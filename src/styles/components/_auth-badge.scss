@@ -1,0 +1,62 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.auth-profile-badge {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    z-index: 10;
+}
+
+.btn-signin-small {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: $text;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid $border;
+    border-radius: $radius-pill;
+    cursor: pointer;
+    transition: $transition;
+    backdrop-filter: blur($blur);
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-1px);
+    }
+}
+
+.user-profile-tag {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0.8rem 0.3rem 0.3rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: $radius-pill;
+    cursor: pointer;
+    transition: $transition;
+    backdrop-filter: blur($blur);
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba($red, 0.4); // Hint for logout
+    }
+}
+
+.user-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    @include flex-center;
+    background: linear-gradient(135deg, $accent, $accent-light);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 800;
+}
+
+.user-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: $text;
+}

@@ -1,0 +1,100 @@
+@use 'sass:color';
+@use '../variables' as *;
+
+.profile-modal-card {
+    background: rgba(30, 30, 40, 0.95);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: $radius-lg;
+    padding: $spacing-xl;
+    width: 90%;
+    max-width: 400px;
+    position: relative;
+    animation: modal-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-lg;
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+}
+
+.profile-avatar-large {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, $accent, color.mix(black, $accent, 20%));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 800;
+    color: white;
+    box-shadow: 0 4px 12px rgba($accent, 0.3);
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+
+    h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        color: white;
+    }
+}
+
+.profile-member-since {
+    font-size: 0.85rem;
+    color: $text-muted;
+}
+
+.profile-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $spacing-md;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: $radius;
+    padding: $spacing-md;
+}
+
+.profile-stat-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.profile-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+}
+
+.profile-stat-label {
+    font-size: 0.75rem;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 4px;
+}
+
+.profile-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: $spacing-sm;
+}
+
+.btn-logout {
+    width: 100%;
+    border-color: rgba(239, 68, 68, 0.5); // red-500
+    color: #ef4444;
+
+    &:hover {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: #ef4444;
+    }
+}

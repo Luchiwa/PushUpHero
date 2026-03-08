@@ -1,0 +1,70 @@
+// ── DESIGN TOKENS ──────────────────────────────────────────────
+// Colors
+$bg: #07080f;
+$text: #f0f2ff;
+$text-muted: rgba(240, 242, 255, 0.5);
+
+// Brand / accent
+$accent: #6366f1;
+$accent-light: #818cf8;
+$accent-pale: #a5b4fc;
+$accent-glow: rgba(99, 102, 241, 0.35);
+
+// Semantic colors
+$green: #22c55e;
+$green-light: #4ade80;
+$amber: #f59e0b;
+$amber-light: #fbbf24;
+$amber-dark: #d97706;
+$red: #ef4444;
+$red-light: #fca5a5;
+$cyan: #a5f3fc;
+$cyan-glow: rgba(34, 211, 238, 0.8);
+
+// Surfaces
+$surface: rgba(255, 255, 255, 0.05);
+$surface-hover: rgba(255, 255, 255, 0.08);
+$surface-dark: rgba(7, 8, 15, 0.7);
+$border: rgba(255, 255, 255, 0.1);
+
+// Shape & spacing
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+$radius: 20px;
+$radius-sm: 12px;
+$radius-lg: 32px;
+$radius-pill: 100px;
+
+// Effects
+$blur: 20px;
+$transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+// ── GRADIENT HELPERS ───────────────────────────────────────────
+$gradient-accent: linear-gradient(135deg, $accent-pale, $accent-light, $accent);
+$gradient-gold: linear-gradient(135deg, $amber-light, $amber, $amber-dark);
+$gradient-green: linear-gradient(90deg, $green, $green-light);
+$gradient-rep: linear-gradient(135deg, $accent-pale, $accent-light);
+
+// ── CSS CUSTOM PROPERTIES ──────────────────────────────────────
+// These are exported to :root so they remain usable in plain CSS contexts
+// (e.g. inline styles, SVG fills, etc.)
+:root {
+    --bg: #{$bg};
+    --surface: #{$surface};
+    --surface-hover: #{$surface-hover};
+    --border: #{$border};
+    --text: #{$text};
+    --text-muted: #{$text-muted};
+    --accent: #{$accent};
+    --accent-glow: #{$accent-glow};
+    --green: #{$green};
+    --amber: #{$amber};
+    --red: #{$red};
+    --radius: #{$radius};
+    --radius-sm: #{$radius-sm};
+    --blur: #{$blur};
+    --transition: #{$transition};
+}

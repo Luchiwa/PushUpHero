@@ -1,0 +1,298 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+// ── Dashboard layout ─────────────────────────────────────────────
+.dashboard {
+    @include fill;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+}
+
+.dashboard-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    pointer-events: all;
+}
+
+// ── Stats row ────────────────────────────────────────────────────
+.stats-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 1.25rem;
+    align-items: center;
+}
+
+// ── Stat card ────────────────────────────────────────────────────
+.stat-card {
+    @include glass;
+    border-radius: $radius;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    min-width: 110px;
+    transition: $transition;
+    pointer-events: all;
+}
+
+.stat-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: $text;
+}
+
+.stat-label {
+    @include label(0.7rem);
+}
+
+// ── Rep counter ──────────────────────────────────────────────────
+.rep-count {
+    font-size: 3rem;
+    line-height: 1;
+    font-weight: 900;
+    @include text-gradient($gradient-rep);
+    animation: rep-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+// ── Score ring ───────────────────────────────────────────────────
+.score-ring {
+    display: block;
+}
+
+// ── Phase badge ──────────────────────────────────────────────────
+.phase-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.85rem;
+    border-radius: $radius-pill;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    backdrop-filter: blur($blur);
+    pointer-events: none;
+    transition: $transition;
+}
+
+.phase-up {
+    background: rgba(59, 130, 246, 0.25);
+    color: #93c5fd;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.phase-down {
+    background: rgba($green, 0.25);
+    color: #86efac;
+    border: 1px solid rgba($green, 0.4);
+}
+
+.phase-transition {
+    background: rgba($amber, 0.25);
+    color: #fcd34d;
+    border: 1px solid rgba($amber, 0.4);
+}
+
+.phase-idle {
+    background: $surface-hover;
+    color: $text-muted;
+    border: 1px solid $border;
+}
+
+// ── Level Badge ──────────────────────────────────────────────────
+.level-badge {
+    @include flex-center;
+}
+
+.level-badge-ring {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    @include flex-center;
+    // conic-gradient set via inline style for dynamic progress
+}
+
+.level-badge-inner {
+    width: 38px;
+    height: 38px;
+    background: $bg;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.level-label {
+    font-size: 0.5rem;
+    font-weight: 800;
+    color: #94a3b8;
+    line-height: 1;
+    margin-top: 2px;
+}
+
+.level-number {
+    font-size: 1rem;
+    font-weight: 800;
+    color: $text;
+    line-height: 1;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+}
+
+// ── Action buttons ───────────────────────────────────────────────
+.dashboard-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-sound {
+    padding: 0.45rem;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    @include flex-center;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid $border;
+    color: $text;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: $transition;
+    backdrop-filter: blur($blur);
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+}
+
+.btn-sound-muted {
+    opacity: 0.5;
+}
+
+.btn-stop {
+    padding: 0.45rem 1rem;
+    border-radius: $radius-pill;
+    background: rgba($red, 0.2);
+    border: 1px solid rgba($red, 0.4);
+    color: $red-light;
+    font-size: 0.82rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: $transition;
+    backdrop-filter: blur($blur);
+
+    &:hover {
+        background: rgba($red, 0.35);
+        transform: translateY(-1px);
+    }
+}
+
+// ── Anti-cheat banner ────────────────────────────────────────────
+.invalid-position-banner {
+    margin: 0 1.25rem;
+    padding: 0.6rem 1rem;
+    background: rgba($red, 0.15);
+    border: 1px solid rgba($red, 0.4);
+    border-radius: $radius-sm;
+    color: $red-light;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: center;
+    backdrop-filter: blur($blur);
+    pointer-events: all;
+    animation: slide-up 0.25s ease both;
+}
+
+// ── Last rep breakdown ───────────────────────────────────────────
+.last-rep-info {
+    margin: auto 1.25rem 1.25rem;
+    @include glass;
+    border-radius: $radius;
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    pointer-events: all;
+    animation: slide-up 0.3s ease both;
+}
+
+.last-rep-title {
+    @include label(0.72rem);
+}
+
+.last-rep-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.bar-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.78rem;
+    color: $text-muted;
+
+    >span:first-child {
+        width: 70px;
+        flex-shrink: 0;
+    }
+
+    >span:last-child {
+        width: 28px;
+        text-align: right;
+        font-weight: 600;
+        color: $text;
+    }
+}
+
+.bar-track {
+    flex: 1;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: $radius-pill;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    border-radius: $radius-pill;
+    background: linear-gradient(90deg, $accent, $accent-light);
+    transition: width 0.4s $transition;
+
+    &-alt {
+        background: $gradient-green;
+    }
+}
+
+// ── Mobile responsive ────────────────────────────────────────────
+@media (max-width: 480px) {
+    .stats-row {
+        padding: 0 0.75rem;
+        gap: 0.6rem;
+    }
+
+    .stat-card {
+        padding: 0.85rem 1rem;
+        min-width: 90px;
+        border-radius: $radius-sm;
+    }
+
+    .rep-count {
+        font-size: 2.25rem;
+    }
+
+    .dashboard-top {
+        padding: 0.75rem;
+    }
+
+    .last-rep-info {
+        margin: auto 0.75rem 0.75rem;
+        border-radius: $radius-sm;
+    }
+}

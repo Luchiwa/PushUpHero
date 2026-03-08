@@ -1,0 +1,45 @@
+@use 'variables' as *;
+
+// ── GLASSMORPHISM CARD ──────────────────────────────────────────
+@mixin glass($bg: $surface-dark, $blur: $blur) {
+    background: $bg;
+    backdrop-filter: blur($blur);
+    -webkit-backdrop-filter: blur($blur);
+    border: 1px solid $border;
+}
+
+// ── TEXT GRADIENT ───────────────────────────────────────────────
+@mixin text-gradient($gradient) {
+    background: $gradient;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+// ── NEON GLOW ───────────────────────────────────────────────────
+@mixin neon-glow($color, $size: 20px) {
+    text-shadow: 0 0 $size rgba($color, 0.7), 0 0 calc($size * 2) rgba($color, 0.35);
+}
+
+// ── ABSOLUTE FILL ────────────────────────────────────────────────
+@mixin fill {
+    position: absolute;
+    inset: 0;
+}
+
+// ── FLEX CENTER ──────────────────────────────────────────────────
+@mixin flex-center($direction: row) {
+    display: flex;
+    flex-direction: $direction;
+    align-items: center;
+    justify-content: center;
+}
+
+// ── UPPERCASE LABEL ──────────────────────────────────────────────
+@mixin label($size: 0.72rem) {
+    font-size: $size;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: $text-muted;
+}
