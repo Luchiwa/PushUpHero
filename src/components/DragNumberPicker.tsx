@@ -5,22 +5,34 @@ interface DragNumberPickerProps {
     min?: number;
     max?: number;
     onChange: (value: number) => void;
+    unit?: string;
+    showTrack?: boolean;
+    showHint?: boolean;
 }
 
 /**
  * A drag/swipe number picker.
  * Drag UP to increase, drag DOWN to decrease.
  * Works with both mouse and touch events.
+ * Hold ▲▼ buttons to continuously increment/decrement.
  */
 export function DragNumberPicker({
     value,
     min = 1,
     max = 100,
     onChange,
+    unit = 'reps',
+    showTrack = true,
+    showHint = true,
 }: DragNumberPickerProps) {
     const startYRef = useRef<number | null>(null);
     const startValueRef = useRef<number>(value);
     const [isDragging, setIsDragging] = useState(false);
+    const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const holdTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // Keep a ref to current value for use inside intervals
+    const valueRef = useRef(value);
+    valueRef.current = value;
 
     // px of drag required to change by 1 unit
     const PX_PER_UNIT = 8;
@@ -44,7 +56,27 @@ export function DragNumberPicker({
         setIsDragging(false);
     }, []);
 
-    // Mouse events
+    // Hold-to-repeat logic
+    const startHold = useCallback((direction: 1 | -1) => {
+        const step = () => {
+            const newVal = Math.min(max, Math.max(min, valueRef.current + direction));
+            onChange(newVal);
+        };
+        // First tick immediately, then accelerate after 400ms
+        step();
+        holdTimeoutRef.current = setTimeout(() => {
+            holdIntervalRef.current = setInterval(step, 80);
+        }, 400);
+    }, [min, max, onChange]);
+
+    const stopHold = useCallback(() => {
+        if (holdTimeoutRef.current) clearTimeout(holdTimeoutRef.current);
+        if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
+        holdTimeoutRef.current = null;
+        holdIntervalRef.current = null;
+    }, []);
+
+    // Mouse events (main drag area)
     const handleMouseDown = (e: React.MouseEvent) => {
         e.preventDefault();
         onDragStart(e.clientY);
@@ -59,7 +91,7 @@ export function DragNumberPicker({
         window.addEventListener('mouseup', handleMouseUp);
     };
 
-    // Touch events
+    // Touch events (main drag area)
     const handleTouchStart = (e: React.TouchEvent) => {
         onDragStart(e.touches[0].clientY);
     };
@@ -78,32 +110,42 @@ export function DragNumberPicker({
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
         >
-            <div className="drag-picker-track">
-                <div className="drag-picker-fill" style={{ height: `${percentage}%` }} />
-            </div>
+            {showTrack && (
+                <div className="drag-picker-track">
+                    <div className="drag-picker-fill" style={{ height: `${percentage}%` }} />
+                </div>
+            )}
 
             <div className="drag-picker-content">
                 <button
                     className="drag-picker-btn"
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onClick={() => onChange(Math.min(max, value + 1))}
+                    onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); startHold(1); }}
+                    onMouseUp={stopHold}
+                    onMouseLeave={stopHold}
+                    onTouchStart={(e) => { e.stopPropagation(); startHold(1); }}
+                    onTouchEnd={stopHold}
                 >▲</button>
 
                 <div className="drag-picker-value">
-                    <span className="drag-picker-number">{value}</span>
-                    <span className="drag-picker-unit">reps</span>
+                    <span className="drag-picker-number">{String(value).padStart(2, '0')}</span>
+                    <span className="drag-picker-unit">{unit}</span>
                 </div>
 
                 <button
                     className="drag-picker-btn"
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onClick={() => onChange(Math.max(min, value - 1))}
+                    onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); startHold(-1); }}
+                    onMouseUp={stopHold}
+                    onMouseLeave={stopHold}
+                    onTouchStart={(e) => { e.stopPropagation(); startHold(-1); }}
+                    onTouchEnd={stopHold}
                 >▼</button>
             </div>
 
-            <p className="drag-picker-hint">
-                {isDragging ? '🎯 Release to confirm' : '↕ Drag or tap ▲▼'}
-            </p>
+            {showHint && (
+                <p className="drag-picker-hint">
+                    {isDragging ? '🎯 Release to confirm' : '↕ Drag or tap ▲▼'}
+                </p>
+            )}
         </div>
     );
 }

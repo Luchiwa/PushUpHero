@@ -1,19 +1,186 @@
 @use 'sass:color';
 @use '../variables' as *;
+@use '../mixins' as *;
 
-.profile-modal-card {
-    background: rgba(30, 30, 40, 0.95);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: $radius-lg;
-    padding: $spacing-xl;
-    width: 90%;
-    max-width: 400px;
-    position: relative;
-    animation: modal-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+// ── Full-screen profile page ──────────────────────────────────────
+.profile-fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    animation: screen-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.profile-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid $border;
+    flex-shrink: 0;
+}
+
+.profile-back-btn {
+    width: 38px;
+    height: 38px;
+    border: none;
+    background: $surface;
+    border-radius: 50%;
+    @include flex-center;
+    cursor: pointer;
+    color: $text;
+    transition: background 0.2s;
+
+    &:hover {
+        background: $surface-hover;
+    }
+}
+
+.profile-topbar-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: $text;
+    letter-spacing: -0.01em;
+}
+
+.profile-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: $spacing-xl $spacing-lg;
     display: flex;
     flex-direction: column;
     gap: $spacing-lg;
+    max-width: 480px;
+    width: 100%;
+    margin: 0 auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+// ── Header ──────────────────────────────────────────────────────
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+}
+
+.profile-avatar-large {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: $gradient-accent;
+    @include flex-center;
+    font-size: 2rem;
+    font-weight: 800;
+    color: white;
+    flex-shrink: 0;
+    box-shadow: 0 4px 16px rgba($accent, 0.3);
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: $text;
+        letter-spacing: -0.02em;
+    }
+}
+
+.profile-member-since {
+    font-size: 0.85rem;
+    color: $text-muted;
+}
+
+// ── Stats grid ───────────────────────────────────────────────────
+.profile-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $spacing-sm;
+    background: $surface;
+    border: 1px solid $border;
+    border-radius: $radius;
+    padding: $spacing-md;
+}
+
+.profile-stat-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 2px;
+}
+
+.profile-stat-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: $text;
+    letter-spacing: -0.03em;
+}
+
+.profile-stat-label {
+    font-size: 0.72rem;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+}
+
+// ── Session history section ───────────────────────────────────────
+.profile-session-history {
+    border-top: 1px solid $border;
+    padding-top: $spacing-md;
+
+    .session-history-list {
+        gap: 0.4rem;
+    }
+
+    .session-history-item {
+        background: $surface;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+
+        &:hover {
+            background: $surface-hover;
+        }
+    }
+}
+
+// ── Actions ──────────────────────────────────────────────────────
+.profile-actions {
+    display: flex;
+    justify-content: center;
+    padding-bottom: $spacing-xl;
+}
+
+.btn-logout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.9rem;
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: $radius-sm;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.85), rgba(220, 38, 38, 0.95));
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    transition: $transition;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+    }
 }
 
 .profile-header {
@@ -26,14 +193,14 @@
     width: 64px;
     height: 64px;
     border-radius: 50%;
-    background: linear-gradient(135deg, $accent, color.mix(black, $accent, 20%));
+    background: linear-gradient(135deg, $accent, color.mix(white, $accent, 30%));
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 2rem;
     font-weight: 800;
     color: white;
-    box-shadow: 0 4px 12px rgba($accent, 0.3);
+    box-shadow: 0 4px 12px rgba($accent, 0.25);
 }
 
 .profile-info {
@@ -43,7 +210,7 @@
     h2 {
         margin: 0;
         font-size: 1.5rem;
-        color: white;
+        color: $text;
     }
 }
 
@@ -56,7 +223,7 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: $spacing-md;
-    background: rgba(0, 0, 0, 0.2);
+    background: #f5f5f5;
     border-radius: $radius;
     padding: $spacing-md;
 }
@@ -71,7 +238,7 @@
 .profile-stat-value {
     font-size: 1.5rem;
     font-weight: 700;
-    color: white;
+    color: $text;
 }
 
 .profile-stat-label {
@@ -88,13 +255,72 @@
     margin-top: $spacing-sm;
 }
 
+.profile-session-history {
+    border-top: 1px solid rgba(26, 26, 26, 0.08);
+    padding-top: $spacing-md;
+    max-height: 60vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+
+    /* Scrollbar styling */
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: rgba(26, 26, 26, 0.15);
+        border-radius: 3px;
+
+        &:hover {
+            background: rgba(26, 26, 26, 0.25);
+        }
+    }
+
+    .session-history-title {
+        margin-bottom: $spacing-sm;
+    }
+
+    .session-history-list {
+        gap: 0.4rem;
+    }
+
+    .session-history-item {
+        background: #f5f5f5;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+
+        &:hover {
+            background: #eeeeee;
+        }
+    }
+}
+
 .btn-logout {
+    margin-top: $spacing-md;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.9rem;
     width: 100%;
-    border-color: rgba(239, 68, 68, 0.5); // red-500
-    color: #ef4444;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: $radius-sm;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.85), rgba(220, 38, 38, 0.95));
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    transition: $transition;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
 
     &:hover {
-        background: rgba(239, 68, 68, 0.1);
-        border-color: #ef4444;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
     }
 }

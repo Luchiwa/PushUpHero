@@ -18,7 +18,10 @@ export function useExerciseDetector({
         detector.getState()
     );
     const detectorRef = useRef(detector);
-    detectorRef.current = detector;
+
+    useEffect(() => {
+        detectorRef.current = detector;
+    }, [detector]);
 
     useEffect(() => {
         if (!isActive || landmarks.length === 0) return;

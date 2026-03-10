@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { doc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from './useAuth';
@@ -40,14 +40,6 @@ export function useLevelSystem() {
     const repsIntoCurrentLevel = totalLifetimeReps - currentLevelBaseReps;
     const repsNeededForNextLevel = nextLevelTotalReq - currentLevelBaseReps;
     const levelProgressPct = (repsIntoCurrentLevel / repsNeededForNextLevel) * 100;
-
-    // Refresh local state when entering guest mode (e.g. on logout)
-    useEffect(() => {
-        if (!user) {
-            const stored = localStorage.getItem(STORAGE_KEY);
-            setTotalLifetimeReps(stored ? parseInt(stored, 10) : 0);
-        }
-    }, [user]);
 
     const addRepsToLifetime = useCallback(async (repsToAdd: number) => {
         if (user) {

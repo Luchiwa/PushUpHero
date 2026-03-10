@@ -7,6 +7,8 @@ import { AuthModal } from './AuthModal';
 interface SummaryProps {
     exerciseState: ExerciseState;
     onReset: () => void;
+    sessionMode?: 'reps' | 'time';
+    elapsedTime?: number;
 }
 
 function ScoreGrade({ score }: { score: number }) {
@@ -17,7 +19,15 @@ function ScoreGrade({ score }: { score: number }) {
     return <span className="grade grade-d">D</span>;
 }
 
-export function SummaryScreen({ exerciseState, onReset }: SummaryProps) {
+function formatElapsedTime(seconds?: number): string {
+    if (!seconds) return '';
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    if (mins > 0) return `${mins}min${secs}s`;
+    return `${secs}s`;
+}
+
+export function SummaryScreen({ exerciseState, onReset, sessionMode, elapsedTime }: SummaryProps) {
     const { level } = useLevelSystem();
     const { user } = useAuth();
     const [showPaywall, setShowPaywall] = useState(false);
@@ -42,20 +52,46 @@ export function SummaryScreen({ exerciseState, onReset }: SummaryProps) {
                 <h2 className="summary-title">Session Complete</h2>
 
                 <div className="summary-stats">
-                    <div className="summary-stat">
-                        <span className="summary-value">{repCount}</span>
-                        <span className="summary-label">Push-ups</span>
-                    </div>
-                    <div className="summary-divider" />
-                    <div className="summary-stat">
-                        <ScoreGrade score={averageScore} />
-                        <span className="summary-label">Grade</span>
-                    </div>
-                    <div className="summary-divider" />
-                    <div className="summary-stat">
-                        <span className="summary-value">{averageScore}</span>
-                        <span className="summary-label">Avg Score</span>
-                    </div>
+                    {sessionMode === 'time' ? (
+                        <>
+                            <div className="summary-stat">
+                                <span className="summary-value">{formatElapsedTime(elapsedTime)}</span>
+                                <span className="summary-label">Duration</span>
+                            </div>
+                            <div className="summary-divider" />
+                            <div className="summary-stat">
+                                <span className="summary-value">{repCount}</span>
+                                <span className="summary-label">Push-ups</span>
+                            </div>
+                            <div className="summary-divider" />
+                            <div className="summary-stat">
+                                <ScoreGrade score={averageScore} />
+                                <span className="summary-label">Grade</span>
+                            </div>
+                            <div className="summary-divider" />
+                            <div className="summary-stat">
+                                <span className="summary-value">{averageScore}</span>
+                                <span className="summary-label">Avg Score</span>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="summary-stat">
+                                <span className="summary-value">{repCount}</span>
+                                <span className="summary-label">Push-ups</span>
+                            </div>
+                            <div className="summary-divider" />
+                            <div className="summary-stat">
+                                <ScoreGrade score={averageScore} />
+                                <span className="summary-label">Grade</span>
+                            </div>
+                            <div className="summary-divider" />
+                            <div className="summary-stat">
+                                <span className="summary-value">{averageScore}</span>
+                                <span className="summary-label">Avg Score</span>
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 {repHistory.length > 0 && (
@@ -63,7 +99,6 @@ export function SummaryScreen({ exerciseState, onReset }: SummaryProps) {
                         <p className="rep-history-title">Rep breakdown</p>
                         <div className="rep-history-list">
                             {repHistory.map((rep, i) => {
-                                const goalReached = rep.score >= 50;
                                 return (
                                     <div key={i} className="rep-history-item">
                                         <span className="rep-num">#{i + 1}</span>
@@ -76,7 +111,7 @@ export function SummaryScreen({ exerciseState, onReset }: SummaryProps) {
                                                 }}
                                             />
                                         </div>
-                                        {goalReached && <span className="rep-check">✓</span>}
+                                        <span className="rep-score">{rep.score}%</span>
                                     </div>
                                 );
                             })}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, runTransaction } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
@@ -11,12 +11,23 @@ interface AuthModalProps {
 
 export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
     const { loginWithGoogle } = useAuth();
-    const [mode, setMode] = useState<'login' | 'register'>('register');
+    const [mode, setMode] = useState<'login' | 'register'>('login');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [username, setUsername] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const emailInputRef = useRef<HTMLInputElement>(null);
+    const usernameInputRef = useRef<HTMLInputElement>(null);
+
+    // Focus on the appropriate first field when mode changes or modal opens
+    useEffect(() => {
+        if (mode === 'register' && usernameInputRef.current) {
+            usernameInputRef.current.focus();
+        } else if (mode === 'login' && emailInputRef.current) {
+            emailInputRef.current.focus();
+        }
+    }, [mode]);
 
     const handleGoogle = async () => {
         try {
@@ -28,7 +39,7 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
             onSuccess?.();
             onClose();
         } catch (err: any) {
-            setError(err.message || 'Erreur Google Sign-In');
+            setError(err.message || 'Google Sign-In error');
         } finally {
             setLoading(false);
         }
@@ -42,7 +53,7 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
         try {
             if (mode === 'register') {
                 if (username.trim().length < 3) {
-                    throw new Error("Le pseudo doit faire au moins 3 caractères");
+                    throw new Error("Username must be at least 3 characters");
                 }
                 const cleanUsername = username.trim().toLowerCase();
 
@@ -52,7 +63,7 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
                     const usernameDoc = await transaction.get(usernameRef);
 
                     if (usernameDoc.exists()) {
-                        throw new Error("Ce pseudo est déjà pris !");
+                        throw new Error("This username is already taken!");
                     }
 
                     // Create the user in Auth
@@ -82,8 +93,8 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
             console.error(err);
             // Translate common firebase errors
             let msg = err.message;
-            if (msg.includes('auth/email-already-in-use')) msg = "Cet email est déjà utilisé.";
-            if (msg.includes('auth/invalid-credential')) msg = "Email ou mot de passe incorrect.";
+            if (msg.includes('auth/email-already-in-use')) msg = "This email is already in use.";
+            if (msg.includes('auth/invalid-credential')) msg = "Incorrect email or password.";
             setError(msg);
         } finally {
             setLoading(false);
@@ -96,12 +107,12 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
                 <button className="auth-close-btn" onClick={onClose}>×</button>
 
                 <h2 className="auth-title">
-                    {mode === 'register' ? 'Créer un compte' : 'Connexion'}
+                    {mode === 'register' ? 'Create an account' : 'Sign in'}
                 </h2>
                 <p className="auth-subtitle">
                     {mode === 'register'
-                        ? 'Sauvegardez vos sessions et votre niveau dans le cloud.'
-                        : 'Retrouvez votre progression.'}
+                        ? 'Save your sessions and level to the cloud.'
+                        : 'Pick up where you left off.'}
                 </p>
 
                 {error && <div className="auth-error">{error}</div>}
@@ -109,8 +120,9 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
                 <form onSubmit={handleEmailAuth} className="auth-form">
                     {mode === 'register' && (
                         <div className="input-group">
-                            <label>Pseudo</label>
+                            <label>Username</label>
                             <input
+                                ref={usernameInputRef}
                                 type="text"
                                 value={username}
                                 onChange={e => setUsername(e.target.value)}
@@ -124,6 +136,7 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
                     <div className="input-group">
                         <label>Email</label>
                         <input
+                            ref={emailInputRef}
                             type="email"
                             value={email}
                             onChange={e => setEmail(e.target.value)}
@@ -132,7 +145,7 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
                         />
                     </div>
                     <div className="input-group">
-                        <label>Mot de passe</label>
+                        <label>Password</label>
                         <input
                             type="password"
                             value={password}
@@ -144,12 +157,12 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
                     </div>
 
                     <button type="submit" className="btn-primary auth-submit" disabled={loading}>
-                        {loading ? 'Chargement...' : (mode === 'register' ? "S'inscrire" : "Se connecter")}
+                        {loading ? 'Loading...' : (mode === 'register' ? "Sign up" : "Sign in")}
                     </button>
                 </form>
 
                 <div className="auth-divider">
-                    <span>ou</span>
+                    <span>or</span>
                 </div>
 
                 <button type="button" className="btn-google" onClick={handleGoogle} disabled={loading}>
@@ -159,13 +172,13 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
                         <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
                         <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                     </svg>
-                    Continuer avec Google
+                    Continue with Google
                 </button>
 
                 <p className="auth-switch">
-                    {mode === 'register' ? 'Déjà un compte ?' : "Pas encore de compte ?"}
+                    {mode === 'register' ? 'Already have an account?' : "Don't have an account?"}
                     <button type="button" onClick={() => { setMode(mode === 'register' ? 'login' : 'register'); setError(''); }}>
-                        {mode === 'register' ? 'Se connecter' : "S'inscrire"}
+                        {mode === 'register' ? 'Sign in' : "Sign up"}
                     </button>
                 </p>
             </div>

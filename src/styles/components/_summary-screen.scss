@@ -4,15 +4,15 @@
 .summary-screen {
     @include fill;
     @include flex-center;
-    background: radial-gradient(ellipse at 50% 0%, rgba($accent, 0.15) 0%, $bg 70%);
+    background: radial-gradient(ellipse at 50% 0%, rgba($accent, 0.08) 0%, #ffffff 70%);
     z-index: 20;
 }
 
 .summary-card {
-    background: rgba(255, 255, 255, 0.04);
+    background: #ffffff;
     backdrop-filter: blur($blur);
     -webkit-backdrop-filter: blur($blur);
-    border: 1px solid $border;
+    border: 1px solid rgba(26, 26, 26, 0.08);
     border-radius: $radius;
     padding: 2.5rem 2rem;
     width: min(90vw, 380px);
@@ -20,19 +20,20 @@
     flex-direction: column;
     gap: 1.75rem;
     align-items: center;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
     animation: card-in 0.5s ease both;
 
     @media (max-width: 480px) {
         padding: 2rem 1.25rem;
         border-radius: $radius-sm;
+        width: min(95vw, 360px);
     }
 }
 
 .summary-title {
     font-size: 1.5rem;
     font-weight: 800;
-    @include text-gradient(linear-gradient(135deg, #e0e7ff, $accent-light));
+    color: $text;
     letter-spacing: -0.02em;
 }
 
@@ -139,16 +140,18 @@
 }
 
 .rep-score {
-    width: 28px;
+    width: 40px;
     text-align: right;
     font-weight: 700;
     color: $text;
+    flex-shrink: 0;
+    font-size: 0.75rem;
 }
 
 .rep-mini-bar {
     flex: 1;
     height: 6px;
-    background: rgba(255, 255, 255, 0.08);
+    background: #d0d0d0;
     border-radius: $radius-pill;
     overflow: hidden;
 }

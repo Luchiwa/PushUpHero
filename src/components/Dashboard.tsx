@@ -1,17 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ExerciseState } from '../exercises/types';
 import { useSoundEffect } from '../hooks/useSoundEffect';
-import { useLevelSystem } from '../hooks/useLevelSystem';
+
 import { FloatyNumbers } from './FloatyNumbers';
 
 interface DashboardProps {
     exerciseState: ExerciseState;
     goalReps: number;
+    sessionMode: 'reps' | 'time';
+    timeGoal: { minutes: number; seconds: number };
     onStop: () => void;
+    onTimerEnd: () => void;
+    elapsedTimeRef?: React.MutableRefObject<number>;
     onFlipCamera: () => void;
     facingMode: 'user' | 'environment';
     soundEnabled: boolean;
     onSoundToggle: () => void;
+    level: number;
+    levelProgressPct: number;
 }
 
 function ScoreRing({ score }: { score: number }) {
@@ -22,7 +28,7 @@ function ScoreRing({ score }: { score: number }) {
 
     return (
         <svg className="score-ring" viewBox="0 0 100 100" width="100" height="100">
-            <circle cx="50" cy="50" r={radius} fill="none" stroke="#ffffff18" strokeWidth="10" />
+            <circle cx="50" cy="50" r={radius} fill="none" stroke="#e0e0e0" strokeWidth="10" />
             <circle
                 cx="50" cy="50" r={radius}
                 fill="none"
@@ -34,9 +40,16 @@ function ScoreRing({ score }: { score: number }) {
                 transform="rotate(-90 50 50)"
                 style={{ transition: 'stroke-dashoffset 0.4s ease, stroke 0.4s ease' }}
             />
-            <text x="50" y="54" textAnchor="middle" fill="white" fontSize="18" fontWeight="bold">
+            <text x="50" y="57" textAnchor="middle" fontSize="26" fontWeight="900" fill="url(#score-gradient)">
                 {score}
             </text>
+            <defs>
+                <linearGradient id="score-gradient" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#ffb366" />
+                    <stop offset="50%" stopColor="#ff9c35" />
+                    <stop offset="100%" stopColor="#ff7f00" />
+                </linearGradient>
+            </defs>
         </svg>
     );
 }
@@ -71,20 +84,28 @@ function GoalProgressBar({ current, goal }: { current: number; goal: number }) {
     );
 }
 
-export function Dashboard({ exerciseState, goalReps, onStop, onFlipCamera, facingMode, soundEnabled, onSoundToggle }: DashboardProps) {
+export function Dashboard({ exerciseState, goalReps, sessionMode, timeGoal, onStop, onTimerEnd, elapsedTimeRef, onFlipCamera, facingMode, soundEnabled, onSoundToggle, level, levelProgressPct }: DashboardProps) {
     const { repCount, averageScore, lastRepResult, isValidPosition, isCalibrated } = exerciseState;
 
     // Audio hook (sound toggle is via prop from App)
-    const { initAudio, playRepSound, playLevelUpSound } = useSoundEffect();
+    const { initAudio, playRepSound, playStartReadySound } = useSoundEffect();
     const prevRepCountRef = useRef(repCount);
+    const prevCalibratedRef = useRef(isCalibrated);
+    const countdownActiveRef = useRef(false);
+    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    // Level System
-    const { level, levelProgressPct, addRepsToLifetime } = useLevelSystem();
-    const prevLevelRef = useRef(level);
+    // Removed level system logic from here to prevent unmount bugs
 
     // Debounced invalid-position banner: only show after 2s of invalid position
     const invalidFramesRef = useRef(0);
     const [showInvalidBanner, setShowInvalidBanner] = useState(false);
+    
+    // Timer state for time-based sessions
+    const [timeRemaining, setTimeRemaining] = useState(() => {
+        const initialSeconds = timeGoal.minutes * 60 + timeGoal.seconds;
+        return sessionMode === 'time' ? initialSeconds : 0;
+    });
+    const totalSecondsRef = useRef(0);
     useEffect(() => {
         if (!isCalibrated) { setShowInvalidBanner(false); return; }
         if (!isValidPosition) {
@@ -101,27 +122,82 @@ export function Dashboard({ exerciseState, goalReps, onStop, onFlipCamera, facin
         if (soundEnabled) initAudio();
     }, [soundEnabled, initAudio]);
 
-    // Handle reps -> sounds & level ups
     useEffect(() => {
         if (repCount > prevRepCountRef.current) {
-            const repsDone = repCount - prevRepCountRef.current;
-
             // Play rep sound
             if (soundEnabled) playRepSound();
-
-            // Add to global lifetime reps
-            addRepsToLifetime(repsDone);
         }
         prevRepCountRef.current = repCount;
-    }, [repCount, playRepSound, soundEnabled, addRepsToLifetime]);
+    }, [repCount, playRepSound, soundEnabled]);
 
-    // Check for level up specifically to play the sound
+    // Play "ready to start" sound when calibration completes
     useEffect(() => {
-        if (level > prevLevelRef.current) {
-            if (soundEnabled) playLevelUpSound();
+        if (!prevCalibratedRef.current && isCalibrated && soundEnabled) {
+            playStartReadySound();
         }
-        prevLevelRef.current = level;
-    }, [level, playLevelUpSound, soundEnabled]);
+        prevCalibratedRef.current = isCalibrated;
+    }, [isCalibrated, soundEnabled, playStartReadySound]);
+
+    // Initialize timer state based on timeGoal
+    useEffect(() => {
+        if (sessionMode === 'time') {
+            const totalSeconds = timeGoal.minutes * 60 + timeGoal.seconds;
+            totalSecondsRef.current = totalSeconds;
+            setTimeRemaining(totalSeconds);
+            // Reset countdown flag so it can restart
+            countdownActiveRef.current = false;
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+            }
+        }
+    }, [sessionMode, timeGoal.minutes, timeGoal.seconds]);
+
+    // Cleanup interval on unmount
+    useEffect(() => {
+        return () => {
+            if (intervalRef.current) clearInterval(intervalRef.current);
+        };
+    }, []);
+
+    // Start countdown when calibration completes (only once per session)
+    useEffect(() => {
+        if (sessionMode !== 'time' || !isCalibrated || countdownActiveRef.current) {
+            return;
+        }
+
+        // Mark that countdown has started
+        countdownActiveRef.current = true;
+
+        // Clear any existing interval
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        
+        intervalRef.current = setInterval(() => {
+            setTimeRemaining((prev) => {
+                const newTime = prev - 1;
+                
+                // Update the ref with elapsed time
+                if (elapsedTimeRef) {
+                    const totalSeconds = totalSecondsRef.current;
+                    elapsedTimeRef.current = totalSeconds - newTime;
+                }
+                
+                return newTime <= 0 ? 0 : newTime;
+            });
+        }, 1000);
+
+    }, [sessionMode, isCalibrated, onStop, elapsedTimeRef]);
+
+    // Trigger stop when countdown reaches 0
+    useEffect(() => {
+        if (sessionMode === 'time' && timeRemaining === 0 && countdownActiveRef.current) {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+            }
+            onTimerEnd();
+        }
+    }, [timeRemaining, sessionMode, onTimerEnd]);
 
     return (
         <div className="dashboard">
@@ -175,13 +251,23 @@ export function Dashboard({ exerciseState, goalReps, onStop, onFlipCamera, facin
                     <span className="stat-label">Avg Score</span>
                 </div>
 
-                <GoalProgressBar current={repCount} goal={goalReps} />
+                {sessionMode === 'time' ? (
+                    <div className="stat-card">
+                        <span className="timer-display">
+                            {String(Math.floor(timeRemaining / 60)).padStart(2, '0')}:
+                            {String(timeRemaining % 60).padStart(2, '0')}
+                        </span>
+                        <span className="stat-label">Time Left</span>
+                    </div>
+                ) : (
+                    <GoalProgressBar current={repCount} goal={goalReps} />
+                )}
             </div>
 
             {/* Anti-cheat feedback banner — debounced, below stats */}
             {showInvalidBanner && (
                 <div className="invalid-position-banner">
-                    ⚠️ Retourne-toi en position pompe — corps horizontal, mains au sol
+                    ⚠️ Get back into push-up position — body horizontal, hands on the ground
                 </div>
             )}
 

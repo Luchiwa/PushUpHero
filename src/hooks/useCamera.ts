@@ -19,9 +19,10 @@ export function useCamera({ facingMode = 'user' }: UseCameraOptions = {}): UseCa
 
     useEffect(() => {
         let stream: MediaStream | null = null;
-        setIsReady(false);
+        let cancelled = false;
 
         async function startCamera() {
+            setIsReady(false);
             try {
                 // Stop any existing stream before switching
                 if (videoRef.current?.srcObject) {
@@ -37,24 +38,33 @@ export function useCamera({ facingMode = 'user' }: UseCameraOptions = {}): UseCa
                     },
                 });
 
+                if (cancelled) {
+                    stream.getTracks().forEach(t => t.stop());
+                    return;
+                }
+
                 if (videoRef.current) {
                     videoRef.current.srcObject = stream;
                     videoRef.current.onloadedmetadata = () => {
-                        videoRef.current?.play();
-                        setIsReady(true);
+                        if (!cancelled) {
+                            videoRef.current?.play();
+                            setIsReady(true);
+                        }
                     };
                 }
             } catch (err) {
-                setError('Camera access denied. Please allow camera permissions.');
-                console.error('Camera error:', err);
+                if (!cancelled) {
+                    setError('Camera access denied. Please allow camera permissions.');
+                    console.error('Camera error:', err);
+                }
             }
         }
 
         startCamera();
 
         return () => {
+            cancelled = true;
             stream?.getTracks().forEach((t) => t.stop());
-            setIsReady(false);
         };
     }, [facingMode]);
 

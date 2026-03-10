@@ -15,7 +15,8 @@ const LOCAL_STORAGE_SESSIONS_KEY = 'pushup-sessions';
  */
 export function useSyncCloud(
     setTotalLifetimeReps?: (reps: number) => void,
-    setCloudSessions?: (sessions: SessionRecord[]) => void
+    setCloudSessions?: (sessions: SessionRecord[]) => void,
+    setTotalSessionCount?: (count: number) => void
 ) {
     const { user } = useAuth();
 
@@ -62,6 +63,21 @@ export function useSyncCloud(
     // 2. Setup Realtime Listeners when authenticated
     useEffect(() => {
         if (!user) {
+            // Guest mode: reset to local storage values
+            if (setTotalLifetimeReps) {
+                const localReps = localStorage.getItem(LOCAL_STORAGE_REPS_KEY);
+                setTotalLifetimeReps(localReps ? parseInt(localReps, 10) : 0);
+            }
+            if (setCloudSessions) {
+                const localRaw = localStorage.getItem(LOCAL_STORAGE_SESSIONS_KEY);
+                try {
+                    setCloudSessions(localRaw ? JSON.parse(localRaw) : []);
+                } catch { setCloudSessions([]); }
+            }
+            if (setTotalSessionCount) {
+                const localCount = localStorage.getItem('pushup_game_total_sessions');
+                setTotalSessionCount(localCount ? parseInt(localCount, 10) : 0);
+            }
             return;
         }
 
@@ -75,6 +91,9 @@ export function useSyncCloud(
                 const data = docSnap.data();
                 if (data.totalReps !== undefined && setTotalLifetimeReps) {
                     setTotalLifetimeReps(data.totalReps);
+                }
+                if (data.totalSessions !== undefined && setTotalSessionCount) {
+                    setTotalSessionCount(data.totalSessions);
                 }
             }
         });

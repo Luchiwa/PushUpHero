@@ -12,6 +12,8 @@ interface VictoryOverlayProps {
     repCount: number;
     soundEnabled: boolean;
     onComplete: () => void;
+    sessionMode?: 'reps' | 'time';
+    elapsedTime?: number;
 }
 
 function createParticles(canvas: HTMLCanvasElement) {
@@ -31,10 +33,14 @@ function createParticles(canvas: HTMLCanvasElement) {
     }));
 }
 
-export function VictoryOverlay({ repCount, soundEnabled, onComplete }: VictoryOverlayProps) {
+export function VictoryOverlay({ repCount, soundEnabled, onComplete, sessionMode, elapsedTime }: VictoryOverlayProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const animRef = useRef<number | null>(null);
     const { initAudio, playVictorySound } = useSoundEffect();
+
+    const formattedTime = elapsedTime
+        ? `${String(Math.floor(elapsedTime / 60)).padStart(2, '0')}:${String(elapsedTime % 60).padStart(2, '0')}`
+        : null;
 
     // Play sound immediately on mount — before Dashboard is gone
     useEffect(() => {
@@ -101,11 +107,20 @@ export function VictoryOverlay({ repCount, soundEnabled, onComplete }: VictoryOv
             <canvas ref={canvasRef} className="victory-canvas" />
             <div className="victory-content">
                 <div className="victory-emoji">🏆</div>
-                <h1 className="victory-title">OBJECTIF ATTEINT !</h1>
-                <p className="victory-reps">{repCount} POMPES</p>
-                <p className="victory-subtitle">Session terminée</p>
+                <h1 className="victory-title">GOAL REACHED!</h1>
+                {sessionMode === 'time' ? (
+                    <>
+                        <p className="victory-reps">{formattedTime}</p>
+                        <p className="victory-subtitle">{repCount} push-ups</p>
+                    </>
+                ) : (
+                    <>
+                        <p className="victory-reps">{repCount} PUSH-UPS</p>
+                        <p className="victory-subtitle">Session complete</p>
+                    </>
+                )}
                 <button className="btn-victory-skip" onClick={onComplete}>
-                    Voir le résumé →
+                    View summary →
                 </button>
             </div>
         </div>

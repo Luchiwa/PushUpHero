@@ -1,14 +1,15 @@
 // ── DESIGN TOKENS ──────────────────────────────────────────────
-// Colors
-$bg: #07080f;
-$text: #f0f2ff;
-$text-muted: rgba(240, 242, 255, 0.5);
+// Colors — Light Theme
+$bg: #ffffff;
+$text: #1a1a1a;
+$text-muted: rgba(26, 26, 26, 0.6);
 
-// Brand / accent
-$accent: #6366f1;
-$accent-light: #818cf8;
-$accent-pale: #a5b4fc;
-$accent-glow: rgba(99, 102, 241, 0.35);
+// Brand / accent — Orange primary (Vibrant)
+$accent: #ff7f00;
+$accent-light: #ff9c35;
+$accent-pale: #ffb366;
+$accent-glow: rgba(255, 127, 0, 0.3);
+$accent-dark: #e67300;
 
 // Semantic colors
 $green: #22c55e;
@@ -22,10 +23,14 @@ $cyan: #a5f3fc;
 $cyan-glow: rgba(34, 211, 238, 0.8);
 
 // Surfaces
-$surface: rgba(255, 255, 255, 0.05);
-$surface-hover: rgba(255, 255, 255, 0.08);
-$surface-dark: rgba(7, 8, 15, 0.7);
-$border: rgba(255, 255, 255, 0.1);
+$surface: rgba(255, 127, 0, 0.08);
+$surface-hover: rgba(255, 127, 0, 0.12);
+$surface-dark: rgba(255, 255, 255, 0.8);
+$border: rgba(26, 26, 26, 0.1);
+
+// Modal overlay
+$modal-overlay: rgba(26, 26, 26, 0.5);
+$modal-overlay-strong: rgba(26, 26, 26, 0.65);
 
 // Shape & spacing
 $spacing-xs: 4px;
@@ -44,7 +49,7 @@ $transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
 // ── GRADIENT HELPERS ───────────────────────────────────────────
 $gradient-accent: linear-gradient(135deg, $accent-pale, $accent-light, $accent);
-$gradient-gold: linear-gradient(135deg, $amber-light, $amber, $amber-dark);
+$gradient-gold: linear-gradient(135deg, $accent-light, $accent, $accent-dark);
 $gradient-green: linear-gradient(90deg, $green, $green-light);
 $gradient-rep: linear-gradient(135deg, $accent-pale, $accent-light);
 

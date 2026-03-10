@@ -18,7 +18,7 @@
     font-size: 1.5rem;
     font-weight: 800;
     color: $accent;
-    text-shadow: 0 0 10px rgba($accent, 0.8), 0 2px 4px rgba(0, 0, 0, 0.5);
+    text-shadow: 0 0 12px rgba($accent, 0.6), 0 2px 4px rgba(0, 0, 0, 0.3);
     animation: float-up-fade 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     bottom: 50%; // Start roughly in the middle of the card
 }

@@ -6,7 +6,7 @@
     inset: 0;
     z-index: 50;
     @include flex-center;
-    background: radial-gradient(ellipse at 50% 40%, rgba($amber, 0.12) 0%, rgba($bg, 0.92) 70%);
+    background: radial-gradient(ellipse at 50% 0%, rgba($accent, 0.08) 0%, #ffffff 70%);
     animation: screen-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -23,34 +23,43 @@
     @include flex-center(column);
     gap: 0.75rem;
     text-align: center;
+    background: #ffffff;
+    border: 1px solid rgba(26, 26, 26, 0.08);
+    border-radius: $radius;
+    padding: 2.5rem 2.5rem;
+    width: min(90vw, 380px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
     animation: victory-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+
+    @media (max-width: 480px) {
+        padding: 2rem 1.5rem;
+        border-radius: $radius-sm;
+        width: min(95vw, 360px);
+    }
 }
 
 .victory-emoji {
-    font-size: 5rem;
+    font-size: 4rem;
     line-height: 1;
-    filter: drop-shadow(0 0 24px rgba($amber, 0.8));
     animation: victory-bounce 0.6s ease infinite alternate;
 }
 
 .victory-title {
-    font-size: clamp(1.8rem, 6vw, 2.8rem);
+    font-size: clamp(1.4rem, 5vw, 2rem);
     font-weight: 900;
     letter-spacing: -0.02em;
-    @include text-gradient($gradient-gold);
-    filter: drop-shadow(0 0 20px rgba($amber, 0.5));
+    @include text-gradient($gradient-accent);
 }
 
 .victory-reps {
-    font-size: clamp(2rem, 8vw, 4rem);
+    font-size: clamp(2rem, 8vw, 3.5rem);
     font-weight: 900;
-    color: #fff;
+    color: $text;
     letter-spacing: -0.03em;
-    text-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
 }
 
 .victory-subtitle {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 600;
     color: $text-muted;
     letter-spacing: 0.1em;
@@ -58,23 +67,22 @@
 }
 
 .btn-victory-skip {
-    margin-top: 1.5rem;
+    margin-top: 1rem;
     padding: 0.75rem 2rem;
     font-size: 1rem;
     font-weight: 700;
-    letter-spacing: 0.05em;
-    color: $amber-light;
-    background: rgba($amber, 0.08);
-    border: 1.5px solid rgba($amber, 0.4);
+    letter-spacing: 0.02em;
+    color: #fff;
+    background: $gradient-accent;
+    border: none;
     border-radius: 999px;
     cursor: pointer;
-    backdrop-filter: blur(8px);
-    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 16px rgba($accent, 0.35);
 
     &:hover {
-        background: rgba($amber, 0.18);
-        border-color: rgba($amber, 0.8);
-        box-shadow: 0 0 20px rgba($amber, 0.3);
+        opacity: 0.9;
+        box-shadow: 0 6px 24px rgba($accent, 0.5);
         transform: translateY(-2px);
     }
 }

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useLevelSystem } from '../hooks/useLevelSystem';
 import { useAuth } from '../hooks/useAuth';
 import { DragNumberPicker } from './DragNumberPicker';
-import { SessionHistoryPanel } from './SessionHistoryPanel';
 import { AuthModal } from './AuthModal';
 import { ProfileModal } from './ProfileModal';
 
@@ -13,6 +12,10 @@ interface StartScreenProps {
     cameraError: string | null;
     goalReps: number;
     onGoalChange: (value: number) => void;
+    sessionMode: 'reps' | 'time';
+    onSessionModeChange: (mode: 'reps' | 'time') => void;
+    timeGoal: { minutes: number; seconds: number };
+    onTimeGoalChange: (time: { minutes: number; seconds: number }) => void;
     onStart: () => void;
 }
 
@@ -22,6 +25,10 @@ export function StartScreen({
     cameraError,
     goalReps,
     onGoalChange,
+    sessionMode,
+    onSessionModeChange,
+    timeGoal,
+    onTimeGoalChange,
     onStart,
 }: StartScreenProps) {
     const { level, totalLifetimeReps, repsNeededForNextLevel, levelProgressPct } = useLevelSystem();
@@ -33,25 +40,23 @@ export function StartScreen({
 
     return (
         <div className="start-screen">
-            <div className="auth-profile-badge">
-                {user ? (
-                    <div className="user-profile-tag" onClick={() => setShowProfileModal(true)} title="Mon profil">
-                        <span className="user-avatar">{dbUser?.displayName?.[0]?.toUpperCase() || 'U'}</span>
-                        <span className="user-name">{dbUser?.displayName || 'Level ' + level}</span>
-                    </div>
-                ) : (
-                    <button className="btn-signin-small" onClick={() => setShowAuthModal(true)}>
-                        Connexion
-                    </button>
-                )}
-            </div>
-
             <div className="camera-vignette" />
 
             <div className="start-card">
                 <div className="start-brand">
-                    <h1>Push-Up Hero</h1>
-                    <p>Level {level} • {totalLifetimeReps} Lifetime Reps</p>
+                    <div className="start-brand-header">
+                        {user ? (
+                            <div className="user-profile-tag" onClick={() => setShowProfileModal(true)} title="Mon profil">
+                                <span className="user-avatar">{dbUser?.displayName?.[0]?.toUpperCase() || 'U'}</span>
+                                <span className="user-name">{dbUser?.displayName || 'Level ' + level}</span>
+                            </div>
+                        ) : (
+                            <button className="btn-signin" onClick={() => setShowAuthModal(true)}>
+                                Sign in
+                            </button>
+                        )}
+                        <p className="start-brand-stats">Level {level} • {totalLifetimeReps} Lifetime Reps</p>
+                    </div>
 
                     <div className="level-preview-bar">
                         <div className="level-preview-fill" style={{ width: `${levelProgressPct}%` }} />
@@ -61,19 +66,56 @@ export function StartScreen({
 
                 <div className="start-card-divider" />
 
+                <div className="session-mode-toggle">
+                    <button
+                        className={`toggle-btn ${sessionMode === 'reps' ? 'active' : ''}`}
+                        onClick={() => onSessionModeChange('reps')}
+                    >
+                        🎯 Reps
+                    </button>
+                    <button
+                        className={`toggle-btn ${sessionMode === 'time' ? 'active' : ''}`}
+                        onClick={() => onSessionModeChange('time')}
+                    >
+                        ⏱ Time
+                    </button>
+                </div>
+
                 <div className="goal-section">
-                    <p className="goal-label">Set your goal</p>
-                    <DragNumberPicker
-                        value={goalReps}
-                        min={1}
-                        max={100}
-                        onChange={onGoalChange}
-                    />
+                    <p className="goal-label">{sessionMode === 'reps' ? 'Set your goal' : 'Time limit'}</p>
+                    {sessionMode === 'reps' ? (
+                        <DragNumberPicker
+                            value={goalReps}
+                            min={1}
+                            max={100}
+                            onChange={onGoalChange}
+                        />
+                    ) : (
+                        <div className="time-picker-row">
+                            <DragNumberPicker
+                                value={timeGoal.minutes}
+                                min={0}
+                                max={60}
+                                onChange={(m) => onTimeGoalChange({ minutes: m, seconds: m === 60 ? 0 : timeGoal.seconds })}
+                                unit="min"
+                                showTrack={false}
+                                showHint={false}
+                            />
+                            <span className="time-picker-colon">:</span>
+                            <DragNumberPicker
+                                value={timeGoal.seconds}
+                                min={0}
+                                max={59}
+                                onChange={(s) => onTimeGoalChange({ minutes: timeGoal.minutes, seconds: s })}
+                                unit="sec"
+                                showTrack={false}
+                                showHint={false}
+                            />
+                        </div>
+                    )}
                 </div>
 
                 <div className="start-card-divider" />
-
-                <SessionHistoryPanel />
 
                 {cameraError ? (
                     <div className="error-message">{cameraError}</div>
@@ -90,7 +132,11 @@ export function StartScreen({
                 </div>
 
                 <button className="btn-primary" onClick={onStart} disabled={!isReady}>
-                    {isReady ? `Start — ${goalReps} rep${goalReps > 1 ? 's' : ''}` : 'Getting Ready…'}
+                    {isReady ? (
+                        sessionMode === 'reps' 
+                            ? `Start — ${goalReps} rep${goalReps > 1 ? 's' : ''}`
+                            : `Start — ${String(timeGoal.minutes).padStart(2, '0')}:${String(timeGoal.seconds).padStart(2, '0')}`
+                    ) : 'Getting Ready…'}
                 </button>
 
                 <p className="hint">Position yourself facing the camera in a push-up stance</p>

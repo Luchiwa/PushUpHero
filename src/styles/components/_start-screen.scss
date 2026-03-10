@@ -10,13 +10,16 @@
 
 .camera-vignette {
     @include fill;
-    background: radial-gradient(ellipse at center, rgba($bg, 0.35) 0%, rgba($bg, 0.8) 100%);
+    background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.6) 100%);
     z-index: 0;
 }
 
 // ── Start card ───────────────────────────────────────────────────
 .start-card {
-    @include glass;
+    background: #ffffff;
+    backdrop-filter: blur($blur);
+    -webkit-backdrop-filter: blur($blur);
+    border: 1px solid rgba(26, 26, 26, 0.08);
     position: relative;
     z-index: 2;
     border-radius: $radius;
@@ -26,8 +29,14 @@
     align-items: center;
     gap: 1.25rem;
     width: min(90vw, 360px);
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba($accent, 0.1);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
     animation: card-in 0.5s ease both;
+
+    @media (max-width: 480px) {
+        width: min(95vw, 340px);
+        padding: 2rem 1.5rem;
+        gap: 1rem;
+    }
 }
 
 .start-card-divider {
@@ -156,12 +165,112 @@
     @include label;
 }
 
+.time-picker-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.time-picker-colon {
+    font-size: 2rem;
+    font-weight: 900;
+    color: $text-muted;
+    line-height: 1;
+    padding-bottom: 1.5rem; // align with numbers
+}
+
+// ── Session mode toggle ────────────────────────────────────────
+.session-mode-toggle {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+    justify-content: center;
+}
+
+.toggle-btn {
+    padding: 0.6rem 1.2rem;
+    border: 1px solid rgba(26, 26, 26, 0.15);
+    background: #f5f5f5;
+    color: $text-muted;
+    border-radius: $radius-sm;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: $transition;
+
+    &:hover {
+        background: #eeeeee;
+        border-color: rgba(26, 26, 26, 0.25);
+    }
+
+    &.active {
+        background: linear-gradient(135deg, $accent, $accent-light);
+        color: white;
+        border-color: $accent;
+        box-shadow: 0 4px 12px rgba($accent, 0.3);
+    }
+}
+
+// ── Start brand / header section ────────────────────────────────
+.start-brand {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.start-brand-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.7rem;
+    width: 100%;
+}
+
+.start-brand-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.start-brand-stats {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: $text;
+    margin: 0;
+}
+
+.btn-signin {
+    background: linear-gradient(135deg, $accent, $accent-light);
+    border: none;
+    border-radius: $radius-sm;
+    color: white;
+    font-size: 0.85rem;
+    padding: 0.65rem 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: $transition;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba($accent, 0.3);
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba($accent, 0.4);
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
+}
+
 // ── Level preview bar (start screen) ────────────────────────────
 .level-preview-bar {
     width: 100%;
     max-width: 250px;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid $border;
+    background: #f5f5f5;
+    border: 1px solid rgba(26, 26, 26, 0.1);
     border-radius: $radius-sm;
     padding: 4px;
     position: relative;
@@ -175,7 +284,7 @@
     left: 0;
     top: 0;
     bottom: 0;
-    background: linear-gradient(90deg, rgba($accent, 0.4), $accent);
+    background: linear-gradient(90deg, rgba($accent, 0.5), $accent);
     border-radius: 8px;
     transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -186,7 +295,8 @@
     font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 0.1em;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    color: $text;
+    text-shadow: none;
 }
 
 // ── Drag number picker ───────────────────────────────────────────
@@ -209,7 +319,7 @@
     top: 0;
     bottom: 0;
     width: 4px;
-    background: rgba(255, 255, 255, 0.06);
+    background: #f0f0f0;
     border-radius: $radius-pill;
     overflow: hidden;
 }
@@ -233,8 +343,8 @@
 }
 
 .drag-picker-btn {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid $border;
+    background: #f5f5f5;
+    border: 1px solid rgba(26, 26, 26, 0.1);
     border-radius: 8px;
     color: $text-muted;
     font-size: 0.7rem;
@@ -246,7 +356,7 @@
     @include flex-center;
 
     &:hover {
-        background: rgba(255, 255, 255, 0.12);
+        background: #eeeeee;
         color: $text;
     }
 }
@@ -294,11 +404,11 @@
     align-items: center;
     gap: 0.5rem;
     margin-top: 1rem;
-    background: rgba(0, 0, 0, 0.65);
+    background: rgba(26, 26, 26, 0.9);
     padding: 0.75rem 1.25rem;
     border-radius: $radius-sm;
-    border: 1px solid rgba($accent, 0.5);
-    box-shadow: 0 4px 16px rgba($accent, 0.2);
+    border: 1px solid rgba($accent, 0.3);
+    box-shadow: 0 4px 16px rgba($accent, 0.15);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
 }
@@ -306,7 +416,7 @@
 .calibration-title {
     font-size: 0.8rem;
     font-weight: 800;
-    color: #c7d2fe;
+    color: $accent-light;
     letter-spacing: 0.05em;
     text-transform: uppercase;
 }
@@ -328,14 +438,140 @@
 .calibration-pct {
     font-size: 1.1rem;
     font-weight: 800;
-    color: white;
-    margin: 0;
+    color: #ffffff;
 }
 
 // ── Mobile responsive ────────────────────────────────────────────
 @media (max-width: 480px) {
+    .start-screen {
+        padding: 1rem 0;
+        overflow-y: auto;
+    }
+
     .start-card {
-        padding: 2rem 1.25rem;
+        padding: 1.5rem 1rem;
         border-radius: $radius-sm;
+        width: min(95vw, 340px);
+        gap: 0.9rem;
+        margin: auto 0;
+    }
+
+    .start-brand {
+        gap: 0.7rem;
+    }
+
+    .start-brand-header {
+        gap: 0.75rem;
+    }
+
+    .start-brand-stats {
+        font-size: 0.75rem;
+    }
+
+    .btn-signin {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.9rem;
+    }
+
+    .user-avatar {
+        width: 24px;
+        height: 24px;
+        font-size: 0.75rem;
+    }
+
+    .user-name {
+        font-size: 0.7rem;
+    }
+
+    .level-preview-bar {
+        max-width: 200px;
+        height: 24px;
+    }
+
+    .level-preview-text {
+        font-size: 0.65rem;
+    }
+
+    .goal-label {
+        font-size: 0.65rem;
+    }
+
+    .session-mode-toggle {
+        gap: 0.4rem;
+    }
+
+    .toggle-btn {
+        padding: 0.5rem 0.9rem;
+        font-size: 0.75rem;
+    }
+
+    .drag-picker {
+        gap: 0.4rem;
+    }
+
+    .drag-picker-number {
+        font-size: 2.8rem;
+    }
+
+    .drag-picker-unit {
+        font-size: 0.65rem;
+    }
+
+    .drag-picker-btn {
+        width: 32px;
+        height: 24px;
+        font-size: 0.65rem;
+    }
+
+    .drag-picker-track {
+        width: 3px;
+    }
+
+    .status-area {
+        font-size: 0.75rem;
+        gap: 0.4rem;
+    }
+
+    .status-dot {
+        width: 6px;
+        height: 6px;
+    }
+
+    .error-message {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.6rem;
+    }
+
+    .hint {
+        font-size: 0.7rem;
+        line-height: 1.4;
+    }
+
+    .btn-primary {
+        padding: 0.7rem 1.25rem;
+        font-size: 0.9rem;
+        border-radius: $radius-sm;
+    }
+
+    .start-card-divider {
+        margin: 0.5rem 0;
+    }
+
+    .calibration-ui {
+        margin-top: 0.75rem;
+        padding: 0.6rem 1rem;
+    }
+
+    .calibration-title {
+        font-size: 0.7rem;
+    }
+
+    .calibration-bar-track {
+        width: 140px;
+        height: 6px;
+    }
+
+    .calibration-pct {
+        font-size: 0.95rem;
     }
 }

@@ -10,10 +10,21 @@ function formatDate(ts: number): string {
     const yesterday = new Date();
     yesterday.setDate(today.getDate() - 1);
 
-    if (d.toDateString() === today.toDateString()) return "Aujourd'hui";
-    if (d.toDateString() === yesterday.toDateString()) return 'Hier';
+    const time = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
-    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+    if (d.toDateString() === today.toDateString()) return `Today at ${time}`;
+    if (d.toDateString() === yesterday.toDateString()) return `Yesterday at ${time}`;
+
+    const date = d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+    return `${date} at ${time}`;
+}
+
+function formatElapsedTime(seconds?: number): string {
+    if (!seconds) return '';
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    if (mins > 0) return `${mins}min${secs}s`;
+    return `${secs}s`;
 }
 
 function scoreColor(score: number): string {
@@ -30,20 +41,29 @@ export function SessionHistoryPanel() {
 
     return (
         <div className="session-history">
-            <p className="session-history-title">Dernières sessions</p>
+            <p className="session-history-title">Recent sessions</p>
             <ul className="session-history-list">
                 {sessions.map((s) => {
-                    const goalReached = s.reps >= s.goalReps;
                     return (
                         <li key={s.id} className="session-history-item">
-                            <span className="session-date">{formatDate(s.date)}</span>
-
-                            <span className="session-reps">
-                                {s.reps}
-                                <span className="session-goal">/{s.goalReps}</span>
-                            </span>
-
-                            {goalReached && <span className="session-trophy" title="Objectif atteint">🏆</span>}
+                            <div className="session-history-left">
+                                <span className="session-date">{formatDate(s.date)}</span>
+                                <div className="session-details">
+                                    {s.sessionMode === 'time' ? (
+                                        <>
+                                            <span className="session-reps">
+                                                {formatElapsedTime(s.elapsedTime)} • {s.reps} reps
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <span className="session-reps">
+                                            {s.reps}
+                                            <span className="session-goal">/{s.goalReps}</span>
+                                        </span>
+                                    )}
+                                    {s.reps >= s.goalReps && <span className="session-trophy" title="Goal reached">🏆</span>}
+                                </div>
+                            </div>
 
                             <span
                                 className="session-score"

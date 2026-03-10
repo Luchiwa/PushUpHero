@@ -5,7 +5,8 @@ export function useSoundEffect() {
 
     const initAudio = useCallback(() => {
         if (!audioCtxRef.current) {
-            audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const AudioCtx = window.AudioContext ?? (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext ?? AudioContext;
+            audioCtxRef.current = new AudioCtx();
         }
         if (audioCtxRef.current.state === 'suspended') {
             audioCtxRef.current.resume();
@@ -15,29 +16,44 @@ export function useSoundEffect() {
     const playRepSound = useCallback(() => {
         if (!audioCtxRef.current) return;
 
-        // "Modern UI Pop" - A clean, snappy, high-quality "tick" or "pop"
+        // "Arcade Pop" - More arcade and snappy with a playful tone
         const ctx = audioCtxRef.current;
 
-        // We use a sine wave with an extremely fast envelope
-        const osc = ctx.createOscillator();
-        const gainNode = ctx.createGain();
+        // Main pop sound: quick upward pitch then quick drop
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
 
-        osc.type = 'sine';
+        osc1.type = 'sine';
+        // Quick sweep from mid-high to low (arcade-like)
+        osc1.frequency.setValueAtTime(600, ctx.currentTime);
+        osc1.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.03);
 
-        // Pitch envelope: starts high (like a water drop) and drops instantly
-        osc.frequency.setValueAtTime(800, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.05);
+        // Snappy envelope
+        gain1.gain.setValueAtTime(0.6, ctx.currentTime);
+        gain1.gain.exponentialRampToValueAtTime(0.05, ctx.currentTime + 0.04);
 
-        // Amplitude envelope: instant attack, very rapid fade
-        gainNode.gain.setValueAtTime(0, ctx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.005);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
+        osc1.connect(gain1);
+        gain1.connect(ctx.destination);
 
-        osc.connect(gainNode);
-        gainNode.connect(ctx.destination);
+        osc1.start();
+        osc1.stop(ctx.currentTime + 0.045);
 
-        osc.start();
-        osc.stop(ctx.currentTime + 0.06);
+        // Add a second layer for that "ding" feel - a triangle wave harmonically above
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(900, ctx.currentTime);
+        osc2.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.035);
+
+        gain2.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain2.gain.exponentialRampToValueAtTime(0.02, ctx.currentTime + 0.04);
+
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+
+        osc2.start();
+        osc2.stop(ctx.currentTime + 0.05);
     }, []);
 
     const playLevelUpSound = useCallback(() => {
@@ -118,5 +134,38 @@ export function useSoundEffect() {
         shimmer.stop(ctx.currentTime + 1.3);
     }, []);
 
-    return { initAudio, playRepSound, playLevelUpSound, playVictorySound };
+    const playStartReadySound = useCallback(() => {
+        if (!audioCtxRef.current) return;
+
+        // "Ready to Start" - Ascending 3-note jingle with a "start" feel
+        const ctx = audioCtxRef.current;
+
+        const playNote = (freq: number, delay: number, duration: number) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const start = ctx.currentTime + delay;
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, start);
+
+            // Quick attack, sustained, quick release
+            gain.gain.setValueAtTime(0, start);
+            gain.gain.linearRampToValueAtTime(0.2, start + 0.05);
+            gain.gain.linearRampToValueAtTime(0.2, start + duration - 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.01, start + duration);
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.start(start);
+            osc.stop(start + duration);
+        };
+
+        // Ascending melody: G4 → B4 → D5 (happy, ready-to-go feel)
+        playNote(392, 0, 0.2);    // G4
+        playNote(493.88, 0.15, 0.2);  // B4
+        playNote(587.33, 0.3, 0.3);   // D5 (slightly longer for emphasis)
+    }, []);
+
+    return { initAudio, playRepSound, playLevelUpSound, playVictorySound, playStartReadySound };
 }
