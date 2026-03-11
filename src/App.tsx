@@ -12,9 +12,8 @@ import { ReloadPrompt } from './components/ReloadPrompt/ReloadPrompt';
 import { VictoryOverlay } from './components/VictoryOverlay/VictoryOverlay';
 import { useRef, useEffect } from 'react';
 import { useSessionHistory } from './hooks/useSessionHistory';
-import { useLevelSystem } from './hooks/useLevelSystem';
+import { useAuth } from './hooks/useAuth';
 import { useSoundEffect } from './hooks/useSoundEffect';
-import { useNotifications } from './hooks/useNotifications';
 import './components/App/App.scss';
 
 type AppScreen = 'idle' | 'active' | 'victory' | 'stopped';
@@ -31,10 +30,9 @@ function App() {
   const detector = useMemo(() => new PushUpDetector(), []);
   const { addSession } = useSessionHistory();
   const { initAudio, playLevelUpSound } = useSoundEffect();
-  useNotifications();
 
   // Root-level tracking for global lifetime reps and levels
-  const { level, levelProgressPct, addRepsToLifetime } = useLevelSystem();
+  const { level, levelProgressPct, addRepsToLifetime } = useAuth();
 
   // Track reps and level safely at root so we don't lose the critical final rep if the dashboard unmounts.
   const prevRepCountRef = useRef(0);

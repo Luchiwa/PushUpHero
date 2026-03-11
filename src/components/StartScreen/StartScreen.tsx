@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useLevelSystem } from '@hooks/useLevelSystem';
 import { useAuth } from '@hooks/useAuth';
 import { DragNumberPicker } from '@components/DragNumberPicker/DragNumberPicker';
 import { AuthModal } from '@components/AuthModal/AuthModal';
@@ -32,8 +31,7 @@ export function StartScreen({
     onTimeGoalChange,
     onStart,
 }: StartScreenProps) {
-    const { level, totalLifetimeReps, repsNeededForNextLevel, levelProgressPct } = useLevelSystem();
-    const { user, dbUser } = useAuth();
+    const { user, dbUser, level, totalLifetimeReps, repsNeededForNextLevel, levelProgressPct } = useAuth();
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [showProfileModal, setShowProfileModal] = useState(false);
 

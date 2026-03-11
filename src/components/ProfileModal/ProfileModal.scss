@@ -45,6 +45,24 @@
     letter-spacing: -0.01em;
 }
 
+.profile-settings-btn {
+    width: 38px;
+    height: 38px;
+    border: none;
+    background: $surface;
+    border-radius: 50%;
+    @include flex-center;
+    cursor: pointer;
+    color: $text-muted;
+    transition: $transition;
+
+    &:hover {
+        background: $surface-hover;
+        color: $text;
+        transform: rotate(30deg);
+    }
+}
+
 .profile-content {
     flex: 1;
     overflow-y: auto;

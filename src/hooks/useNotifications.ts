@@ -3,7 +3,7 @@ import {
     collection, query, where, onSnapshot,
     updateDoc, doc,
 } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db } from '@lib/firebase';
 import { useAuth } from './useAuth';
 
 export interface AppNotification {

@@ -1,0 +1,447 @@
+@use 'sass:color';
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.settings-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    @include flex-center;
+    background: $modal-overlay-strong;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    animation: screen-in 0.2s ease both;
+    padding: $spacing-md;
+}
+
+.settings-card {
+    background: #ffffff;
+    border-radius: $radius;
+    width: min(92vw, 440px);
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.18);
+    animation: card-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+    overflow: hidden;
+}
+
+// ── Header ──────────────────────────────────────────────────────
+.settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid $border;
+    flex-shrink: 0;
+}
+
+.settings-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: $text;
+    letter-spacing: -0.01em;
+    margin: 0;
+}
+
+.settings-close-btn {
+    width: 34px;
+    height: 34px;
+    border: none;
+    background: $surface;
+    border-radius: 50%;
+    @include flex-center;
+    cursor: pointer;
+    color: $text-muted;
+    transition: $transition;
+
+    &:hover {
+        background: $surface-hover;
+        color: $text;
+    }
+}
+
+// ── Body ─────────────────────────────────────────────────────────
+.settings-body {
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    -webkit-overflow-scrolling: touch;
+}
+
+// ── Accordion ────────────────────────────────────────────────────
+.settings-accordion {
+    border-bottom: 1px solid $border;
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &--danger {
+        .settings-accordion-header:hover {
+            background: rgba($red, 0.04);
+        }
+    }
+}
+
+.settings-accordion-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.2s;
+
+    &:hover {
+        background: $surface;
+    }
+}
+
+.settings-accordion-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: $text;
+
+    &--danger {
+        color: $red;
+    }
+}
+
+.settings-accordion-chevron {
+    color: $text-muted;
+    flex-shrink: 0;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &--open {
+        transform: rotate(180deg);
+    }
+}
+
+.settings-accordion-body {
+    padding: 0 1.5rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-md;
+    animation: accordion-open 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes accordion-open {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+// ── Form inputs ──────────────────────────────────────────────────
+.settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-md;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+
+    label {
+        font-size: 0.72rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: $text-muted;
+    }
+
+    input {
+        background: #ffffff;
+        border: 1px solid rgba(26, 26, 26, 0.15);
+        border-radius: $radius-sm;
+        padding: 0.75rem 1rem;
+        color: $text;
+        font-size: 0.95rem;
+        font-family: inherit;
+        transition: $transition;
+
+        &:focus {
+            outline: none;
+            border-color: $accent;
+            box-shadow: 0 0 0 2px rgba($accent, 0.15);
+        }
+
+        &::placeholder {
+            color: rgba(26, 26, 26, 0.3);
+        }
+
+        &.input--danger-ready {
+            border-color: $red;
+            box-shadow: 0 0 0 2px rgba($red, 0.15);
+        }
+    }
+}
+
+// ── Feedback messages ────────────────────────────────────────────
+.settings-feedback {
+    padding: 0.6rem 0.9rem;
+    border-radius: $radius-sm;
+    font-size: 0.82rem;
+    margin: 0;
+
+    &--error {
+        background: rgba($red, 0.08);
+        border: 1px solid rgba($red, 0.25);
+        color: color.adjust($red, $lightness: -5%);
+    }
+
+    &--success {
+        background: rgba($green, 0.1);
+        border: 1px solid rgba($green, 0.3);
+        color: color.adjust($green, $lightness: -10%);
+    }
+}
+
+// ── Buttons ──────────────────────────────────────────────────────
+.settings-submit {
+    align-self: flex-start;
+}
+
+.settings-danger-desc {
+    font-size: 0.85rem;
+    color: $text-muted;
+    line-height: 1.5;
+    margin: 0;
+
+    strong {
+        color: $text;
+    }
+}
+
+.btn-danger {
+    padding: 0.75rem 1.5rem;
+    border-radius: $radius-sm;
+    border: none;
+    background: $red;
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: $transition;
+    align-self: flex-start;
+
+    &:hover:not(:disabled) {
+        background: color.adjust($red, $lightness: -8%);
+    }
+
+    &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+}
+
+
+.settings-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    @include flex-center;
+    background: $modal-overlay-strong;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    animation: screen-in 0.2s ease both;
+    padding: $spacing-md;
+}
+
+.settings-card {
+    background: #ffffff;
+    border-radius: $radius;
+    width: min(92vw, 440px);
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.18);
+    animation: card-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+    overflow: hidden;
+}
+
+// ── Header ──────────────────────────────────────────────────────
+.settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid $border;
+    flex-shrink: 0;
+}
+
+.settings-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: $text;
+    letter-spacing: -0.01em;
+    margin: 0;
+}
+
+.settings-close-btn {
+    width: 34px;
+    height: 34px;
+    border: none;
+    background: $surface;
+    border-radius: 50%;
+    @include flex-center;
+    cursor: pointer;
+    color: $text-muted;
+    transition: $transition;
+
+    &:hover {
+        background: $surface-hover;
+        color: $text;
+    }
+}
+
+// ── Body ─────────────────────────────────────────────────────────
+.settings-body {
+    overflow-y: auto;
+    padding: $spacing-lg $spacing-lg;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xl;
+    -webkit-overflow-scrolling: touch;
+}
+
+// ── Section ──────────────────────────────────────────────────────
+.settings-section {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-md;
+}
+
+.settings-section-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: $text-muted;
+    margin: 0;
+    padding-bottom: $spacing-sm;
+    border-bottom: 1px solid $border;
+
+    &--danger {
+        color: $red;
+    }
+}
+
+// ── Form inputs (reuse auth style) ───────────────────────────────
+.settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-md;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+
+    label {
+        font-size: 0.72rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: $text-muted;
+    }
+
+    input {
+        background: #ffffff;
+        border: 1px solid rgba(26, 26, 26, 0.15);
+        border-radius: $radius-sm;
+        padding: 0.75rem 1rem;
+        color: $text;
+        font-size: 0.95rem;
+        font-family: inherit;
+        transition: $transition;
+
+        &:focus {
+            outline: none;
+            border-color: $accent;
+            box-shadow: 0 0 0 2px rgba($accent, 0.15);
+        }
+
+        &::placeholder {
+            color: rgba(26, 26, 26, 0.3);
+        }
+
+        &.input--danger-ready {
+            border-color: $red;
+            box-shadow: 0 0 0 2px rgba($red, 0.15);
+        }
+    }
+}
+
+// ── Feedback messages ────────────────────────────────────────────
+.settings-error {
+    background: rgba($red, 0.08);
+    border: 1px solid rgba($red, 0.25);
+    color: color.adjust($red, $lightness: -5%);
+    padding: 0.6rem 0.9rem;
+    border-radius: $radius-sm;
+    font-size: 0.82rem;
+    margin: 0;
+}
+
+.settings-success {
+    background: rgba($green, 0.1);
+    border: 1px solid rgba($green, 0.3);
+    color: color.adjust($green, $lightness: -10%);
+    padding: 0.6rem 0.9rem;
+    border-radius: $radius-sm;
+    font-size: 0.82rem;
+    margin: 0;
+}
+
+// ── Buttons ──────────────────────────────────────────────────────
+.settings-submit {
+    align-self: flex-start;
+}
+
+.settings-danger-desc {
+    font-size: 0.85rem;
+    color: $text-muted;
+    line-height: 1.5;
+    margin: 0;
+
+    strong {
+        color: $text;
+    }
+}
+
+.btn-danger {
+    padding: 0.75rem 1.5rem;
+    border-radius: $radius-sm;
+    border: none;
+    background: $red;
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: $transition;
+    align-self: flex-start;
+
+    &:hover:not(:disabled) {
+        background: color.adjust($red, $lightness: -8%);
+    }
+
+    &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+}
+
+.settings-section--danger {
+    padding: $spacing-md;
+    background: rgba($red, 0.04);
+    border: 1px solid rgba($red, 0.15);
+    border-radius: $radius-sm;
+}

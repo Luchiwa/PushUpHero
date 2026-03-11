@@ -69,6 +69,7 @@ export default defineConfig({
     alias: {
       '@hooks': path.resolve(__dirname, 'src/hooks'),
       '@components': path.resolve(__dirname, 'src/components'),
+      '@lib': path.resolve(__dirname, 'src/lib'),
     },
   },
   css: {

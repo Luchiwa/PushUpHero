@@ -15,6 +15,13 @@ export interface AuthContextType {
     loading: boolean;
     loginWithGoogle: () => Promise<void>;
     logout: () => Promise<void>;
+    // Level system
+    level: number;
+    totalLifetimeReps: number;
+    repsIntoCurrentLevel: number;
+    repsNeededForNextLevel: number;
+    levelProgressPct: number;
+    addRepsToLifetime: (reps: number) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType>({} as AuthContextType);

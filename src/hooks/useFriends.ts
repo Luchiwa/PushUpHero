@@ -3,7 +3,7 @@ import {
     collection, doc, getDoc, setDoc, deleteDoc,
     onSnapshot, addDoc, serverTimestamp
 } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db } from '@lib/firebase';
 import { useAuth } from './useAuth';
 
 export interface FriendRequest {
@@ -47,9 +47,11 @@ export function useFriends() {
     // ── Realtime listeners ──────────────────────────────────────────
     useEffect(() => {
         if (!user) {
-            setFriends([]);
-            setIncomingRequests([]);
-            setOutgoingRequests([]);
+            setTimeout(() => {
+                setFriends([]);
+                setIncomingRequests([]);
+                setOutgoingRequests([]);
+            }, 0);
             return;
         }
 

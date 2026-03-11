@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { doc, updateDoc, increment } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db } from '@lib/firebase';
 import { useAuth } from './useAuth';
 import { useSyncCloud } from './useSyncCloud';
 

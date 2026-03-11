@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { doc, getDoc, onSnapshot, collection, query, orderBy, limit, writeBatch } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db } from '@lib/firebase';
 import { useAuth } from './useAuth';
 import type { SessionRecord } from './useSessionHistory';
 

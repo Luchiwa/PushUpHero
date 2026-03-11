@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import './AuthModal.scss';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, runTransaction } from 'firebase/firestore';
-import { auth, db } from '../../lib/firebase';
+import { auth, db } from '@lib/firebase';
 import { useAuth } from '@hooks/useAuth';
 
 interface AuthModalProps {
