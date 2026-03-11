@@ -14,7 +14,11 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 1.25rem;
+    // iOS PWA: push below the notch / Dynamic Island
+    padding-top: max(1rem, env(safe-area-inset-top));
+    padding-right: 1.25rem;
+    padding-bottom: 1rem;
+    padding-left: 1.25rem;
     pointer-events: all;
 }
 
@@ -339,6 +343,6 @@
     .stats-row { padding: 0 0.75rem; gap: 0.6rem; }
     .stat-card { padding: 0.85rem 1rem; min-width: 90px; border-radius: $radius-sm; }
     .rep-count { font-size: 2.25rem; }
-    .dashboard-top { padding: 0.75rem; }
+    .dashboard-top { padding-top: max(0.75rem, env(safe-area-inset-top)); padding-right: 0.75rem; padding-bottom: 0.75rem; padding-left: 0.75rem; }
     .last-rep-info { margin: auto 0.75rem 0.75rem; border-radius: $radius-sm; }
 }

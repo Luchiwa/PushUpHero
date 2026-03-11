@@ -5,6 +5,7 @@ import { useExerciseDetector } from './hooks/useExerciseDetector';
 import { PushUpDetector } from './exercises/pushup/PushUpDetector';
 import { StartScreen } from './components/StartScreen/StartScreen';
 import { PoseOverlay } from './components/PoseOverlay/PoseOverlay';
+import type { PoseOverlayHandle } from './components/PoseOverlay/PoseOverlay';
 import { Dashboard } from './components/Dashboard/Dashboard';
 import { SummaryScreen } from './components/SummaryScreen/SummaryScreen';
 import { PositionGuide } from './components/PositionGuide/PositionGuide';
@@ -41,18 +42,32 @@ function App() {
   const [elapsedTime, setElapsedTime] = useState(0);
   const sessionSavedRef = useRef(false); // guard against double-save
 
-  const { videoRef, isReady: isCameraReady, error: cameraError } = useCamera({ facingMode });
+  const cameraEnabled = screen === 'active';
+  const { videoRef, isReady: isCameraReady, error: cameraError } = useCamera({ facingMode, enabled: cameraEnabled });
 
-  const { landmarks, rawResult, isModelReady } = usePoseDetection({
-    videoRef,
-    isVideoReady: isCameraReady,
+  const poseOverlayRef = useRef<PoseOverlayHandle>(null);
+
+  const { exerciseState, processLandmarks, resetDetector } = useExerciseDetector({
+    detector,
     isActive: screen === 'active',
   });
 
-  const { exerciseState, resetDetector } = useExerciseDetector({
-    detector,
-    landmarks,
+  // exerciseState ref kept fresh so onFrame closure always sees latest phase/validity
+  const exerciseStateRef = useRef(exerciseState);
+  useEffect(() => { exerciseStateRef.current = exerciseState; }, [exerciseState]);
+
+  const { isModelReady } = usePoseDetection({
+    videoRef,
+    isVideoReady: isCameraReady,
     isActive: screen === 'active',
+    onFrame: (landmarks, rawResult) => {
+      processLandmarks(landmarks);
+      poseOverlayRef.current?.drawResult(
+        rawResult,
+        exerciseStateRef.current.currentPhase,
+        exerciseStateRef.current.isValidPosition,
+      );
+    },
   });
 
   const saveCurrentSession = () => {
@@ -144,10 +159,8 @@ function App() {
       {screen === 'active' && (
         <>
           <PoseOverlay
-            rawResult={rawResult}
+            ref={poseOverlayRef}
             videoRef={videoRef}
-            phase={exerciseState.currentPhase}
-            isValidPosition={exerciseState.isValidPosition}
           />
           <PositionGuide
             isCalibrated={exerciseState.isCalibrated}
@@ -175,7 +188,6 @@ function App() {
         <StartScreen
           videoRef={videoRef}
           isModelReady={isModelReady}
-          isCameraReady={isCameraReady}
           cameraError={cameraError}
           goalReps={goalReps}
           onGoalChange={setGoalReps}

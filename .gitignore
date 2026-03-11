@@ -23,8 +23,9 @@ dist-ssr
 *.sln
 *.sw?
 
-# Local Netlify folder
-.netlify
 .env
 .env.*
+
+# Firebase — secrets & local cache
 firebase-service-account.json
+.firebase/

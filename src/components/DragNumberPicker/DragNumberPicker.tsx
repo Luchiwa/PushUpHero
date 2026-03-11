@@ -123,8 +123,8 @@ export function DragNumberPicker({
                     onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); startHold(1); }}
                     onMouseUp={stopHold}
                     onMouseLeave={stopHold}
-                    onTouchStart={(e) => { e.stopPropagation(); startHold(1); }}
-                    onTouchEnd={stopHold}
+                    onTouchStart={(e) => { e.stopPropagation(); e.preventDefault(); startHold(1); }}
+                    onTouchEnd={(e) => { e.stopPropagation(); e.preventDefault(); stopHold(); }}
                 >▲</button>
 
                 <div className="drag-picker-value">
@@ -137,8 +137,8 @@ export function DragNumberPicker({
                     onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); startHold(-1); }}
                     onMouseUp={stopHold}
                     onMouseLeave={stopHold}
-                    onTouchStart={(e) => { e.stopPropagation(); startHold(-1); }}
-                    onTouchEnd={stopHold}
+                    onTouchStart={(e) => { e.stopPropagation(); e.preventDefault(); startHold(-1); }}
+                    onTouchEnd={(e) => { e.stopPropagation(); e.preventDefault(); stopHold(); }}
                 >▼</button>
             </div>
 

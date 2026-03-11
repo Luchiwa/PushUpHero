@@ -6,6 +6,9 @@
     @include flex-center;
     background: radial-gradient(ellipse at 50% 0%, rgba($accent, 0.08) 0%, #ffffff 70%);
     z-index: 20;
+    // iOS PWA: push content below the status bar
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
 .summary-card {

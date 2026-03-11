@@ -3,12 +3,12 @@ import { useAuth } from '@hooks/useAuth';
 import { DragNumberPicker } from '@components/DragNumberPicker/DragNumberPicker';
 import { AuthModal } from '@components/AuthModal/AuthModal';
 import { ProfileModal } from '@components/ProfileModal/ProfileModal';
+import { InstallBanner } from '@components/InstallBanner/InstallBanner';
 import './StartScreen.scss';
 
 interface StartScreenProps {
     videoRef: React.RefObject<HTMLVideoElement | null>;
     isModelReady: boolean;
-    isCameraReady: boolean;
     cameraError: string | null;
     goalReps: number;
     onGoalChange: (value: number) => void;
@@ -21,7 +21,6 @@ interface StartScreenProps {
 
 export function StartScreen({
     isModelReady,
-    isCameraReady,
     cameraError,
     goalReps,
     onGoalChange,
@@ -35,11 +34,12 @@ export function StartScreen({
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [showProfileModal, setShowProfileModal] = useState(false);
 
-    const isReady = isModelReady && isCameraReady;
+    const isReady = isModelReady;
 
     return (
         <div className="start-screen">
             <div className="camera-vignette" />
+            <InstallBanner />
 
             <div className="start-card">
                 <div className="start-brand">
@@ -120,8 +120,8 @@ export function StartScreen({
                     <div className="error-message">{cameraError}</div>
                 ) : (
                     <div className="status-area">
-                        <div className={`status-dot ${isCameraReady ? 'ready' : 'loading'}`} />
-                        <span>{isCameraReady ? 'Camera ready' : 'Initializing camera…'}</span>
+                        <div className="status-dot ready" />
+                        <span>Camera will start with session</span>
                     </div>
                 )}
 

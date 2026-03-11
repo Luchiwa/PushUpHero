@@ -1,0 +1,192 @@
+@use '../../styles/variables' as *;
+@use 'sass:color';
+
+// ── Install banner ──────────────────────────────────────────────
+.install-banner {
+    position: absolute;
+    top: max(12px, env(safe-area-inset-top, 12px));
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 200;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    width: min(calc(100% - 32px), 420px);
+
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1.5px solid $border;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+
+    animation: banner-slide-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes banner-slide-in {
+    from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.install-banner-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.install-banner-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.install-banner-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: $text;
+}
+
+.install-banner-sub {
+    font-size: 0.72rem;
+    color: $text-muted;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.install-banner-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.install-banner-btn {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: none;
+    background: $accent;
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s;
+
+    &:hover {
+        background: color.adjust($accent, $lightness: -8%);
+    }
+}
+
+.install-banner-dismiss {
+    background: none;
+    border: none;
+    color: $text-muted;
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+
+    &:hover { color: $text; }
+}
+
+// ── iOS guide overlay ───────────────────────────────────────────
+.ios-guide-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    background: $modal-overlay;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    animation: fade-in 0.2s ease;
+}
+
+@keyframes fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.ios-guide-sheet {
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+    background: #fff;
+    border-radius: 24px 24px 0 0;
+    padding: 28px 24px max(24px, env(safe-area-inset-bottom, 24px));
+    animation: sheet-slide-up 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+@keyframes sheet-slide-up {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+}
+
+.ios-guide-close {
+    position: absolute;
+    top: 16px;
+    right: 18px;
+    background: rgba(0,0,0,0.07);
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    color: $text-muted;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ios-guide-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: $text;
+    margin-bottom: 20px;
+}
+
+.ios-guide-steps {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+
+    li {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-size: 0.9rem;
+        color: $text;
+    }
+}
+
+.ios-guide-step-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: $surface;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+    color: $accent;
+}
+
+.ios-guide-arrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: $accent;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-align: center;
+    opacity: 0.8;
+}
