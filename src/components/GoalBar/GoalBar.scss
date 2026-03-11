@@ -1,0 +1,39 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// ── Goal card (vertical progress bar) ────────────────────────────
+.goal-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.85rem 1rem;
+}
+
+.goal-vertical-track {
+    width: 14px;
+    height: 60px;
+    background: #e0e0e0;
+    border-radius: $radius-pill;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+}
+
+.goal-vertical-fill {
+    width: 100%;
+    border-radius: $radius-pill;
+    background: linear-gradient(0deg, $accent, $accent-light);
+    transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &.goal-done {
+        background: $gradient-green;
+        box-shadow: 0 0 10px rgba($green, 0.5);
+    }
+}
+
+.goal-vertical-count {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: $text;
+}

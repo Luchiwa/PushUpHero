@@ -1,0 +1,56 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.position-guide {
+    @include fill;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    pointer-events: none;
+    opacity: 1;
+    transition: opacity 0.8s ease;
+    padding-bottom: 2rem;
+
+    &.position-guide-hidden {
+        opacity: 0;
+    }
+}
+
+.position-guide-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.position-guide-img-wrapper {
+    position: relative;
+    @include flex-center;
+    width: min(80vw, 350px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba($red, 0.1) 0%, transparent 70%);
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba($red, 0.1);
+}
+
+.position-guide-img {
+    width: 130%;
+    height: auto;
+    opacity: 0.85;
+    mix-blend-mode: screen;
+    transform: translateY(-5%);
+}
+
+.position-guide-label {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: $red-light;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-shadow: 0 0 16px rgba($red, 0.9);
+    opacity: 0.9;
+    margin-top: 0.5rem;
+}

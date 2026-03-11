@@ -1,0 +1,466 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// ── Friends Tab ───────────────────────────────────────────────────
+.friends-tab {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-md;
+}
+
+.friends-search-form {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    width: 100%;
+}
+
+.friends-search-input-wrap {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.friends-search-icon {
+    position: absolute;
+    left: 0.75rem;
+    color: $text-muted;
+    pointer-events: none;
+    flex-shrink: 0;
+}
+
+.friends-search-input {
+    width: 100%;
+    padding: 0.7rem 2.2rem 0.7rem 2.4rem;
+    background: $surface;
+    border: 1px solid $border;
+    border-radius: $radius-sm;
+    font-size: 0.95rem;
+    color: $text;
+    font-family: inherit;
+    transition: $transition;
+    box-sizing: border-box;
+
+    &:focus {
+        outline: none;
+        border-color: $accent;
+        box-shadow: 0 0 0 2px rgba($accent, 0.12);
+    }
+
+    &::placeholder {
+        color: $text-muted;
+    }
+}
+
+.friends-search-clear {
+    position: absolute;
+    right: 0.6rem;
+    background: none;
+    border: none;
+    color: $text-muted;
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    line-height: 1;
+
+    &:hover { color: $text; }
+}
+
+.friends-search-btn {
+    flex-shrink: 0;
+    padding: 0.7rem 1.1rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    font-family: inherit;
+    white-space: nowrap;
+    border: none;
+    border-radius: $radius-sm;
+    background: linear-gradient(135deg, $accent, $accent-light);
+    color: white;
+    cursor: pointer;
+    transition: $transition;
+    box-shadow: 0 4px 12px $accent-glow;
+
+    &:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba($accent, 0.45);
+    }
+
+    &:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        transform: none;
+    }
+}
+
+.friends-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.friends-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: $text-muted;
+}
+
+.friends-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: $accent;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 800;
+    border-radius: 999px;
+}
+
+.friends-empty-msg {
+    font-size: 0.85rem;
+    color: $text-muted;
+    text-align: center;
+    padding: $spacing-md 0;
+    margin: 0;
+}
+
+// ── Friend / Request card ─────────────────────────────────────────
+.friend-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: $surface;
+    border: 1px solid $border;
+    border-radius: $radius-sm;
+    padding: 0.65rem 0.85rem;
+    transition: background 0.15s;
+
+    &:hover {
+        background: $surface-hover;
+    }
+
+    &--request {
+        border-color: rgba($accent, 0.25);
+        background: rgba($accent, 0.04);
+    }
+}
+
+.friend-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: $gradient-accent;
+    color: white;
+    font-size: 1rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.friend-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.friend-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: $text;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.friend-stats {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    color: $text-muted;
+    flex-wrap: wrap;
+}
+
+.friend-stats-dot {
+    opacity: 0.4;
+}
+
+.friend-request-label {
+    font-size: 0.78rem;
+    color: $accent;
+    font-weight: 600;
+}
+
+.friend-request-actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.btn-accept,
+.btn-decline {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: $transition;
+
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.btn-accept {
+    background: rgba($green, 0.12);
+    color: $green;
+    &:hover:not(:disabled) { background: rgba($green, 0.22); }
+}
+
+.btn-decline {
+    background: rgba($red, 0.1);
+    color: $red;
+    &:hover:not(:disabled) { background: rgba($red, 0.2); }
+}
+
+.friend-search-action {
+    flex-shrink: 0;
+}
+
+.btn-add-friend {
+    padding: 0.4rem 0.85rem;
+    background: $accent;
+    color: white;
+    border: none;
+    border-radius: $radius-sm;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: $transition;
+
+    &:hover:not(:disabled) {
+        background: $accent-dark;
+        transform: translateY(-1px);
+    }
+
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.friend-card--outgoing {
+    border-color: rgba($text-muted, 0.2);
+    background: rgba($text-muted, 0.04);
+}
+
+.friend-pending-label {
+    font-size: 0.78rem;
+    color: $text-muted;
+    font-weight: 500;
+    font-style: italic;
+}
+
+.btn-cancel-request {
+    padding: 0.4rem 0.85rem;
+    background: none;
+    color: $text-muted;
+    border: 1px solid $border;
+    border-radius: $radius-sm;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: $transition;
+
+    &:hover:not(:disabled) { border-color: $text-muted; color: $text; }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.friend-badge {
+    padding: 0.3rem 0.65rem;
+    border-radius: $radius-sm;
+    font-size: 0.75rem;
+    font-weight: 700;
+
+    &--already {
+        background: rgba($green, 0.1);
+        color: $green;
+    }
+
+    &--incoming {
+        background: rgba($accent, 0.1);
+        color: $accent;
+    }
+}
+
+.friend-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex-shrink: 0;
+}
+
+.btn-encourage {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid rgba($accent, 0.25);
+    background: rgba($accent, 0.07);
+    font-size: 1rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: $transition;
+
+    &:hover:not(:disabled) {
+        background: rgba($accent, 0.18);
+        border-color: rgba($accent, 0.45);
+        transform: scale(1.12);
+    }
+
+    &--cooldown {
+        opacity: 0.4;
+        filter: grayscale(0.6);
+        cursor: not-allowed;
+    }
+
+    &:disabled {
+        cursor: not-allowed;
+    }
+}
+
+.btn-remove-friend {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid transparent;
+    background: none;
+    color: $text-muted;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: $transition;
+    opacity: 0;
+
+    .friend-card:hover & {
+        opacity: 1;
+    }
+
+    &:hover {
+        background: rgba($red, 0.1);
+        border-color: rgba($red, 0.2);
+        color: $red;
+    }
+}
+
+// ── Confirm remove modal ──────────────────────────────────────────
+.friend-confirm-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $modal-overlay-strong;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    animation: screen-in 0.2s ease both;
+}
+
+.friend-confirm-card {
+    background: #fff;
+    border: 1px solid rgba(26, 26, 26, 0.1);
+    border-radius: $radius;
+    padding: 1.75rem 1.5rem 1.5rem;
+    width: min(88vw, 340px);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15);
+    animation: card-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.friend-confirm-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: $text;
+}
+
+.friend-confirm-body {
+    margin: 0;
+    font-size: 0.9rem;
+    color: $text-muted;
+    line-height: 1.5;
+
+    strong {
+        color: $text;
+        font-weight: 700;
+    }
+}
+
+.friend-confirm-actions {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: flex-end;
+    margin-top: 0.25rem;
+}
+
+.friend-confirm-cancel {
+    padding: 0.55rem 1rem;
+    background: none;
+    border: 1px solid $border;
+    border-radius: $radius-sm;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: inherit;
+    color: $text-muted;
+    cursor: pointer;
+    transition: $transition;
+
+    &:hover:not(:disabled) {
+        border-color: $text-muted;
+        color: $text;
+    }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.friend-confirm-remove {
+    padding: 0.55rem 1rem;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(220, 38, 38, 0.95));
+    border: none;
+    border-radius: $radius-sm;
+    font-size: 0.9rem;
+    font-weight: 700;
+    font-family: inherit;
+    color: white;
+    cursor: pointer;
+    transition: $transition;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+
+    &:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(239, 68, 68, 0.35);
+    }
+    &:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+}

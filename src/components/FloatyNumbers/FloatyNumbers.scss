@@ -1,0 +1,23 @@
+@use 'variables' as *;
+
+.floaty-numbers-container {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    overflow: visible;
+}
+
+.floaty-label {
+    position: absolute;
+    bottom: 100%;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: $accent;
+    text-shadow: 0 0 12px rgba($accent, 0.6), 0 2px 4px rgba(0, 0, 0, 0.3);
+    animation: floaty-rise 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    white-space: nowrap;
+}

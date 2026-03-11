@@ -1,0 +1,41 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.user-profile-tag {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: $surface;
+    border: 1px solid $border;
+    border-radius: 999px;
+    padding: 0.35rem 0.75rem 0.35rem 0.35rem;
+    cursor: pointer;
+    transition: $transition;
+
+    &:hover {
+        background: rgba($accent, 0.12);
+        border-color: $accent;
+    }
+}
+
+.user-avatar {
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, $accent, $accent-light);
+    @include flex-center;
+    font-weight: 700;
+    font-size: 0.7rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.user-name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: $text;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

@@ -1,0 +1,108 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// ── Drag number picker ───────────────────────────────────────────
+.drag-picker {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: ns-resize;
+    user-select: none;
+    -webkit-user-select: none;
+    position: relative;
+    touch-action: none;
+}
+
+.drag-picker-track {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: #f0f0f0;
+    border-radius: $radius-pill;
+    overflow: hidden;
+}
+
+.drag-picker-fill {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: linear-gradient(to top, $accent, $accent-light);
+    border-radius: $radius-pill;
+    transition: height 0.1s ease;
+}
+
+.drag-picker-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    width: 100%;
+}
+
+.drag-picker-btn {
+    background: #f5f5f5;
+    border: 1px solid rgba(26, 26, 26, 0.1);
+    border-radius: 8px;
+    color: $text-muted;
+    font-size: 0.7rem;
+    width: 36px;
+    height: 28px;
+    cursor: pointer;
+    transition: $transition;
+    font-family: inherit;
+    @include flex-center;
+
+    &:hover {
+        background: #eeeeee;
+        color: $text;
+    }
+}
+
+.drag-picker-value {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+    padding: 0.5rem 0;
+}
+
+.drag-picker-number {
+    font-size: 3.5rem;
+    font-weight: 900;
+    line-height: 1;
+    @include text-gradient($gradient-rep);
+    transition: transform 0.1s ease;
+    min-width: 3ch;
+    text-align: center;
+}
+
+.drag-picker-unit {
+    font-size: 0.75rem;
+    color: $text-muted;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.drag-picker-hint {
+    font-size: 0.7rem;
+    color: $text-muted;
+    text-align: center;
+}
+
+.drag-picker-active .drag-picker-number {
+    transform: scale(1.08);
+}
+
+@media (max-width: 480px) {
+    .drag-picker { gap: 0.4rem; }
+    .drag-picker-number { font-size: 2.8rem; }
+    .drag-picker-unit { font-size: 0.65rem; }
+    .drag-picker-btn { width: 32px; height: 24px; font-size: 0.65rem; }
+    .drag-picker-track { width: 3px; }
+}

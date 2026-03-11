@@ -6,6 +6,8 @@ import type { SessionRecord } from './useSessionHistory';
 
 const LOCAL_STORAGE_REPS_KEY = 'pushup_game_total_reps';
 const LOCAL_STORAGE_SESSIONS_KEY = 'pushup-sessions';
+const LOCAL_STORAGE_TOTAL_SESSIONS_KEY = 'pushup_game_total_sessions';
+const MERGE_LOCK_KEY = 'pushup_merge_in_progress';
 
 /**
  * useSyncCloud
@@ -20,8 +22,11 @@ export function useSyncCloud(
 ) {
     const { user } = useAuth();
 
-    // 1. Merge local data to cloud on first login
+    // 1. Merge local data to cloud on first login — protected by a lock to prevent double-call
     const mergeLocalToCloud = useCallback(async (uid: string) => {
+        // If another instance of this hook is already merging, bail out
+        if (localStorage.getItem(MERGE_LOCK_KEY) === 'true') return;
+
         const localRepsRaw = localStorage.getItem(LOCAL_STORAGE_REPS_KEY);
         const localSessionsRaw = localStorage.getItem(LOCAL_STORAGE_SESSIONS_KEY);
 
@@ -31,57 +36,66 @@ export function useSyncCloud(
             if (localSessionsRaw) localSessions = JSON.parse(localSessionsRaw);
         } catch (e) { console.error('Failed to parse local sessions', e); }
 
+        // Clear local storage immediately to prevent any concurrent merge from picking up same data
+        localStorage.setItem(MERGE_LOCK_KEY, 'true');
+        localStorage.removeItem(LOCAL_STORAGE_REPS_KEY);
+        localStorage.removeItem(LOCAL_STORAGE_SESSIONS_KEY);
+        localStorage.removeItem(LOCAL_STORAGE_TOTAL_SESSIONS_KEY);
+
         if (localReps > 0 || localSessions.length > 0) {
             console.log('Merging local data to cloud...', { localReps, sessions: localSessions.length });
 
-            const batch = writeBatch(db);
-            const userRef = doc(db, 'users', uid);
+            try {
+                const batch = writeBatch(db);
+                const userRef = doc(db, 'users', uid);
 
-            // Get current cloud reps to add local reps to it
-            const userDoc = await getDoc(userRef);
-            const cloudReps = userDoc.exists() ? (userDoc.data().totalReps || 0) : 0;
+                // Get current cloud reps and sessions count to add local data to it
+                const userDoc = await getDoc(userRef);
+                const cloudReps = userDoc.exists() ? (userDoc.data().totalReps || 0) : 0;
+                const cloudSessions = userDoc.exists() ? (userDoc.data().totalSessions || 0) : 0;
 
-            batch.set(userRef, {
-                totalReps: cloudReps + localReps
-            }, { merge: true });
+                batch.set(userRef, {
+                    totalReps: cloudReps + localReps,
+                    totalSessions: cloudSessions + localSessions.length
+                }, { merge: true });
 
-            // Batch write all local sessions to the user's sessions subcollection
-            localSessions.forEach(session => {
-                const sessionRef = doc(collection(db, 'users', uid, 'sessions'), session.id);
-                batch.set(sessionRef, session);
-            });
+                localSessions.forEach(session => {
+                    const sessionRef = doc(collection(db, 'users', uid, 'sessions'), session.id);
+                    batch.set(sessionRef, session);
+                });
 
-            await batch.commit();
-
-            // Clear local storage so we don't merge them again
-            localStorage.removeItem(LOCAL_STORAGE_REPS_KEY);
-            localStorage.removeItem(LOCAL_STORAGE_SESSIONS_KEY);
-            console.log('Merge complete. Local storage cleared.');
+                await batch.commit();
+                console.log('Merge complete.');
+            } catch (e) {
+                console.error('Merge failed', e);
+            }
         }
+
+        localStorage.removeItem(MERGE_LOCK_KEY);
     }, []);
 
     // 2. Setup Realtime Listeners when authenticated
     useEffect(() => {
         if (!user) {
-            // Guest mode: reset to local storage values
+            // Guest mode: read from localStorage and display locally stored values
             if (setTotalLifetimeReps) {
                 const localReps = localStorage.getItem(LOCAL_STORAGE_REPS_KEY);
                 setTotalLifetimeReps(localReps ? parseInt(localReps, 10) : 0);
             }
             if (setCloudSessions) {
-                const localRaw = localStorage.getItem(LOCAL_STORAGE_SESSIONS_KEY);
                 try {
+                    const localRaw = localStorage.getItem(LOCAL_STORAGE_SESSIONS_KEY);
                     setCloudSessions(localRaw ? JSON.parse(localRaw) : []);
                 } catch { setCloudSessions([]); }
             }
             if (setTotalSessionCount) {
-                const localCount = localStorage.getItem('pushup_game_total_sessions');
+                const localCount = localStorage.getItem(LOCAL_STORAGE_TOTAL_SESSIONS_KEY);
                 setTotalSessionCount(localCount ? parseInt(localCount, 10) : 0);
             }
             return;
         }
 
-        // Trigger merge check
+        // Logged in: merge any guest data into cloud, then listen to Firestore
         mergeLocalToCloud(user.uid);
 
         // Listen to User Profile (Total Reps)

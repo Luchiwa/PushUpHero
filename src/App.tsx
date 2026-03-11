@@ -3,17 +3,19 @@ import { useCamera } from './hooks/useCamera';
 import { usePoseDetection } from './hooks/usePoseDetection';
 import { useExerciseDetector } from './hooks/useExerciseDetector';
 import { PushUpDetector } from './exercises/pushup/PushUpDetector';
-import { StartScreen } from './components/StartScreen';
-import { PoseOverlay } from './components/PoseOverlay';
-import { Dashboard } from './components/Dashboard';
-import { SummaryScreen } from './components/SummaryScreen';
-import { PositionGuide } from './components/PositionGuide';
-import { ReloadPrompt } from './components/ReloadPrompt';
-import { VictoryOverlay } from './components/VictoryOverlay';
+import { StartScreen } from './components/StartScreen/StartScreen';
+import { PoseOverlay } from './components/PoseOverlay/PoseOverlay';
+import { Dashboard } from './components/Dashboard/Dashboard';
+import { SummaryScreen } from './components/SummaryScreen/SummaryScreen';
+import { PositionGuide } from './components/PositionGuide/PositionGuide';
+import { ReloadPrompt } from './components/ReloadPrompt/ReloadPrompt';
+import { VictoryOverlay } from './components/VictoryOverlay/VictoryOverlay';
 import { useRef, useEffect } from 'react';
 import { useSessionHistory } from './hooks/useSessionHistory';
 import { useLevelSystem } from './hooks/useLevelSystem';
 import { useSoundEffect } from './hooks/useSoundEffect';
+import { useNotifications } from './hooks/useNotifications';
+import './components/App/App.scss';
 
 type AppScreen = 'idle' | 'active' | 'victory' | 'stopped';
 type FacingMode = 'user' | 'environment';
@@ -29,6 +31,7 @@ function App() {
   const detector = useMemo(() => new PushUpDetector(), []);
   const { addSession } = useSessionHistory();
   const { initAudio, playLevelUpSound } = useSoundEffect();
+  useNotifications();
 
   // Root-level tracking for global lifetime reps and levels
   const { level, levelProgressPct, addRepsToLifetime } = useLevelSystem();
@@ -38,6 +41,7 @@ function App() {
   const prevLevelRef = useRef(level);
   const elapsedTimeRef = useRef(0);
   const [elapsedTime, setElapsedTime] = useState(0);
+  const sessionSavedRef = useRef(false); // guard against double-save
 
   const { videoRef, isReady: isCameraReady, error: cameraError } = useCamera({ facingMode });
 
@@ -54,13 +58,18 @@ function App() {
   });
 
   const saveCurrentSession = () => {
+    if (sessionSavedRef.current) return; // prevent double-save
     if (exerciseState.repCount > 0) {
+      sessionSavedRef.current = true;
       addSession({
         reps: exerciseState.repCount,
         averageScore: Math.round(exerciseState.averageScore),
         goalReps,
         sessionMode,
         elapsedTime: sessionMode === 'time' ? elapsedTimeRef.current : undefined,
+      }).catch(err => {
+        console.error('Failed to save session:', err);
+        sessionSavedRef.current = false; // allow retry on error
       });
     }
   };
@@ -68,6 +77,7 @@ function App() {
   const handleStart = () => {
     prevRepCountRef.current = exerciseState.repCount; // Reset base
     elapsedTimeRef.current = 0; // Reset elapsed time for new session
+    sessionSavedRef.current = false; // Reset save guard for new session
     setScreen('active');
   };
   const handleStop = () => { 
@@ -106,14 +116,14 @@ function App() {
     }
   }, [exerciseState.repCount, addRepsToLifetime, screen]);
 
-  // Track global level ups
+  // Track global level ups (only during active sessions)
   useEffect(() => {
-    if (level > prevLevelRef.current) {
+    if (screen === 'active' && level > prevLevelRef.current) {
       initAudio();
       if (soundEnabled) playLevelUpSound();
     }
     prevLevelRef.current = level;
-  }, [level, soundEnabled, playLevelUpSound, initAudio]);
+  }, [level, screen, soundEnabled, playLevelUpSound, initAudio]);
 
   // Trigger victory screen when goal is reached (reps mode only)
   useEffect(() => {
@@ -185,6 +195,7 @@ function App() {
           onReset={handleReset}
           sessionMode={sessionMode}
           elapsedTime={elapsedTime}
+          level={level}
         />
       )}
 

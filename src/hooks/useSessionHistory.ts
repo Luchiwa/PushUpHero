@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { collection, doc, setDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from './useAuth';
 import { useSyncCloud } from './useSyncCloud';
@@ -59,19 +59,24 @@ export function useSessionHistory() {
             date: Date.now(),
         };
 
+        // Firestore rejects undefined values — remove optional fields if absent
+        if (newSession.elapsedTime === undefined) delete newSession.elapsedTime;
+        if (newSession.sessionMode === undefined) delete newSession.sessionMode;
+
         if (user) {
-            // Write to Cloud directly (Realtime listener updates local state)
-            const sessionRef = doc(collection(db, 'users', user.uid, 'sessions'), newSession.id);
-            await setDoc(sessionRef, newSession);
-            // Increment totalSessions counter on user doc
-            const { updateDoc, increment } = await import('firebase/firestore');
-            await updateDoc(doc(db, 'users', user.uid), { totalSessions: increment(1) });
+            try {
+                const sessionRef = doc(collection(db, 'users', user.uid, 'sessions'), newSession.id);
+                await setDoc(sessionRef, newSession);
+                await updateDoc(doc(db, 'users', user.uid), { totalSessions: increment(1) });
+            } catch (err) {
+                console.error('[addSession] Firestore error:', err);
+                throw err;
+            }
         } else {
             // Write to Local State
             const updated = [newSession, ...sessions].slice(0, MAX_SESSIONS);
             setSessions(updated);
             saveLocalSessions(updated);
-            // Track total count locally
             const newCount = totalSessionCount + 1;
             setTotalSessionCount(newCount);
             localStorage.setItem(STORAGE_TOTAL_KEY, newCount.toString());

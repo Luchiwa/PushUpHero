@@ -95,17 +95,17 @@
 @keyframes floaty-rise {
     0% {
         opacity: 1;
-        transform: translateX(-50%) translateY(0);
+        transform: translateY(0);
     }
 
     70% {
         opacity: 1;
-        transform: translateX(-50%) translateY(-40px);
+        transform: translateY(-40px);
     }
 
     100% {
         opacity: 0;
-        transform: translateX(-50%) translateY(-60px);
+        transform: translateY(-60px);
     }
 }
 

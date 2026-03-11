@@ -1,0 +1,253 @@
+@use 'sass:color';
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// ── Full-screen profile page ──────────────────────────────────────
+.profile-fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    animation: screen-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.profile-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid $border;
+    flex-shrink: 0;
+}
+
+.profile-back-btn {
+    width: 38px;
+    height: 38px;
+    border: none;
+    background: $surface;
+    border-radius: 50%;
+    @include flex-center;
+    cursor: pointer;
+    color: $text;
+    transition: background 0.2s;
+
+    &:hover {
+        background: $surface-hover;
+    }
+}
+
+.profile-topbar-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: $text;
+    letter-spacing: -0.01em;
+}
+
+.profile-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: $spacing-xl $spacing-lg;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-lg;
+    max-width: 480px;
+    width: 100%;
+    margin: 0 auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+// ── Header ──────────────────────────────────────────────────────
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+}
+
+.profile-avatar-large {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: $gradient-accent;
+    @include flex-center;
+    font-size: 2rem;
+    font-weight: 800;
+    color: white;
+    flex-shrink: 0;
+    box-shadow: 0 4px 16px rgba($accent, 0.3);
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: $text;
+        letter-spacing: -0.02em;
+    }
+}
+
+.profile-member-since {
+    font-size: 0.85rem;
+    color: $text-muted;
+}
+
+// ── Stats grid ───────────────────────────────────────────────────
+.profile-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $spacing-sm;
+    background: $surface;
+    border: 1px solid $border;
+    border-radius: $radius;
+    padding: $spacing-md;
+}
+
+.profile-stat-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 2px;
+}
+
+.profile-stat-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: $text;
+    letter-spacing: -0.03em;
+}
+
+.profile-stat-label {
+    font-size: 0.72rem;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+}
+
+// ── Session history section ───────────────────────────────────────
+.profile-session-history {
+    border-top: 1px solid $border;
+    padding-top: $spacing-md;
+
+    .session-history-list {
+        gap: 0.4rem;
+    }
+
+    .session-history-item {
+        background: $surface;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+
+        &:hover {
+            background: $surface-hover;
+        }
+    }
+}
+
+// ── Actions ──────────────────────────────────────────────────────
+.profile-actions {
+    display: flex;
+    justify-content: center;
+    padding-bottom: $spacing-xl;
+}
+
+.btn-logout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.9rem;
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: $radius-sm;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.85), rgba(220, 38, 38, 0.95));
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    transition: $transition;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+    }
+}
+
+// ── Profile Tabs ──────────────────────────────────────────────────
+.profile-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid $border;
+    flex-shrink: 0;
+}
+
+.profile-tab {
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.65rem 1rem;
+    background: none;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: $text-muted;
+    cursor: pointer;
+    transition: color 0.2s;
+
+    &::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: $accent;
+        border-radius: 2px 2px 0 0;
+        transform: scaleX(0);
+        transition: transform 0.2s ease;
+    }
+
+    &:hover {
+        color: $text;
+    }
+
+    &--active {
+        color: $accent;
+
+        &::after {
+            transform: scaleX(1);
+        }
+    }
+}
+
+.profile-tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: $accent;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 800;
+    border-radius: 999px;
+    line-height: 1;
+}
+
+.profile-tab-panel {
+    flex: 1;
+}

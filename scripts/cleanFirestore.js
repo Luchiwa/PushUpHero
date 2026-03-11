@@ -51,29 +51,70 @@ async function main() {
             }
         }
 
-        // 5. Supprimer toutes les sessions de l'utilisateur
-        console.log(`🗑️ Suppression de la sous-collection "sessions"...`);
-        const sessionsSnapshot = await userDocRef.collection('sessions').get();
-        const batch = db.batch();
-
-        sessionsSnapshot.docs.forEach((doc) => {
-            batch.delete(doc.ref);
-        });
-
-        if (!sessionsSnapshot.empty) {
-            await batch.commit();
-            console.log(`✅ ${sessionsSnapshot.size} sessions supprimées.`);
+        // 5. Supprimer toutes les sous-collections de l'utilisateur
+        const subcollections = ['sessions', 'friends', 'friendRequests', 'friendRequestsSent', 'notifications'];
+        for (const sub of subcollections) {
+            const snapshot = await userDocRef.collection(sub).get();
+            if (!snapshot.empty) {
+                const batch = db.batch();
+                snapshot.docs.forEach((doc) => batch.delete(doc.ref));
+                await batch.commit();
+                console.log(`✅ ${snapshot.size} document(s) supprimé(s) dans "${sub}".`);
+            } else {
+                console.log(`ℹ️  Sous-collection "${sub}" vide ou inexistante.`);
+            }
         }
 
-        // 6. Supprimer le document utilisateur (Profil)
+        // 6. Nettoyer les données croisées chez les amis
+        console.log(`🔎 Nettoyage des données croisées chez les autres utilisateurs...`);
+
+        // Supprimer ce compte de la liste d'amis de ses amis
+        const friendsSnapshot = await userDocRef.collection('friends').get();
+        const crossBatch = db.batch();
+        let crossCount = 0;
+
+        for (const friendDoc of friendsSnapshot.docs) {
+            const friendUid = friendDoc.id;
+            const base = db.collection('users').doc(friendUid);
+            // Ce compte dans leur liste d'amis
+            crossBatch.delete(base.collection('friends').doc(uid));
+            // Demandes reçues de ce compte
+            crossBatch.delete(base.collection('friendRequests').doc(uid));
+            // Demandes envoyées vers ce compte
+            crossBatch.delete(base.collection('friendRequestsSent').doc(uid));
+            crossCount++;
+        }
+
+        // Supprimer aussi les demandes en attente envoyées par ce compte (chez les destinataires)
+        const sentSnapshot = await userDocRef.collection('friendRequestsSent').get();
+        for (const sentDoc of sentSnapshot.docs) {
+            const toUid = sentDoc.id;
+            crossBatch.delete(db.collection('users').doc(toUid).collection('friendRequests').doc(uid));
+        }
+
+        // Supprimer aussi les demandes reçues par ce compte (chez les expéditeurs)
+        const receivedSnapshot = await userDocRef.collection('friendRequests').get();
+        for (const receivedDoc of receivedSnapshot.docs) {
+            const fromUid = receivedDoc.id;
+            crossBatch.delete(db.collection('users').doc(fromUid).collection('friendRequestsSent').doc(uid));
+        }
+
+        if (crossCount > 0 || !sentSnapshot.empty || !receivedSnapshot.empty) {
+            await crossBatch.commit();
+            console.log(`✅ Données croisées nettoyées chez ${crossCount} ami(s).`);
+        } else {
+            console.log(`ℹ️  Aucune donnée croisée à nettoyer.`);
+        }
+
+        // 7. Supprimer le document utilisateur (Profil)
         console.log(`🗑️ Suppression du profil utilisateur Firestore...`);
         await userDocRef.delete();
 
-        // 7. Supprimer définitivement le compte Firebase Auth
+        // 8. Supprimer définitivement le compte Firebase Auth
         console.log(`🗑️ Suppression du compte Firebase Auth...`);
         await auth.deleteUser(uid);
 
-        console.log(`🎉 Succès ! Le compte "${email}" et toutes ses données ont été complètement purgés.`);
+        console.log(`🎉 Succès ! Le compte "${email}" et toutes ses données (amis, notifications, sessions) ont été complètement purgés.`);
 
     } catch (error) {
         if (error.code === 'auth/user-not-found') {

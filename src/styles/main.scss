@@ -1,39 +1,9 @@
-// ── PushUp Game — SCSS Entry Point ────────────────────────────────
+// ── PushUp Hero — SCSS Entry Point ────────────────────────────────
 //
-// Architecture:
-//   styles/
-//   ├── _variables.scss     Design tokens (colors, spacing, effects)
-//   ├── _mixins.scss        Reusable SCSS patterns
-//   ├── _reset.scss         Base reset + typography
-//   ├── _animations.scss    All @keyframe animations
-//   └── components/
-//       ├── _app.scss            App shell + video layer
-//       ├── _start-screen.scss   Idle / start screen
-//       ├── _dashboard.scss      Active-session HUD
-//       ├── _goal-bar.scss       Vertical goal progress bar
-//       ├── _summary-screen.scss Post-session summary
-//       ├── _position-guide.scss Goku calibration guide
-//       ├── _floaty-numbers.scss Floating +1 rep feedback
-//       ├── _victory-overlay.scss Goal reached celebration
-//       └── _reload-prompt.scss  PWA update toast
+// Global foundation only — component styles are co-located with their TSX.
 // ─────────────────────────────────────────────────────────────────
 
 // Foundation
 @use 'variables'; // exports CSS custom properties to :root
 @use 'reset';
 @use 'animations';
-
-// Components
-@use 'components/app';
-@use 'components/start-screen';
-@use 'components/dashboard';
-@use 'components/goal-bar';
-@use 'components/summary-screen';
-@use 'components/position-guide';
-@use 'components/floaty-numbers';
-@use 'components/victory-overlay';
-@use 'components/reload-prompt';
-@use 'components/session-history';
-@use 'components/auth-modal';
-@use 'components/auth-badge';
-@use 'components/profile-modal';
