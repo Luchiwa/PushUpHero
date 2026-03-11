@@ -193,7 +193,6 @@ function App() {
           onReset={handleReset}
           sessionMode={sessionMode}
           elapsedTime={elapsedTime}
-          level={level}
         />
       )}
 

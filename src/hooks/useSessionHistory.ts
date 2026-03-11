@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { collection, doc, setDoc, updateDoc, increment } from 'firebase/firestore';
+import { collection, doc, setDoc, updateDoc, increment, addDoc, serverTimestamp, getDocs, query, where, Timestamp, deleteDoc } from 'firebase/firestore';
 import { db } from '@lib/firebase';
 import { useAuth } from './useAuth';
 import { useSyncCloud } from './useSyncCloud';
@@ -68,6 +68,30 @@ export function useSessionHistory() {
                 const sessionRef = doc(collection(db, 'users', user.uid, 'sessions'), newSession.id);
                 await setDoc(sessionRef, newSession);
                 await updateDoc(doc(db, 'users', user.uid), { totalSessions: increment(1) });
+
+                // ── Write activity feed event ──────────────────────────
+                const activityEvent: Record<string, unknown> = {
+                    type: 'session',
+                    reps: newSession.reps,
+                    averageScore: newSession.averageScore,
+                    sessionMode: newSession.sessionMode ?? 'reps',
+                    goalReps: newSession.goalReps,
+                    createdAt: serverTimestamp(),
+                };
+                if (newSession.elapsedTime !== undefined) activityEvent.elapsedTime = newSession.elapsedTime;
+                await addDoc(collection(db, 'users', user.uid, 'activityFeed'), activityEvent);
+
+                // ── Prune activity feed events older than 30 days ──────
+                // Fire-and-forget — never blocks the session save
+                const cutoff = Timestamp.fromMillis(Date.now() - 30 * 24 * 60 * 60 * 1000);
+                getDocs(
+                    query(
+                        collection(db, 'users', user.uid, 'activityFeed'),
+                        where('createdAt', '<', cutoff)
+                    )
+                ).then(snap => {
+                    snap.forEach(d => deleteDoc(d.ref));
+                }).catch(() => { /* non-critical */ });
             } catch (err) {
                 console.error('[addSession] Firestore error:', err);
                 throw err;

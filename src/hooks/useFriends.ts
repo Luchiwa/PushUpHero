@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
     collection, doc, getDoc, setDoc, deleteDoc,
     onSnapshot, addDoc, serverTimestamp
@@ -44,6 +44,9 @@ export function useFriends() {
     const [incomingRequests, setIncomingRequests] = useState<FriendRequest[]>([]);
     const [outgoingRequests, setOutgoingRequests] = useState<OutgoingRequest[]>([]);
 
+    // Holds unsub functions for per-friend profile listeners
+    const profileUnsubsRef = useRef<Map<string, () => void>>(new Map());
+
     // ── Realtime listeners ──────────────────────────────────────────
     useEffect(() => {
         if (!user) {
@@ -52,12 +55,43 @@ export function useFriends() {
                 setIncomingRequests([]);
                 setOutgoingRequests([]);
             }, 0);
+            // Clean up any profile listeners
+            profileUnsubsRef.current.forEach(unsub => unsub());
+            profileUnsubsRef.current.clear();
             return;
         }
 
-        // Listen to confirmed friends
+        // Listen to confirmed friends list, then attach per-profile listeners
         const friendsRef = collection(db, 'users', user.uid, 'friends');
         const unsubFriends = onSnapshot(friendsRef, snap => {
+            const currentUids = new Set(snap.docs.map(d => d.id));
+
+            // Remove listeners for friends that were removed
+            profileUnsubsRef.current.forEach((unsub, uid) => {
+                if (!currentUids.has(uid)) {
+                    unsub();
+                    profileUnsubsRef.current.delete(uid);
+                }
+            });
+
+            // Add listeners for new friends
+            snap.docs.forEach(friendDoc => {
+                const uid = friendDoc.id;
+                if (!profileUnsubsRef.current.has(uid)) {
+                    const unsub = onSnapshot(doc(db, 'users', uid), profileSnap => {
+                        if (!profileSnap.exists()) return;
+                        const p = profileSnap.data();
+                        setFriends(prev => prev.map(f =>
+                            f.uid === uid
+                                ? { ...f, level: p.level ?? f.level, totalReps: p.totalReps ?? f.totalReps, totalSessions: p.totalSessions ?? f.totalSessions }
+                                : f
+                        ));
+                    });
+                    profileUnsubsRef.current.set(uid, unsub);
+                }
+            });
+
+            // Set initial list from the friends subcollection docs
             setFriends(snap.docs.map(d => d.data() as Friend));
         });
 
@@ -91,6 +125,8 @@ export function useFriends() {
             unsubFriends();
             unsubRequests();
             unsubOutgoing();
+            profileUnsubsRef.current.forEach(unsub => unsub());
+            profileUnsubsRef.current.clear();
         };
     }, [user]);
 

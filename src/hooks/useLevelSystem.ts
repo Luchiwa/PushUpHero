@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { doc, updateDoc, increment } from 'firebase/firestore';
+import { doc, updateDoc, increment, getDoc } from 'firebase/firestore';
 import { db } from '@lib/firebase';
 import { useAuth } from './useAuth';
 import { useSyncCloud } from './useSyncCloud';
@@ -43,11 +43,15 @@ export function useLevelSystem() {
 
     const addRepsToLifetime = useCallback(async (repsToAdd: number) => {
         if (user) {
-            // Write to Cloud directly (Realtime listener will update local state)
             const userRef = doc(db, 'users', user.uid);
-            await updateDoc(userRef, {
-                totalReps: increment(repsToAdd)
-            });
+            await updateDoc(userRef, { totalReps: increment(repsToAdd) });
+            // Re-read to get the accurate updated total, then persist the computed level
+            const snap = await getDoc(userRef);
+            if (snap.exists()) {
+                const updatedTotal = snap.data().totalReps as number;
+                const updatedLevel = calculateLevelFromTotalReps(updatedTotal);
+                await updateDoc(userRef, { level: updatedLevel });
+            }
         } else {
             // Write to Local State
             setTotalLifetimeReps(prev => {

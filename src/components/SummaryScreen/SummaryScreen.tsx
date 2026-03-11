@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { ExerciseState } from '../../exercises/types';
 import { useAuth } from '@hooks/useAuth';
+import { useShareSession } from '@hooks/useShareSession';
+import type { ShareSessionData } from '@hooks/useShareSession';
 import { AuthModal } from '@components/AuthModal/AuthModal';
 import './SummaryScreen.scss';
 
@@ -28,9 +30,43 @@ function formatElapsedTime(seconds?: number): string {
     return `${secs}s`;
 }
 
-export function SummaryScreen({ exerciseState, onReset, sessionMode, elapsedTime, level }: SummaryProps) {
-    const { user } = useAuth();
+export function SummaryScreen({ exerciseState, onReset, sessionMode, elapsedTime }: Omit<SummaryProps, 'level'>) {
+    const { user, dbUser, level } = useAuth();
+    const { shareSession } = useShareSession();
+    const [sharing, setSharing] = useState(false);
+    const [shareError, setShareError] = useState('');
     const [showPaywall, setShowPaywall] = useState(false);
+
+    const handleShare = async () => {
+        if (!user || !dbUser) return;
+        setSharing(true);
+        setShareError('');
+        try {
+            const grade =
+                averageScore >= 90 ? 'S' :
+                averageScore >= 75 ? 'A' :
+                averageScore >= 60 ? 'B' :
+                averageScore >= 45 ? 'C' : 'D';
+            const shareData: ShareSessionData = {
+                repCount,
+                averageScore,
+                sessionMode: sessionMode ?? 'reps',
+                elapsedTime,
+                level,
+                username: dbUser.displayName,
+                grade,
+            };
+            await shareSession(shareData);
+        } catch (err: unknown) {
+            // User cancelled share — don't show error
+            const msg = (err as Error)?.message ?? '';
+            if (!msg.includes('AbortError') && !msg.includes('cancel')) {
+                setShareError('Could not share. Try downloading instead.');
+            }
+        } finally {
+            setSharing(false);
+        }
+    };
 
     const { repCount, averageScore, repHistory } = exerciseState;
 
@@ -119,9 +155,29 @@ export function SummaryScreen({ exerciseState, onReset, sessionMode, elapsedTime
                     </div>
                 )}
 
-                <button className="btn-primary" onClick={onReset}>
-                    🔁 Try Again
-                </button>
+                <div className="summary-actions">
+                    <button className="btn-primary" onClick={onReset}>
+                        🔁 Try Again
+                    </button>
+                    {user && dbUser && (
+                        <button
+                            className="btn-share"
+                            onClick={handleShare}
+                            disabled={sharing}
+                        >
+                            {sharing ? (
+                                <span className="btn-share-spinner" />
+                            ) : (
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                                </svg>
+                            )}
+                            {sharing ? 'Generating…' : 'Share'}
+                        </button>
+                    )}
+                </div>
+                {shareError && <p className="summary-share-error">{shareError}</p>}
             </div>
 
             {showPaywall && (

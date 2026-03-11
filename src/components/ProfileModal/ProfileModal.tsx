@@ -4,10 +4,11 @@ import { useSessionHistory } from '@hooks/useSessionHistory';
 import { useFriends } from '@hooks/useFriends';
 import { SessionHistoryPanel } from '@components/SessionHistoryPanel/SessionHistoryPanel';
 import { FriendsTab } from '@components/FriendsTab/FriendsTab';
+import { FriendsFeedPanel } from '@components/FriendsFeedPanel/FriendsFeedPanel';
 import { SettingsModal } from '@components/SettingsModal/SettingsModal';
 import './ProfileModal.scss';
 
-type ProfileTab = 'history' | 'friends';
+type ProfileTab = 'history' | 'friends' | 'feed';
 
 interface ProfileModalProps {
     onClose: () => void;
@@ -16,7 +17,7 @@ interface ProfileModalProps {
 export function ProfileModal({ onClose }: ProfileModalProps) {
     const { user, dbUser, logout, level, totalLifetimeReps } = useAuth();
     const { getSessions, totalSessionCount } = useSessionHistory();
-    const { incomingRequests } = useFriends();
+    const { friends, incomingRequests } = useFriends();
     const sessions = getSessions();
 
     const [activeTab, setActiveTab] = useState<ProfileTab>('history');
@@ -94,6 +95,13 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
                             <span className="profile-tab-badge">{incomingRequests.length}</span>
                         )}
                     </button>
+                    <button
+                        className={`profile-tab ${activeTab === 'feed' ? 'profile-tab--active' : ''}`}
+                        onClick={() => setActiveTab('feed')}
+                    >
+                        Feed
+                        {friends.length > 0 && <span className="profile-tab-dot" />}
+                    </button>
                 </div>
 
                 {/* Tab content */}
@@ -108,6 +116,11 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
                 {activeTab === 'friends' && (
                     <div className="profile-tab-panel">
                         <FriendsTab />
+                    </div>
+                )}
+                {activeTab === 'feed' && (
+                    <div className="profile-tab-panel">
+                        <FriendsFeedPanel friends={friends} />
                     </div>
                 )}
 

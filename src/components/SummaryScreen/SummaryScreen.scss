@@ -140,3 +140,59 @@
     border-radius: $radius-pill;
     transition: width 0.5s ease;
 }
+
+// ── Actions ──────────────────────────────────────────────────────
+.summary-actions {
+    display: flex;
+    gap: $spacing-md;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-share {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: 2px solid rgba($accent, 0.35);
+    border-radius: $radius-sm;
+    background: rgba($accent, 0.06);
+    color: $accent-dark;
+    font-size: 0.9rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: $transition;
+    white-space: nowrap;
+
+    &:hover:not(:disabled) {
+        background: rgba($accent, 0.12);
+        border-color: $accent;
+    }
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+}
+
+.btn-share-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba($accent, 0.3);
+    border-top-color: $accent;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.summary-share-error {
+    font-size: 0.8rem;
+    color: $red;
+    text-align: center;
+    margin: -0.5rem 0 0;
+}
