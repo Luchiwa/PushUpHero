@@ -3,26 +3,13 @@
 @use 'mixins' as *;
 
 .settings-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 60;
-    @include flex-center;
-    background: $modal-overlay-strong;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    animation: screen-in 0.2s ease both;
+    @include modal-overlay($z: 60);
     padding: $spacing-md;
 }
 
 .settings-card {
-    background: #ffffff;
-    border-radius: $radius;
-    width: min(92vw, 440px);
+    @include modal-card($width: 440px, $padding: 0);
     max-height: 90vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.18);
-    animation: card-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
     overflow: hidden;
 }
 
@@ -44,21 +31,10 @@
     margin: 0;
 }
 
+// .settings-close-btn → use .btn-icon from design system
 .settings-close-btn {
     width: 34px;
     height: 34px;
-    border: none;
-    background: $surface;
-    border-radius: 50%;
-    @include flex-center;
-    cursor: pointer;
-    color: $text-muted;
-    transition: $transition;
-
-    &:hover {
-        background: $surface-hover;
-        color: $text;
-    }
 }
 
 // ── Body ─────────────────────────────────────────────────────────
@@ -141,62 +117,18 @@
     gap: $spacing-md;
 }
 
-.input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-
-    label {
-        font-size: 0.72rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: $text-muted;
-    }
-
-    input {
-        background: #ffffff;
-        border: 1px solid rgba(26, 26, 26, 0.15);
-        border-radius: $radius-sm;
-        padding: 0.75rem 1rem;
-        color: $text;
-        font-size: 0.95rem;
-        font-family: inherit;
-        transition: $transition;
-
-        &:focus {
-            outline: none;
-            border-color: $accent;
-            box-shadow: 0 0 0 2px rgba($accent, 0.15);
-        }
-
-        &::placeholder {
-            color: rgba(26, 26, 26, 0.3);
-        }
-
-        &.input--danger-ready {
-            border-color: $red;
-            box-shadow: 0 0 0 2px rgba($red, 0.15);
-        }
-    }
-}
+// .input-group → defined in _forms.scss design system
 
 // ── Feedback messages ────────────────────────────────────────────
 .settings-feedback {
-    padding: 0.6rem 0.9rem;
-    border-radius: $radius-sm;
-    font-size: 0.82rem;
-    margin: 0;
+    @include alert;
 
     &--error {
-        background: rgba($red, 0.08);
-        border: 1px solid rgba($red, 0.25);
         color: color.adjust($red, $lightness: -5%);
     }
 
     &--success {
-        background: rgba($green, 0.1);
-        border: 1px solid rgba($green, 0.3);
+        @include alert($green);
         color: color.adjust($green, $lightness: -10%);
     }
 }
@@ -217,258 +149,11 @@
     }
 }
 
-.btn-danger {
-    padding: 0.75rem 1.5rem;
-    border-radius: $radius-sm;
-    border: none;
-    background: $red;
-    color: white;
-    font-size: 0.9rem;
-    font-weight: 700;
-    font-family: inherit;
-    cursor: pointer;
-    transition: $transition;
-    align-self: flex-start;
+// .btn-danger → defined in _buttons.scss design system
 
-    &:hover:not(:disabled) {
-        background: color.adjust($red, $lightness: -8%);
-    }
-
-    &:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-    }
-}
-
-
-.settings-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 60;
-    @include flex-center;
-    background: $modal-overlay-strong;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    animation: screen-in 0.2s ease both;
-    padding: $spacing-md;
-}
-
-.settings-card {
-    background: #ffffff;
-    border-radius: $radius;
-    width: min(92vw, 440px);
-    max-height: 90vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.18);
-    animation: card-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
-    overflow: hidden;
-}
-
-// ── Header ──────────────────────────────────────────────────────
-.settings-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid $border;
-    flex-shrink: 0;
-}
-
-.settings-title {
-    font-size: 1.15rem;
-    font-weight: 800;
-    color: $text;
-    letter-spacing: -0.01em;
-    margin: 0;
-}
-
-.settings-close-btn {
-    width: 34px;
-    height: 34px;
-    border: none;
-    background: $surface;
-    border-radius: 50%;
-    @include flex-center;
-    cursor: pointer;
-    color: $text-muted;
-    transition: $transition;
-
-    &:hover {
-        background: $surface-hover;
-        color: $text;
-    }
-}
-
-// ── Body ─────────────────────────────────────────────────────────
-.settings-body {
-    overflow-y: auto;
-    padding: $spacing-lg $spacing-lg;
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-xl;
-    -webkit-overflow-scrolling: touch;
-}
-
-// ── Section ──────────────────────────────────────────────────────
-.settings-section {
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-md;
-}
-
-.settings-section-title {
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: $text-muted;
-    margin: 0;
-    padding-bottom: $spacing-sm;
-    border-bottom: 1px solid $border;
-
-    &--danger {
-        color: $red;
-    }
-}
-
-// ── Form inputs (reuse auth style) ───────────────────────────────
-.settings-form {
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-md;
-}
-
-.input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-
-    label {
-        font-size: 0.72rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: $text-muted;
-    }
-
-    input {
-        background: #ffffff;
-        border: 1px solid rgba(26, 26, 26, 0.15);
-        border-radius: $radius-sm;
-        padding: 0.75rem 1rem;
-        color: $text;
-        font-size: 0.95rem;
-        font-family: inherit;
-        transition: $transition;
-
-        &:focus {
-            outline: none;
-            border-color: $accent;
-            box-shadow: 0 0 0 2px rgba($accent, 0.15);
-        }
-
-        &::placeholder {
-            color: rgba(26, 26, 26, 0.3);
-        }
-
-        &.input--danger-ready {
-            border-color: $red;
-            box-shadow: 0 0 0 2px rgba($red, 0.15);
-        }
-    }
-}
-
-// ── Feedback messages ────────────────────────────────────────────
-.settings-error {
-    background: rgba($red, 0.08);
-    border: 1px solid rgba($red, 0.25);
-    color: color.adjust($red, $lightness: -5%);
-    padding: 0.6rem 0.9rem;
-    border-radius: $radius-sm;
-    font-size: 0.82rem;
-    margin: 0;
-}
-
-.settings-success {
-    background: rgba($green, 0.1);
-    border: 1px solid rgba($green, 0.3);
-    color: color.adjust($green, $lightness: -10%);
-    padding: 0.6rem 0.9rem;
-    border-radius: $radius-sm;
-    font-size: 0.82rem;
-    margin: 0;
-}
-
-// ── Buttons ──────────────────────────────────────────────────────
-.settings-submit {
-    align-self: flex-start;
-}
-
-.settings-danger-desc {
-    font-size: 0.85rem;
-    color: $text-muted;
-    line-height: 1.5;
-    margin: 0;
-
-    strong {
-        color: $text;
-    }
-}
-
-.btn-danger {
-    padding: 0.75rem 1.5rem;
-    border-radius: $radius-sm;
-    border: none;
-    background: $red;
-    color: white;
-    font-size: 0.9rem;
-    font-weight: 700;
-    font-family: inherit;
-    cursor: pointer;
-    transition: $transition;
-    align-self: flex-start;
-
-    &:hover:not(:disabled) {
-        background: color.adjust($red, $lightness: -8%);
-    }
-
-    &:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-    }
-}
-
-.settings-section--danger {
-    padding: $spacing-md;
-    background: rgba($red, 0.04);
-    border: 1px solid rgba($red, 0.15);
-    border-radius: $radius-sm;
-}
-
-// ── Sign Out button ───────────────────────────────────────────────
+// .btn-logout → defined in _buttons.scss design system
+// Local override: center it under the accordions
 .btn-logout {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-size: 0.9rem;
-    width: 100%;
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: $radius-sm;
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.85), rgba(220, 38, 38, 0.95));
-    color: white;
-    font-weight: 700;
-    cursor: pointer;
-    transition: $transition;
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
-    margin-top: $spacing-md;
-
-    &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
-    }
+    margin: $spacing-md 1.5rem 1.5rem;
+    align-self: center;
 }

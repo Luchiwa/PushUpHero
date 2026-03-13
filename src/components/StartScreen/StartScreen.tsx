@@ -54,9 +54,15 @@ export function StartScreen({
                                     className="user-avatar"
                                 />
                                 <span className="user-name">{dbUser?.displayName || 'Level ' + level}</span>
+                                {(dbUser?.streak ?? 0) > 0 && (
+                                    <>
+                                        <span className="user-streak-sep">·</span>
+                                        <span className="user-streak">{dbUser!.streak} 🔥</span>
+                                    </>
+                                )}
                             </div>
                         ) : (
-                            <button className="btn-signin" onClick={() => setShowAuthModal(true)}>
+                            <button className="btn-primary-sm" onClick={() => setShowAuthModal(true)}>
                                 Sign in
                             </button>
                         )}
@@ -73,13 +79,13 @@ export function StartScreen({
 
                 <div className="session-mode-toggle">
                     <button
-                        className={`toggle-btn ${sessionMode === 'reps' ? 'active' : ''}`}
+                        className={`btn-toggle ${sessionMode === 'reps' ? 'active' : ''}`}
                         onClick={() => onSessionModeChange('reps')}
                     >
                         🎯 Reps
                     </button>
                     <button
-                        className={`toggle-btn ${sessionMode === 'time' ? 'active' : ''}`}
+                        className={`btn-toggle ${sessionMode === 'time' ? 'active' : ''}`}
                         onClick={() => onSessionModeChange('time')}
                     >
                         ⏱ Time

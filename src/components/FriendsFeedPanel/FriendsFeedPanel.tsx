@@ -116,22 +116,10 @@ function FeedItem({ event }: { event: import('@hooks/useActivityFeed').ActivityE
     const grade = getGradeLetter(event.averageScore);
     const gradeColor = getGradeColor(event.averageScore);
     const message = buildEventMessage(event);
-    // Deterministic hue used as gradient fallback when no photoURL
-    const hue = (event.uid.charCodeAt(0) * 47 + event.uid.charCodeAt(1) * 13) % 360;
 
     return (
         <li className="feed-item">
-            {event.photoURL ? (
-                <Avatar photoURL={event.photoURL} initials={event.displayName} size={36} className="feed-avatar" />
-            ) : (
-                <div
-                    className="feed-avatar feed-avatar--initials"
-                    style={{ background: `hsl(${hue}, 60%, 70%)` }}
-                    aria-hidden
-                >
-                    {event.displayName[0]?.toUpperCase() ?? '?'}
-                </div>
-            )}
+            <Avatar photoURL={event.photoURL} initials={event.displayName} size={36} />
             <div className="feed-item-body">
                 <span className="feed-item-name">{event.displayName}</span>
                 <span className="feed-item-msg">{message}</span>

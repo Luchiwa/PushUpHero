@@ -21,9 +21,7 @@
     top: 0;
     bottom: 0;
     width: 4px;
-    background: #f0f0f0;
-    border-radius: $radius-pill;
-    overflow: hidden;
+    @include progress-track($bg: #f0f0f0);
 }
 
 .drag-picker-fill {
@@ -31,8 +29,7 @@
     bottom: 0;
     left: 0;
     width: 100%;
-    background: linear-gradient(to top, $accent, $accent-light);
-    border-radius: $radius-pill;
+    @include progress-fill(linear-gradient(to top, $accent, $accent-light));
     transition: height 0.1s ease;
 }
 
@@ -75,18 +72,15 @@
     font-size: 3.5rem;
     font-weight: 900;
     line-height: 1;
-    @include text-gradient($gradient-rep);
+    @include text-gradient($gradient-accent-rich);
     transition: transform 0.1s ease;
     min-width: 3ch;
     text-align: center;
 }
 
 .drag-picker-unit {
-    font-size: 0.75rem;
-    color: $text-muted;
+    @include label(0.75rem);
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
 }
 
 .drag-picker-hint {

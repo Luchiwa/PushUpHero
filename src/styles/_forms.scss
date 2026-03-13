@@ -1,0 +1,23 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// ── INPUT GROUP ─────────────────────────────────────────────────
+// Label + input field — used in AuthModal, SettingsModal, FriendsTab search
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+
+    label {
+        @include label;
+    }
+
+    input {
+        @include form-input;
+
+        &.input--danger-ready {
+            border-color: $red;
+            box-shadow: 0 0 0 2px rgba($red, 0.15);
+        }
+    }
+}

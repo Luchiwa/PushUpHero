@@ -8,6 +8,8 @@ export interface DbUser {
     totalReps: number;
     createdAt?: number;
     photoURL?: string;
+    streak?: number;
+    lastSessionDate?: string; // UTC date string YYYY-MM-DD
 }
 
 export interface AuthContextType {

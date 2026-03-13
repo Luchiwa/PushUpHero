@@ -48,9 +48,35 @@ export function useLevelSystem() {
             // Re-read to get the accurate updated total, then persist the computed level
             const snap = await getDoc(userRef);
             if (snap.exists()) {
-                const updatedTotal = snap.data().totalReps as number;
+                const data = snap.data();
+                const updatedTotal = data.totalReps as number;
                 const updatedLevel = calculateLevelFromTotalReps(updatedTotal);
-                await updateDoc(userRef, { level: updatedLevel });
+
+                // ── Streak logic (UTC, 36h grace window) ────────────
+                const todayUTC = new Date().toISOString().slice(0, 10);
+                const lastDate: string | undefined = data.lastSessionDate;
+                const lastMs = lastDate ? new Date(lastDate).getTime() : 0;
+                const nowMs = Date.now();
+                const elapsed = nowMs - lastMs;
+                const GRACE_MS = 36 * 60 * 60 * 1000;
+
+                let newStreak: number;
+                if (lastDate === todayUTC) {
+                    // Already logged a session today — keep streak
+                    newStreak = data.streak ?? 1;
+                } else if (lastDate && elapsed <= GRACE_MS) {
+                    // Within 36h grace window — increment
+                    newStreak = (data.streak ?? 0) + 1;
+                } else {
+                    // Streak broken — reset to 1
+                    newStreak = 1;
+                }
+
+                await updateDoc(userRef, {
+                    level: updatedLevel,
+                    streak: newStreak,
+                    lastSessionDate: todayUTC,
+                });
             }
         } else {
             // Write to Local State

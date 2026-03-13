@@ -12,19 +12,11 @@
 }
 
 .summary-card {
-    background: #ffffff;
-    backdrop-filter: blur($blur);
-    -webkit-backdrop-filter: blur($blur);
-    border: 1px solid rgba(26, 26, 26, 0.08);
-    border-radius: $radius;
-    padding: 2.5rem 2rem;
-    width: min(90vw, 380px);
-    display: flex;
-    flex-direction: column;
+    @include modal-card($width: 380px, $padding: 2.5rem 2rem);
+    @include glass;
     gap: 1.75rem;
     align-items: center;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
-    animation: card-in 0.5s ease both;
+    box-shadow: $shadow-card;
 
     @media (max-width: 480px) {
         padding: 2rem 1.25rem;
@@ -132,16 +124,12 @@
 
 .rep-mini-bar {
     flex: 1;
-    height: 6px;
-    background: #d0d0d0;
-    border-radius: $radius-pill;
-    overflow: hidden;
+    @include progress-track;
 }
 
 .rep-mini-fill {
-    height: 100%;
-    border-radius: $radius-pill;
-    transition: width 0.5s ease;
+    @include progress-fill;
+    transition-duration: 0.5s;
 }
 
 // ── Actions ──────────────────────────────────────────────────────

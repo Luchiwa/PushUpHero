@@ -70,7 +70,7 @@
     font-size: 3rem;
     line-height: 1;
     font-weight: 900;
-    @include text-gradient($gradient-rep);
+    @include text-gradient($gradient-accent-rich);
     animation: rep-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
@@ -80,7 +80,7 @@
     line-height: 1;
     font-weight: 900;
     font-family: 'Courier New', monospace;
-    @include text-gradient($gradient-rep);
+    @include text-gradient($gradient-accent-rich);
     letter-spacing: 0.05em;
 }
 
@@ -284,17 +284,11 @@
 
 .bar-track {
     flex: 1;
-    height: 6px;
-    background: #d0d0d0;
-    border-radius: $radius-pill;
-    overflow: hidden;
+    @include progress-track;
 }
 
 .bar-fill {
-    height: 100%;
-    border-radius: $radius-pill;
-    background: linear-gradient(90deg, $accent, $accent-light);
-    transition: width 0.4s $transition;
+    @include progress-fill;
 
     &-alt {
         background: $gradient-green;

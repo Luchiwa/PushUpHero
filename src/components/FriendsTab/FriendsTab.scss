@@ -68,32 +68,7 @@
     &:hover { color: $text; }
 }
 
-.friends-search-btn {
-    flex-shrink: 0;
-    padding: 0.7rem 1.1rem;
-    font-size: 0.9rem;
-    font-weight: 700;
-    font-family: inherit;
-    white-space: nowrap;
-    border: none;
-    border-radius: $radius-sm;
-    background: linear-gradient(135deg, $accent, $accent-light);
-    color: white;
-    cursor: pointer;
-    transition: $transition;
-    box-shadow: 0 4px 12px $accent-glow;
-
-    &:hover:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 18px rgba($accent, 0.45);
-    }
-
-    &:disabled {
-        opacity: 0.45;
-        cursor: not-allowed;
-        transform: none;
-    }
-}
+// .friends-search-btn → replaced by .btn-primary-sm from design system
 
 .friends-section {
     display: flex;
@@ -106,11 +81,7 @@
     align-items: center;
     gap: 0.5rem;
     margin: 0 0 0.25rem;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: $text-muted;
+    @include label(0.75rem);
 }
 
 .friends-badge {
@@ -156,19 +127,7 @@
     }
 }
 
-.friend-avatar {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    background: $gradient-accent;
-    color: white;
-    font-size: 1rem;
-    font-weight: 800;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
+// .friend-avatar → handled by <Avatar> component
 
 .friend-info {
     flex: 1;
@@ -182,9 +141,18 @@
     font-size: 0.95rem;
     font-weight: 700;
     color: $text;
-    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
     overflow: hidden;
-    text-overflow: ellipsis;
+}
+
+.friend-streak {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: $accent;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .friend-stats {
@@ -369,29 +337,12 @@
 
 // ── Confirm remove modal ──────────────────────────────────────────
 .friend-confirm-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 1100;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: $modal-overlay-strong;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    animation: screen-in 0.2s ease both;
+    @include modal-overlay($z: 1100, $blur: 6px);
 }
 
 .friend-confirm-card {
-    background: #fff;
-    border: 1px solid rgba(26, 26, 26, 0.1);
-    border-radius: $radius;
-    padding: 1.75rem 1.5rem 1.5rem;
-    width: min(88vw, 340px);
-    display: flex;
-    flex-direction: column;
+    @include modal-card($width: 340px, $padding: 1.75rem 1.5rem 1.5rem);
     gap: 0.75rem;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15);
-    animation: card-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .friend-confirm-title {
@@ -441,7 +392,7 @@
 
 .friend-confirm-remove {
     padding: 0.55rem 1rem;
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(220, 38, 38, 0.95));
+    background: $gradient-danger;
     border: none;
     border-radius: $radius-sm;
     font-size: 0.9rem;

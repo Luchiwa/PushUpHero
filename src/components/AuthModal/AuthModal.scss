@@ -2,29 +2,12 @@
 @use 'mixins' as *;
 
 .auth-modal-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 999;
-    @include flex-center;
-    background: $modal-overlay-strong;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    animation: screen-in 0.3s ease both;
+    @include modal-overlay($z: 999);
 }
 
 .auth-modal-card {
-    background: #ffffff;
-    backdrop-filter: blur($blur);
-    -webkit-backdrop-filter: blur($blur);
-    border: 1px solid rgba(26, 26, 26, 0.1);
-    border-radius: $radius;
-    padding: 2.5rem 2rem;
-    width: min(90vw, 400px);
-    display: flex;
-    flex-direction: column;
+    @include modal-card($width: 400px, $padding: 2.5rem 2rem);
     gap: 1.25rem;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-    animation: card-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
     position: relative;
 }
 
@@ -61,12 +44,7 @@
 }
 
 .auth-error {
-    background: rgba($red, 0.1);
-    border: 1px solid rgba($red, 0.3);
-    color: $red-light;
-    padding: 0.75rem;
-    border-radius: $radius-sm;
-    font-size: 0.8rem;
+    @include alert($red);
     text-align: center;
 }
 
@@ -76,36 +54,7 @@
     gap: 1rem;
 }
 
-.input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-
-    label {
-        @include label(0.7rem);
-    }
-
-    input {
-        background: #ffffff;
-        border: 1px solid rgba(26, 26, 26, 0.15);
-        border-radius: $radius-sm;
-        padding: 0.75rem 1rem;
-        color: $text;
-        font-size: 0.95rem;
-        font-family: inherit;
-        transition: $transition;
-
-        &:focus {
-            outline: none;
-            border-color: $accent;
-            box-shadow: 0 0 0 2px rgba($accent, 0.15);
-        }
-
-        &::placeholder {
-            color: rgba(26, 26, 26, 0.3);
-        }
-    }
-}
+// .input-group → defined in _forms.scss design system
 
 .auth-submit {
     margin-top: 0.5rem;
@@ -129,25 +78,7 @@
     span { padding: 0 1rem; }
 }
 
-.btn-google {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    width: 100%;
-    padding: 0.75rem 1.5rem;
-    border: 1px solid rgba(26, 26, 26, 0.15);
-    border-radius: $radius-sm;
-    background: #f5f5f5;
-    color: $text;
-    font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: $transition;
-
-    &:hover { background: #eeeeee; }
-    &:disabled { opacity: 0.5; cursor: not-allowed; }
-}
+// .btn-google → defined in _buttons.scss design system
 
 .auth-switch {
     text-align: center;

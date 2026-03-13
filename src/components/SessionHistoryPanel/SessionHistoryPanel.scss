@@ -47,9 +47,7 @@
     flex: 1;
     color: $text-muted;
     font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    @include text-truncate;
     font-size: 0.75rem;
 }
 

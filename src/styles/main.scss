@@ -6,4 +6,6 @@
 // Foundation
 @use 'variables'; // exports CSS custom properties to :root
 @use 'reset';
+@use 'buttons'; // design system — shared button classes
+@use 'forms';   // design system — shared form / input classes
 @use 'animations';

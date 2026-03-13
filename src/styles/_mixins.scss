@@ -36,10 +36,92 @@
 }
 
 // ── UPPERCASE LABEL ──────────────────────────────────────────────
-@mixin label($size: 0.72rem) {
+@mixin label($size: $font-xs) {
     font-size: $size;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: $text-muted;
+}
+
+// ── MODAL OVERLAY ────────────────────────────────────────────────
+@mixin modal-overlay($z: 100, $blur: 8px, $bg: $modal-overlay-strong) {
+    position: fixed;
+    inset: 0;
+    z-index: $z;
+    @include flex-center;
+    background: $bg;
+    backdrop-filter: blur($blur);
+    -webkit-backdrop-filter: blur($blur);
+    animation: screen-in 0.2s ease both;
+}
+
+// ── MODAL CARD ───────────────────────────────────────────────────
+@mixin modal-card($width: 400px, $padding: 2rem 1.5rem) {
+    background: #ffffff;
+    border: 1px solid $border;
+    border-radius: $radius;
+    padding: $padding;
+    width: min(90vw, $width);
+    display: flex;
+    flex-direction: column;
+    box-shadow: $shadow-modal;
+    animation: card-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+// ── TEXT TRUNCATE ────────────────────────────────────────────────
+@mixin text-truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+// ── ALERT ────────────────────────────────────────────────────────
+@mixin alert($color: $red) {
+    background: rgba($color, 0.08);
+    border: 1px solid rgba($color, 0.25);
+    color: $color;
+    padding: 0.6rem 0.9rem;
+    border-radius: $radius-sm;
+    font-size: $font-sm;
+    margin: 0;
+}
+
+// ── FORM INPUT ───────────────────────────────────────────────────
+@mixin form-input {
+    background: #ffffff;
+    border: 1px solid rgba(26, 26, 26, 0.15);
+    border-radius: $radius-sm;
+    padding: 0.75rem 1rem;
+    color: $text;
+    font-size: $font-base;
+    font-family: inherit;
+    transition: $transition;
+
+    &:focus {
+        outline: none;
+        border-color: $accent;
+        box-shadow: 0 0 0 2px rgba($accent, 0.15);
+    }
+
+    &::placeholder {
+        color: rgba(26, 26, 26, 0.3);
+    }
+}
+
+// ── PROGRESS BAR ────────────────────────────────────────────────
+// Horizontal track (container)
+@mixin progress-track($height: 6px, $bg: #d0d0d0) {
+    height: $height;
+    background: $bg;
+    border-radius: $radius-pill;
+    overflow: hidden;
+}
+
+// Horizontal fill (child)
+@mixin progress-fill($gradient: linear-gradient(90deg, $accent, $accent-light)) {
+    height: 100%;
+    border-radius: $radius-pill;
+    background: $gradient;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }

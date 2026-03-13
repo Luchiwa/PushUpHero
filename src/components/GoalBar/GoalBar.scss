@@ -13,18 +13,14 @@
 .goal-vertical-track {
     width: 14px;
     height: 60px;
-    background: #e0e0e0;
-    border-radius: $radius-pill;
-    overflow: hidden;
+    @include progress-track($bg: #e0e0e0);
     display: flex;
     align-items: flex-end;
 }
 
 .goal-vertical-fill {
     width: 100%;
-    border-radius: $radius-pill;
-    background: linear-gradient(0deg, $accent, $accent-light);
-    transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    @include progress-fill(linear-gradient(0deg, $accent, $accent-light));
 
     &.goal-done {
         background: $gradient-green;

@@ -56,7 +56,12 @@ function FriendCard({ friend, onRemove, onEncourage }: {
         <div className="friend-card">
             <Avatar photoURL={friend.photoURL} initials={friend.displayName} size={40} />
             <div className="friend-info">
-                <span className="friend-name">{friend.displayName}</span>
+                <span className="friend-name">
+                    {friend.displayName}
+                    {(friend.streak ?? 0) > 0 && (
+                        <span className="friend-streak">🔥 {friend.streak}</span>
+                    )}
+                </span>
                 <div className="friend-stats">
                     <span>Lvl {friend.level}</span>
                     <span className="friend-stats-dot">·</span>
@@ -285,7 +290,7 @@ export function FriendsTab() {
                         <button type="button" className="friends-search-clear" onClick={clearSearch} aria-label="Clear">✕</button>
                     )}
                 </div>
-                <button type="submit" className="friends-search-btn" disabled={searching || !query.trim()}>
+                <button type="submit" className="btn-primary-sm" disabled={searching || !query.trim()}>
                     {searching ? '…' : 'Search'}
                 </button>
             </form>

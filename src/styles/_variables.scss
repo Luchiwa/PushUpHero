@@ -46,12 +46,29 @@ $radius-pill: 100px;
 // Effects
 $blur: 20px;
 $transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-fast: 0.15s ease;
+
+// ── SHADOW TOKENS ──────────────────────────────────────────────
+$shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.08);
+$shadow-md: 0 8px 24px rgba(0, 0, 0, 0.12);
+$shadow-card: 0 12px 40px rgba(0, 0, 0, 0.08);
+$shadow-modal: 0 20px 48px rgba(0, 0, 0, 0.18);
+
+// ── FONT SIZE SCALE ────────────────────────────────────────────
+$font-xs: 0.72rem;   // labels, captions
+$font-sm: 0.8rem;    // small text
+$font-md: 0.9rem;    // body, inputs
+$font-base: 0.95rem; // form inputs, names
+$font-lg: 1.15rem;   // section titles
+$font-xl: 1.5rem;    // modal titles
+$font-2xl: 2.5rem;   // hero numbers
+$font-3xl: 3rem;     // big counters
 
 // ── GRADIENT HELPERS ───────────────────────────────────────────
-$gradient-accent: linear-gradient(135deg, $accent-pale, $accent-light, $accent);
-$gradient-gold: linear-gradient(135deg, $accent-light, $accent, $accent-dark);
-$gradient-green: linear-gradient(90deg, $green, $green-light);
-$gradient-rep: linear-gradient(135deg, $accent-pale, $accent-light);
+$gradient-accent: linear-gradient(135deg, $accent, $accent-light);
+$gradient-accent-rich: linear-gradient(135deg, $accent-pale, $accent-light, $accent);
+$gradient-danger: linear-gradient(135deg, rgba($red, 0.85), rgba(220, 38, 38, 0.95));
+$gradient-green: linear-gradient(135deg, $green, #16a34a);
 
 // ── CSS CUSTOM PROPERTIES ──────────────────────────────────────
 // These are exported to :root so they remain usable in plain CSS contexts

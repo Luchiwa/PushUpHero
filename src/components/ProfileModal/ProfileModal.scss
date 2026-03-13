@@ -22,20 +22,10 @@
     flex-shrink: 0;
 }
 
+// .profile-back-btn → inherits from .btn-icon in TSX
+// Override: color $text (not $text-muted), hover is bg only
 .profile-back-btn {
-    width: 38px;
-    height: 38px;
-    border: none;
-    background: $surface;
-    border-radius: 50%;
-    @include flex-center;
-    cursor: pointer;
     color: $text;
-    transition: background 0.2s;
-
-    &:hover {
-        background: $surface-hover;
-    }
 }
 
 .profile-topbar-title {
@@ -45,20 +35,10 @@
     letter-spacing: -0.01em;
 }
 
+// .profile-settings-btn → inherits from .btn-icon in TSX
+// Override: hover rotate
 .profile-settings-btn {
-    width: 38px;
-    height: 38px;
-    border: none;
-    background: $surface;
-    border-radius: 50%;
-    @include flex-center;
-    cursor: pointer;
-    color: $text-muted;
-    transition: $transition;
-
     &:hover {
-        background: $surface-hover;
-        color: $text;
         transform: rotate(30deg);
     }
 }
@@ -125,7 +105,26 @@
         font-weight: 800;
         color: $text;
         letter-spacing: -0.02em;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
     }
+}
+
+.profile-streak-sep {
+    color: $text-muted;
+    font-weight: 400;
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+.profile-streak {
+    font-size: 1rem;
+    font-weight: 700;
+    color: $text;
+    white-space: nowrap;
+    letter-spacing: 0;
 }
 
 .profile-member-since {
@@ -160,11 +159,7 @@
 }
 
 .profile-stat-label {
-    font-size: 0.72rem;
-    color: $text-muted;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-weight: 700;
+    @include label;
 }
 
 // ── Session history section ───────────────────────────────────────
@@ -194,30 +189,7 @@
     padding-bottom: $spacing-xl;
 }
 
-.btn-logout {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-size: 0.9rem;
-    width: 100%;
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: $radius-sm;
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.85), rgba(220, 38, 38, 0.95));
-    color: white;
-    font-weight: 700;
-    cursor: pointer;
-    transition: $transition;
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
-
-    &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
-    }
-}
+// .btn-logout → defined in _buttons.scss design system
 
 // ── Profile Tabs ──────────────────────────────────────────────────
 .profile-tabs {
