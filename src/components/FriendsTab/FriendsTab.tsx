@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import './FriendsTab.scss';
 import { useFriends } from '@hooks/useFriends';
 import type { SearchResult, FriendRequest, Friend, OutgoingRequest } from '@hooks/useFriends';
+import { Avatar } from '@components/Avatar/Avatar';
 
 // ── Sub-components ──────────────────────────────────────────────
 
@@ -53,7 +54,7 @@ function FriendCard({ friend, onRemove, onEncourage }: {
 
     return (
         <div className="friend-card">
-            <div className="friend-avatar">{friend.displayName[0]?.toUpperCase()}</div>
+            <Avatar photoURL={friend.photoURL} initials={friend.displayName} size={40} />
             <div className="friend-info">
                 <span className="friend-name">{friend.displayName}</span>
                 <div className="friend-stats">
@@ -101,7 +102,7 @@ function RequestCard({ request, onAccept, onDecline }: {
 
     return (
         <div className="friend-card friend-card--request">
-            <div className="friend-avatar">{request.fromUsername[0]?.toUpperCase()}</div>
+            <Avatar photoURL={undefined} initials={request.fromUsername} size={40} />
             <div className="friend-info">
                 <span className="friend-name">{request.fromUsername}</span>
                 <span className="friend-request-label">Wants to be your friend</span>
@@ -138,7 +139,7 @@ function OutgoingRequestCard({ request, onCancel }: {
 
     return (
         <div className="friend-card friend-card--outgoing">
-            <div className="friend-avatar">{request.toUsername[0]?.toUpperCase()}</div>
+            <Avatar photoURL={undefined} initials={request.toUsername} size={40} />
             <div className="friend-info">
                 <span className="friend-name">{request.toUsername}</span>
                 <span className="friend-pending-label">Request sent — awaiting reply</span>
@@ -171,7 +172,7 @@ function SearchResultCard({ result, onSend, onCancel }: {
 
     return (
         <div className="friend-card friend-card--search">
-            <div className="friend-avatar">{result.displayName[0]?.toUpperCase()}</div>
+            <Avatar photoURL={undefined} initials={result.displayName} size={40} />
             <div className="friend-info">
                 <span className="friend-name">{result.displayName}</span>
                 <div className="friend-stats">

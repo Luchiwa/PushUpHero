@@ -352,24 +352,18 @@
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    border: 1px solid transparent;
-    background: none;
-    color: $text-muted;
+    border: 1px solid rgba($red, 0.25);
+    background: rgba($red, 0.07);
+    color: $red;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: $transition;
-    opacity: 0;
-
-    .friend-card:hover & {
-        opacity: 1;
-    }
 
     &:hover {
-        background: rgba($red, 0.1);
-        border-color: rgba($red, 0.2);
-        color: $red;
+        background: rgba($red, 0.15);
+        border-color: rgba($red, 0.4);
     }
 }
 

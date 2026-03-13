@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 type FacingMode = 'user' | 'environment';
 
@@ -13,73 +13,66 @@ interface UseCameraReturn {
     videoRef: React.RefObject<HTMLVideoElement | null>;
     isReady: boolean;
     error: string | null;
+    triggerStart: (overrideFacingMode?: FacingMode) => void;
 }
 
 export function useCamera({ facingMode = 'user', enabled = true }: UseCameraOptions = {}): UseCameraReturn {
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const [isReady, setIsReady] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const streamRef = useRef<MediaStream | null>(null);
+    const facingModeRef = useRef(facingMode);
+    useEffect(() => { facingModeRef.current = facingMode; }, [facingMode]);
 
-    useEffect(() => {
-        let stream: MediaStream | null = null;
-        let cancelled = false;
-
-        function stopStream() {
-            if (videoRef.current?.srcObject) {
-                (videoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop());
-                videoRef.current.srcObject = null;
-            }
-            setIsReady(false);
+    const stopStream = useCallback(() => {
+        streamRef.current?.getTracks().forEach(t => t.stop());
+        streamRef.current = null;
+        if (videoRef.current) {
+            videoRef.current.srcObject = null;
         }
+        setIsReady(false);
+    }, []);
 
+    const triggerStart = useCallback(async (overrideFacingMode?: FacingMode) => {
+        stopStream();
+        setError(null);
+        const mode = overrideFacingMode ?? facingModeRef.current;
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: mode,
+                    width:  { ideal: isMobile ? 640  : 1280 },
+                    height: { ideal: isMobile ? 480  : 720  },
+                },
+            });
+
+            streamRef.current = stream;
+
+            if (!videoRef.current) return;
+            videoRef.current.srcObject = stream;
+
+            const video = videoRef.current;
+            const onReady = () => {
+                video.play().catch(() => {});
+                setIsReady(true);
+            };
+            if (video.readyState >= 2) {
+                onReady();
+            } else {
+                video.onloadedmetadata = onReady;
+            }
+        } catch (err) {
+            setError('Camera access denied. Please allow camera permissions.');
+            console.error('Camera error:', err);
+        }
+    }, [stopStream]);
+
+    // Stop stream when disabled
+    useEffect(() => {
         if (!enabled) {
             stopStream();
-            return;
         }
+    }, [enabled, stopStream]);
 
-        async function startCamera() {
-            setIsReady(false);
-            try {
-                // Stop any existing stream before switching
-                stopStream();
-
-                stream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        facingMode,
-                        width:  { ideal: isMobile ? 640  : 1280 },
-                        height: { ideal: isMobile ? 480  : 720  },
-                    },
-                });
-
-                if (cancelled) {
-                    stream.getTracks().forEach(t => t.stop());
-                    return;
-                }
-
-                if (videoRef.current) {
-                    videoRef.current.srcObject = stream;
-                    videoRef.current.onloadedmetadata = () => {
-                        if (!cancelled) {
-                            videoRef.current?.play();
-                            setIsReady(true);
-                        }
-                    };
-                }
-            } catch (err) {
-                if (!cancelled) {
-                    setError('Camera access denied. Please allow camera permissions.');
-                    console.error('Camera error:', err);
-                }
-            }
-        }
-
-        startCamera();
-
-        return () => {
-            cancelled = true;
-            stream?.getTracks().forEach((t) => t.stop());
-        };
-    }, [facingMode, enabled]);
-
-    return { videoRef, isReady, error };
+    return { videoRef, isReady, error, triggerStart };
 }

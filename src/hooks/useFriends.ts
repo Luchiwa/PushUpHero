@@ -25,6 +25,7 @@ export interface Friend {
     level: number;
     totalReps: number;
     totalSessions: number;
+    photoURL?: string;
 }
 
 export type SearchResult = {
@@ -83,7 +84,7 @@ export function useFriends() {
                         const p = profileSnap.data();
                         setFriends(prev => prev.map(f =>
                             f.uid === uid
-                                ? { ...f, level: p.level ?? f.level, totalReps: p.totalReps ?? f.totalReps, totalSessions: p.totalSessions ?? f.totalSessions }
+                                ? { ...f, level: p.level ?? f.level, totalReps: p.totalReps ?? f.totalReps, totalSessions: p.totalSessions ?? f.totalSessions, photoURL: p.photoURL ?? f.photoURL }
                                 : f
                         ));
                     });

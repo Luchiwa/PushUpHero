@@ -43,7 +43,7 @@ function App() {
   const sessionSavedRef = useRef(false); // guard against double-save
 
   const cameraEnabled = screen === 'active';
-  const { videoRef, isReady: isCameraReady, error: cameraError } = useCamera({ facingMode, enabled: cameraEnabled });
+  const { videoRef, isReady: isCameraReady, error: cameraError, triggerStart: startCamera } = useCamera({ facingMode, enabled: cameraEnabled });
 
   const poseOverlayRef = useRef<PoseOverlayHandle>(null);
 
@@ -91,6 +91,7 @@ function App() {
     prevRepCountRef.current = exerciseState.repCount; // Reset base
     elapsedTimeRef.current = 0; // Reset elapsed time for new session
     sessionSavedRef.current = false; // Reset save guard for new session
+    startCamera(); // called synchronously in tap handler — required for Safari iOS getUserMedia
     setScreen('active');
   };
   const handleStop = () => { 
@@ -174,7 +175,11 @@ function App() {
             onStop={handleStop}
             onTimerEnd={handleTimerEnd}
             elapsedTimeRef={elapsedTimeRef}
-            onFlipCamera={() => setFacingMode(m => m === 'user' ? 'environment' : 'user')}
+            onFlipCamera={() => {
+                const newMode = facingMode === 'user' ? 'environment' : 'user';
+                setFacingMode(newMode);
+                startCamera(newMode);
+            }}
             facingMode={facingMode}
             soundEnabled={soundEnabled}
             onSoundToggle={() => setSoundEnabled(s => !s)}

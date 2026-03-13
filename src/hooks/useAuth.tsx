@@ -7,6 +7,7 @@ export interface DbUser {
     level: number;
     totalReps: number;
     createdAt?: number;
+    photoURL?: string;
 }
 
 export interface AuthContextType {
@@ -15,6 +16,7 @@ export interface AuthContextType {
     loading: boolean;
     loginWithGoogle: () => Promise<void>;
     logout: () => Promise<void>;
+    uploadAvatar: (file: File) => Promise<void>;
     // Level system
     level: number;
     totalLifetimeReps: number;

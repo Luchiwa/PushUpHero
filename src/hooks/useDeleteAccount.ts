@@ -6,7 +6,8 @@ import {
     getDocs,
     writeBatch,
 } from 'firebase/firestore';
-import { auth, db } from '@lib/firebase';
+import { ref, deleteObject } from 'firebase/storage';
+import { auth, db, storage } from '@lib/firebase';
 
 /**
  * Deletes the current user's account and all associated Firestore data.
@@ -81,9 +82,16 @@ export async function deleteCurrentAccount(): Promise<void> {
     // ── 4. Delete user profile document ─────────────────────────
     await deleteDoc(userRef);
 
-    // ── 5. Delete Firebase Auth account ─────────────────────────
+    // ── 5. Delete avatar from Storage (ignore if not found) ──────
+    try {
+        await deleteObject(ref(storage, `avatars/${uid}.jpg`));
+    } catch {
+        // File may not exist if user never uploaded an avatar
+    }
+
+    // ── 6. Delete Firebase Auth account ─────────────────────────
     await deleteUser(user);
 
-    // ── 6. Clear local storage ───────────────────────────────────
+    // ── 7. Clear local storage ───────────────────────────────────
     localStorage.clear();
 }

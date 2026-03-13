@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@hooks/useAuth';
+import { Avatar } from '@components/Avatar/Avatar';
 import { useSessionHistory } from '@hooks/useSessionHistory';
 import { useFriends } from '@hooks/useFriends';
+import { useActivityFeed } from '@hooks/useActivityFeed';
 import { SessionHistoryPanel } from '@components/SessionHistoryPanel/SessionHistoryPanel';
 import { FriendsTab } from '@components/FriendsTab/FriendsTab';
 import { FriendsFeedPanel } from '@components/FriendsFeedPanel/FriendsFeedPanel';
@@ -15,18 +17,42 @@ interface ProfileModalProps {
 }
 
 export function ProfileModal({ onClose }: ProfileModalProps) {
-    const { user, dbUser, logout, level, totalLifetimeReps } = useAuth();
+    const { user, dbUser, level, totalLifetimeReps, uploadAvatar } = useAuth();
     const { getSessions, totalSessionCount } = useSessionHistory();
     const { friends, incomingRequests } = useFriends();
     const sessions = getSessions();
 
     const [activeTab, setActiveTab] = useState<ProfileTab>('history');
     const [showSettings, setShowSettings] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleLogout = async () => {
-        await logout();
-        onClose();
+    const handleAvatarClick = () => fileInputRef.current?.click();
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploading(true);
+        try { await uploadAvatar(file); } finally { setUploading(false); e.target.value = ''; }
     };
+
+    const FEED_SEEN_KEY = `feed_last_seen_${user?.uid}`;
+    const [lastSeen, setLastSeen] = useState<number>(
+        () => parseInt(localStorage.getItem(`feed_last_seen_${user?.uid}`) ?? '0', 10)
+    );
+    const { feed } = useActivityFeed(friends);
+    const latestEventAt = feed.length > 0 ? feed[0].createdAt : 0;
+    const hasFeedUnread = friends.length > 0 && latestEventAt > lastSeen;
+
+    const markFeedSeen = () => {
+        const now = Date.now();
+        localStorage.setItem(FEED_SEEN_KEY, String(now));
+        setLastSeen(now);
+    };
+
+    useEffect(() => {
+        if (activeTab === 'feed') markFeedSeen();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeTab]);
 
     if (!user) return null;
 
@@ -54,9 +80,22 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
 
             <div className="profile-content">
                 <div className="profile-header">
-                    <div className="profile-avatar-large">
-                        {dbUser?.displayName?.[0]?.toUpperCase() || 'U'}
+                    <div className={`profile-avatar-wrapper ${uploading ? 'profile-avatar-wrapper--uploading' : ''}`}>
+                        <Avatar
+                            photoURL={dbUser?.photoURL}
+                            initials={dbUser?.displayName || 'U'}
+                            size={72}
+                            onClick={handleAvatarClick}
+                        />
+                        <span className="profile-avatar-edit-hint">✎</span>
                     </div>
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={handleFileChange}
+                    />
                     <div className="profile-info">
                         <h2>{dbUser?.displayName || 'User'}</h2>
                         <span className="profile-member-since">Member since {memberSince}</span>
@@ -100,7 +139,7 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
                         onClick={() => setActiveTab('feed')}
                     >
                         Feed
-                        {friends.length > 0 && <span className="profile-tab-dot" />}
+                        {hasFeedUnread && <span className="profile-tab-dot" />}
                     </button>
                 </div>
 
@@ -123,17 +162,6 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
                         <FriendsFeedPanel friends={friends} />
                     </div>
                 )}
-
-                <div className="profile-actions">
-                    <button className="btn-logout" onClick={handleLogout}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                            <polyline points="16 17 21 12 16 7"></polyline>
-                            <line x1="21" y1="12" x2="9" y2="12"></line>
-                        </svg>
-                        Sign Out
-                    </button>
-                </div>
             </div>
         </div>
 

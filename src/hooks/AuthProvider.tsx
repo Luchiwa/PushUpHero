@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '@lib/firebase';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { auth, db, storage } from '@lib/firebase';
 import { AuthContext } from './useAuth';
 import type { DbUser } from './useAuth';
 import { useLevelSystem } from './useLevelSystem';
@@ -62,6 +63,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    const uploadAvatar = async (file: File) => {
+        if (!user) throw new Error('Not authenticated');
+        // Resize to max 512px before upload to save bandwidth
+        const bitmap = await createImageBitmap(file);
+        const size = Math.min(512, bitmap.width, bitmap.height);
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d')!;
+        // Center-crop square
+        const srcSize = Math.min(bitmap.width, bitmap.height);
+        const sx = (bitmap.width - srcSize) / 2;
+        const sy = (bitmap.height - srcSize) / 2;
+        ctx.drawImage(bitmap, sx, sy, srcSize, srcSize, 0, 0, size, size);
+        const blob = await new Promise<Blob>((resolve) =>
+            canvas.toBlob((b) => resolve(b!), 'image/jpeg', 0.85)
+        );
+        const storageRef = ref(storage, `avatars/${user.uid}.jpg`);
+        await user.getIdToken(true); // force token refresh
+        await uploadBytes(storageRef, blob, { contentType: 'image/jpeg' });
+        const url = await getDownloadURL(storageRef);
+        await updateDoc(doc(db, 'users', user.uid), { photoURL: url });
+        setDbUser(prev => prev ? { ...prev, photoURL: url } : prev);
+    };
+
     const logout = async () => {
         await signOut(auth);
         localStorage.removeItem('pushup_game_total_reps');
@@ -72,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Provide base auth values; AppServices will merge level system values on top
     const baseValue = {
-        user, dbUser, loading, loginWithGoogle, logout,
+        user, dbUser, loading, loginWithGoogle, logout, uploadAvatar,
         // placeholders overridden by AppServices below
         level: 0,
         totalLifetimeReps: 0,

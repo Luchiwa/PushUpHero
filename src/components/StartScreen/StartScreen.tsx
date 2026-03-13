@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@hooks/useAuth';
+import { Avatar } from '@components/Avatar/Avatar';
 import { DragNumberPicker } from '@components/DragNumberPicker/DragNumberPicker';
 import { AuthModal } from '@components/AuthModal/AuthModal';
 import { ProfileModal } from '@components/ProfileModal/ProfileModal';
@@ -46,7 +47,12 @@ export function StartScreen({
                     <div className="start-brand-header">
                         {user ? (
                             <div className="user-profile-tag" onClick={() => setShowProfileModal(true)} title="Mon profil">
-                                <span className="user-avatar">{dbUser?.displayName?.[0]?.toUpperCase() || 'U'}</span>
+                                <Avatar
+                                    photoURL={dbUser?.photoURL}
+                                    initials={dbUser?.displayName || 'U'}
+                                    size={32}
+                                    className="user-avatar"
+                                />
                                 <span className="user-name">{dbUser?.displayName || 'Level ' + level}</span>
                             </div>
                         ) : (

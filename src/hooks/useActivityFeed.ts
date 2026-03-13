@@ -8,6 +8,7 @@ export interface ActivityEvent {
     id: string;
     uid: string;
     displayName: string;
+    photoURL?: string;
     type: 'session';
     reps: number;
     averageScore: number;
@@ -89,6 +90,7 @@ export function useActivityFeed(friends: Friend[]) {
                                 id: d.id,
                                 uid: friend.uid,
                                 displayName: friend.displayName,
+                                photoURL: friend.photoURL,
                                 type: 'session',
                                 reps: data.reps ?? 0,
                                 averageScore: data.averageScore ?? 0,

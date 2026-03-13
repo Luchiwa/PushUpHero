@@ -83,17 +83,35 @@
     gap: $spacing-md;
 }
 
-.profile-avatar-large {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    background: $gradient-accent;
-    @include flex-center;
-    font-size: 2rem;
-    font-weight: 800;
-    color: white;
+.profile-avatar-wrapper {
+    position: relative;
     flex-shrink: 0;
-    box-shadow: 0 4px 16px rgba($accent, 0.3);
+
+    .avatar {
+        box-shadow: 0 4px 16px rgba($accent, 0.3);
+    }
+
+    &--uploading {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+}
+
+.profile-avatar-edit-hint {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: $accent;
+    color: white;
+    font-size: 0.65rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
 }
 
 .profile-info {
@@ -268,4 +286,15 @@
 
 .profile-tab-panel {
     flex: 1;
+}
+
+// ── Footer (logout) ───────────────────────────────────────────────
+.profile-footer {
+    flex-shrink: 0;
+    padding: 0.75rem $spacing-lg max(0.75rem, env(safe-area-inset-bottom));
+    border-top: 1px solid $border;
+    max-width: 480px;
+    width: 100%;
+    margin: 0 auto;
+    align-self: stretch;
 }

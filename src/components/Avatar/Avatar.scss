@@ -1,0 +1,48 @@
+@use '../../styles/variables' as *;
+
+.avatar {
+    border-radius: 50%;
+    background: linear-gradient(135deg, $accent 0%, $accent-light 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+    user-select: none;
+    position: relative;
+
+    &--clickable {
+        cursor: pointer;
+
+        &::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0);
+            transition: background 0.15s ease;
+            border-radius: 50%;
+        }
+
+        &:hover::after {
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        &:active::after {
+            background: rgba(0, 0, 0, 0.25);
+        }
+    }
+
+    &__img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    &__initials {
+        color: white;
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: 0.02em;
+    }
+}
