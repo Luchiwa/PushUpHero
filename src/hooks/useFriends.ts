@@ -76,7 +76,22 @@ export function useFriends() {
                 }
             });
 
-            // Add listeners for new friends
+            // Set initial list first — stats at 0, profile snapshots will fill them in.
+            // Must come BEFORE attaching listeners so the listener updates are never overwritten.
+            setFriends(snap.docs.map(d => {
+                const data = d.data();
+                return {
+                    uid: data.uid,
+                    displayName: data.displayName,
+                    photoURL: data.photoURL ?? undefined,
+                    level: 0,
+                    totalReps: 0,
+                    totalSessions: 0,
+                    streak: 0,
+                } as Friend;
+            }));
+
+            // Attach per-profile live listeners for stats (level, totalReps, totalSessions, streak)
             snap.docs.forEach(friendDoc => {
                 const uid = friendDoc.id;
                 if (!profileUnsubsRef.current.has(uid)) {
@@ -85,16 +100,20 @@ export function useFriends() {
                         const p = profileSnap.data();
                         setFriends(prev => prev.map(f =>
                             f.uid === uid
-                                ? { ...f, level: p.level ?? f.level, totalReps: p.totalReps ?? f.totalReps, totalSessions: p.totalSessions ?? f.totalSessions, photoURL: p.photoURL ?? f.photoURL, streak: p.streak ?? f.streak }
+                                ? {
+                                    ...f,
+                                    level: p.level ?? 0,
+                                    totalReps: p.totalReps ?? 0,
+                                    totalSessions: p.totalSessions ?? 0,
+                                    photoURL: p.photoURL ?? f.photoURL,
+                                    streak: p.streak ?? 0,
+                                }
                                 : f
                         ));
                     });
                     profileUnsubsRef.current.set(uid, unsub);
                 }
             });
-
-            // Set initial list from the friends subcollection docs
-            setFriends(snap.docs.map(d => d.data() as Friend));
         });
 
         // Listen to incoming friend requests
@@ -210,27 +229,16 @@ export function useFriends() {
     const acceptFriendRequest = useCallback(async (request: FriendRequest) => {
         if (!user || !dbUser) return;
 
-        // Fetch requester's profile for stats
-        const profileDoc = await getDoc(doc(db, 'users', request.fromUid));
-        if (!profileDoc.exists()) return;
-        const profile = profileDoc.data();
-
-        // Add them to my friends
+        // Add them to my friends (stats come from live profile snapshot, not stored here)
         await setDoc(doc(db, 'users', user.uid, 'friends', request.fromUid), {
             uid: request.fromUid,
             displayName: request.fromUsername,
-            level: profile.level || 0,
-            totalReps: profile.totalReps || 0,
-            totalSessions: profile.totalSessions || 0,
         });
 
         // Add me to their friends
         await setDoc(doc(db, 'users', request.fromUid, 'friends', user.uid), {
             uid: user.uid,
             displayName: dbUser.displayName,
-            level: profile.level || 0,
-            totalReps: profile.totalReps || 0,
-            totalSessions: profile.totalSessions || 0,
         });
 
         // Delete the incoming request

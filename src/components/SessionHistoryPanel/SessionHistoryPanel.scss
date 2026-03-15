@@ -85,6 +85,25 @@
     flex-shrink: 0;
 }
 
+.session-history-view-all {
+    align-self: center;
+    margin-top: 0.25rem;
+    padding: 0.45rem 1.2rem;
+    border-radius: 100px;
+    background: transparent;
+    border: 1.5px solid $accent;
+    color: $accent;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background $transition-fast, color $transition-fast;
+
+    &:hover {
+        background: $accent;
+        color: #fff;
+    }
+}
+
 @media (max-width: 480px) {
     .session-history { gap: 0.4rem; }
     .session-history-title { font-size: 0.6rem; margin-bottom: 0.25rem; }

@@ -31,7 +31,7 @@ export function StartScreen({
     onTimeGoalChange,
     onStart,
 }: StartScreenProps) {
-    const { user, dbUser, level, totalLifetimeReps, repsNeededForNextLevel, levelProgressPct } = useAuth();
+    const { user, dbUser, level, totalLifetimeReps, repsIntoCurrentLevel, repsNeededForNextLevel, levelProgressPct } = useAuth();
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [showProfileModal, setShowProfileModal] = useState(false);
 
@@ -71,7 +71,7 @@ export function StartScreen({
 
                     <div className="level-preview-bar">
                         <div className="level-preview-fill" style={{ width: `${levelProgressPct}%` }} />
-                        <span className="level-preview-text">{repsNeededForNextLevel} reps to Level {level + 1}</span>
+                        <span className="level-preview-text">{repsNeededForNextLevel - repsIntoCurrentLevel} reps to Level {level + 1}</span>
                     </div>
                 </div>
 

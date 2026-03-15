@@ -1,0 +1,40 @@
+@use 'variables' as *;
+
+.weekly-chart {
+    width: 100%;
+    height: auto;
+    display: block;
+    overflow: visible;
+}
+
+.chart-axis-label {
+    font-size: 9px;
+    fill: $text-muted;
+    font-family: inherit;
+}
+
+.chart-day-label {
+    font-size: 10px;
+    fill: $text-muted;
+    font-family: inherit;
+    font-weight: 500;
+
+    &--today {
+        fill: $accent;
+        font-weight: 700;
+    }
+}
+
+.chart-today-label {
+    font-size: 9px;
+    fill: $accent;
+    font-weight: 700;
+    font-family: inherit;
+}
+
+.chart-tooltip-text {
+    font-size: 10px;
+    fill: #ffffff;
+    font-weight: 700;
+    font-family: inherit;
+}

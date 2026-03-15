@@ -296,6 +296,7 @@ export function FriendsTab() {
             </form>
 
             {/* Search result */}
+            <div className="friends-tab-scroll">
             {searchResult === 'not_found' && (
                 <p className="friends-empty-msg">No user found with this username.</p>
             )}
@@ -370,6 +371,7 @@ export function FriendsTab() {
                     </>
                 ) : null}
             </div>
+            </div>{/* end friends-tab-scroll */}
 
         </div>
 

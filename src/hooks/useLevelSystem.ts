@@ -52,30 +52,29 @@ export function useLevelSystem() {
                 const updatedTotal = data.totalReps as number;
                 const updatedLevel = calculateLevelFromTotalReps(updatedTotal);
 
-                // ── Streak logic (UTC, 36h grace window) ────────────
-                const todayUTC = new Date().toISOString().slice(0, 10);
+                // ── Streak logic (local calendar days) ───────────────
+                const now = new Date();
+                const todayLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
                 const lastDate: string | undefined = data.lastSessionDate;
-                const lastMs = lastDate ? new Date(lastDate).getTime() : 0;
-                const nowMs = Date.now();
-                const elapsed = nowMs - lastMs;
-                const GRACE_MS = 36 * 60 * 60 * 1000;
 
                 let newStreak: number;
-                if (lastDate === todayUTC) {
-                    // Already logged a session today — keep streak
+                if (lastDate === todayLocal) {
+                    // Already logged a session today — keep streak unchanged
                     newStreak = data.streak ?? 1;
-                } else if (lastDate && elapsed <= GRACE_MS) {
-                    // Within 36h grace window — increment
-                    newStreak = (data.streak ?? 0) + 1;
+                } else if (lastDate) {
+                    // Check if lastDate was exactly yesterday (local time)
+                    const yesterday = new Date(now);
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const yesterdayLocal = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+                    newStreak = lastDate === yesterdayLocal ? (data.streak ?? 0) + 1 : 1;
                 } else {
-                    // Streak broken — reset to 1
                     newStreak = 1;
                 }
 
                 await updateDoc(userRef, {
                     level: updatedLevel,
                     streak: newStreak,
-                    lastSessionDate: todayUTC,
+                    lastSessionDate: todayLocal,
                 });
             }
         } else {

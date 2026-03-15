@@ -34,18 +34,47 @@
 
 .summary-stats {
     display: flex;
-    gap: 1.5rem;
     align-items: center;
+    justify-content: space-between;
     width: 100%;
-    justify-content: center;
+    gap: 0;
 
-    @media (max-width: 480px) { gap: 1rem; }
+    // Time mode: stack duration above the 3-stat row
+    &--time {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+}
+
+// Row of 3 stats (reps mode, or bottom row of time mode)
+.summary-stats-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 0;
+}
+
+// Full-width duration stat (time mode only)
+.summary-stat--wide {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid $border;
+}
+
+.summary-value--duration {
+    font-size: 2.5rem;
 }
 
 .summary-divider {
     width: 1px;
     height: 50px;
     background: $border;
+    flex-shrink: 0;
 }
 
 .summary-stat {
@@ -53,6 +82,8 @@
     flex-direction: column;
     align-items: center;
     gap: 0.35rem;
+    flex: 1;
+    min-width: 0;
 }
 
 .summary-value {
@@ -60,10 +91,14 @@
     font-weight: 900;
     line-height: 1;
     @include text-gradient(linear-gradient(135deg, $accent-pale, $accent));
+
+    @media (max-width: 480px) { font-size: 2rem; }
 }
 
 .summary-label {
     @include label(0.7rem);
+    text-align: center;
+    white-space: nowrap;
 }
 
 // ── Grade ────────────────────────────────────────────────────────

@@ -87,27 +87,28 @@ export function SummaryScreen({ exerciseState, onReset, sessionMode, elapsedTime
             <div className="summary-card">
                 <h2 className="summary-title">Session Complete</h2>
 
-                <div className="summary-stats">
+                <div className={`summary-stats${sessionMode === 'time' ? ' summary-stats--time' : ''}`}>
                     {sessionMode === 'time' ? (
                         <>
-                            <div className="summary-stat">
-                                <span className="summary-value">{formatElapsedTime(elapsedTime)}</span>
+                            <div className="summary-stat summary-stat--wide">
+                                <span className="summary-value summary-value--duration">{formatElapsedTime(elapsedTime)}</span>
                                 <span className="summary-label">Duration</span>
                             </div>
-                            <div className="summary-divider" />
-                            <div className="summary-stat">
-                                <span className="summary-value">{repCount}</span>
-                                <span className="summary-label">Push-ups</span>
-                            </div>
-                            <div className="summary-divider" />
-                            <div className="summary-stat">
-                                <ScoreGrade score={averageScore} />
-                                <span className="summary-label">Grade</span>
-                            </div>
-                            <div className="summary-divider" />
-                            <div className="summary-stat">
-                                <span className="summary-value">{averageScore}</span>
-                                <span className="summary-label">Avg Score</span>
+                            <div className="summary-stats-row">
+                                <div className="summary-stat">
+                                    <span className="summary-value">{repCount}</span>
+                                    <span className="summary-label">Push-ups</span>
+                                </div>
+                                <div className="summary-divider" />
+                                <div className="summary-stat">
+                                    <ScoreGrade score={averageScore} />
+                                    <span className="summary-label">Grade</span>
+                                </div>
+                                <div className="summary-divider" />
+                                <div className="summary-stat">
+                                    <span className="summary-value">{averageScore}</span>
+                                    <span className="summary-label">Avg Score</span>
+                                </div>
                             </div>
                         </>
                     ) : (

@@ -79,8 +79,9 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
                     transaction.set(userRef, {
                         uid: user.uid,
                         displayName: username.trim(),
-                        level: 1, // Will be merged from localstorage later
+                        level: 0,
                         totalReps: 0,
+                        totalSessions: 0,
                         createdAt: Date.now()
                     });
                 });

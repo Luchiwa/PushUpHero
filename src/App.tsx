@@ -8,6 +8,7 @@ import { PoseOverlay } from './components/PoseOverlay/PoseOverlay';
 import type { PoseOverlayHandle } from './components/PoseOverlay/PoseOverlay';
 import { Dashboard } from './components/Dashboard/Dashboard';
 import { SummaryScreen } from './components/SummaryScreen/SummaryScreen';
+import { LevelUpScreen } from './components/LevelUpScreen/LevelUpScreen';
 import { PositionGuide } from './components/PositionGuide/PositionGuide';
 import { ReloadPrompt } from './components/ReloadPrompt/ReloadPrompt';
 import { VictoryOverlay } from './components/VictoryOverlay/VictoryOverlay';
@@ -17,7 +18,7 @@ import { useAuth } from './hooks/useAuth';
 import { useSoundEffect } from './hooks/useSoundEffect';
 import './components/App/App.scss';
 
-type AppScreen = 'idle' | 'active' | 'victory' | 'stopped';
+type AppScreen = 'idle' | 'active' | 'victory' | 'stopped' | 'levelup';
 type FacingMode = 'user' | 'environment';
 type SessionMode = 'reps' | 'time';
 
@@ -38,6 +39,7 @@ function App() {
   // Track reps and level safely at root so we don't lose the critical final rep if the dashboard unmounts.
   const prevRepCountRef = useRef(0);
   const prevLevelRef = useRef(level);
+  const [levelBefore, setLevelBefore] = useState(level);
   const elapsedTimeRef = useRef(0);
   const [elapsedTime, setElapsedTime] = useState(0);
   const sessionSavedRef = useRef(false); // guard against double-save
@@ -91,6 +93,7 @@ function App() {
     prevRepCountRef.current = exerciseState.repCount; // Reset base
     elapsedTimeRef.current = 0; // Reset elapsed time for new session
     sessionSavedRef.current = false; // Reset save guard for new session
+    setLevelBefore(level); // Snapshot du level au début de la session
     startCamera(); // called synchronously in tap handler — required for Safari iOS getUserMedia
     setScreen('active');
   };
@@ -112,9 +115,21 @@ function App() {
   const handleVictory = () => setScreen('victory');
   const handleVictoryComplete = () => { saveCurrentSession(); setElapsedTime(elapsedTimeRef.current); setScreen('stopped'); };
   const handleReset = () => {
+    if (level > levelBefore) {
+      // Level-up détecté : afficher l'écran avant de reset
+      setScreen('levelup');
+      return;
+    }
     resetDetector();
     prevRepCountRef.current = 0;
-    elapsedTimeRef.current = 0; // Reset elapsed time
+    elapsedTimeRef.current = 0;
+    setScreen('idle');
+  };
+
+  const handleLevelUpContinue = () => {
+    resetDetector();
+    prevRepCountRef.current = 0;
+    elapsedTimeRef.current = 0;
     setScreen('idle');
   };
 
@@ -210,6 +225,14 @@ function App() {
           onReset={handleReset}
           sessionMode={sessionMode}
           elapsedTime={elapsedTime}
+        />
+      )}
+
+      {screen === 'levelup' && (
+        <LevelUpScreen
+          previousLevel={levelBefore}
+          newLevel={level}
+          onContinue={handleLevelUpContinue}
         />
       )}
 

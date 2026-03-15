@@ -8,6 +8,7 @@ import { SessionHistoryPanel } from '@components/SessionHistoryPanel/SessionHist
 import { FriendsTab } from '@components/FriendsTab/FriendsTab';
 import { FriendsFeedPanel } from '@components/FriendsFeedPanel/FriendsFeedPanel';
 import { SettingsModal } from '@components/SettingsModal/SettingsModal';
+import { StatsScreen } from '@components/StatsScreen/StatsScreen';
 import './ProfileModal.scss';
 
 type ProfileTab = 'history' | 'friends' | 'feed';
@@ -24,6 +25,7 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
 
     const [activeTab, setActiveTab] = useState<ProfileTab>('history');
     const [showSettings, setShowSettings] = useState(false);
+    const [showStats, setShowStats] = useState(false);
     const [uploading, setUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -155,7 +157,7 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
                 {activeTab === 'history' && (
                     <div className="profile-tab-panel">
                         {sessions.length > 0
-                            ? <SessionHistoryPanel />
+                            ? <SessionHistoryPanel onViewAll={() => setShowStats(true)} />
                             : <p className="friends-empty-msg">No sessions yet. Start your first workout!</p>
                         }
                     </div>
@@ -178,6 +180,9 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
                 onClose={() => setShowSettings(false)}
                 onAccountDeleted={() => { onClose(); }}
             />
+        )}
+        {showStats && (
+            <StatsScreen onClose={() => setShowStats(false)} />
         )}
         </>
     );

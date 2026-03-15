@@ -45,15 +45,14 @@
 
 .profile-content {
     flex: 1;
-    overflow-y: auto;
-    padding: $spacing-xl $spacing-lg;
+    overflow: hidden;          // ne scroll plus — les tab-panels gèrent leur propre scroll
+    padding: $spacing-xl $spacing-lg 0;
     display: flex;
     flex-direction: column;
     gap: $spacing-lg;
     max-width: 480px;
     width: 100%;
     margin: 0 auto;
-    -webkit-overflow-scrolling: touch;
 }
 
 // ── Header ──────────────────────────────────────────────────────
@@ -258,6 +257,77 @@
 
 .profile-tab-panel {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+
+    // ── History tab ──────────────────────────────────────────────
+    .session-history {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+
+        .session-history-title {
+            flex-shrink: 0;
+            padding-bottom: $spacing-sm;
+        }
+
+        .session-history-list {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: $spacing-xl;
+        }
+
+        .session-history-view-all {
+            flex-shrink: 0;
+            margin-top: $spacing-sm;
+            margin-bottom: $spacing-md;
+        }
+    }
+
+    // ── Friends tab ──────────────────────────────────────────────
+    .friends-tab {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+
+        .friends-search-form {
+            flex-shrink: 0;
+        }
+
+        .friends-tab-scroll {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: $spacing-xl;
+        }
+    }
+
+    // ── Feed tab ─────────────────────────────────────────────────
+    .friends-feed {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+
+        .feed-header {
+            flex-shrink: 0;
+        }
+
+        .feed-scroll {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: $spacing-xl;
+        }
+    }
 }
 
 // ── Footer (logout) ───────────────────────────────────────────────

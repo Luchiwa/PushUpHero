@@ -87,6 +87,7 @@ export function FriendsFeedPanel({ friends }: FriendsFeedPanelProps) {
                 </button>
             </div>
 
+            <div className="feed-scroll">
             {todayFeed.length > 0 && (
                 <section className="feed-section">
                     <p className="feed-section-label">Today</p>
@@ -108,6 +109,7 @@ export function FriendsFeedPanel({ friends }: FriendsFeedPanelProps) {
                     </ul>
                 </section>
             )}
+            </div>{/* end feed-scroll */}
         </div>
     );
 }

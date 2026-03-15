@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { auth, db, storage } from '@lib/firebase';
 import { AuthContext } from './useAuth';
@@ -30,24 +30,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
             setUser(firebaseUser);
             if (firebaseUser) {
-                try {
-                    const docSnap = await getDoc(doc(db, 'users', firebaseUser.uid));
+                // Realtime listener on the user profile — keeps dbUser (streak, level, etc.) always fresh
+                const userRef = doc(db, 'users', firebaseUser.uid);
+                const unsubUser = onSnapshot(userRef, (docSnap) => {
                     if (docSnap.exists()) {
-                        setDbUser(docSnap.data() as DbUser);
+                        const userData = docSnap.data() as DbUser;
+
+                        // Reset streak if no session was made yesterday or today (local calendar days)
+                        if (userData.lastSessionDate && (userData.streak ?? 0) > 0) {
+                            const now = new Date();
+                            const todayLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+                            const yesterday = new Date(now);
+                            yesterday.setDate(yesterday.getDate() - 1);
+                            const yesterdayLocal = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+
+                            const isRecentEnough = userData.lastSessionDate === todayLocal || userData.lastSessionDate === yesterdayLocal;
+                            if (!isRecentEnough) {
+                                userData.streak = 0;
+                                updateDoc(userRef, { streak: 0 }).catch(() => {});
+                            }
+                        }
+
+                        setDbUser(userData);
                     } else {
                         setDbUser(null);
                     }
-                } catch (err) {
-                    console.error('Error fetching user data:', err);
-                    setDbUser(null);
-                }
+                    setLoading(false);
+                });
+                return unsubUser;
             } else {
                 setDbUser(null);
+                setLoading(false);
+                return undefined;
             }
-            setLoading(false);
         });
 
         return unsubscribe;

@@ -1,9 +1,18 @@
 /**
- * SessionHistoryPanel — displays the last 5 sessions on the start screen.
+ * SessionHistoryPanel — displays sessions list.
+ * When `sessions` prop is provided, renders that list directly.
+ * Otherwise falls back to useSessionHistory() (last 5 sessions).
  */
 import { useMemo } from 'react';
 import { useSessionHistory } from '@hooks/useSessionHistory';
+import type { SessionRecord } from '@hooks/useSessionHistory';
 import './SessionHistoryPanel.scss';
+
+interface SessionHistoryPanelProps {
+    sessions?: SessionRecord[];
+    title?: string;
+    onViewAll?: () => void;
+}
 
 function formatDate(ts: number): string {
     const d = new Date(ts);
@@ -34,15 +43,19 @@ function scoreColor(score: number): string {
     return '#ef4444';
 }
 
-export function SessionHistoryPanel() {
-    const { getSessions } = useSessionHistory();
-    const sessions = useMemo(() => getSessions(), [getSessions]);
+export function SessionHistoryPanel({ sessions: sessionsProp, title, onViewAll }: SessionHistoryPanelProps) {
+    const { getSessions, totalSessionCount } = useSessionHistory();
+    const fallbackSessions = useMemo(() => getSessions(), [getSessions]);
+
+    const sessions = sessionsProp ?? fallbackSessions;
+    const resolvedTitle = title ?? 'Recent sessions';
+    const showViewAll = !sessionsProp && onViewAll && totalSessionCount > 5;
 
     if (sessions.length === 0) return null;
 
     return (
         <div className="session-history">
-            <p className="session-history-title">Recent sessions</p>
+            <p className="session-history-title">{resolvedTitle}</p>
             <ul className="session-history-list">
                 {sessions.map((s) => {
                     return (
@@ -76,6 +89,11 @@ export function SessionHistoryPanel() {
                     );
                 })}
             </ul>
+            {showViewAll && (
+                <button className="session-history-view-all" onClick={onViewAll}>
+                    View all history
+                </button>
+            )}
         </div>
     );
 }
