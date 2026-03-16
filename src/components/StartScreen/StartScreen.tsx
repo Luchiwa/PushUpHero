@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@hooks/useAuth';
 import { Avatar } from '@components/Avatar/Avatar';
 import { DragNumberPicker } from '@components/DragNumberPicker/DragNumberPicker';
@@ -34,6 +34,16 @@ export function StartScreen({
     const { user, dbUser, level, totalLifetimeReps, repsIntoCurrentLevel, repsNeededForNextLevel, levelProgressPct } = useAuth();
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [showProfileModal, setShowProfileModal] = useState(false);
+    const [profileInitialTab, setProfileInitialTab] = useState<'history' | 'friends' | 'feed'>('history');
+
+    // Open profile modal on correct tab when app is launched via a push notification deep link
+    useEffect(() => {
+        if (window.location.hash === '#friends') {
+            setProfileInitialTab('friends');
+            setShowProfileModal(true);
+            history.replaceState(null, '', window.location.pathname);
+        }
+    }, []);
 
     const isReady = isModelReady;
 
@@ -158,7 +168,10 @@ export function StartScreen({
             )}
 
             {showProfileModal && (
-                <ProfileModal onClose={() => setShowProfileModal(false)} />
+                <ProfileModal
+                    initialTab={profileInitialTab}
+                    onClose={() => { setShowProfileModal(false); setProfileInitialTab('history'); }}
+                />
             )}
         </div>
     );

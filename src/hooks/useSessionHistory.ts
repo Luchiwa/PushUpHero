@@ -1,12 +1,11 @@
 import { useCallback, useState } from 'react';
-import { collection, doc, setDoc, updateDoc, increment, addDoc, serverTimestamp, getDocs, query, where, Timestamp, deleteDoc } from 'firebase/firestore';
-import { db } from '@lib/firebase';
 import { useAuth } from './useAuth';
 import { useSyncCloud } from './useSyncCloud';
+import { saveSession } from '@lib/userService';
 
 const STORAGE_KEY = 'pushup-sessions';
 const STORAGE_TOTAL_KEY = 'pushup_game_total_sessions';
-const MAX_SESSIONS = 5;
+const MAX_LOCAL_SESSIONS = 5;
 
 export interface SessionRecord {
     id: string;
@@ -34,24 +33,23 @@ function saveLocalSessions(sessions: SessionRecord[]): void {
 }
 
 export function useSessionHistory() {
-    const { user } = useAuth();
+    const { user, dbUser, totalLifetimeReps, addGuestReps } = useAuth();
 
-    // Internal state
     const [sessions, setSessions] = useState<SessionRecord[]>(() => loadLocalSessions());
     const [totalSessionCount, setTotalSessionCount] = useState<number>(() => {
         const raw = localStorage.getItem(STORAGE_TOTAL_KEY);
         return raw ? parseInt(raw, 10) : 0;
     });
 
-    // Cloud listener — also resets to local sessions on logout
-    useSyncCloud(
-        undefined,
-        setSessions,
-        setTotalSessionCount
-    );
+    // Sync sessions + totalSessionCount from Firestore (or localStorage for guests).
+    // totalReps is handled by useLevelSystem's own useSyncCloud instance.
+    useSyncCloud(undefined, setSessions, setTotalSessionCount);
 
-    const getSessions = useCallback((): SessionRecord[] => sessions, [sessions]);
-
+    /**
+     * Save a completed session.
+     * - Logged in: one atomic writeBatch (session + profile stats + activity feed)
+     * - Guest: localStorage only
+     */
     const addSession = useCallback(async (entry: Omit<SessionRecord, 'id' | 'date'>) => {
         const newSession: SessionRecord = {
             ...entry,
@@ -64,48 +62,22 @@ export function useSessionHistory() {
         if (newSession.sessionMode === undefined) delete newSession.sessionMode;
 
         if (user) {
-            try {
-                const sessionRef = doc(collection(db, 'users', user.uid, 'sessions'), newSession.id);
-                await setDoc(sessionRef, newSession);
-                await updateDoc(doc(db, 'users', user.uid), { totalSessions: increment(1) });
-
-                // ── Write activity feed event ──────────────────────────
-                const activityEvent: Record<string, unknown> = {
-                    type: 'session',
-                    reps: newSession.reps,
-                    averageScore: newSession.averageScore,
-                    sessionMode: newSession.sessionMode ?? 'reps',
-                    goalReps: newSession.goalReps,
-                    createdAt: serverTimestamp(),
-                };
-                if (newSession.elapsedTime !== undefined) activityEvent.elapsedTime = newSession.elapsedTime;
-                await addDoc(collection(db, 'users', user.uid, 'activityFeed'), activityEvent);
-
-                // ── Prune activity feed events older than 30 days ──────
-                // Fire-and-forget — never blocks the session save
-                const cutoff = Timestamp.fromMillis(Date.now() - 30 * 24 * 60 * 60 * 1000);
-                getDocs(
-                    query(
-                        collection(db, 'users', user.uid, 'activityFeed'),
-                        where('createdAt', '<', cutoff)
-                    )
-                ).then(snap => {
-                    snap.forEach(d => deleteDoc(d.ref));
-                }).catch(() => { /* non-critical */ });
-            } catch (err) {
-                console.error('[addSession] Firestore error:', err);
-                throw err;
-            }
+            await saveSession({
+                uid: user.uid,
+                session: newSession,
+                currentTotalReps: totalLifetimeReps,
+                dbUser,
+            });
         } else {
-            // Write to Local State
-            const updated = [newSession, ...sessions].slice(0, MAX_SESSIONS);
+            const updated = [newSession, ...sessions].slice(0, MAX_LOCAL_SESSIONS);
             setSessions(updated);
             saveLocalSessions(updated);
             const newCount = totalSessionCount + 1;
             setTotalSessionCount(newCount);
             localStorage.setItem(STORAGE_TOTAL_KEY, newCount.toString());
+            addGuestReps(newSession.reps);
         }
-    }, [user, sessions, totalSessionCount]);
+    }, [user, dbUser, totalLifetimeReps, sessions, totalSessionCount, addGuestReps]);
 
-    return { getSessions, addSession, totalSessionCount };
+    return { sessions, addSession, totalSessionCount };
 }

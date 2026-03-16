@@ -25,7 +25,7 @@ export interface AuthContextType {
     repsIntoCurrentLevel: number;
     repsNeededForNextLevel: number;
     levelProgressPct: number;
-    addRepsToLifetime: (reps: number) => Promise<void>;
+    addGuestReps: (reps: number) => void;
 }
 
 export const AuthContext = createContext<AuthContextType>({} as AuthContextType);

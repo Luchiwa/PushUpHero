@@ -34,16 +34,45 @@ self.addEventListener('message', (event: ExtendableMessageEvent) => {
     }
 });
 
+// ── FCM background push notifications ───────────────────────────
+self.addEventListener('push', (event: PushEvent) => {
+    const data = event.data?.json() as {
+        notification?: { title?: string; body?: string };
+        data?: { type?: string };
+    } | undefined;
+
+    const title = data?.notification?.title ?? 'PushUp Hero';
+    const body  = data?.notification?.body  ?? '';
+
+    event.waitUntil(
+        self.registration.showNotification(title, {
+            body,
+            icon: '/pwa-192x192.png',
+            badge: '/pwa-192x192.png',
+            tag: data?.data?.type ?? 'notification',
+            renotify: true,
+        } as NotificationOptions)
+    );
+});
+
 // ── Click on notification → focus/open the app ───────────────────
 self.addEventListener('notificationclick', (event: NotificationEvent) => {
     event.notification.close();
+
+    const tag = event.notification.tag;
+    const targetUrl = tag === 'friend_request' ? '/#friends' : '/';
+
     event.waitUntil(
         self.clients
             .matchAll({ type: 'window', includeUncontrolled: true })
             .then(clients => {
-                const existing = clients.find(c => c.url && 'focus' in c);
-                if (existing) return existing.focus();
-                return self.clients.openWindow('/');
+                // If app already open, navigate it to the right URL and focus
+                const existing = clients.find(c => 'navigate' in c);
+                if (existing) {
+                    (existing as WindowClient).navigate(targetUrl);
+                    return existing.focus();
+                }
+                return self.clients.openWindow(targetUrl);
             })
     );
 });

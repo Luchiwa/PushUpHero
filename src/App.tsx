@@ -16,6 +16,7 @@ import { useRef, useEffect } from 'react';
 import { useSessionHistory } from './hooks/useSessionHistory';
 import { useAuth } from './hooks/useAuth';
 import { useSoundEffect } from './hooks/useSoundEffect';
+import { calculateLevelFromTotalReps, calculateTotalRepsForLevel } from './hooks/useLevelSystem';
 import './components/App/App.scss';
 
 type AppScreen = 'idle' | 'active' | 'victory' | 'stopped' | 'levelup';
@@ -34,12 +35,11 @@ function App() {
   const { initAudio, playLevelUpSound } = useSoundEffect();
 
   // Root-level tracking for global lifetime reps and levels
-  const { level, levelProgressPct, addRepsToLifetime } = useAuth();
+  const { totalLifetimeReps } = useAuth();
 
   // Track reps and level safely at root so we don't lose the critical final rep if the dashboard unmounts.
-  const prevRepCountRef = useRef(0);
-  const prevLevelRef = useRef(level);
-  const [levelBefore, setLevelBefore] = useState(level);
+  const prevLevelRef = useRef(0);
+  const [levelBefore, setLevelBefore] = useState(0);
   const elapsedTimeRef = useRef(0);
   const [elapsedTime, setElapsedTime] = useState(0);
   const sessionSavedRef = useRef(false); // guard against double-save
@@ -57,6 +57,16 @@ function App() {
   // exerciseState ref kept fresh so onFrame closure always sees latest phase/validity
   const exerciseStateRef = useRef(exerciseState);
   useEffect(() => { exerciseStateRef.current = exerciseState; }, [exerciseState]);
+
+  // Project level + progress in real-time from totalLifetimeReps + current repCount.
+  // repCount is only added during the active/victory phase — once the session is saved,
+  // totalLifetimeReps already includes those reps, so we must not double-count.
+  const sessionReps = (screen === 'active' || screen === 'victory') ? exerciseState.repCount : 0;
+  const liveTotal = totalLifetimeReps + sessionReps;
+  const liveLevel = calculateLevelFromTotalReps(liveTotal);
+  const liveLevelBase = calculateTotalRepsForLevel(liveLevel);
+  const liveLevelNext = calculateTotalRepsForLevel(liveLevel + 1);
+  const liveProgressPct = ((liveTotal - liveLevelBase) / (liveLevelNext - liveLevelBase)) * 100;
 
   const { isModelReady } = usePoseDetection({
     videoRef,
@@ -90,11 +100,10 @@ function App() {
   };
 
   const handleStart = () => {
-    prevRepCountRef.current = exerciseState.repCount; // Reset base
-    elapsedTimeRef.current = 0; // Reset elapsed time for new session
-    sessionSavedRef.current = false; // Reset save guard for new session
-    setLevelBefore(level); // Snapshot du level au début de la session
-    startCamera(); // called synchronously in tap handler — required for Safari iOS getUserMedia
+    elapsedTimeRef.current = 0;
+    sessionSavedRef.current = false;
+    setLevelBefore(liveLevel); // snapshot from projected live level
+    startCamera();
     setScreen('active');
   };
   const handleStop = () => { 
@@ -115,44 +124,29 @@ function App() {
   const handleVictory = () => setScreen('victory');
   const handleVictoryComplete = () => { saveCurrentSession(); setElapsedTime(elapsedTimeRef.current); setScreen('stopped'); };
   const handleReset = () => {
-    if (level > levelBefore) {
-      // Level-up détecté : afficher l'écran avant de reset
+    if (liveLevel > levelBefore) {
       setScreen('levelup');
       return;
     }
     resetDetector();
-    prevRepCountRef.current = 0;
     elapsedTimeRef.current = 0;
     setScreen('idle');
   };
 
   const handleLevelUpContinue = () => {
     resetDetector();
-    prevRepCountRef.current = 0;
     elapsedTimeRef.current = 0;
     setScreen('idle');
   };
 
-  // Securely track rep increments specifically for lifetime global state
-  // We do it here in App because Dashboard can unmount instantly on the 10th rep.
+  // Track level-ups in real-time during active sessions
   useEffect(() => {
-    if (screen === 'active' || screen === 'victory') { // still count if it just flipped to victory
-      if (exerciseState.repCount > prevRepCountRef.current) {
-        const repsDone = exerciseState.repCount - prevRepCountRef.current;
-        addRepsToLifetime(repsDone);
-        prevRepCountRef.current = exerciseState.repCount;
-      }
-    }
-  }, [exerciseState.repCount, addRepsToLifetime, screen]);
-
-  // Track global level ups (only during active sessions)
-  useEffect(() => {
-    if (screen === 'active' && level > prevLevelRef.current) {
+    if (screen === 'active' && liveLevel > prevLevelRef.current) {
       initAudio();
       if (soundEnabled) playLevelUpSound();
     }
-    prevLevelRef.current = level;
-  }, [level, screen, soundEnabled, playLevelUpSound, initAudio]);
+    prevLevelRef.current = liveLevel;
+  }, [liveLevel, screen, soundEnabled, playLevelUpSound, initAudio]);
 
   // Trigger victory screen when goal is reached (reps mode only)
   useEffect(() => {
@@ -198,8 +192,8 @@ function App() {
             facingMode={facingMode}
             soundEnabled={soundEnabled}
             onSoundToggle={() => setSoundEnabled(s => !s)}
-            level={level}
-            levelProgressPct={levelProgressPct}
+            level={liveLevel}
+            levelProgressPct={liveProgressPct}
           />
         </>
       )}
@@ -231,7 +225,7 @@ function App() {
       {screen === 'levelup' && (
         <LevelUpScreen
           previousLevel={levelBefore}
-          newLevel={level}
+          newLevel={liveLevel}
           onContinue={handleLevelUpContinue}
         />
       )}

@@ -15,15 +15,15 @@ type ProfileTab = 'history' | 'friends' | 'feed';
 
 interface ProfileModalProps {
     onClose: () => void;
+    initialTab?: ProfileTab;
 }
 
-export function ProfileModal({ onClose }: ProfileModalProps) {
+export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
     const { user, dbUser, level, totalLifetimeReps, uploadAvatar } = useAuth();
-    const { getSessions, totalSessionCount } = useSessionHistory();
+    const { sessions, totalSessionCount } = useSessionHistory();
     const { friends, incomingRequests } = useFriends();
-    const sessions = getSessions();
 
-    const [activeTab, setActiveTab] = useState<ProfileTab>('history');
+    const [activeTab, setActiveTab] = useState<ProfileTab>(initialTab ?? 'history');
     const [showSettings, setShowSettings] = useState(false);
     const [showStats, setShowStats] = useState(false);
     const [uploading, setUploading] = useState(false);

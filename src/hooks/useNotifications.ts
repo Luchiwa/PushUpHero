@@ -3,56 +3,66 @@ import {
     collection, query, where, onSnapshot,
     updateDoc, doc,
 } from 'firebase/firestore';
-import { db } from '@lib/firebase';
+import { db, getFcmToken } from '@lib/firebase';
 import { useAuth } from './useAuth';
 
 export interface AppNotification {
     id: string;
-    type: 'encouragement';
+    type: 'encouragement' | 'friend_request';
     fromUid: string;
     fromUsername: string;
     sentAt: number;
     read: boolean;
 }
 
-const ICON = '/pwa-192x192.png';
+// ─── Register FCM token in Firestore ─────────────────────────────────────────
 
-async function requestPermission(): Promise<boolean> {
-    if (!('Notification' in window)) return false;
-    if (Notification.permission === 'granted') return true;
-    if (Notification.permission === 'denied') return false;
-    const result = await Notification.requestPermission();
-    return result === 'granted';
+async function registerFcmToken(uid: string): Promise<void> {
+    const token = await getFcmToken();
+    if (!token) return;
+    await updateDoc(doc(db, 'users', uid), { fcmToken: token });
 }
+
+// ─── In-app notification fallback (when app is open) ─────────────────────────
+// When the app is open, the SW push may not show (browser suppresses it).
+// We use the Firestore onSnapshot to show a native notification directly,
+// and mark it as read so the Cloud Function doesn't retry.
+
+const ICON = '/pwa-192x192.png';
 
 function showNativeNotification(title: string, body: string) {
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
-
-    // Try via service worker first (shows even when app is in background)
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({
-            type: 'SHOW_NOTIFICATION',
-            title,
-            body,
-            icon: ICON,
-        });
-    } else {
-        new Notification(title, { body, icon: ICON });
-    }
+    new Notification(title, { body, icon: ICON });
 }
+
+// ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useNotifications() {
     const { user } = useAuth();
-    const permissionRequestedRef = useRef(false);
+    const tokenRegisteredRef = useRef(false);
 
-    // Ask for notification permission once user is logged in
+    // 1. Request permission + register FCM token once user logs in
     useEffect(() => {
-        if (!user || permissionRequestedRef.current) return;
-        permissionRequestedRef.current = true;
-        requestPermission();
+        if (!user || tokenRegisteredRef.current) return;
+
+        const setup = async () => {
+            if (!('Notification' in window)) return;
+
+            if (Notification.permission === 'default') {
+                await Notification.requestPermission();
+            }
+
+            if (Notification.permission !== 'granted') return;
+
+            tokenRegisteredRef.current = true;
+            await registerFcmToken(user.uid);
+        };
+
+        setup();
     }, [user]);
 
-    // Listen to unread notifications in Firestore
+    // 2. While app is open: listen for unread notifications → show in-app + mark read
+    //    (The Cloud Function handles background push via FCM — this is the foreground fallback)
     useEffect(() => {
         if (!user) return;
 
@@ -68,26 +78,34 @@ export function useNotifications() {
                 if (data.type === 'encouragement') {
                     showNativeNotification(
                         '💪 Encouragement!',
-                        `${data.fromUsername} believes in you — go crush it!`
+                        `${data.fromUsername} believes in you — go crush it!`,
                     );
                 } else if (data.type === 'friend_request') {
                     showNativeNotification(
                         '🤝 Friend request',
-                        `${data.fromUsername} wants to be your friend!`
+                        `${data.fromUsername} wants to be your friend!`,
                     );
                 }
 
-                // Mark as read so it doesn't fire again on next mount
-                await updateDoc(doc(db, 'users', user.uid, 'notifications', change.doc.id), {
-                    read: true,
-                });
+                await updateDoc(
+                    doc(db, 'users', user.uid, 'notifications', change.doc.id),
+                    { read: true },
+                );
             }
         });
 
         return () => unsub();
     }, [user]);
 
-    const requestNotificationPermission = useCallback(() => requestPermission(), []);
+    const requestNotificationPermission = useCallback(async () => {
+        if (!('Notification' in window)) return;
+        if (Notification.permission !== 'default') return;
+        const result = await Notification.requestPermission();
+        if (result === 'granted' && user) {
+            tokenRegisteredRef.current = true;
+            await registerFcmToken(user.uid);
+        }
+    }, [user]);
 
     return { requestNotificationPermission };
 }

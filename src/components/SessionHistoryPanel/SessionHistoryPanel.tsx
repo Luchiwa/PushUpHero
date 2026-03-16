@@ -3,7 +3,6 @@
  * When `sessions` prop is provided, renders that list directly.
  * Otherwise falls back to useSessionHistory() (last 5 sessions).
  */
-import { useMemo } from 'react';
 import { useSessionHistory } from '@hooks/useSessionHistory';
 import type { SessionRecord } from '@hooks/useSessionHistory';
 import './SessionHistoryPanel.scss';
@@ -44,10 +43,9 @@ function scoreColor(score: number): string {
 }
 
 export function SessionHistoryPanel({ sessions: sessionsProp, title, onViewAll }: SessionHistoryPanelProps) {
-    const { getSessions, totalSessionCount } = useSessionHistory();
-    const fallbackSessions = useMemo(() => getSessions(), [getSessions]);
+    const { sessions: hookSessions, totalSessionCount } = useSessionHistory();
 
-    const sessions = sessionsProp ?? fallbackSessions;
+    const sessions = sessionsProp ?? hookSessions;
     const resolvedTitle = title ?? 'Recent sessions';
     const showViewAll = !sessionsProp && onViewAll && totalSessionCount > 5;
 

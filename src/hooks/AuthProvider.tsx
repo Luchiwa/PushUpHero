@@ -123,7 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         repsIntoCurrentLevel: 0,
         repsNeededForNextLevel: 1,
         levelProgressPct: 0,
-        addRepsToLifetime: async () => {},
+        addGuestReps: () => {},
     };
 
     return (

@@ -1,7 +1,8 @@
 import { useEffect, useCallback } from 'react';
-import { doc, getDoc, onSnapshot, collection, query, orderBy, limit, writeBatch } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, collection, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '@lib/firebase';
 import { useAuth } from './useAuth';
+import { mergeLocalDataToCloud } from '@lib/userService';
 import type { SessionRecord } from './useSessionHistory';
 
 const LOCAL_STORAGE_REPS_KEY = 'pushup_game_total_reps';
@@ -11,121 +12,110 @@ const MERGE_LOCK_KEY = 'pushup_merge_in_progress';
 
 /**
  * useSyncCloud
- * Handles the bidirectional synchronization between local storage and Firestore.
- * - On login/register: Merges local reps and sessions into Firestore, then clears local storage.
- * - While logged in: Subscribes to Firestore for realtime updates to level/reps and sessions.
+ *
+ * Single instance — mounted once inside AuthProvider/AppServices.
+ * Handles everything related to cloud ↔ local synchronisation:
+ *   - On login: merges guest localStorage data into Firestore
+ *   - While logged in: realtime listeners for totalReps, sessions, totalSessions
+ *   - On logout: seeds state back from localStorage
+ *
+ * Accepts three optional callbacks so each consumer (useLevelSystem,
+ * useSessionHistory) can wire up its own setState without this hook
+ * knowing about their internals.
  */
 export function useSyncCloud(
     setTotalLifetimeReps?: (reps: number) => void,
-    setCloudSessions?: (sessions: SessionRecord[]) => void,
-    setTotalSessionCount?: (count: number) => void
+    setSessions?: (sessions: SessionRecord[]) => void,
+    setTotalSessionCount?: (count: number) => void,
 ) {
     const { user } = useAuth();
 
-    // 1. Merge local data to cloud on first login — protected by a lock to prevent double-call
+    // ─── Merge guest data into Firestore on first login ───────────────────────
     const mergeLocalToCloud = useCallback(async (uid: string) => {
-        // If another instance of this hook is already merging, bail out
         if (localStorage.getItem(MERGE_LOCK_KEY) === 'true') return;
 
-        const localRepsRaw = localStorage.getItem(LOCAL_STORAGE_REPS_KEY);
-        const localSessionsRaw = localStorage.getItem(LOCAL_STORAGE_SESSIONS_KEY);
-
-        const localReps = localRepsRaw ? parseInt(localRepsRaw, 10) : 0;
+        const localReps = parseInt(localStorage.getItem(LOCAL_STORAGE_REPS_KEY) ?? '0', 10) || 0;
         let localSessions: SessionRecord[] = [];
         try {
-            if (localSessionsRaw) localSessions = JSON.parse(localSessionsRaw);
-        } catch (e) { console.error('Failed to parse local sessions', e); }
+            const raw = localStorage.getItem(LOCAL_STORAGE_SESSIONS_KEY);
+            if (raw) localSessions = JSON.parse(raw);
+        } catch { /* malformed data — skip */ }
 
-        // Clear local storage immediately to prevent any concurrent merge from picking up same data
+        // Claim the lock and clear local storage before any async work
         localStorage.setItem(MERGE_LOCK_KEY, 'true');
         localStorage.removeItem(LOCAL_STORAGE_REPS_KEY);
         localStorage.removeItem(LOCAL_STORAGE_SESSIONS_KEY);
         localStorage.removeItem(LOCAL_STORAGE_TOTAL_SESSIONS_KEY);
 
         if (localReps > 0 || localSessions.length > 0) {
-            console.log('Merging local data to cloud...', { localReps, sessions: localSessions.length });
-
             try {
-                const batch = writeBatch(db);
-                const userRef = doc(db, 'users', uid);
-
-                // Get current cloud reps and sessions count to add local data to it
-                const userDoc = await getDoc(userRef);
+                const userDoc = await getDoc(doc(db, 'users', uid));
                 const cloudReps = userDoc.exists() ? (userDoc.data().totalReps || 0) : 0;
                 const cloudSessions = userDoc.exists() ? (userDoc.data().totalSessions || 0) : 0;
 
-                batch.set(userRef, {
-                    totalReps: cloudReps + localReps,
-                    totalSessions: cloudSessions + localSessions.length
-                }, { merge: true });
-
-                localSessions.forEach(session => {
-                    const sessionRef = doc(collection(db, 'users', uid, 'sessions'), session.id);
-                    batch.set(sessionRef, session);
-                });
-
-                await batch.commit();
-                console.log('Merge complete.');
+                await mergeLocalDataToCloud({ uid, localReps, localSessions, cloudReps, cloudSessions });
             } catch (e) {
-                console.error('Merge failed', e);
+                console.error('[useSyncCloud] Merge failed:', e);
             }
         }
 
         localStorage.removeItem(MERGE_LOCK_KEY);
     }, []);
 
-    // 2. Setup Realtime Listeners when authenticated
+    // ─── Realtime listeners (or localStorage fallback for guests) ────────────
     useEffect(() => {
         if (!user) {
-            // Guest mode: read from localStorage and display locally stored values
+            // Guest: seed state from localStorage
             if (setTotalLifetimeReps) {
-                const localReps = localStorage.getItem(LOCAL_STORAGE_REPS_KEY);
-                setTotalLifetimeReps(localReps ? parseInt(localReps, 10) : 0);
+                const reps = parseInt(localStorage.getItem(LOCAL_STORAGE_REPS_KEY) ?? '0', 10) || 0;
+                setTotalLifetimeReps(reps);
             }
-            if (setCloudSessions) {
+            if (setSessions) {
                 try {
-                    const localRaw = localStorage.getItem(LOCAL_STORAGE_SESSIONS_KEY);
-                    setCloudSessions(localRaw ? JSON.parse(localRaw) : []);
-                } catch { setCloudSessions([]); }
+                    const raw = localStorage.getItem(LOCAL_STORAGE_SESSIONS_KEY);
+                    setSessions(raw ? JSON.parse(raw) : []);
+                } catch { setSessions([]); }
             }
             if (setTotalSessionCount) {
-                const localCount = localStorage.getItem(LOCAL_STORAGE_TOTAL_SESSIONS_KEY);
-                setTotalSessionCount(localCount ? parseInt(localCount, 10) : 0);
+                const count = parseInt(localStorage.getItem(LOCAL_STORAGE_TOTAL_SESSIONS_KEY) ?? '0', 10) || 0;
+                setTotalSessionCount(count);
             }
             return;
         }
 
-        // Logged in: merge any guest data into cloud, then listen to Firestore
         mergeLocalToCloud(user.uid);
 
-        // Listen to User Profile (Total Reps)
         const userRef = doc(db, 'users', user.uid);
-        const unsubUser = onSnapshot(userRef, (docSnap) => {
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                if (data.totalReps !== undefined && setTotalLifetimeReps) {
-                    setTotalLifetimeReps(data.totalReps);
-                }
-                if (data.totalSessions !== undefined && setTotalSessionCount) {
-                    setTotalSessionCount(data.totalSessions);
-                }
-            }
+
+        // User profile: totalReps + totalSessions
+        const unsubProfile = onSnapshot(userRef, (snap) => {
+            if (!snap.exists()) return;
+            const data = snap.data();
+            if (setTotalLifetimeReps && data.totalReps !== undefined) setTotalLifetimeReps(data.totalReps);
+            if (setTotalSessionCount && data.totalSessions !== undefined) setTotalSessionCount(data.totalSessions);
         });
 
-        // Listen to Sessions subcollection (Last 5)
-        const sessionsRef = collection(db, 'users', user.uid, 'sessions');
-        const q = query(sessionsRef, orderBy('date', 'desc'), limit(5));
-        const unsubSessions = onSnapshot(q, (snapshot) => {
-            const sessions: SessionRecord[] = [];
-            snapshot.forEach(docSnap => {
-                sessions.push(docSnap.data() as SessionRecord);
-            });
-            if (setCloudSessions) setCloudSessions(sessions);
+        // Sessions subcollection (last 5 — enough for the history panel)
+        const sessionsQuery = query(
+            collection(db, 'users', user.uid, 'sessions'),
+            orderBy('date', 'desc'),
+            limit(5),
+        );
+        const unsubSessions = onSnapshot(sessionsQuery, (snap) => {
+            if (setSessions) setSessions(snap.docs.map(d => d.data() as SessionRecord));
         });
 
-        return () => {
-            unsubUser();
-            unsubSessions();
-        };
-    }, [user, mergeLocalToCloud, setTotalLifetimeReps, setCloudSessions]);
+        return () => { unsubProfile(); unsubSessions(); };
+    }, [user, mergeLocalToCloud, setTotalLifetimeReps, setSessions, setTotalSessionCount]);
+
+    // For guest mode: update totalReps in state + localStorage atomically
+    const addGuestReps = useCallback((repsToAdd: number) => {
+        if (user) return; // only for guests
+        const current = parseInt(localStorage.getItem(LOCAL_STORAGE_REPS_KEY) ?? '0', 10) || 0;
+        const next = current + repsToAdd;
+        localStorage.setItem(LOCAL_STORAGE_REPS_KEY, next.toString());
+        if (setTotalLifetimeReps) setTotalLifetimeReps(next);
+    }, [user, setTotalLifetimeReps]);
+
+    return { addGuestReps };
 }
