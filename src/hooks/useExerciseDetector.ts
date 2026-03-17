@@ -1,6 +1,6 @@
-import { useRef, useState, useCallback } from 'react';
-import { BaseExerciseDetector } from '../exercises/BaseExerciseDetector';
-import type { ExerciseState, Landmark } from '../exercises/types';
+import { useRef, useState, useCallback, useEffect } from 'react';
+import { BaseExerciseDetector } from '@exercises/BaseExerciseDetector';
+import type { ExerciseState, Landmark } from '@exercises/types';
 
 
 interface UseExerciseDetectorProps {
@@ -16,14 +16,19 @@ export function useExerciseDetector({
         detector.getState()
     );
     const detectorRef = useRef(detector);
-    detectorRef.current = detector;
+    useEffect(() => { detectorRef.current = detector; }, [detector]);
+
+    // Keep isActive in a ref so processLandmarks always reads the latest value
+    // without needing to be re-created (avoids circular-dependency issues).
+    const isActiveRef = useRef(isActive);
+    useEffect(() => { isActiveRef.current = isActive; }, [isActive]);
 
     /**
      * Called directly from the pose detection loop — no React re-render unless
      * the exercise state actually changes (rep counted, phase change, etc.)
      */
     const processLandmarks = useCallback((landmarks: Landmark[]) => {
-        if (!isActive || landmarks.length === 0) return;
+        if (!isActiveRef.current || landmarks.length === 0) return;
         const newState = detectorRef.current.processPose(landmarks);
         setExerciseState(prev => {
             // Only re-render when something meaningful changes
@@ -39,7 +44,7 @@ export function useExerciseDetector({
             }
             return { ...newState };
         });
-    }, [isActive]);
+    }, []);
 
     const resetDetector = useCallback(() => {
         detectorRef.current.reset();

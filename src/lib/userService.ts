@@ -19,7 +19,9 @@ import {
     deleteDoc,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { calculateLevelFromTotalReps } from '@hooks/useLevelSystem';import type { SessionRecord } from '@hooks/useSessionHistory';
+import { FEED_PRUNE_AGE_MS } from './constants';
+import { calculateLevelFromTotalReps } from '@hooks/useLevelSystem';
+import type { SessionRecord } from '@hooks/useSessionHistory';
 import type { DbUser } from '@hooks/useAuth';
 
 // ─── Date helpers ────────────────────────────────────────────────────────────
@@ -99,13 +101,14 @@ export async function saveSession({ uid, session, currentTotalReps, dbUser }: Sa
         createdAt: serverTimestamp(),
     };
     if (session.elapsedTime !== undefined) feedEvent.elapsedTime = session.elapsedTime;
+    if (session.numberOfSets !== undefined && session.numberOfSets > 1) feedEvent.numberOfSets = session.numberOfSets;
     const feedRef = doc(collection(db, 'users', uid, 'activityFeed'));
     batch.set(feedRef, feedEvent);
 
     await batch.commit();
 
     // Prune feed events older than 30 days — fire-and-forget, never blocks the save
-    const cutoff = Timestamp.fromMillis(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const cutoff = Timestamp.fromMillis(Date.now() - FEED_PRUNE_AGE_MS);
     getDocs(query(
         collection(db, 'users', uid, 'activityFeed'),
         where('createdAt', '<', cutoff),

@@ -1,0 +1,304 @@
+@use 'sass:color';
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// ── Full-screen profile page ──────────────────────────────────────
+.profile-fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    animation: screen-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.profile-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid $border;
+    flex-shrink: 0;
+}
+
+// .profile-back-btn → inherits from .btn-icon in TSX
+// Override: color $text (not $text-muted), hover is bg only
+.profile-back-btn {
+    color: $text;
+}
+
+.profile-topbar-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: $text;
+    letter-spacing: -0.01em;
+}
+
+// .profile-settings-btn → inherits from .btn-icon in TSX
+// Override: hover rotate
+.profile-settings-btn {
+    &:hover {
+        transform: rotate(30deg);
+    }
+}
+
+.profile-content {
+    flex: 1;
+    overflow: hidden;          // ne scroll plus — les tab-panels gèrent leur propre scroll
+    padding: $spacing-xl $spacing-lg 0;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-lg;
+    max-width: 480px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+// ── Header ──────────────────────────────────────────────────────
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+}
+
+.profile-avatar-wrapper {
+    position: relative;
+    flex-shrink: 0;
+
+    .avatar {
+        box-shadow: 0 4px 16px rgba($accent, 0.3);
+    }
+
+    &--uploading {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+}
+
+.profile-avatar-edit-hint {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: $accent;
+    color: white;
+    font-size: 0.65rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: $text;
+        letter-spacing: -0.02em;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+}
+
+.profile-streak-sep {
+    color: $text-muted;
+    font-weight: 400;
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+.profile-streak {
+    font-size: 1rem;
+    font-weight: 700;
+    color: $text;
+    white-space: nowrap;
+    letter-spacing: 0;
+}
+
+.profile-member-since {
+    font-size: 0.85rem;
+    color: $text-muted;
+}
+
+// ── Stats grid ───────────────────────────────────────────────────
+.profile-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $spacing-sm;
+    background: $surface;
+    border: 1px solid $border;
+    border-radius: $radius;
+    padding: $spacing-md;
+}
+
+.profile-stat-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 2px;
+}
+
+.profile-stat-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: $text;
+    letter-spacing: -0.03em;
+}
+
+.profile-stat-label {
+    @include label;
+}
+
+// ── Profile Tabs ──────────────────────────────────────────────────
+.profile-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid $border;
+    flex-shrink: 0;
+}
+
+.profile-tab {
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.65rem 1rem;
+    background: none;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: $text-muted;
+    cursor: pointer;
+    transition: color 0.2s;
+
+    &::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: $accent;
+        border-radius: 2px 2px 0 0;
+        transform: scaleX(0);
+        transition: transform 0.2s ease;
+    }
+
+    &:hover {
+        color: $text;
+    }
+
+    &--active {
+        color: $accent;
+
+        &::after {
+            transform: scaleX(1);
+        }
+    }
+}
+
+.profile-tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: $accent;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 800;
+    border-radius: 999px;
+    line-height: 1;
+}
+
+.profile-tab-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+
+    // ── History tab ──────────────────────────────────────────────
+    .session-history {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+
+        .session-history-title {
+            flex-shrink: 0;
+            padding-bottom: $spacing-sm;
+        }
+
+        .session-history-list {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: $spacing-xl;
+        }
+
+        .session-history-view-all {
+            flex-shrink: 0;
+            margin-top: $spacing-sm;
+            margin-bottom: $spacing-md;
+        }
+    }
+
+    // ── Friends tab ──────────────────────────────────────────────
+    .friends-tab {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+
+        .friends-search-form {
+            flex-shrink: 0;
+        }
+
+        .friends-tab-scroll {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: $spacing-xl;
+        }
+    }
+
+    // ── Feed tab ─────────────────────────────────────────────────
+    .friends-feed {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+
+        .feed-header {
+            flex-shrink: 0;
+        }
+
+        .feed-scroll {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: $spacing-xl;
+        }
+    }
+}
+
+

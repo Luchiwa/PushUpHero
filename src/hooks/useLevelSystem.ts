@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuth } from './useAuth';
-import { useSyncCloud } from './useSyncCloud';
 
 // ─── Pure level-formula functions (no React, importable anywhere) ─────────────
 
@@ -14,23 +13,33 @@ export function calculateTotalRepsForLevel(level: number): number {
     return (level * (level + 1)) / 2;
 }
 
-// ─── Hook: derived level state, synced from Firestore via useSyncCloud ────────
+// ─── Hook: derived level state ─────────────────────────────────────────────────
 
 const STORAGE_KEY = 'pushup_game_total_reps';
 
 export function useLevelSystem() {
     const { user, dbUser } = useAuth();
 
-    const [totalLifetimeReps, setTotalLifetimeReps] = useState<number>(() => {
+    const [totalLifetimeReps, setTotalLifetimeRepsState] = useState<number>(() => {
         const stored = localStorage.getItem(STORAGE_KEY);
         return stored ? parseInt(stored, 10) : 0;
     });
 
-    // Single cloud listener for totalReps — feeds all derived level values below
-    const { addGuestReps } = useSyncCloud(setTotalLifetimeReps);
+    // Exposed so AppServices can wire useSyncCloud into this setter
+    const setTotalLifetimeReps = useCallback((reps: number) => {
+        setTotalLifetimeRepsState(reps);
+    }, []);
 
-    // Level: read from Firestore (dbUser.level) for logged-in users so it always
-    // matches the stored value. Calculated locally for guests.
+    // For guest mode: update totalReps in state + localStorage atomically
+    const addGuestReps = useCallback((repsToAdd: number) => {
+        if (user) return;
+        setTotalLifetimeRepsState(prev => {
+            const next = prev + repsToAdd;
+            localStorage.setItem(STORAGE_KEY, next.toString());
+            return next;
+        });
+    }, [user]);
+
     const level = user ? (dbUser?.level ?? calculateLevelFromTotalReps(totalLifetimeReps)) : calculateLevelFromTotalReps(totalLifetimeReps);
     const currentLevelBaseReps = calculateTotalRepsForLevel(level);
     const nextLevelTotalReq = calculateTotalRepsForLevel(level + 1);
@@ -40,6 +49,7 @@ export function useLevelSystem() {
 
     return {
         totalLifetimeReps,
+        setTotalLifetimeReps,
         level,
         repsIntoCurrentLevel,
         repsNeededForNextLevel,

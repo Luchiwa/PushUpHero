@@ -17,6 +17,17 @@ export interface RepResult {
     minAngle: number;
 }
 
+/** A completed set within a multi-set session */
+export interface SetRecord {
+    reps: number;
+    averageScore: number;
+    repHistory: RepResult[];
+    duration: number;           // seconds for this set
+    setMode: 'reps' | 'time';
+    goalReps?: number;          // if mode is reps
+    timeGoal?: number;          // if mode is time (seconds)
+}
+
 export interface ExerciseState {
     repCount: number;
     averageScore: number;

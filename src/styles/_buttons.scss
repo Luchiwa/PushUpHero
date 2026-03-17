@@ -109,20 +109,21 @@
 }
 
 // ── SECONDARY ───────────────────────────────────────────────────
-// Outline / ghost — Cancel, dismiss actions
+// Outline / ghost — Cancel, dismiss actions, multi-set workout
 .btn-secondary {
     @extend %btn-base;
-    padding: 0.6rem 1.2rem;
-    border: 1px solid $border;
+    width: 100%;
+    padding: 0.75rem 1.2rem;
+    border: 1.5px solid rgba($accent, 0.3);
     border-radius: $radius-sm;
-    background: transparent;
-    color: $text-muted;
-    font-size: 0.85rem;
-    font-weight: 600;
+    background: rgba($accent, 0.06);
+    color: $accent-dark;
+    font-size: 0.9rem;
+    font-weight: 700;
 
     &:hover:not(:disabled) {
-        border-color: rgba(26, 26, 26, 0.3);
-        color: $text;
+        background: rgba($accent, 0.12);
+        border-color: rgba($accent, 0.5);
     }
 }
 

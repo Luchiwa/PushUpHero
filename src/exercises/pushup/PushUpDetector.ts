@@ -1,5 +1,6 @@
 import { BaseExerciseDetector } from '../BaseExerciseDetector';
 import type { ExerciseState, Landmark } from '../types';
+import { CALIBRATION_FRAMES_REQUIRED } from '@lib/constants';
 
 /**
  * MediaPipe Pose landmark indices (33-point model).
@@ -52,11 +53,9 @@ export class PushUpDetector extends BaseExerciseDetector {
     private minAngleThisRep: number = 180;
     private bestAlignmentThisRep: number = 100;
     private hasReachedValidDown = false;
-    private frameCount = 0; // for throttled debug logging
 
     // ── Calibration State ──
     private calibrationFrames: { spread: number, wristOffset: number }[] = [];
-    private readonly CALIBRATION_FRAMES_REQUIRED = 90; // ~3 seconds at 30fps
 
     // Calibrated personalized thresholds
     private calibratedMaxBodyVerticalSpread = MAX_BODY_VERTICAL_SPREAD;
@@ -120,9 +119,9 @@ export class PushUpDetector extends BaseExerciseDetector {
 
             if (isRoughlyPlank) {
                 this.calibrationFrames.push({ spread: bodyVerticalSpread, wristOffset: wristOffset });
-                this.state.calibratingPercentage = Math.min(100, Math.round((this.calibrationFrames.length / this.CALIBRATION_FRAMES_REQUIRED) * 100));
+                this.state.calibratingPercentage = Math.min(100, Math.round((this.calibrationFrames.length / CALIBRATION_FRAMES_REQUIRED) * 100));
 
-                if (this.calibrationFrames.length >= this.CALIBRATION_FRAMES_REQUIRED) {
+                if (this.calibrationFrames.length >= CALIBRATION_FRAMES_REQUIRED) {
                     // Compute averages
                     const avgSpread = this.calibrationFrames.reduce((s, f) => s + f.spread, 0) / this.calibrationFrames.length;
                     const avgWrist = this.calibrationFrames.reduce((s, f) => s + f.wristOffset, 0) / this.calibrationFrames.length;
@@ -152,24 +151,7 @@ export class PushUpDetector extends BaseExerciseDetector {
 
         const isValidPushUpPosition = isBodyHorizontal && areWristsBelowShoulders;
 
-        // ── Debug logging (every 30 frames) ──
-        this.frameCount++;
-        if (this.frameCount % 30 === 0) {
-            console.log('%c[PushUp Debug]', 'color: cyan; font-weight: bold', {
-                angle: smoothedAngle.toFixed(1),
-                ANGLE_UP: ANGLE_UP_THRESHOLD,
-                ANGLE_DOWN: ANGLE_DOWN_THRESHOLD,
-                phase: this.state.currentPhase,
-                hasValidDown: this.hasReachedValidDown,
-                spread: bodyVerticalSpread.toFixed(3),
-                spreadMax: this.calibratedMaxBodyVerticalSpread.toFixed(3),
-                isHorizontal: isBodyHorizontal,
-                wristOffset: wristOffset.toFixed(3),
-                wristMax: this.calibratedWristBelowShoulderMargin.toFixed(3),
-                wristsOk: areWristsBelowShoulders,
-                isValidPos: isValidPushUpPosition,
-            });
-        }
+
 
         // ── 3. Alignment score ───────────────────────────────────────
         const alignmentScore = this.computeAlignmentScore(
@@ -191,7 +173,6 @@ export class PushUpDetector extends BaseExerciseDetector {
                 const repAlignmentScore = this.bestAlignmentThisRep;
                 const repScore = Math.round(repAmplitudeScore * 0.6 + repAlignmentScore * 0.4);
                 this.recordRep(repScore, repAmplitudeScore, repAlignmentScore, this.minAngleThisRep);
-                console.log('%c[PushUp] REP COUNTED!', 'color: lime; font-weight: bold', { repScore, minAngle: this.minAngleThisRep.toFixed(1) });
 
                 // Reset for next rep
                 this.minAngleThisRep = 180;

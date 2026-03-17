@@ -3,6 +3,7 @@ import {
     collection,
     deleteDoc,
     doc,
+    getDoc,
     getDocs,
     writeBatch,
 } from 'firebase/firestore';
@@ -21,39 +22,23 @@ export async function deleteCurrentAccount(): Promise<void> {
     const userRef = doc(db, 'users', uid);
 
     // ── 1. Release username claim ────────────────────────────────
-    const userSnap = await getDocs(collection(db, 'usernames'));
-    for (const d of userSnap.docs) {
-        if (d.data().uid === uid) {
-            await deleteDoc(d.ref);
-            break;
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+        const displayName = userSnap.data().displayName;
+        if (displayName) {
+            const usernameKey = displayName.trim().toLowerCase();
+            await deleteDoc(doc(db, 'usernames', usernameKey));
         }
     }
 
-    // ── 2. Delete own subcollections ─────────────────────────────
-    const subcollections = [
-        'sessions',
-        'friends',
-        'friendRequests',
-        'friendRequestsSent',
-        'notifications',
-    ] as const;
-
-    for (const sub of subcollections) {
-        const snap = await getDocs(collection(userRef, sub));
-        if (!snap.empty) {
-            const batch = writeBatch(db);
-            snap.docs.forEach(d => batch.delete(d.ref));
-            await batch.commit();
-        }
-    }
-
-    // ── 3. Clean cross-user data ─────────────────────────────────
+    // ── 2. Read cross-user references BEFORE deleting own data ───
     const [friendsSnap, sentSnap, receivedSnap] = await Promise.all([
         getDocs(collection(userRef, 'friends')),
         getDocs(collection(userRef, 'friendRequestsSent')),
         getDocs(collection(userRef, 'friendRequests')),
     ]);
 
+    // ── 3. Clean cross-user data ─────────────────────────────────
     const crossBatch = writeBatch(db);
 
     // Remove this user from friends' lists & their pending requests
@@ -79,19 +64,38 @@ export async function deleteCurrentAccount(): Promise<void> {
 
     await crossBatch.commit();
 
-    // ── 4. Delete user profile document ─────────────────────────
+    // ── 4. Delete own subcollections ─────────────────────────────
+    const subcollections = [
+        'sessions',
+        'friends',
+        'friendRequests',
+        'friendRequestsSent',
+        'notifications',
+        'activityFeed',
+    ] as const;
+
+    for (const sub of subcollections) {
+        const snap = await getDocs(collection(userRef, sub));
+        if (!snap.empty) {
+            const batch = writeBatch(db);
+            snap.docs.forEach(d => batch.delete(d.ref));
+            await batch.commit();
+        }
+    }
+
+    // ── 5. Delete user profile document ─────────────────────────
     await deleteDoc(userRef);
 
-    // ── 5. Delete avatar from Storage (ignore if not found) ──────
+    // ── 6. Delete avatar from Storage (ignore if not found) ──────
     try {
         await deleteObject(ref(storage, `avatars/${uid}.jpg`));
     } catch {
         // File may not exist if user never uploaded an avatar
     }
 
-    // ── 6. Delete Firebase Auth account ─────────────────────────
+    // ── 7. Delete Firebase Auth account ─────────────────────────
     await deleteUser(user);
 
-    // ── 7. Clear local storage ───────────────────────────────────
+    // ── 8. Clear local storage ───────────────────────────────────
     localStorage.clear();
 }

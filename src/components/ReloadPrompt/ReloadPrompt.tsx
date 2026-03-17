@@ -5,14 +5,7 @@ export function ReloadPrompt() {
     const {
         needRefresh: [needRefresh, setNeedRefresh],
         updateServiceWorker,
-    } = useRegisterSW({
-        onRegistered(r: ServiceWorkerRegistration | undefined) {
-            console.log('SW Registered: ', r);
-        },
-        onRegisterError(error: unknown) {
-            console.log('SW registration error', error);
-        },
-    });
+    } = useRegisterSW();
 
     const close = () => {
         setNeedRefresh(false);

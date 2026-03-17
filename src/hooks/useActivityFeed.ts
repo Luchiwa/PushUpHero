@@ -15,26 +15,11 @@ export interface ActivityEvent {
     sessionMode: 'reps' | 'time';
     goalReps: number;
     elapsedTime?: number;
+    numberOfSets?: number;
     createdAt: number; // Unix ms
 }
 
-const EVENTS_PER_FRIEND = 5;
-
-function getGradeLetter(score: number): string {
-    if (score >= 95) return 'S';
-    if (score >= 80) return 'A';
-    if (score >= 65) return 'B';
-    if (score >= 50) return 'C';
-    return 'D';
-}
-
-export function getGradeColor(score: number): string {
-    if (score >= 95) return '#a855f7';
-    if (score >= 80) return '#22c55e';
-    if (score >= 65) return '#3b82f6';
-    if (score >= 50) return '#f59e0b';
-    return '#ef4444';
-}
+import { EVENTS_PER_FRIEND, getGradeLetter } from '@lib/constants';
 
 export function formatRelativeTime(ms: number): string {
     const diffSec = Math.floor((Date.now() - ms) / 1000);
@@ -48,16 +33,17 @@ export function formatRelativeTime(ms: number): string {
 
 export function buildEventMessage(event: ActivityEvent): string {
     const grade = getGradeLetter(event.averageScore);
+    const setsInfo = event.numberOfSets && event.numberOfSets > 1 ? ` (${event.numberOfSets} sets)` : '';
     if (event.sessionMode === 'time') {
         const mins = event.elapsedTime ? Math.floor(event.elapsedTime / 60) : 0;
         const secs = event.elapsedTime ? event.elapsedTime % 60 : 0;
         const duration = mins > 0 ? `${mins}min${secs > 0 ? `${secs}s` : ''}` : `${secs}s`;
-        return `did ${event.reps} push-ups in ${duration} · Grade ${grade}`;
+        return `did ${event.reps} push-ups in ${duration}${setsInfo} · Grade ${grade}`;
     }
     const goalReached = event.reps >= event.goalReps;
     return goalReached
-        ? `hit their goal of ${event.goalReps} push-ups! Grade ${grade} 🏆`
-        : `did ${event.reps}/${event.goalReps} push-ups · Grade ${grade}`;
+        ? `hit their goal of ${event.goalReps} push-ups${setsInfo}! Grade ${grade} 🏆`
+        : `did ${event.reps}/${event.goalReps} push-ups${setsInfo} · Grade ${grade}`;
 }
 
 export function useActivityFeed(friends: Friend[]) {
@@ -97,6 +83,7 @@ export function useActivityFeed(friends: Friend[]) {
                                 sessionMode: data.sessionMode ?? 'reps',
                                 goalReps: data.goalReps ?? 0,
                                 elapsedTime: data.elapsedTime,
+                                numberOfSets: data.numberOfSets,
                                 createdAt: ts ? ts.toMillis() : Date.now(),
                             };
                         });

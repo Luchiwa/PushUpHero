@@ -1,0 +1,236 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// ── Feed wrapper ────────────────────────────────────────────────
+.friends-feed {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-sm;
+    padding-bottom: $spacing-lg;
+}
+
+// ── Header row ─────────────────────────────────────────────────
+.feed-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $spacing-xs;
+}
+
+.feed-header-title {
+    @include label($font-sm);
+}
+
+.feed-refresh-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: $text-muted;
+    padding: 4px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    transition: color 0.15s, background 0.15s;
+
+    &:hover {
+        color: $accent;
+        background: $surface;
+    }
+}
+
+// ── Sections (Today / Earlier) ──────────────────────────────────
+.feed-section {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+}
+
+.feed-section-label {
+    @include label;
+    margin: $spacing-sm 0 4px;
+}
+
+// ── Feed list ───────────────────────────────────────────────────
+.feed-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+// ── Individual feed item ────────────────────────────────────────
+.feed-item {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    padding: 10px $spacing-sm;
+    border-radius: 12px;
+    background: $surface;
+    transition: background 0.15s;
+
+    &:hover {
+        background: $surface-hover;
+    }
+}
+
+// .feed-avatar → handled by <Avatar> component
+
+.feed-item-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.feed-item-name {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: $text;
+    @include text-truncate;
+}
+
+.feed-item-msg {
+    font-size: 0.78rem;
+    color: $text-muted;
+    @include text-truncate;
+}
+
+.feed-item-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    flex-shrink: 0;
+}
+
+.feed-grade-badge {
+    font-size: 0.78rem;
+    font-weight: 900;
+    border: 1.5px solid;
+    border-radius: 6px;
+    padding: 0 6px;
+    line-height: 1.6;
+}
+
+.feed-item-time {
+    font-size: 0.68rem;
+    color: $text-muted;
+    white-space: nowrap;
+}
+
+// ── Tab dot indicator ───────────────────────────────────────────
+.profile-tab-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: $accent;
+    border-radius: 50%;
+    margin-left: 5px;
+    vertical-align: middle;
+}
+
+// ── Empty state ─────────────────────────────────────────────────
+.feed-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $spacing-sm;
+    padding: $spacing-xl 0;
+    color: $text-muted;
+    text-align: center;
+
+    .feed-empty-icon {
+        font-size: 2rem;
+    }
+
+    p {
+        font-size: 0.88rem;
+    }
+}
+
+// ── Error state ─────────────────────────────────────────────────
+.feed-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $spacing-sm;
+    padding: $spacing-xl 0;
+    color: $red;
+    text-align: center;
+    font-size: 0.85rem;
+
+    .btn-text {
+        background: none;
+        border: none;
+        color: $accent;
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 0.85rem;
+        padding: 0;
+    }
+}
+
+// ── Skeleton loader ─────────────────────────────────────────────
+@keyframes feed-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.feed-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: $spacing-sm;
+}
+
+.feed-skeleton-item {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    padding: 10px $spacing-sm;
+    border-radius: 12px;
+    background: $surface;
+}
+
+%shimmer {
+    background: linear-gradient(
+        90deg,
+        rgba(26, 26, 26, 0.06) 25%,
+        rgba(26, 26, 26, 0.12) 50%,
+        rgba(26, 26, 26, 0.06) 75%
+    );
+    background-size: 200% 100%;
+    animation: feed-shimmer 1.5s infinite;
+    border-radius: 6px;
+}
+
+.feed-skeleton-avatar {
+    @extend %shimmer;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.feed-skeleton-lines {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.feed-skeleton-line {
+    @extend %shimmer;
+    height: 10px;
+
+    &--name {
+        width: 35%;
+    }
+
+    &--msg {
+        width: 65%;
+    }
+}

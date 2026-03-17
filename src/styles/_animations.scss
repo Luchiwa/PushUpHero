@@ -52,21 +52,6 @@
     }
 }
 
-// ── Pulse icon ──────────────────────────────────────────────────
-@keyframes pulse-icon {
-
-    0%,
-    100% {
-        filter: drop-shadow(0 0 10px rgba($accent, 0.5));
-        transform: scale(1);
-    }
-
-    50% {
-        filter: drop-shadow(0 0 22px rgba($accent, 0.9));
-        transform: scale(1.06);
-    }
-}
-
 // ── Rep counter pop ─────────────────────────────────────────────
 @keyframes rep-pop {
     from {

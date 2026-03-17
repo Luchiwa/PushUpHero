@@ -67,8 +67,13 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@hooks': path.resolve(__dirname, 'src/hooks'),
+      '@app': path.resolve(__dirname, 'src/app'),
+      '@screens': path.resolve(__dirname, 'src/screens'),
+      '@overlays': path.resolve(__dirname, 'src/overlays'),
+      '@modals': path.resolve(__dirname, 'src/modals'),
       '@components': path.resolve(__dirname, 'src/components'),
+      '@hooks': path.resolve(__dirname, 'src/hooks'),
+      '@exercises': path.resolve(__dirname, 'src/exercises'),
       '@lib': path.resolve(__dirname, 'src/lib'),
     },
   },

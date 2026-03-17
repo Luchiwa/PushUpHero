@@ -1,0 +1,143 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.rest-screen {
+    @include fill;
+    z-index: 5;
+    @include flex-center;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    animation: screen-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.rest-card {
+    @include modal-card($width: 360px, $padding: 2rem 1.75rem);
+    align-items: center;
+    gap: 1.5rem;
+    box-shadow: $shadow-card;
+}
+
+// ── Set feedback section ────────────────────────────────────────
+.rest-set-feedback {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+}
+
+.rest-set-badge {
+    font-size: $font-md;
+    font-weight: 700;
+    color: $green;
+    background: rgba($green, 0.1);
+    border: 1px solid rgba($green, 0.25);
+    padding: 0.4rem 1rem;
+    border-radius: $radius-pill;
+}
+
+.rest-set-stats {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.25rem;
+    width: 100%;
+}
+
+.rest-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+.rest-stat-value {
+    font-size: $font-2xl;
+    font-weight: 800;
+    color: $text;
+
+    &.grade {
+        font-size: 1.75rem;
+    }
+}
+
+.rest-stat-label {
+    @include label;
+}
+
+.rest-stat-divider {
+    width: 1px;
+    height: 40px;
+    background: $border;
+}
+
+// ── Grade colors (reuse from SummaryScreen pattern) ─────────────
+.rest-stat-value.grade-s { color: #a855f7; }
+.rest-stat-value.grade-a { color: $green; }
+.rest-stat-value.grade-b { color: #3b82f6; }
+.rest-stat-value.grade-c { color: $amber; }
+.rest-stat-value.grade-d { color: $red; }
+
+// ── Countdown section ───────────────────────────────────────────
+.rest-countdown-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.rest-countdown-label {
+    @include label($font-sm);
+    color: $text-muted;
+    text-transform: none;
+    font-weight: 600;
+}
+
+.rest-countdown-timer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rest-countdown-digits {
+    font-size: 4rem;
+    font-weight: 900;
+    @include text-gradient($gradient-accent);
+    letter-spacing: -0.03em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.rest-countdown-bar {
+    width: 100%;
+    @include progress-track($height: 8px, $bg: #f0f0f0);
+    border: 1px solid $border;
+}
+
+.rest-countdown-fill {
+    @include progress-fill(linear-gradient(90deg, $accent, $green));
+    transition: width 1s linear;
+}
+
+.rest-up-next {
+    font-size: $font-sm;
+    font-weight: 600;
+    color: $text-muted;
+}
+
+// ── Mobile ──────────────────────────────────────────────────────
+@media (max-width: 480px) {
+    .rest-card {
+        width: min(95vw, 340px);
+        padding: 1.5rem 1.25rem;
+        gap: 1.25rem;
+    }
+
+    .rest-set-badge { font-size: 0.82rem; }
+    .rest-stat-value { font-size: 2rem; }
+    .rest-stat-value.grade { font-size: 1.5rem; }
+    .rest-countdown-digits { font-size: 3rem; }
+    .rest-up-next { font-size: 0.75rem; }
+}

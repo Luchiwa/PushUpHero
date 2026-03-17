@@ -13,20 +13,16 @@ const MERGE_LOCK_KEY = 'pushup_merge_in_progress';
 /**
  * useSyncCloud
  *
- * Single instance — mounted once inside AuthProvider/AppServices.
+ * Single instance — mounted once inside AppServices.
  * Handles everything related to cloud ↔ local synchronisation:
  *   - On login: merges guest localStorage data into Firestore
  *   - While logged in: realtime listeners for totalReps, sessions, totalSessions
  *   - On logout: seeds state back from localStorage
- *
- * Accepts three optional callbacks so each consumer (useLevelSystem,
- * useSessionHistory) can wire up its own setState without this hook
- * knowing about their internals.
  */
 export function useSyncCloud(
-    setTotalLifetimeReps?: (reps: number) => void,
-    setSessions?: (sessions: SessionRecord[]) => void,
-    setTotalSessionCount?: (count: number) => void,
+    setTotalLifetimeReps: (reps: number) => void,
+    setSessions: (sessions: SessionRecord[]) => void,
+    setTotalSessionCount: (count: number) => void,
 ) {
     const { user } = useAuth();
 
@@ -66,20 +62,14 @@ export function useSyncCloud(
     useEffect(() => {
         if (!user) {
             // Guest: seed state from localStorage
-            if (setTotalLifetimeReps) {
-                const reps = parseInt(localStorage.getItem(LOCAL_STORAGE_REPS_KEY) ?? '0', 10) || 0;
-                setTotalLifetimeReps(reps);
-            }
-            if (setSessions) {
-                try {
-                    const raw = localStorage.getItem(LOCAL_STORAGE_SESSIONS_KEY);
-                    setSessions(raw ? JSON.parse(raw) : []);
-                } catch { setSessions([]); }
-            }
-            if (setTotalSessionCount) {
-                const count = parseInt(localStorage.getItem(LOCAL_STORAGE_TOTAL_SESSIONS_KEY) ?? '0', 10) || 0;
-                setTotalSessionCount(count);
-            }
+            const reps = parseInt(localStorage.getItem(LOCAL_STORAGE_REPS_KEY) ?? '0', 10) || 0;
+            setTotalLifetimeReps(reps);
+            try {
+                const raw = localStorage.getItem(LOCAL_STORAGE_SESSIONS_KEY);
+                setSessions(raw ? JSON.parse(raw) : []);
+            } catch { setSessions([]); }
+            const count = parseInt(localStorage.getItem(LOCAL_STORAGE_TOTAL_SESSIONS_KEY) ?? '0', 10) || 0;
+            setTotalSessionCount(count);
             return;
         }
 
@@ -91,8 +81,8 @@ export function useSyncCloud(
         const unsubProfile = onSnapshot(userRef, (snap) => {
             if (!snap.exists()) return;
             const data = snap.data();
-            if (setTotalLifetimeReps && data.totalReps !== undefined) setTotalLifetimeReps(data.totalReps);
-            if (setTotalSessionCount && data.totalSessions !== undefined) setTotalSessionCount(data.totalSessions);
+            if (data.totalReps !== undefined) setTotalLifetimeReps(data.totalReps);
+            if (data.totalSessions !== undefined) setTotalSessionCount(data.totalSessions);
         });
 
         // Sessions subcollection (last 5 — enough for the history panel)
@@ -102,20 +92,11 @@ export function useSyncCloud(
             limit(5),
         );
         const unsubSessions = onSnapshot(sessionsQuery, (snap) => {
-            if (setSessions) setSessions(snap.docs.map(d => d.data() as SessionRecord));
+            setSessions(snap.docs.map(d => d.data() as SessionRecord));
         });
 
         return () => { unsubProfile(); unsubSessions(); };
     }, [user, mergeLocalToCloud, setTotalLifetimeReps, setSessions, setTotalSessionCount]);
 
-    // For guest mode: update totalReps in state + localStorage atomically
-    const addGuestReps = useCallback((repsToAdd: number) => {
-        if (user) return; // only for guests
-        const current = parseInt(localStorage.getItem(LOCAL_STORAGE_REPS_KEY) ?? '0', 10) || 0;
-        const next = current + repsToAdd;
-        localStorage.setItem(LOCAL_STORAGE_REPS_KEY, next.toString());
-        if (setTotalLifetimeReps) setTotalLifetimeReps(next);
-    }, [user, setTotalLifetimeReps]);
-
-    return { addGuestReps };
+    return {};
 }

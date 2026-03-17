@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { User } from 'firebase/auth';
+import type { SessionRecord } from './useSessionHistory';
 
 export interface DbUser {
     uid: string;
@@ -26,6 +27,11 @@ export interface AuthContextType {
     repsNeededForNextLevel: number;
     levelProgressPct: number;
     addGuestReps: (reps: number) => void;
+    // Sessions (synced from Firestore via useSyncCloud)
+    sessions: SessionRecord[];
+    setSessions: (sessions: SessionRecord[]) => void;
+    totalSessionCount: number;
+    setTotalSessionCount: (count: number) => void;
 }
 
 export const AuthContext = createContext<AuthContextType>({} as AuthContextType);

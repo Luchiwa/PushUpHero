@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 
-type FacingMode = 'user' | 'environment';
+export type FacingMode = 'user' | 'environment';
 
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
@@ -67,12 +67,15 @@ export function useCamera({ facingMode = 'user', enabled = true }: UseCameraOpti
         }
     }, [stopStream]);
 
-    // Stop stream when disabled
+    // Sync camera lifecycle with enabled prop — stopStream resets
+    // both the MediaStream and isReady state in one atomic operation.
+    /* eslint-disable react-hooks/set-state-in-effect */
     useEffect(() => {
         if (!enabled) {
             stopStream();
         }
     }, [enabled, stopStream]);
+    /* eslint-enable react-hooks/set-state-in-effect */
 
     return { videoRef, isReady, error, triggerStart };
 }

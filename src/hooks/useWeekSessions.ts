@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, limit } from 'firebase/firestore';
 import { db } from '@lib/firebase';
 import { useAuth } from './useAuth';
 import type { SessionRecord } from './useSessionHistory';
@@ -69,7 +69,7 @@ export function useWeekSessions(): UseWeekSessionsReturn {
             firstFetched.current = true;
             try {
                 const oldestSnap = await getDocs(
-                    query(sessionsRef, orderBy('date', 'asc'))
+                    query(sessionsRef, orderBy('date', 'asc'), limit(1))
                 );
                 if (!oldestSnap.empty) {
                     setFirstSessionDate((oldestSnap.docs[0].data() as SessionRecord).date);

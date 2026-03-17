@@ -1,29 +1,26 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { useAuth } from './useAuth';
-import { useSyncCloud } from './useSyncCloud';
 import { saveSession } from '@lib/userService';
+import { MAX_LOCAL_SESSIONS } from '@lib/constants';
+import type { SetRecord } from '@exercises/types';
 
 const STORAGE_KEY = 'pushup-sessions';
 const STORAGE_TOTAL_KEY = 'pushup_game_total_sessions';
-const MAX_LOCAL_SESSIONS = 5;
 
 export interface SessionRecord {
     id: string;
     date: number;        // Unix timestamp (ms)
-    reps: number;
+    reps: number;        // total reps across all sets (aggregate)
     averageScore: number;
     goalReps: number;
-    sessionMode?: 'reps' | 'time'; // 'reps' for backward compatibility
-    elapsedTime?: number;          // seconds for time-based sessions
-}
+    sessionMode?: 'reps' | 'time';
+    elapsedTime?: number;          // seconds — total duration
 
-function loadLocalSessions(): SessionRecord[] {
-    try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? (JSON.parse(raw) as SessionRecord[]) : [];
-    } catch {
-        return [];
-    }
+    // ── Multi-set fields ──
+    numberOfSets?: number;         // configured sets count (1 = legacy single-set)
+    restDuration?: number;         // configured rest between sets (seconds)
+    sets?: SetRecord[];            // per-set breakdown
+    totalDuration?: number;        // total workout duration including rest (seconds)
 }
 
 function saveLocalSessions(sessions: SessionRecord[]): void {
@@ -33,17 +30,7 @@ function saveLocalSessions(sessions: SessionRecord[]): void {
 }
 
 export function useSessionHistory() {
-    const { user, dbUser, totalLifetimeReps, addGuestReps } = useAuth();
-
-    const [sessions, setSessions] = useState<SessionRecord[]>(() => loadLocalSessions());
-    const [totalSessionCount, setTotalSessionCount] = useState<number>(() => {
-        const raw = localStorage.getItem(STORAGE_TOTAL_KEY);
-        return raw ? parseInt(raw, 10) : 0;
-    });
-
-    // Sync sessions + totalSessionCount from Firestore (or localStorage for guests).
-    // totalReps is handled by useLevelSystem's own useSyncCloud instance.
-    useSyncCloud(undefined, setSessions, setTotalSessionCount);
+    const { user, dbUser, totalLifetimeReps, addGuestReps, sessions, setSessions, totalSessionCount, setTotalSessionCount } = useAuth();
 
     /**
      * Save a completed session.
@@ -60,6 +47,10 @@ export function useSessionHistory() {
         // Firestore rejects undefined values — remove optional fields if absent
         if (newSession.elapsedTime === undefined) delete newSession.elapsedTime;
         if (newSession.sessionMode === undefined) delete newSession.sessionMode;
+        if (newSession.numberOfSets === undefined) delete newSession.numberOfSets;
+        if (newSession.restDuration === undefined) delete newSession.restDuration;
+        if (newSession.sets === undefined) delete newSession.sets;
+        if (newSession.totalDuration === undefined) delete newSession.totalDuration;
 
         if (user) {
             await saveSession({
@@ -77,7 +68,7 @@ export function useSessionHistory() {
             localStorage.setItem(STORAGE_TOTAL_KEY, newCount.toString());
             addGuestReps(newSession.reps);
         }
-    }, [user, dbUser, totalLifetimeReps, sessions, totalSessionCount, addGuestReps]);
+    }, [user, dbUser, totalLifetimeReps, sessions, totalSessionCount, addGuestReps, setSessions, setTotalSessionCount]);
 
     return { sessions, addSession, totalSessionCount };
 }

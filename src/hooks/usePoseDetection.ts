@@ -4,7 +4,7 @@ import {
     FilesetResolver,
 } from '@mediapipe/tasks-vision';
 import type { PoseLandmarkerResult } from '@mediapipe/tasks-vision';
-import type { Landmark } from '../exercises/types';
+import type { Landmark } from '@exercises/types';
 
 // Mobile browsers (Android/iOS) struggle with GPU delegate — use CPU there
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);

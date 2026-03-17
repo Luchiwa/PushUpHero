@@ -30,8 +30,13 @@
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
     "paths": {
-      "@hooks/*": ["src/hooks/*"],
+      "@app/*": ["src/app/*"],
+      "@screens/*": ["src/screens/*"],
+      "@overlays/*": ["src/overlays/*"],
+      "@modals/*": ["src/modals/*"],
       "@components/*": ["src/components/*"],
+      "@hooks/*": ["src/hooks/*"],
+      "@exercises/*": ["src/exercises/*"],
       "@lib/*": ["src/lib/*"]
     }
   },
