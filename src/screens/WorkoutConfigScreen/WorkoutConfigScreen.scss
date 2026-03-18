@@ -1,30 +1,29 @@
 @use 'variables' as *;
 @use 'mixins' as *;
 
+// ── Full-screen wizard (same shell as ProfileModal / StatsScreen) ────────────
 .workout-config-screen {
-    @include fill;
-    z-index: 5;
-    @include flex-center;
-    animation: screen-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
-    overflow-y: auto;
-    padding: 1rem 0;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: $bg;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: screen-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.workout-config-card {
-    @include modal-card($width: 380px, $padding: 2rem 1.75rem);
-    @include glass;
+// ── Top bar ─────────────────────────────────────────────────────────────────
+.wc-topbar {
+    display: flex;
     align-items: center;
-    gap: 1.25rem;
-    box-shadow: $shadow-card;
-    position: relative;
-    z-index: 2;
-    margin: auto 0;
+    justify-content: space-between;
+    padding: $spacing-sm $spacing-md;
+    border-bottom: 1px solid $border;
+    flex-shrink: 0;
 }
 
-.workout-config-back {
-    position: absolute;
-    top: 1rem;
-    left: 1rem;
+.wc-back-btn {
     width: 40px;
     height: 40px;
     display: flex;
@@ -39,108 +38,218 @@
     }
 }
 
-.workout-config-title {
-    font-size: $font-xl;
-    font-weight: 800;
-    @include text-gradient($gradient-accent);
-    letter-spacing: -0.02em;
-    margin-top: 0.5rem;
+.wc-topbar-title {
+    font-size: $font-lg;
+    font-weight: 700;
+    color: $text;
+    letter-spacing: -0.01em;
 }
 
-.workout-config-subtitle {
-    font-size: $font-sm;
-    color: $text-muted;
-    margin-top: -0.75rem;
-}
-
-// ── Config sections ─────────────────────────────────────────────
-.config-section {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.config-label {
-    @include label;
-}
-
-.config-divider {
-    width: 100%;
-    height: 1px;
-    background: $border;
-    border-radius: 1px;
-}
-
-// ── Workout summary ─────────────────────────────────────────────
-.workout-summary {
+// ── Progress dots ───────────────────────────────────────────────────────────
+.wc-progress {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    width: 100%;
-    padding: 0.85rem 1rem;
-    background: $surface;
-    border: 1px solid $border;
-    border-radius: $radius-sm;
-}
-
-.workout-summary-icon {
-    font-size: 1.5rem;
+    justify-content: center;
+    gap: 8px;
+    padding: $spacing-md 0 0;
     flex-shrink: 0;
 }
 
-.workout-summary-details {
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
+.wc-progress-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba($text, 0.12);
+    transition: background 0.25s ease, transform 0.25s ease;
+
+    &--active {
+        background: $accent;
+        transform: scale(1.25);
+    }
 }
 
-.workout-summary-line {
+// ── Body (capped width on desktop, full-width on mobile) ────────────────────
+.wc-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    max-width: 480px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 $spacing-lg;
+}
+
+// ── Individual step ─────────────────────────────────────────────────────────
+.wc-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $spacing-lg;
+    padding: $spacing-xl 0;
+    animation: wc-step-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes wc-step-in {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.wc-step-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    text-align: center;
+}
+
+.wc-step-emoji {
+    font-size: 2.5rem;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+}
+
+.wc-step-title {
+    font-size: $font-xl;
+    font-weight: 800;
+    color: $text;
+    letter-spacing: -0.02em;
+}
+
+.wc-step-subtitle {
+    font-size: $font-sm;
+    color: $text-muted;
+    line-height: 1.4;
+}
+
+.wc-step-content {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+// ── Bottom action bar (pinned above footer) ────────────────────────────────
+.wc-bottom-bar {
+    flex-shrink: 0;
+    max-width: 480px;
+    width: 100%;
+    margin: 0 auto;
+    padding: $spacing-md $spacing-lg;
+}
+
+.wc-next-btn {
+    width: 100%;
+}
+
+// ── Mode toggle (reuse from StartScreen) ────────────────────────────────────
+.wc-step .session-mode-toggle {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+    justify-content: center;
+}
+
+// ── Summary card ────────────────────────────────────────────────────────────
+.wc-summary {
+    width: 100%;
+    background: $surface;
+    border: 1px solid $border;
+    border-radius: $radius-sm;
+    padding: 0.25rem 0;
+}
+
+.wc-summary-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1.25rem;
+}
+
+.wc-summary-row--total {
+    background: rgba($accent, 0.04);
+}
+
+.wc-summary-label {
+    font-size: $font-md;
+    color: $text-muted;
+    font-weight: 600;
+}
+
+.wc-summary-value {
     font-size: $font-md;
     font-weight: 700;
     color: $text;
 }
 
-.workout-summary-rest {
-    font-weight: 600;
-    color: $text-muted;
-    font-size: $font-sm;
-}
-
-.workout-summary-total {
-    font-size: $font-xs;
+.wc-summary-value--accent {
     color: $accent;
-    font-weight: 700;
+    font-weight: 800;
     text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.wc-summary-divider {
+    height: 1px;
+    background: $border;
+    margin: 0 1.25rem;
+}
+
+// ── Footer ──────────────────────────────────────────────────────────────────
+.wc-footer {
+    flex-shrink: 0;
+    padding: $spacing-sm $spacing-md $spacing-md;
+    text-align: center;
+    border-top: 1px solid $border;
+}
+
+.wc-step-counter {
+    font-size: $font-xs;
+    color: $text-muted;
+    font-weight: 600;
     letter-spacing: 0.04em;
-    margin-top: 0.15rem;
+    text-transform: uppercase;
 }
 
-// Reuse shared styles from StartScreen
-.workout-config-card {
-    .session-mode-toggle {
-        display: flex;
-        gap: 0.5rem;
-        width: 100%;
-        justify-content: center;
-    }
-}
-
-// ── Mobile responsive ───────────────────────────────────────────
+// ── Mobile adjustments ──────────────────────────────────────────────────────
 @media (max-width: 480px) {
-    .workout-config-card {
-        width: min(95vw, 340px);
-        padding: 1.5rem 1.25rem;
-        gap: 1rem;
+    .wc-body {
+        padding: 0 $spacing-md;
     }
 
-    .workout-config-title { font-size: 1.3rem; }
-    .workout-config-subtitle { font-size: 0.75rem; }
-    .config-label { font-size: 0.65rem; }
-    .workout-summary { padding: 0.65rem 0.75rem; }
-    .workout-summary-icon { font-size: 1.25rem; }
-    .workout-summary-line { font-size: 0.82rem; }
-    .workout-summary-rest { font-size: 0.72rem; }
-    .workout-summary-total { font-size: 0.65rem; }
+    .wc-step {
+        padding: $spacing-lg 0;
+    }
+
+    .wc-step-emoji {
+        font-size: 2rem;
+    }
+
+    .wc-step-title {
+        font-size: 1.25rem;
+    }
+
+    .wc-step-subtitle {
+        font-size: 0.75rem;
+    }
+
+    .wc-summary-row {
+        padding: 0.7rem 1rem;
+    }
+
+    .wc-summary-divider {
+        margin: 0 1rem;
+    }
+
+    .wc-bottom-bar {
+        padding: $spacing-sm $spacing-md;
+    }
 }

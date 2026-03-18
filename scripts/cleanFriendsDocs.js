@@ -66,7 +66,7 @@ async function run() {
             const batch = db.batch();
             const chunk = docsToClean.slice(i, i + BATCH_SIZE);
             const deleteMap = Object.fromEntries(STALE_FIELDS.map(f => [f, FieldValue.delete()]));
-            chunk.forEach(d => batch.update(d.ref, deleteMap));
+            chunk.forEach(d => { batch.update(d.ref, deleteMap); });
             await batch.commit();
         }
 

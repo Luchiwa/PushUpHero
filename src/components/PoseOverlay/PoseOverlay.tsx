@@ -1,5 +1,6 @@
 import { useRef, useImperativeHandle, forwardRef } from 'react';
 import type { PoseLandmarkerResult } from '@mediapipe/tasks-vision';
+import type { ExerciseType } from '@exercises/types';
 
 /** MediaPipe Pose connections for skeleton drawing */
 const POSE_CONNECTIONS: [number, number][] = [
@@ -12,8 +13,11 @@ const POSE_CONNECTIONS: [number, number][] = [
     [24, 26], [26, 28], // right leg
 ];
 
-/** Key joints to highlight for push-ups */
-const KEY_JOINTS = new Set([11, 12, 13, 14, 15, 16, 23, 24]);
+/** Key joints to highlight per exercise type */
+const KEY_JOINTS_MAP: Record<ExerciseType, Set<number>> = {
+    pushup: new Set([11, 12, 13, 14, 15, 16, 23, 24]),        // shoulders, elbows, wrists, hips
+    squat: new Set([11, 12, 23, 24, 25, 26, 27, 28]),          // shoulders, hips, knees, ankles
+};
 
 export interface PoseOverlayHandle {
     drawResult: (result: PoseLandmarkerResult, phase: string, isValidPosition: boolean) => void;
@@ -21,10 +25,11 @@ export interface PoseOverlayHandle {
 
 interface PoseOverlayProps {
     videoRef: React.RefObject<HTMLVideoElement | null>;
+    exerciseType: ExerciseType;
 }
 
 export const PoseOverlay = forwardRef<PoseOverlayHandle, PoseOverlayProps>(
-    function PoseOverlay({ videoRef }, ref) {
+    function PoseOverlay({ videoRef, exerciseType }, ref) {
         const canvasRef = useRef<HTMLCanvasElement>(null);
 
         useImperativeHandle(ref, () => ({
@@ -66,12 +71,14 @@ export const PoseOverlay = forwardRef<PoseOverlayHandle, PoseOverlayProps>(
                     }
                 }
 
+                const keyJoints = KEY_JOINTS_MAP[exerciseType];
+
                 for (let i = 0; i < lms.length; i++) {
                     const lm = lms[i];
                     if (!lm) continue;
                     const x = lm.x * w;
                     const y = lm.y * h;
-                    const isKey = KEY_JOINTS.has(i);
+                    const isKey = keyJoints.has(i);
 
                     ctx.beginPath();
                     ctx.arc(x, y, isKey ? 8 : 4, 0, Math.PI * 2);

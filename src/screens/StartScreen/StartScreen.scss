@@ -5,31 +5,30 @@
 .start-screen {
     @include fill;
     z-index: 5;
-    @include flex-center;
+    display: flex;
+    flex-direction: column;
+    background: $bg;
     animation: screen-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .camera-vignette {
-    @include fill;
-    background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.6) 100%);
-    z-index: 0;
+    display: none;
 }
 
-// ── Start card ───────────────────────────────────────────────────
-.start-card {
-    @include modal-card($width: 360px, $padding: 2.5rem 2rem);
-    @include glass;
-    align-items: center;
-    gap: 1.25rem;
-    box-shadow: $shadow-card;
+// ── Start content ───────────────────────────────────────────────
+.start-content {
     position: relative;
     z-index: 2;
-
-    @media (max-width: 480px) {
-        width: min(95vw, 340px);
-        padding: 2rem 1.5rem;
-        gap: 1rem;
-    }
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 2rem $spacing-lg;
+    flex: 1;
+    overflow-y: auto;
 }
 
 .start-card-divider {
@@ -72,13 +71,6 @@
     border: 1px solid rgba($red, 0.25);
     border-radius: $radius-sm;
     width: 100%;
-}
-
-.hint {
-    font-size: 0.74rem;
-    color: $text-muted;
-    text-align: center;
-    line-height: 1.5;
 }
 
 // ── Buttons ──────────────────────────────────────────────────────
@@ -200,82 +192,87 @@
     text-shadow: none;
 }
 
-// ── Calibration UI ───────────────────────────────────────────────
-.calibration-ui {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 1rem;
-    background: rgba(26, 26, 26, 0.9);
-    padding: 0.75rem 1.25rem;
-    border-radius: $radius-sm;
-    border: 1px solid rgba($accent, 0.3);
-    box-shadow: 0 4px 16px rgba($accent, 0.15);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-}
-
-.calibration-title {
-    font-size: 0.8rem;
-    font-weight: 800;
-    color: $accent-light;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-}
-
-.calibration-bar-track {
-    width: 160px;
-    @include progress-track($height: 8px, $bg: rgba(255, 255, 255, 0.15));
-    border-radius: 4px;
-}
-
-.calibration-bar-fill {
-    @include progress-fill(linear-gradient(90deg, $accent, $green));
-    transition: width 0.1s linear;
-}
-
-.calibration-pct {
-    font-size: 1.1rem;
-    font-weight: 800;
-    color: #ffffff;
-}
-
 // ── Mobile responsive ────────────────────────────────────────────
 @media (max-width: 480px) {
-    .start-screen {
-        padding: 1rem 0;
-        overflow-y: auto;
-    }
-
-    .start-card {
-        padding: 1.5rem 1rem;
-        border-radius: $radius-sm;
-        width: min(95vw, 340px);
+    .start-content {
+        padding: 1.5rem $spacing-md;
         gap: 0.9rem;
-        margin: auto 0;
     }
 
-    .start-brand { gap: 0.7rem; }
-    .start-brand-header { gap: 0.75rem; }
-    .start-brand-stats { font-size: 0.75rem; }
-    .btn-primary-sm { font-size: 0.75rem; padding: 0.5rem 0.9rem; }
-    .user-avatar { width: 32px !important; height: 32px !important; font-size: 0.8rem; }
-    .user-name { font-size: 0.75rem; }
-    .user-streak-sep { font-size: 0.7rem; }
-    .user-streak { font-size: 0.75rem; }
-    .level-preview-bar { max-width: 200px; height: 24px; }
-    .level-preview-text { font-size: 0.65rem; }
-    .goal-label { font-size: 0.65rem; }
-    .session-mode-toggle { gap: 0.4rem; }
-    .btn-toggle { padding: 0.5rem 0.9rem; font-size: 0.75rem; }
-    .status-area { font-size: 0.75rem; gap: 0.4rem; }
-    .error-message { font-size: 0.75rem; padding: 0.4rem 0.6rem; }
-    .hint { font-size: 0.7rem; line-height: 1.4; }
-    .btn-primary { padding: 0.7rem 1.25rem; font-size: 0.9rem; border-radius: $radius-sm; }
-    .start-card-divider { margin: 0.5rem 0; }
-    .calibration-ui { margin-top: 0.75rem; padding: 0.6rem 1rem; }
-    .calibration-title { font-size: 0.7rem; }
-    .calibration-bar-track { width: 140px; height: 6px; }
-    .calibration-pct { font-size: 0.95rem; }
+    .start-brand {
+        gap: 0.7rem;
+    }
+
+    .start-brand-header {
+        gap: 0.75rem;
+    }
+
+    .start-brand-stats {
+        font-size: 0.75rem;
+    }
+
+    .btn-primary-sm {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.9rem;
+    }
+
+    .user-avatar {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 0.8rem;
+    }
+
+    .user-name {
+        font-size: 0.75rem;
+    }
+
+    .user-streak-sep {
+        font-size: 0.7rem;
+    }
+
+    .user-streak {
+        font-size: 0.75rem;
+    }
+
+    .level-preview-bar {
+        max-width: 200px;
+        height: 24px;
+    }
+
+    .level-preview-text {
+        font-size: 0.65rem;
+    }
+
+    .goal-label {
+        font-size: 0.65rem;
+    }
+
+    .session-mode-toggle {
+        gap: 0.4rem;
+    }
+
+    .btn-toggle {
+        padding: 0.5rem 0.9rem;
+        font-size: 0.75rem;
+    }
+
+    .status-area {
+        font-size: 0.75rem;
+        gap: 0.4rem;
+    }
+
+    .error-message {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.6rem;
+    }
+
+    .btn-primary {
+        padding: 0.7rem 1.25rem;
+        font-size: 0.9rem;
+        border-radius: $radius-sm;
+    }
+
+    .start-card-divider {
+        margin: 0.5rem 0;
+    }
 }

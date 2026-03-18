@@ -15,6 +15,7 @@ export interface SessionRecord {
     goalReps: number;
     sessionMode?: 'reps' | 'time';
     elapsedTime?: number;          // seconds — total duration
+    exerciseType?: 'pushup' | 'squat'; // defaults to 'pushup' for legacy sessions
 
     // ── Multi-set fields ──
     numberOfSets?: number;         // configured sets count (1 = legacy single-set)
@@ -47,6 +48,7 @@ export function useSessionHistory() {
         // Firestore rejects undefined values — remove optional fields if absent
         if (newSession.elapsedTime === undefined) delete newSession.elapsedTime;
         if (newSession.sessionMode === undefined) delete newSession.sessionMode;
+        if (newSession.exerciseType === undefined) delete newSession.exerciseType;
         if (newSession.numberOfSets === undefined) delete newSession.numberOfSets;
         if (newSession.restDuration === undefined) delete newSession.restDuration;
         if (newSession.sets === undefined) delete newSession.sets;

@@ -1,9 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useWeekSessions, getWeekStart, formatWeekRange } from '@hooks/useWeekSessions';
+import type { ExerciseType } from '@exercises/types';
 import { WeeklyChart } from './WeeklyChart';
 import { SessionHistoryPanel } from '@modals/panels/SessionHistoryPanel/SessionHistoryPanel';
 import './StatsScreen.scss';
 import './WeeklyChart.scss';
+
+type ExerciseFilter = 'all' | ExerciseType;
+
+const FILTERS: { value: ExerciseFilter; emoji: string; label: string }[] = [
+    { value: 'all', emoji: '🏋️', label: 'All' },
+    { value: 'pushup', emoji: '💪', label: 'Push-ups' },
+    { value: 'squat', emoji: '🦵', label: 'Squats' },
+];
 
 interface StatsScreenProps {
     onClose: () => void;
@@ -11,25 +20,33 @@ interface StatsScreenProps {
 
 export function StatsScreen({ onClose }: StatsScreenProps) {
     const [weekOffset, setWeekOffset] = useState(0);
+    const [exerciseFilter, setExerciseFilter] = useState<ExerciseFilter>('all');
     const { sessions, loading, firstSessionDate, fetchWeek } = useWeekSessions();
 
     useEffect(() => {
         fetchWeek(weekOffset);
     }, [weekOffset, fetchWeek]);
 
+    const filteredSessions = useMemo(
+        () => exerciseFilter === 'all'
+            ? sessions
+            : sessions.filter(s => (s.exerciseType ?? 'pushup') === exerciseFilter),
+        [sessions, exerciseFilter],
+    );
+
     const isPrevDisabled = firstSessionDate === null
         || getWeekStart(weekOffset - 1).getTime() + 7 * 86_400_000 <= firstSessionDate;
 
     const isNextDisabled = weekOffset >= 0;
 
-    const hasActivity = sessions.some(s => s.reps > 0);
+    const hasActivity = filteredSessions.some(s => s.reps > 0);
 
     return (
         <div className="stats-screen">
             {/* Top bar */}
             <div className="stats-topbar">
-                <button className="btn-icon stats-back-btn" onClick={onClose} aria-label="Back">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <button type="button" className="btn-icon stats-back-btn" onClick={onClose} aria-label="Back">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <polyline points="15 18 9 12 15 6" />
                     </svg>
                 </button>
@@ -39,11 +56,28 @@ export function StatsScreen({ onClose }: StatsScreenProps) {
 
             <div className="stats-body">
                 <div className="stats-fixed-top">
+
+                {/* Exercise type filter */}
+                <div className="stats-filter-row">
+                    {FILTERS.map(f => (
+                        <button
+                            key={f.value}
+                            type="button"
+                            className={`stats-filter-pill${exerciseFilter === f.value ? ' active' : ''}`}
+                            onClick={() => setExerciseFilter(f.value)}
+                        >
+                            <span className="stats-filter-emoji">{f.emoji}</span>
+                            {f.label}
+                        </button>
+                    ))}
+                </div>
+
                 {/* Week chart section */}
                 <div className="stats-chart-section">
                     {/* Week navigation header */}
                     <div className="stats-week-nav">
                         <button
+                            type="button"
                             className="btn-icon stats-nav-btn"
                             onClick={() => setWeekOffset(w => w - 1)}
                             disabled={isPrevDisabled}
@@ -53,6 +87,7 @@ export function StatsScreen({ onClose }: StatsScreenProps) {
                         </button>
                         <span className="stats-week-label">{formatWeekRange(weekOffset)}</span>
                         <button
+                            type="button"
                             className="btn-icon stats-nav-btn"
                             onClick={() => setWeekOffset(w => w + 1)}
                             disabled={isNextDisabled}
@@ -69,12 +104,12 @@ export function StatsScreen({ onClose }: StatsScreenProps) {
                         </div>
                     ) : hasActivity ? (
                         <div className="stats-chart-wrap">
-                            <WeeklyChart sessions={sessions} weekOffset={weekOffset} />
+                            <WeeklyChart sessions={filteredSessions} weekOffset={weekOffset} />
                         </div>
                     ) : (
                         <div className="stats-empty-week">
                             <span className="stats-empty-icon">🏖️</span>
-                            <p>No activity this week</p>
+                            <p>{exerciseFilter === 'all' ? 'No activity this week' : 'No matching sessions'}</p>
                         </div>
                     )}
                 </div>
@@ -82,14 +117,14 @@ export function StatsScreen({ onClose }: StatsScreenProps) {
                 </div>{/* end stats-fixed-top */}
 
                 {/* Titre fixe hors scroll */}
-                {(sessions.length > 0 || !loading) && (
+                {(filteredSessions.length > 0 || !loading) && (
                     <p className="stats-sessions-title">This week's sessions</p>
                 )}
 
                 {/* Session list — seule zone scrollable */}
                 <div className="stats-sessions-scroll">
-                    {sessions.length > 0 ? (
-                        <SessionHistoryPanel sessions={sessions} />
+                    {filteredSessions.length > 0 ? (
+                        <SessionHistoryPanel sessions={filteredSessions} />
                     ) : !loading && (
                         <p className="stats-sessions-empty">No sessions to display.</p>
                     )}

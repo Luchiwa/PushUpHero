@@ -4,8 +4,12 @@ import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching';
 declare const self: ServiceWorkerGlobalScope;
 
 cleanupOutdatedCaches();
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-precacheAndRoute((self as any).__WB_MANIFEST);
+precacheAndRoute((self as unknown as { __WB_MANIFEST: Array<{url: string; revision: string | null}> }).__WB_MANIFEST);
+
+// ── Claim clients so the "controlling" event fires in workbox-window ──
+self.addEventListener('activate', (event: ExtendableEvent) => {
+    event.waitUntil(self.clients.claim());
+});
 
 // ── Handle messages from the app ──────────────────────────────────
 self.addEventListener('message', (event: ExtendableMessageEvent) => {

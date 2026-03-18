@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { collection, query, orderBy, limit, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import type { Timestamp } from 'firebase/firestore';
 import { db } from '@lib/firebase';
 import { useAuth } from './useAuth';
 import type { Friend } from './useFriends';

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
+import { EmailAuthProvider, GoogleAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, updatePassword } from 'firebase/auth';
 import { auth } from '@lib/firebase';
 import { useAuth } from '@hooks/useAuth';
 import { deleteCurrentAccount } from '@hooks/useDeleteAccount';
@@ -19,12 +19,13 @@ function SettingsAccordion({ title, danger, isOpen, onToggle, children }: {
 }) {
     return (
         <div className={`settings-accordion${danger ? ' settings-accordion--danger' : ''}${isOpen ? ' settings-accordion--open' : ''}`}>
-            <button className="settings-accordion-header" onClick={onToggle}>
+            <button type="button" className="settings-accordion-header" onClick={onToggle}>
                 <span className={`settings-accordion-title${danger ? ' settings-accordion-title--danger' : ''}`}>{title}</span>
                 <svg
                     className={`settings-accordion-chevron${isOpen ? ' settings-accordion-chevron--open' : ''}`}
                     width="18" height="18" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                    aria-hidden="true"
                 >
                     <polyline points="6 9 12 15 18 9" />
                 </svg>
@@ -81,7 +82,9 @@ export function SettingsModal({ onClose, onAccountDeleted }: SettingsModalProps)
             if (!user || !user.email) throw new Error('No authenticated user');
             const credential = EmailAuthProvider.credential(user.email, currentPwd);
             await reauthenticateWithCredential(user, credential);
-            await updatePassword(auth.currentUser!, newPwd);
+            const currentUser = auth.currentUser;
+            if (!currentUser) throw new Error('No authenticated user');
+            await updatePassword(currentUser, newPwd);
             setPwdSuccess(true);
             setCurrentPwd('');
             setNewPwd('');
@@ -104,6 +107,15 @@ export function SettingsModal({ onClose, onAccountDeleted }: SettingsModalProps)
         setDeleteError('');
         setDeleteLoading(true);
         try {
+            if (!user) throw new Error('No authenticated user');
+
+            // Force re-authentication so deleteUser never fails with requires-recent-login
+            if (isGoogleUser) {
+                await reauthenticateWithPopup(user, new GoogleAuthProvider());
+            }
+            // (email/password users already re-auth'd implicitly via a recent sign-in;
+            //  if it still fails the catch below will prompt them to sign out and back in)
+
             await deleteCurrentAccount();
             onAccountDeleted();
         } catch (err: unknown) {
@@ -119,13 +131,13 @@ export function SettingsModal({ onClose, onAccountDeleted }: SettingsModalProps)
     };
 
     return (
-        <div className="settings-overlay" onClick={onClose}>
-            <div className="settings-card" onClick={e => e.stopPropagation()}>
+        <div className="settings-overlay" role="presentation" onClick={onClose} onKeyDown={e => e.key === 'Escape' && onClose()}>
+            <div className="settings-card" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()} onKeyDown={e => e.stopPropagation()}>
                 {/* Header */}
                 <div className="settings-header">
                     <h2 className="settings-title">Settings</h2>
-                    <button className="btn-icon settings-close-btn" onClick={onClose} aria-label="Close">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <button type="button" className="btn-icon settings-close-btn" onClick={onClose} aria-label="Close">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                             <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                         </svg>
                     </button>
@@ -137,8 +149,9 @@ export function SettingsModal({ onClose, onAccountDeleted }: SettingsModalProps)
                         <SettingsAccordion title="Change Password" isOpen={openSection === 'password'} onToggle={() => toggleSection('password')}>
                             <form className="settings-form" onSubmit={handlePasswordChange}>
                                 <div className="input-group">
-                                    <label>Current password</label>
+                                    <label htmlFor="settings-current-pwd">Current password</label>
                                     <input
+                                        id="settings-current-pwd"
                                         type="password"
                                         value={currentPwd}
                                         onChange={e => setCurrentPwd(e.target.value)}
@@ -148,8 +161,9 @@ export function SettingsModal({ onClose, onAccountDeleted }: SettingsModalProps)
                                     />
                                 </div>
                                 <div className="input-group">
-                                    <label>New password</label>
+                                    <label htmlFor="settings-new-pwd">New password</label>
                                     <input
+                                        id="settings-new-pwd"
                                         type="password"
                                         value={newPwd}
                                         onChange={e => setNewPwd(e.target.value)}
@@ -159,8 +173,9 @@ export function SettingsModal({ onClose, onAccountDeleted }: SettingsModalProps)
                                     />
                                 </div>
                                 <div className="input-group">
-                                    <label>Confirm new password</label>
+                                    <label htmlFor="settings-confirm-pwd">Confirm new password</label>
                                     <input
+                                        id="settings-confirm-pwd"
                                         type="password"
                                         value={confirmPwd}
                                         onChange={e => setConfirmPwd(e.target.value)}
@@ -184,8 +199,9 @@ export function SettingsModal({ onClose, onAccountDeleted }: SettingsModalProps)
                             Deleting your account is <strong>permanent and irreversible</strong>. All your data (sessions, friends, progress) will be permanently deleted.
                         </p>
                         <div className="input-group">
-                            <label>Type <strong>DELETE</strong> to confirm</label>
+                            <label htmlFor="settings-delete-confirm">Type <strong>DELETE</strong> to confirm</label>
                             <input
+                                id="settings-delete-confirm"
                                 type="text"
                                 value={deleteInput}
                                 onChange={e => setDeleteInput(e.target.value)}
@@ -195,6 +211,7 @@ export function SettingsModal({ onClose, onAccountDeleted }: SettingsModalProps)
                         </div>
                         {deleteError && <p className="settings-feedback settings-feedback--error">{deleteError}</p>}
                         <button
+                            type="button"
                             className="btn-danger"
                             onClick={handleDeleteAccount}
                             disabled={deleteInput !== 'DELETE' || deleteLoading}
@@ -203,8 +220,8 @@ export function SettingsModal({ onClose, onAccountDeleted }: SettingsModalProps)
                         </button>
                     </SettingsAccordion>
 
-                    <button className="btn-logout" onClick={handleLogout}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <button type="button" className="btn-logout" onClick={handleLogout}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                             <polyline points="16 17 21 12 16 7"></polyline>
                             <line x1="21" y1="12" x2="9" y2="12"></line>

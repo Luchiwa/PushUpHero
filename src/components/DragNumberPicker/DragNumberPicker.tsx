@@ -119,6 +119,7 @@ export function DragNumberPicker({
 
             <div className="drag-picker-content">
                 <button
+                    type="button"
                     className="drag-picker-btn"
                     onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); startHold(1); }}
                     onMouseUp={stopHold}
@@ -133,6 +134,7 @@ export function DragNumberPicker({
                 </div>
 
                 <button
+                    type="button"
                     className="drag-picker-btn"
                     onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); startHold(-1); }}
                     onMouseUp={stopHold}

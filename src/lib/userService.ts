@@ -112,7 +112,7 @@ export async function saveSession({ uid, session, currentTotalReps, dbUser }: Sa
     getDocs(query(
         collection(db, 'users', uid, 'activityFeed'),
         where('createdAt', '<', cutoff),
-    )).then(snap => snap.forEach(d => deleteDoc(d.ref))).catch(() => { /* non-critical */ });
+    )).then(snap => snap.forEach(d => { deleteDoc(d.ref); })).catch(() => { /* non-critical */ });
 }
 
 // ─── Merge local guest data into Firestore on first login ────────────────────
@@ -137,11 +137,49 @@ export async function mergeLocalDataToCloud({
 
     const newTotalReps = cloudReps + localReps;
     const newLevel = calculateLevelFromTotalReps(newTotalReps);
-    batch.set(userRef, {
+
+    // ── Compute streak from local sessions ─────────────────────────────────
+    // Find the most recent guest session date, then compute the streak
+    // by walking sessions sorted newest-first and counting consecutive days.
+    const profileUpdate: Record<string, unknown> = {
         totalReps: newTotalReps,
         totalSessions: cloudSessions + localSessions.length,
         level: newLevel,
-    }, { merge: true });
+    };
+
+    if (localSessions.length > 0) {
+        const todayLocal = localDateString();
+        const yesterdayLocal = yesterdayDateString();
+
+        // Sort sessions newest-first and get their local date strings
+        const sortedDates = [...localSessions]
+            .sort((a, b) => b.date - a.date)
+            .map(s => localDateString(new Date(s.date)));
+
+        const mostRecentDate = sortedDates[0];
+
+        // Only grant streak if the most recent session was today or yesterday
+        if (mostRecentDate === todayLocal || mostRecentDate === yesterdayLocal) {
+            // Count consecutive unique days starting from mostRecentDate
+            const uniqueDays = [...new Set(sortedDates)];
+            let streak = 0;
+            let expected = mostRecentDate;
+            for (const day of uniqueDays) {
+                if (day === expected) {
+                    streak++;
+                    const d = new Date(expected);
+                    d.setDate(d.getDate() - 1);
+                    expected = localDateString(d);
+                } else {
+                    break;
+                }
+            }
+            profileUpdate.streak = streak;
+            profileUpdate.lastSessionDate = mostRecentDate;
+        }
+    }
+
+    batch.set(userRef, profileUpdate, { merge: true });
 
     localSessions.forEach(session => {
         const sessionRef = doc(collection(db, 'users', uid, 'sessions'), session.id);

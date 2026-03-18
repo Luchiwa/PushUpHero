@@ -20,10 +20,10 @@ export function ReloadPrompt() {
                     <span>A new version is available!</span>
                 </div>
                 <div className="reload-prompt-actions">
-                    <button className="btn-reload" onClick={() => updateServiceWorker(true)}>
+                    <button type="button" className="btn-reload" onClick={() => updateServiceWorker(true)}>
                         Reload
                     </button>
-                    <button className="btn-close" onClick={() => close()}>
+                    <button type="button" className="btn-close" onClick={() => close()}>
                         Close
                     </button>
                 </div>

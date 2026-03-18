@@ -3,14 +3,18 @@ import { useAuth } from '@hooks/useAuth';
 import { Avatar } from '@components/Avatar/Avatar';
 import { DragNumberPicker } from '@components/DragNumberPicker/DragNumberPicker';
 import { TimePicker } from '@components/TimePicker/TimePicker';
+import { ExercisePicker } from '@components/ExercisePicker/ExercisePicker';
 import { AuthModal } from '@modals/AuthModal/AuthModal';
 import { ProfileModal } from '@modals/ProfileModal/ProfileModal';
 import { InstallBanner } from '@overlays/InstallBanner/InstallBanner';
+import type { ExerciseType } from '@exercises/types';
 import './StartScreen.scss';
 
 interface StartScreenProps {
     isModelReady: boolean;
     cameraError: string | null;
+    exerciseType: ExerciseType;
+    onExerciseTypeChange: (type: ExerciseType) => void;
     goalReps: number;
     onGoalChange: (value: number) => void;
     sessionMode: 'reps' | 'time';
@@ -24,6 +28,8 @@ interface StartScreenProps {
 export function StartScreen({
     isModelReady,
     cameraError,
+    exerciseType,
+    onExerciseTypeChange,
     goalReps,
     onGoalChange,
     sessionMode,
@@ -53,11 +59,11 @@ export function StartScreen({
             <div className="camera-vignette" />
             <InstallBanner />
 
-            <div className="start-card">
+            <div className="start-content">
                 <div className="start-brand">
                     <div className="start-brand-header">
                         {user ? (
-                            <div className="user-profile-tag" onClick={() => setShowProfileModal(true)} title="Mon profil">
+                            <button type="button" className="user-profile-tag" onClick={() => setShowProfileModal(true)} title="Mon profil">
                                 <Avatar
                                     photoURL={dbUser?.photoURL}
                                     initials={dbUser?.displayName || 'U'}
@@ -68,12 +74,12 @@ export function StartScreen({
                                 {(dbUser?.streak ?? 0) > 0 && (
                                     <>
                                         <span className="user-streak-sep">·</span>
-                                        <span className="user-streak">{dbUser!.streak} 🔥</span>
+                                        <span className="user-streak">{dbUser?.streak} 🔥</span>
                                     </>
                                 )}
-                            </div>
+                            </button>
                         ) : (
-                            <button className="btn-primary-sm" onClick={() => setShowAuthModal(true)}>
+                            <button type="button" className="btn-primary-sm" onClick={() => setShowAuthModal(true)}>
                                 Sign in
                             </button>
                         )}
@@ -88,14 +94,20 @@ export function StartScreen({
 
                 <div className="start-card-divider" />
 
+                <ExercisePicker value={exerciseType} onChange={onExerciseTypeChange} />
+
+                <div className="start-card-divider" />
+
                 <div className="session-mode-toggle">
                     <button
+                        type="button"
                         className={`btn-toggle ${sessionMode === 'reps' ? 'active' : ''}`}
                         onClick={() => onSessionModeChange('reps')}
                     >
                         🎯 Reps
                     </button>
                     <button
+                        type="button"
                         className={`btn-toggle ${sessionMode === 'time' ? 'active' : ''}`}
                         onClick={() => onSessionModeChange('time')}
                     >
@@ -133,7 +145,7 @@ export function StartScreen({
                     </div>
                 )}
 
-                <button className="btn-primary" onClick={onStart} disabled={!isReady}>
+                <button type="button" className="btn-primary" onClick={onStart} disabled={!isReady}>
                     {isReady ? (
                         sessionMode === 'reps' 
                             ? `Start — ${goalReps} rep${goalReps > 1 ? 's' : ''}`
@@ -141,11 +153,9 @@ export function StartScreen({
                     ) : 'Getting Ready…'}
                 </button>
 
-                <button className="btn-secondary" onClick={onOpenWorkoutConfig} disabled={!isReady}>
+                <button type="button" className="btn-secondary" onClick={onOpenWorkoutConfig} disabled={!isReady}>
                     🏋️ Multi-Set Workout
                 </button>
-
-                <p className="hint">Position yourself facing the camera in a push-up stance</p>
             </div>
 
             {showAuthModal && (

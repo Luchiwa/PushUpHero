@@ -20,16 +20,16 @@ export function InstallBanner() {
                 </div>
                 <div className="install-banner-actions">
                     {context === 'android' && (
-                        <button className="install-banner-btn" onClick={triggerInstall}>
+                        <button type="button" className="install-banner-btn" onClick={triggerInstall}>
                             Install
                         </button>
                     )}
                     {context === 'ios' && (
-                        <button className="install-banner-btn" onClick={() => setShowIOSGuide(true)}>
+                        <button type="button" className="install-banner-btn" onClick={() => setShowIOSGuide(true)}>
                             How?
                         </button>
                     )}
-                    <button className="install-banner-dismiss" onClick={() => setDismissed(true)} aria-label="Dismiss">
+                    <button type="button" className="install-banner-dismiss" onClick={() => setDismissed(true)} aria-label="Dismiss">
                         ✕
                     </button>
                 </div>
@@ -37,15 +37,15 @@ export function InstallBanner() {
 
             {/* ── iOS guide sheet ──────────────────────────────────── */}
             {showIOSGuide && (
-                <div className="ios-guide-overlay" onClick={() => setShowIOSGuide(false)}>
-                    <div className="ios-guide-sheet" onClick={e => e.stopPropagation()}>
-                        <button className="ios-guide-close" onClick={() => setShowIOSGuide(false)}>✕</button>
+                <div className="ios-guide-overlay" role="presentation" onClick={() => setShowIOSGuide(false)} onKeyDown={e => e.key === 'Escape' && setShowIOSGuide(false)}>
+                    <div className="ios-guide-sheet" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()} onKeyDown={e => e.stopPropagation()}>
+                        <button type="button" className="ios-guide-close" onClick={() => setShowIOSGuide(false)}>✕</button>
                         <h3 className="ios-guide-title">Add to Home Screen</h3>
                         <ol className="ios-guide-steps">
                             <li>
                                 <span className="ios-guide-step-icon">
                                     {/* Share icon */}
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                                         <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
                                         <polyline points="16 6 12 2 8 6"/>
                                         <line x1="12" y1="2" x2="12" y2="15"/>
@@ -63,7 +63,7 @@ export function InstallBanner() {
                             </li>
                         </ol>
                         <div className="ios-guide-arrow">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                                 <line x1="12" y1="5" x2="12" y2="19"/>
                                 <polyline points="19 12 12 19 5 12"/>
                             </svg>

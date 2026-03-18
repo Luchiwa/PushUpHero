@@ -62,7 +62,7 @@ export function useFriends() {
                 setOutgoingRequests([]);
             }, 0);
             // Clean up any profile listeners
-            profileUnsubs.forEach(unsub => unsub());
+            profileUnsubs.forEach(unsub => { unsub(); });
             profileUnsubs.clear();
             return;
         }
@@ -80,20 +80,32 @@ export function useFriends() {
                 }
             });
 
-            // Set initial list first — stats at 0, profile snapshots will fill them in.
-            // Must come BEFORE attaching listeners so the listener updates are never overwritten.
-            setFriends(snap.docs.map(d => {
-                const data = d.data();
-                return {
-                    uid: data.uid,
-                    displayName: data.displayName,
-                    photoURL: data.photoURL ?? undefined,
-                    level: 0,
-                    totalReps: 0,
-                    totalSessions: 0,
-                    streak: 0,
-                } as Friend;
-            }));
+            // Build new friends list, preserving data already fetched by profile listeners
+            setFriends(prev => {
+                const prevMap = new Map(prev.map(f => [f.uid, f]));
+                return snap.docs.map(d => {
+                    const data = d.data();
+                    const existing = prevMap.get(data.uid);
+                    if (existing) {
+                        // Keep live stats, but update displayName/photoURL from friends doc if changed
+                        return {
+                            ...existing,
+                            displayName: data.displayName ?? existing.displayName,
+                            photoURL: data.photoURL ?? existing.photoURL,
+                        };
+                    }
+                    // Brand new friend — starts at 0, profile listener will fill in shortly
+                    return {
+                        uid: data.uid,
+                        displayName: data.displayName,
+                        photoURL: data.photoURL ?? undefined,
+                        level: 0,
+                        totalReps: 0,
+                        totalSessions: 0,
+                        streak: 0,
+                    } as Friend;
+                });
+            });
 
             // Attach per-profile live listeners for stats (level, totalReps, totalSessions, streak)
             snap.docs.forEach(friendDoc => {
@@ -156,7 +168,7 @@ export function useFriends() {
             unsubFriends();
             unsubRequests();
             unsubOutgoing();
-            profileUnsubs.forEach(unsub => unsub());
+            profileUnsubs.forEach(unsub => { unsub(); });
             profileUnsubs.clear();
         };
     }, [user]);

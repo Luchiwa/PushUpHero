@@ -5,6 +5,18 @@ export interface Landmark {
     visibility?: number;
 }
 
+export type ExerciseType = 'pushup' | 'squat';
+
+const EXERCISE_LABELS: Record<ExerciseType, string> = {
+    pushup: 'Push-ups',
+    squat: 'Squats',
+};
+
+/** Human-readable label: 'Push-ups', 'Squats' */
+export function getExerciseLabel(type: ExerciseType): string {
+    return EXERCISE_LABELS[type];
+}
+
 export type ExercisePhase = 'idle' | 'up' | 'down' | 'transition';
 
 export interface RepResult {

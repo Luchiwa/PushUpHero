@@ -3,6 +3,8 @@
  * Shows for up to DURATION_MS, then auto-transitions. User can also skip immediately.
  */
 import { useEffect, useRef } from 'react';
+import type { ExerciseType } from '@exercises/types';
+import { getExerciseLabel } from '@exercises/types';
 import { useSoundEffect } from '@hooks/useSoundEffect';
 import './VictoryOverlay.scss';
 
@@ -10,6 +12,7 @@ const DURATION_MS = 10_000; // 10 seconds auto-transition
 const PARTICLE_COUNT = 60;
 
 interface VictoryOverlayProps {
+    exerciseType: ExerciseType;
     repCount: number;
     soundEnabled: boolean;
     onComplete: () => void;
@@ -35,7 +38,7 @@ function createParticles(canvas: HTMLCanvasElement) {
     }));
 }
 
-export function VictoryOverlay({ repCount, soundEnabled, onComplete, sessionMode, elapsedTime, totalSets }: VictoryOverlayProps) {
+export function VictoryOverlay({ exerciseType, repCount, soundEnabled, onComplete, sessionMode, elapsedTime, totalSets }: VictoryOverlayProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const animRef = useRef<number | null>(null);
     const { initAudio, playVictorySound } = useSoundEffect();
@@ -48,8 +51,7 @@ export function VictoryOverlay({ repCount, soundEnabled, onComplete, sessionMode
     useEffect(() => {
         initAudio();
         if (soundEnabled) playVictorySound();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [initAudio, playVictorySound, soundEnabled]);
 
     // Confetti canvas animation (runs independently of the auto-transition timer)
     useEffect(() => {
@@ -70,7 +72,7 @@ export function VictoryOverlay({ repCount, soundEnabled, onComplete, sessionMode
             lastTime = now;
             elapsed += dt * 16.67;
 
-            ctx!.clearRect(0, 0, canvas!.width, canvas!.height);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             for (const p of particles) {
                 p.x += p.vx * dt;
@@ -80,13 +82,13 @@ export function VictoryOverlay({ repCount, soundEnabled, onComplete, sessionMode
                 // Confetti fades out in the first 3s, then canvas is cleared
                 p.opacity = Math.max(0, 1 - elapsed / 3000);
 
-                ctx!.save();
-                ctx!.globalAlpha = p.opacity;
-                ctx!.translate(p.x, p.y);
-                ctx!.rotate((p.rotation * Math.PI) / 180);
-                ctx!.fillStyle = p.color;
-                ctx!.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
-                ctx!.restore();
+                ctx.save();
+                ctx.globalAlpha = p.opacity;
+                ctx.translate(p.x, p.y);
+                ctx.rotate((p.rotation * Math.PI) / 180);
+                ctx.fillStyle = p.color;
+                ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+                ctx.restore();
             }
 
             animRef.current = requestAnimationFrame(animate);
@@ -115,17 +117,17 @@ export function VictoryOverlay({ repCount, soundEnabled, onComplete, sessionMode
                 {sessionMode === 'time' ? (
                     <>
                         <p className="victory-reps">{formattedTime}</p>
-                        <p className="victory-subtitle">{repCount} push-ups{totalSets != null && totalSets > 1 ? ` · ${totalSets} sets` : ''}</p>
+                        <p className="victory-subtitle">{repCount} {getExerciseLabel(exerciseType).toLowerCase()}{totalSets != null && totalSets > 1 ? ` · ${totalSets} sets` : ''}</p>
                     </>
                 ) : (
                     <>
-                        <p className="victory-reps">{repCount} PUSH-UPS</p>
+                        <p className="victory-reps">{repCount} {getExerciseLabel(exerciseType).toUpperCase()}</p>
                         <p className="victory-subtitle">
                             {totalSets != null && totalSets > 1 ? `${totalSets} sets completed` : 'Session complete'}
                         </p>
                     </>
                 )}
-                <button className="btn-victory-skip" onClick={onComplete}>
+                <button type="button" className="btn-victory-skip" onClick={onComplete}>
                     View summary →
                 </button>
             </div>

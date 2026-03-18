@@ -104,7 +104,7 @@ export function RestScreen({
                     </p>
                 </div>
 
-                <button className="btn-primary" onClick={onRestComplete}>
+                <button type="button" className="btn-primary" onClick={onRestComplete}>
                     ⏭ Skip Rest
                 </button>
             </div>

@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
-import { BaseExerciseDetector } from '@exercises/BaseExerciseDetector';
+import type { BaseExerciseDetector } from '@exercises/BaseExerciseDetector';
 import type { ExerciseState, Landmark } from '@exercises/types';
 
 

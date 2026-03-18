@@ -8,6 +8,8 @@ import type { FacingMode } from '@hooks/useCamera';
 import { usePoseDetection } from '@hooks/usePoseDetection';
 import { useExerciseDetector } from '@hooks/useExerciseDetector';
 import { PushUpDetector } from '@exercises/pushup/PushUpDetector';
+import { SquatDetector } from '@exercises/squat/SquatDetector';
+import type { ExerciseType } from '@exercises/types';
 import { useWorkoutStateMachine } from './useWorkoutStateMachine';
 import { StartScreen } from '@screens/StartScreen/StartScreen';
 import { WorkoutConfigScreen } from '@screens/WorkoutConfigScreen/WorkoutConfigScreen';
@@ -24,7 +26,11 @@ import './App.scss';
 
 function App() {
   const [facingMode, setFacingMode] = useState<FacingMode>('user');
-  const detector = useMemo(() => new PushUpDetector(), []);
+  const [exerciseType, setExerciseType] = useState<ExerciseType>('pushup');
+  const detector = useMemo(
+    () => (exerciseType === 'squat' ? new SquatDetector() : new PushUpDetector()),
+    [exerciseType],
+  );
 
   // ── Exercise detector ────────────────────────────────────────────
   // isActive is synced from wm.screen via useEffect (one render behind).
@@ -83,12 +89,14 @@ function App() {
 
       {wm.screen === 'active' && (
         <>
-          <PoseOverlay ref={poseOverlayRef} videoRef={videoRef} />
+          <PoseOverlay ref={poseOverlayRef} videoRef={videoRef} exerciseType={exerciseType} />
           <PositionGuide
+            exerciseType={exerciseType}
             isCalibrated={exerciseState.isCalibrated}
             calibratingPercentage={exerciseState.calibratingPercentage}
           />
           <Dashboard
+            exerciseType={exerciseType}
             exerciseState={exerciseState}
             goalReps={wm.goalReps}
             sessionMode={wm.sessionMode}
@@ -116,6 +124,11 @@ function App() {
         <StartScreen
           isModelReady={isModelReady}
           cameraError={cameraError}
+          exerciseType={exerciseType}
+          onExerciseTypeChange={(t) => {
+            setExerciseType(t);
+            wm.setWorkoutConfig(prev => ({ ...prev, exerciseType: t }));
+          }}
           goalReps={wm.goalReps}
           onGoalChange={wm.setGoalReps}
           sessionMode={wm.sessionMode}
@@ -130,7 +143,10 @@ function App() {
       {wm.screen === 'config' && (
         <WorkoutConfigScreen
           config={wm.workoutConfig}
-          onConfigChange={wm.setWorkoutConfig}
+          onConfigChange={(cfg) => {
+            wm.setWorkoutConfig(cfg);
+            setExerciseType(cfg.exerciseType);
+          }}
           onStart={wm.handleWorkoutStart}
           onBack={wm.handleBackToIdle}
           isReady={isModelReady}
@@ -149,6 +165,7 @@ function App() {
 
       {wm.screen === 'stopped' && (
         <SummaryScreen
+          exerciseType={exerciseType}
           exerciseState={exerciseState}
           completedSets={wm.completedSets}
           onReset={wm.handleReset}
@@ -160,13 +177,14 @@ function App() {
       {wm.screen === 'levelup' && (
         <LevelUpScreen
           previousLevel={wm.levelBefore}
-          newLevel={wm.liveLevel}
+          newLevel={wm.savedLevel ?? wm.liveLevel}
           onContinue={wm.handleLevelUpContinue}
         />
       )}
 
       {wm.screen === 'victory' && (
         <VictoryOverlay
+          exerciseType={exerciseType}
           repCount={wm.completedSetsReps}
           soundEnabled={wm.soundEnabled}
           onComplete={wm.handleVictoryComplete}

@@ -25,7 +25,7 @@ export function useCamera({ facingMode = 'user', enabled = true }: UseCameraOpti
     useEffect(() => { facingModeRef.current = facingMode; }, [facingMode]);
 
     const stopStream = useCallback(() => {
-        streamRef.current?.getTracks().forEach(t => t.stop());
+        streamRef.current?.getTracks().forEach(t => { t.stop(); });
         streamRef.current = null;
         if (videoRef.current) {
             videoRef.current.srcObject = null;

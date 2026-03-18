@@ -8,6 +8,11 @@ import type { SessionRecord } from '@hooks/useSessionHistory';
 import { formatElapsedTime } from '@lib/constants';
 import './SessionHistoryPanel.scss';
 
+const EXERCISE_EMOJI: Record<string, string> = {
+    pushup: '💪',
+    squat: '🦵',
+};
+
 interface SessionHistoryPanelProps {
     sessions?: SessionRecord[];
     title?: string;
@@ -52,7 +57,12 @@ export function SessionHistoryPanel({ sessions: sessionsProp, title, onViewAll }
                     return (
                         <li key={s.id} className="session-history-item">
                             <div className="session-history-left">
-                                <span className="session-date">{formatDate(s.date)}</span>
+                                <div className="session-date-row">
+                                    <span className="session-date">{formatDate(s.date)}</span>
+                                    <span className="session-exercise-badge">
+                                        {EXERCISE_EMOJI[s.exerciseType ?? 'pushup']} {s.exerciseType === 'squat' ? 'Squats' : 'Push-ups'}
+                                    </span>
+                                </div>
                                 <div className="session-details">
                                     {(() => {
                                         // For multi-set sessions saved before the fix, goalReps was per-set.
@@ -102,7 +112,7 @@ export function SessionHistoryPanel({ sessions: sessionsProp, title, onViewAll }
                 })}
             </ul>
             {showViewAll && (
-                <button className="session-history-view-all" onClick={onViewAll}>
+                <button type="button" className="session-history-view-all" onClick={onViewAll}>
                     View all history
                 </button>
             )}

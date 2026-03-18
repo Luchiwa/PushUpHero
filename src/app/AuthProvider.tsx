@@ -8,6 +8,7 @@ import type { DbUser } from '@hooks/useAuth';
 import { useLevelSystem } from '@hooks/useLevelSystem';
 import { useNotifications } from '@hooks/useNotifications';
 import { useSyncCloud } from '@hooks/useSyncCloud';
+import { invalidateAvatarCache } from '@hooks/useAvatarCache';
 import type { SessionRecord } from '@hooks/useSessionHistory';
 
 function AppServices({ children }: { children: React.ReactNode }) {
@@ -105,19 +106,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const canvas = document.createElement('canvas');
         canvas.width = size;
         canvas.height = size;
-        const ctx = canvas.getContext('2d')!;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Canvas 2D context unavailable');
         // Center-crop square
         const srcSize = Math.min(bitmap.width, bitmap.height);
         const sx = (bitmap.width - srcSize) / 2;
         const sy = (bitmap.height - srcSize) / 2;
         ctx.drawImage(bitmap, sx, sy, srcSize, srcSize, 0, 0, size, size);
-        const blob = await new Promise<Blob>((resolve) =>
-            canvas.toBlob((b) => resolve(b!), 'image/jpeg', 0.85)
+        const blob = await new Promise<Blob>((resolve, reject) =>
+            canvas.toBlob((b) => { if (b) resolve(b); else reject(new Error('toBlob failed')); }, 'image/jpeg', 0.85)
         );
         const storageRef = ref(storage, `avatars/${user.uid}.jpg`);
         await user.getIdToken(true); // force token refresh
         await uploadBytes(storageRef, blob, { contentType: 'image/jpeg' });
         const url = await getDownloadURL(storageRef);
+        // Bust the avatar cache so the new image is fetched fresh
+        if (dbUser?.photoURL) await invalidateAvatarCache(dbUser.photoURL);
         await updateDoc(doc(db, 'users', user.uid), { photoURL: url });
         setDbUser(prev => prev ? { ...prev, photoURL: url } : prev);
     };

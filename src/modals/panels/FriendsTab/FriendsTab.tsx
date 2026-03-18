@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import './FriendsTab.scss';
 import { useFriends } from '@hooks/useFriends';
 import type { SearchResult, FriendRequest, Friend, OutgoingRequest } from '@hooks/useFriends';
@@ -9,22 +9,22 @@ import { ENCOURAGE_COOLDOWN_MS } from '@lib/constants';
 const ENCOURAGE_KEY = (uid: string) => `pushup_encourage_${uid}`;
 
 function useEncourageCooldown(friendUid: string) {
-    const getRemaining = () => {
+    const getRemaining = useCallback(() => {
         const last = parseInt(localStorage.getItem(ENCOURAGE_KEY(friendUid)) || '0', 10);
         return Math.max(0, ENCOURAGE_COOLDOWN_MS - (Date.now() - last));
-    };
+    }, [friendUid]);
     const [remaining, setRemaining] = useState(getRemaining);
+    const isActive = remaining > 0;
 
     useEffect(() => {
-        if (remaining <= 0) return;
+        if (!isActive) return;
         const id = setInterval(() => {
             const r = getRemaining();
             setRemaining(r);
             if (r <= 0) clearInterval(id);
         }, 30_000);
         return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [remaining > 0]);
+    }, [isActive, getRemaining]);
 
     const markSent = () => {
         localStorage.setItem(ENCOURAGE_KEY(friendUid), Date.now().toString());
@@ -71,6 +71,7 @@ function FriendCard({ friend, onRemove, onEncourage }: {
             </div>
             <div className="friend-card-actions">
                 <button
+                    type="button"
                     className={`btn-encourage${onCooldown ? ' btn-encourage--cooldown' : ''}`}
                     onClick={handleEncourage}
                     disabled={onCooldown || sending}
@@ -79,8 +80,8 @@ function FriendCard({ friend, onRemove, onEncourage }: {
                 >
                     {sending ? <span className="btn-encourage-spinner">...</span> : '💪'}
                 </button>
-                <button className="btn-remove-friend" onClick={onRemove} title="Remove friend" aria-label="Remove friend">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <button type="button" className="btn-remove-friend" onClick={onRemove} title="Remove friend" aria-label="Remove friend">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                         <circle cx="9" cy="7" r="4"/>
                         <line x1="23" y1="11" x2="17" y2="11"/>
@@ -113,12 +114,14 @@ function RequestCard({ request, onAccept, onDecline }: {
             </div>
             <div className="friend-request-actions">
                 <button
+                    type="button"
                     className="btn-accept"
                     disabled={loading}
                     onClick={() => handle(onAccept)}
                     title="Accept"
                 >✓</button>
                 <button
+                    type="button"
                     className="btn-decline"
                     disabled={loading}
                     onClick={() => handle(onDecline)}
@@ -150,6 +153,7 @@ function OutgoingRequestCard({ request, onCancel }: {
             </div>
             <div className="friend-search-action">
                 <button
+                    type="button"
                     className="btn-cancel-request"
                     disabled={loading}
                     onClick={() => handle(onCancel)}
@@ -193,6 +197,7 @@ function SearchResultCard({ result, onSend, onCancel }: {
                 )}
                 {result.relation === 'request_sent' && (
                     <button
+                        type="button"
                         className="btn-cancel-request"
                         disabled={loading}
                         onClick={() => handle(onCancel)}
@@ -205,6 +210,7 @@ function SearchResultCard({ result, onSend, onCancel }: {
                 )}
                 {result.relation === 'none' && (
                     <button
+                        type="button"
                         className="btn-add-friend"
                         disabled={loading}
                         onClick={() => handle(onSend)}
@@ -271,7 +277,7 @@ export function FriendsTab() {
             {/* Search bar */}
             <form className="friends-search-form" onSubmit={handleSearch}>
                 <div className="friends-search-input-wrap">
-                    <svg className="friends-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg className="friends-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <circle cx="11" cy="11" r="8" />
                         <line x1="21" y1="21" x2="16.65" y2="16.65" />
                     </svg>
@@ -293,9 +299,7 @@ export function FriendsTab() {
                     {searching ? '…' : 'Search'}
                 </button>
             </form>
-
             {/* Search result */}
-            <div className="friends-tab-scroll">
             {searchResult === 'not_found' && (
                 <p className="friends-empty-msg">No user found with this username.</p>
             )}
@@ -314,7 +318,6 @@ export function FriendsTab() {
                     />
                 </div>
             )}
-
             {/* Incoming requests */}
             {incomingRequests.length > 0 && (
                 <div className="friends-section">
@@ -332,7 +335,7 @@ export function FriendsTab() {
                     ))}
                 </div>
             )}
-
+            <div className="friends-tab-scroll">
             {/* Outgoing requests */}
             {outgoingRequests.length > 0 && (
                 <div className="friends-section">
@@ -376,14 +379,20 @@ export function FriendsTab() {
 
         {/* Confirm remove modal */}
         {confirmRemove && (
-            <div className="friend-confirm-overlay" onClick={() => !removing && setConfirmRemove(null)}>
-                <div className="friend-confirm-card" onClick={e => e.stopPropagation()}>
+            <div
+                className="friend-confirm-overlay"
+                role="presentation"
+                onClick={() => !removing && setConfirmRemove(null)}
+                onKeyDown={e => e.key === 'Escape' && !removing && setConfirmRemove(null)}
+            >
+                <div className="friend-confirm-card" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()} onKeyDown={e => e.stopPropagation()}>
                     <p className="friend-confirm-title">Remove friend?</p>
                     <p className="friend-confirm-body">
                         Remove <strong>{confirmRemove?.displayName}</strong> from your friends list?
                     </p>
                     <div className="friend-confirm-actions">
                         <button
+                            type="button"
                             className="friend-confirm-cancel"
                             onClick={() => setConfirmRemove(null)}
                             disabled={removing}
@@ -391,6 +400,7 @@ export function FriendsTab() {
                             Cancel
                         </button>
                         <button
+                            type="button"
                             className="friend-confirm-remove"
                             onClick={handleConfirmRemove}
                             disabled={removing}

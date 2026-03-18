@@ -14,6 +14,7 @@ export interface ShareSessionData {
     grade: string;
     numberOfSets?: number;
     bestScore?: number;
+    exerciseType?: 'pushup' | 'squat';
 }
 
 // ── Helpers ──────────────────────────────────────────────────────
@@ -62,7 +63,8 @@ export function generateSessionCard(data: ShareSessionData): HTMLCanvasElement {
     const canvas = document.createElement('canvas');
     canvas.width = W;
     canvas.height = H;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas 2D context unavailable');
 
     // ── Background ──────────────────────────────────────────────
     ctx.fillStyle = '#ffffff';
@@ -179,7 +181,8 @@ export function generateSessionCard(data: ShareSessionData): HTMLCanvasElement {
     if (data.sessionMode === 'time') {
         stats.push({ value: formatTime(data.elapsedTime), label: 'Duration' });
     }
-    stats.push({ value: String(data.repCount), label: 'Push-ups', accent: true });
+    const repLabel = data.exerciseType === 'squat' ? 'Squats' : 'Push-ups';
+    stats.push({ value: String(data.repCount), label: repLabel, accent: true });
     stats.push({ value: String(data.averageScore), label: 'Avg Score' });
     if (data.bestScore != null && data.bestScore !== data.averageScore) {
         stats.push({ value: String(data.bestScore), label: 'Best Rep' });
@@ -273,7 +276,10 @@ export function generateSessionCard(data: ShareSessionData): HTMLCanvasElement {
     ctx.textAlign = 'center';
     ctx.font = `500 28px -apple-system, "Helvetica Neue", Arial, sans-serif`;
     ctx.fillStyle = 'rgba(26,26,26,0.35)';
-    ctx.fillText('Track your push-ups with Push-Up Hero 💪', W / 2, 890);
+    const tagline = data.exerciseType === 'squat'
+        ? 'Track your squats with Push-Up Hero 💪'
+        : 'Track your push-ups with Push-Up Hero 💪';
+    ctx.fillText(tagline, W / 2, 890);
 
     return canvas;
 }

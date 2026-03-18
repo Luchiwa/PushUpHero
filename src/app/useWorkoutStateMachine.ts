@@ -42,12 +42,14 @@ export function useWorkoutStateMachine({
   // ── Level tracking ──────────────────────────────────────────────
   const prevLevelRef = useRef(0);
   const [levelBefore, setLevelBefore] = useState(0);
+  const savedLevelRef = useRef<number | null>(null);
   const elapsedTimeRef = useRef(0);
   const [elapsedTime, setElapsedTime] = useState(0);
   const sessionSavedRef = useRef(false);
 
   // ── Multi-set state ─────────────────────────────────────────────
   const [workoutConfig, setWorkoutConfig] = useState<WorkoutConfig>({
+    exerciseType: 'pushup',
     numberOfSets: 3,
     sessionMode: 'reps',
     goalReps: 10,
@@ -94,6 +96,9 @@ export function useWorkoutStateMachine({
     const totalReps = allSets.reduce((sum, s) => sum + s.reps, 0);
     if (totalReps === 0) return;
 
+    // Snapshot the level we should reach BEFORE totalLifetimeReps is incremented
+    // to avoid double-counting (allSessionReps + updated totalLifetimeReps).
+    savedLevelRef.current = calculateLevelFromTotalReps(totalLifetimeReps + totalReps);
     sessionSavedRef.current = true;
     const weightedScoreSum = allSets.reduce((sum, s) => sum + s.averageScore * s.reps, 0);
     const avgScore = totalReps > 0 ? Math.round(weightedScoreSum / totalReps) : 0;
@@ -106,6 +111,7 @@ export function useWorkoutStateMachine({
       averageScore: avgScore,
       goalReps: isMultiSetSession ? goalReps * allSets.length : goalReps,
       sessionMode,
+      exerciseType: workoutConfig.exerciseType,
       elapsedTime: sessionMode === 'time' ? elapsedTimeRef.current : undefined,
       numberOfSets: isMultiSetSession ? allSets.length : undefined,
       restDuration: isMultiSetSession ? restSeconds : undefined,
@@ -115,20 +121,21 @@ export function useWorkoutStateMachine({
       console.error('Failed to save session:', err);
       sessionSavedRef.current = false;
     });
-  }, [addSession, goalReps, sessionMode, workoutConfig.restTime]);
+  }, [addSession, goalReps, sessionMode, workoutConfig.restTime, workoutConfig.exerciseType, totalLifetimeReps]);
 
   // ── Handlers ────────────────────────────────────────────────────
 
   const handleStart = () => {
     elapsedTimeRef.current = 0;
     sessionSavedRef.current = false;
+    savedLevelRef.current = null;
     setLevelBefore(liveLevel);
     setCurrentSetIndex(0);
     setCompletedSets([]);
     setCompletedSetsReps(0);
     setStartTimeRef.current = Date.now();
     workoutStartTimeRef.current = Date.now();
-    setWorkoutConfig(prev => ({ ...prev, numberOfSets: 1, sessionMode, goalReps, timeGoal }));
+    setWorkoutConfig(prev => ({ ...prev, numberOfSets: 1, sessionMode, goalReps, timeGoal, exerciseType: prev.exerciseType }));
     startCamera();
     setScreen('active');
   };
@@ -141,6 +148,7 @@ export function useWorkoutStateMachine({
   const handleWorkoutStart = () => {
     elapsedTimeRef.current = 0;
     sessionSavedRef.current = false;
+    savedLevelRef.current = null;
     setLevelBefore(liveLevel);
     setCurrentSetIndex(0);
     setCompletedSets([]);
@@ -230,7 +238,8 @@ export function useWorkoutStateMachine({
   };
 
   const handleReset = () => {
-    if (liveLevel > levelBefore) {
+    const effectiveLevel = savedLevelRef.current ?? liveLevel;
+    if (effectiveLevel > levelBefore) {
       setScreen('levelup');
       return;
     }
@@ -239,6 +248,7 @@ export function useWorkoutStateMachine({
     setCurrentSetIndex(0);
     setCompletedSets([]);
     setCompletedSetsReps(0);
+    savedLevelRef.current = null;
     setScreen('idle');
   };
 
@@ -248,6 +258,7 @@ export function useWorkoutStateMachine({
     setCurrentSetIndex(0);
     setCompletedSets([]);
     setCompletedSetsReps(0);
+    savedLevelRef.current = null;
     setScreen('idle');
   };
 
@@ -285,6 +296,7 @@ export function useWorkoutStateMachine({
     isMultiSet, totalSets,
     // Level
     liveLevel, liveProgressPct, levelBefore,
+    savedLevel: savedLevelRef.current,
     // Timing
     elapsedTime, elapsedTimeRef,
     // Handlers

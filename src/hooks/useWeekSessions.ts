@@ -56,7 +56,7 @@ export function useWeekSessions(): UseWeekSessionsReturn {
 
         // Serve from cache if available
         if (cache.current.has(weekOffset)) {
-            setSessions(cache.current.get(weekOffset)!);
+            setSessions(cache.current.get(weekOffset) ?? []);
             return;
         }
 

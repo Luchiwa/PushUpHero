@@ -1,0 +1,79 @@
+@use 'variables' as *;
+
+.exercise-picker {
+  display: flex;
+  gap: $spacing-sm;
+  width: 100%;
+  justify-content: center;
+}
+
+.exercise-picker-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.9rem 1.2rem;
+  border-radius: $radius;
+  border: none;
+  background: rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+  transition: background $transition-fast, transform $transition-fast, box-shadow $transition-fast;
+  flex: 1;
+  max-width: 160px;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.07);
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+
+  &--selected {
+    background: $surface;
+    box-shadow: 0 2px 12px rgba($accent, 0.2);
+    transform: scale(1.02);
+
+    &:hover {
+      background: $surface-hover;
+    }
+  }
+}
+
+.exercise-picker-emoji {
+  font-size: 2rem;
+  line-height: 1;
+  transition: transform $transition-fast;
+
+  .exercise-picker-card--selected & {
+    transform: scale(1.15);
+  }
+}
+
+.exercise-picker-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: $text-muted;
+  letter-spacing: 0.02em;
+  transition: color $transition-fast;
+
+  .exercise-picker-card--selected & {
+    color: $accent-dark;
+  }
+}
+
+@media (max-width: 480px) {
+  .exercise-picker-card {
+    padding: 0.75rem 1rem;
+    max-width: 140px;
+  }
+
+  .exercise-picker-emoji {
+    font-size: 1.6rem;
+  }
+
+  .exercise-picker-label {
+    font-size: 0.72rem;
+  }
+}

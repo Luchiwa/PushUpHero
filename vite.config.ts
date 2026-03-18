@@ -15,7 +15,7 @@ export default defineConfig({
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
       },
-      includeAssets: ['position-guide.png', 'apple-touch-icon.png'],
+      includeAssets: ['apple-touch-icon.png'],
       manifest: {
         name: 'Push-Up Hero',
         short_name: 'PushUpHero',
@@ -75,6 +75,7 @@ export default defineConfig({
       '@hooks': path.resolve(__dirname, 'src/hooks'),
       '@exercises': path.resolve(__dirname, 'src/exercises'),
       '@lib': path.resolve(__dirname, 'src/lib'),
+      '@assets': path.resolve(__dirname, 'src/assets'),
     },
   },
   css: {

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import type { ExerciseState } from '@exercises/types';
+import type { ExerciseState, ExerciseType } from '@exercises/types';
 import type { SetRecord } from '@exercises/types';
+import { getExerciseLabel } from '@exercises/types';
 import { useAuth } from '@hooks/useAuth';
 import { useShareSession } from '@hooks/useShareSession';
 import type { ShareSessionData } from '@hooks/useShareSession';
@@ -9,6 +10,7 @@ import { getGradeLetter, getGradeClass, formatElapsedTime } from '@lib/constants
 import './SummaryScreen.scss';
 
 interface SummaryProps {
+    exerciseType: ExerciseType;
     exerciseState: ExerciseState;
     completedSets?: SetRecord[];
     onReset: () => void;
@@ -20,7 +22,7 @@ function ScoreGrade({ score }: { score: number }) {
     return <span className={`grade ${getGradeClass(score)}`}>{getGradeLetter(score)}</span>;
 }
 
-export function SummaryScreen({ exerciseState, completedSets, onReset, sessionMode, elapsedTime }: SummaryProps) {
+export function SummaryScreen({ exerciseType, exerciseState, completedSets, onReset, sessionMode, elapsedTime }: SummaryProps) {
     const { user, dbUser, level } = useAuth();
     const { shareSession } = useShareSession();
     const [sharing, setSharing] = useState(false);
@@ -60,6 +62,7 @@ export function SummaryScreen({ exerciseState, completedSets, onReset, sessionMo
                 grade,
                 numberOfSets: isMultiSet ? completedSets.length : undefined,
                 bestScore,
+                exerciseType,
             };
             await shareSession(shareData);
         } catch (err: unknown) {
@@ -102,7 +105,7 @@ export function SummaryScreen({ exerciseState, completedSets, onReset, sessionMo
                             <div className="summary-stats-row">
                                 <div className="summary-stat">
                                     <span className="summary-value">{totalReps}</span>
-                                    <span className="summary-label">Push-ups</span>
+                                    <span className="summary-label">{getExerciseLabel(exerciseType)}</span>
                                 </div>
                                 <div className="summary-divider" />
                                 <div className="summary-stat">
@@ -120,7 +123,7 @@ export function SummaryScreen({ exerciseState, completedSets, onReset, sessionMo
                         <>
                             <div className="summary-stat">
                                 <span className="summary-value">{totalReps}</span>
-                                <span className="summary-label">Push-ups</span>
+                                <span className="summary-label">{getExerciseLabel(exerciseType)}</span>
                             </div>
                             <div className="summary-divider" />
                             <div className="summary-stat">
@@ -141,8 +144,9 @@ export function SummaryScreen({ exerciseState, completedSets, onReset, sessionMo
                     <div className="sets-breakdown">
                         <p className="sets-breakdown-title">Sets breakdown</p>
                         {completedSets.map((set, i) => (
-                            <div key={i} className={`set-item ${expandedSet === i ? 'set-item--expanded' : ''}`}>
+                            <div key={`set-${set.reps}-${i}`} className={`set-item ${expandedSet === i ? 'set-item--expanded' : ''}`}>
                                 <button
+                                    type="button"
                                     className="set-item-header"
                                     onClick={() => setExpandedSet(expandedSet === i ? null : i)}
                                 >
@@ -155,7 +159,7 @@ export function SummaryScreen({ exerciseState, completedSets, onReset, sessionMo
                                 {expandedSet === i && set.repHistory.length > 0 && (
                                     <div className="set-item-reps">
                                         {set.repHistory.map((rep, j) => (
-                                            <div key={j} className="rep-history-item">
+                                            <div key={`rep-${rep.score}-${j}`} className="rep-history-item">
                                                 <span className="rep-num">#{j + 1}</span>
                                                 <div className="rep-mini-bar">
                                                     <div
@@ -182,7 +186,7 @@ export function SummaryScreen({ exerciseState, completedSets, onReset, sessionMo
                         <p className="rep-history-title">Rep breakdown</p>
                         <div className="rep-history-list">
                             {allRepHistory.map((rep, i) => (
-                                <div key={i} className="rep-history-item">
+                                <div key={`rep-${rep.score}-${i}`} className="rep-history-item">
                                     <span className="rep-num">#{i + 1}</span>
                                     <div className="rep-mini-bar">
                                         <div
@@ -201,11 +205,12 @@ export function SummaryScreen({ exerciseState, completedSets, onReset, sessionMo
                 )}
 
                 <div className="summary-actions">
-                    <button className="btn-primary" onClick={onReset}>
+                    <button type="button" className="btn-primary" onClick={onReset}>
                         🔁 Try Again
                     </button>
                     {user && dbUser && (
                         <button
+                            type="button"
                             className="btn-share"
                             onClick={handleShare}
                             disabled={sharing}
@@ -213,7 +218,7 @@ export function SummaryScreen({ exerciseState, completedSets, onReset, sessionMo
                             {sharing ? (
                                 <span className="btn-share-spinner" />
                             ) : (
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                                     <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
                                     <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
                                 </svg>

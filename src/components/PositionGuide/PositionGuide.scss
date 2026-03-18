@@ -18,39 +18,96 @@
     }
 }
 
-.position-guide-inner {
+.position-guide-card {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0.5rem;
+    padding: 1.25rem 1.5rem;
+    border-radius: $radius-sm;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    max-width: min(85vw, 340px);
+    text-align: center;
 }
 
-.position-guide-img-wrapper {
-    position: relative;
-    @include flex-center;
-    width: min(80vw, 350px);
-    aspect-ratio: 1;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba($red, 0.1) 0%, transparent 70%);
-    overflow: hidden;
-    box-shadow: 0 0 30px rgba($red, 0.1);
+.position-guide-emoji {
+    font-size: 2.2rem;
+    line-height: 1;
 }
 
-.position-guide-img {
-    width: 130%;
-    height: auto;
-    opacity: 0.85;
-    mix-blend-mode: screen;
-    transform: translateY(-5%);
-}
-
-.position-guide-label {
-    font-size: 0.85rem;
+.position-guide-title {
+    font-size: 1rem;
     font-weight: 800;
-    color: $red-light;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    text-shadow: 0 0 16px rgba($red, 0.9);
-    opacity: 0.9;
+    color: #ffffff;
+    letter-spacing: 0.02em;
+    margin: 0;
+}
+
+.position-guide-desc {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.4;
+    margin: 0;
+}
+
+.calibration-ui {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
     margin-top: 0.5rem;
+    width: 100%;
+}
+
+.calibration-title {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: $accent-light;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.calibration-bar-track {
+    width: 100%;
+    @include progress-track($height: 6px, $bg: rgba(255, 255, 255, 0.15));
+    border-radius: 3px;
+}
+
+.calibration-bar-fill {
+    @include progress-fill(linear-gradient(90deg, $accent, $green));
+    transition: width 0.1s linear;
+}
+
+.calibration-pct {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0;
+}
+
+@media (max-width: 480px) {
+    .position-guide {
+        padding-bottom: 1.25rem;
+    }
+
+    .position-guide-card {
+        padding: 1rem 1.25rem;
+        gap: 0.4rem;
+    }
+
+    .position-guide-emoji {
+        font-size: 1.8rem;
+    }
+
+    .position-guide-title {
+        font-size: 0.85rem;
+    }
+
+    .position-guide-desc {
+        font-size: 0.72rem;
+    }
 }

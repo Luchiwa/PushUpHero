@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@hooks/useAuth';
 import { Avatar } from '@components/Avatar/Avatar';
 import { useSessionHistory } from '@hooks/useSessionHistory';
@@ -45,16 +45,15 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
     const latestEventAt = feed.length > 0 ? feed[0].createdAt : 0;
     const hasFeedUnread = friends.length > 0 && latestEventAt > lastSeen;
 
-    const markFeedSeen = () => {
+    const markFeedSeen = useCallback(() => {
         const now = Date.now();
         localStorage.setItem(FEED_SEEN_KEY, String(now));
         setLastSeen(now);
-    };
+    }, [FEED_SEEN_KEY]);
 
     useEffect(() => {
         if (activeTab === 'feed') markFeedSeen();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [activeTab]);
+    }, [activeTab, markFeedSeen]);
 
     if (!user) return null;
 
@@ -66,14 +65,14 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
         <>
         <div className="profile-fullscreen">
             <div className="profile-topbar">
-                <button className="btn-icon profile-back-btn" onClick={onClose}>
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <button type="button" className="btn-icon profile-back-btn" onClick={onClose}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <polyline points="15 18 9 12 15 6" />
                     </svg>
                 </button>
                 <span className="profile-topbar-title">Profile</span>
-                <button className="btn-icon profile-settings-btn" onClick={() => setShowSettings(true)} aria-label="Settings">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <button type="button" className="btn-icon profile-settings-btn" onClick={() => setShowSettings(true)} aria-label="Settings">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <circle cx="12" cy="12" r="3" />
                         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
                     </svg>
@@ -104,7 +103,7 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
                             {(dbUser?.streak ?? 0) > 0 && (
                                 <>
                                     <span className="profile-streak-sep">·</span>
-                                    <span className="profile-streak">{dbUser!.streak} 🔥 Streak</span>
+                                    <span className="profile-streak">{dbUser?.streak} 🔥 Streak</span>
                                 </>
                             )}
                         </h2>
@@ -130,12 +129,14 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
                 {/* Tab bar */}
                 <div className="profile-tabs">
                     <button
+                        type="button"
                         className={`profile-tab ${activeTab === 'history' ? 'profile-tab--active' : ''}`}
                         onClick={() => setActiveTab('history')}
                     >
                         History
                     </button>
                     <button
+                        type="button"
                         className={`profile-tab ${activeTab === 'friends' ? 'profile-tab--active' : ''}`}
                         onClick={() => setActiveTab('friends')}
                     >
@@ -145,6 +146,7 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
                         )}
                     </button>
                     <button
+                        type="button"
                         className={`profile-tab ${activeTab === 'feed' ? 'profile-tab--active' : ''}`}
                         onClick={() => setActiveTab('feed')}
                     >

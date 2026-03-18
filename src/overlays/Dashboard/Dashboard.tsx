@@ -1,10 +1,12 @@
 import './Dashboard.scss';
-import type { ExerciseState } from '@exercises/types';
+import type { ExerciseState, ExerciseType } from '@exercises/types';
+import { getExerciseLabel } from '@exercises/types';
 import { useDashboardLogic } from './useDashboardLogic';
 
 import { FloatyNumbers } from '@components/FloatyNumbers/FloatyNumbers';
 
 interface DashboardProps {
+    exerciseType: ExerciseType;
     exerciseState: ExerciseState;
     goalReps: number;
     sessionMode: 'reps' | 'time';
@@ -29,7 +31,7 @@ function ScoreRing({ score }: { score: number }) {
     const color = score >= 75 ? '#22c55e' : score >= 50 ? '#f59e0b' : '#ef4444';
 
     return (
-        <svg className="score-ring" viewBox="0 0 100 100" width="100" height="100">
+        <svg className="score-ring" viewBox="0 0 100 100" width="100" height="100" aria-hidden="true">
             <circle cx="50" cy="50" r={radius} fill="none" stroke="#e0e0e0" strokeWidth="10" />
             <circle
                 cx="50" cy="50" r={radius}
@@ -86,7 +88,7 @@ function GoalProgressBar({ current, goal }: { current: number; goal: number }) {
     );
 }
 
-export function Dashboard({ exerciseState, goalReps, sessionMode, timeGoal, onStop, onTimerEnd, elapsedTimeRef, onFlipCamera, facingMode, soundEnabled, onSoundToggle, level, levelProgressPct, currentSet, totalSets }: DashboardProps) {
+export function Dashboard({ exerciseType, exerciseState, goalReps, sessionMode, timeGoal, onStop, onTimerEnd, elapsedTimeRef, onFlipCamera, facingMode, soundEnabled, onSoundToggle, level, levelProgressPct, currentSet, totalSets }: DashboardProps) {
     const { repCount, averageScore, lastRepResult, isValidPosition, isCalibrated } = exerciseState;
 
     const { showInvalidBanner, timeRemaining } = useDashboardLogic({
@@ -106,37 +108,39 @@ export function Dashboard({ exerciseState, goalReps, sessionMode, timeGoal, onSt
                 <LevelBadge level={level} progressPct={levelProgressPct} />
                 <div className="dashboard-actions">
                     <button
+                        type="button"
                         className="btn-sound"
                         onClick={onFlipCamera}
                         title={facingMode === 'user' ? 'Switch to rear camera' : 'Switch to front camera'}
                     >
                         {/* Camera flip icon */}
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                             <path d="M11 19H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h1l2-3h6l2 3h1a2 2 0 0 1 2 2v1" />
                             <circle cx="9" cy="13" r="3" />
                             <path d="M17 15v6M14 18l3-3 3 3" />
                         </svg>
                     </button>
                     <button
+                        type="button"
                         className={`btn-sound ${soundEnabled ? '' : 'btn-sound-muted'}`}
                         onClick={onSoundToggle}
                         title={soundEnabled ? 'Mute sound' : 'Enable sound'}
                     >
                         {soundEnabled ? (
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                                 <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
                                 <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
                             </svg>
                         ) : (
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                                 <line x1="23" y1="9" x2="17" y2="15"></line>
                                 <line x1="17" y1="9" x2="23" y2="15"></line>
                             </svg>
                         )}
                     </button>
-                    <button className="btn-stop" onClick={onStop}>■ Stop</button>
+                    <button className="btn-stop" onClick={onStop} type="button">■ Stop</button>
                 </div>
             </div>
 
@@ -152,7 +156,7 @@ export function Dashboard({ exerciseState, goalReps, sessionMode, timeGoal, onSt
                         <FloatyNumbers repCount={repCount} />
                         <span className="stat-value rep-count">{repCount}</span>
                     </div>
-                    <span className="stat-label">Push-ups</span>
+                    <span className="stat-label">{getExerciseLabel(exerciseType)}</span>
                 </div>
 
                 <div className="stat-card score-card">
@@ -176,7 +180,9 @@ export function Dashboard({ exerciseState, goalReps, sessionMode, timeGoal, onSt
             {/* Anti-cheat feedback banner — debounced, below stats */}
             {showInvalidBanner && (
                 <div className="invalid-position-banner">
-                    ⚠️ Get back into push-up position — body horizontal, hands on the ground
+                    {exerciseType === 'pushup'
+                        ? '⚠️ Get back into push-up position — body horizontal, hands on the ground'
+                        : '⚠️ Get back into squat position — stand upright facing the camera'}
                 </div>
             )}
 
