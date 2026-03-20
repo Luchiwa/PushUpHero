@@ -102,6 +102,23 @@ export async function saveSession({ uid, session, currentTotalReps, dbUser }: Sa
     };
     if (session.elapsedTime !== undefined) feedEvent.elapsedTime = session.elapsedTime;
     if (session.numberOfSets !== undefined && session.numberOfSets > 1) feedEvent.numberOfSets = session.numberOfSets;
+    if (session.exerciseType) feedEvent.exerciseType = session.exerciseType;
+    if (session.isMultiExercise) {
+        feedEvent.isMultiExercise = true;
+        // Build lightweight per-block summaries for the feed
+        if (session.blocks && session.sets) {
+            let si = 0;
+            const summaries: { label: string; reps: number }[] = [];
+            for (const block of session.blocks) {
+                const blockSets = session.sets.slice(si, si + block.numberOfSets);
+                si += block.numberOfSets;
+                const reps = blockSets.reduce((s, st) => s + st.reps, 0);
+                const label = block.exerciseType === 'squat' ? 'Squats' : 'Push-ups';
+                summaries.push({ label, reps });
+            }
+            feedEvent.blockSummaries = summaries;
+        }
+    }
     const feedRef = doc(collection(db, 'users', uid, 'activityFeed'));
     batch.set(feedRef, feedEvent);
 

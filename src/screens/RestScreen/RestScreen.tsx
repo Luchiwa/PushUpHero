@@ -19,6 +19,12 @@ interface RestScreenProps {
     lastSetResult: SetRecord;
     /** Called when rest is over (countdown ends or user skips) */
     onRestComplete: () => void;
+    /** Label for the current exercise (e.g. "Push-ups") */
+    exerciseLabel?: string;
+    /** True when this rest is between two different exercises (not between sets) */
+    isExerciseTransition?: boolean;
+    /** Label for the next exercise (e.g. "Squats") */
+    nextExerciseLabel?: string;
 }
 
 export function RestScreen({
@@ -27,6 +33,9 @@ export function RestScreen({
     totalSets,
     lastSetResult,
     onRestComplete,
+    exerciseLabel,
+    isExerciseTransition = false,
+    nextExerciseLabel,
 }: RestScreenProps) {
     const [remaining, setRemaining] = useState(restDuration);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -64,7 +73,14 @@ export function RestScreen({
             <div className="rest-card">
                 {/* Set completed feedback */}
                 <div className="rest-set-feedback">
-                    <span className="rest-set-badge">✅ Set {completedSet}/{totalSets}</span>
+                    <span className="rest-set-badge">
+                        {isExerciseTransition
+                            ? `✅ Exercise ${completedSet}/${totalSets} done`
+                            : `✅ Set ${completedSet}/${totalSets}`}
+                    </span>
+                    {exerciseLabel && (
+                        <span className="rest-exercise-label">{exerciseLabel}</span>
+                    )}
                     <div className="rest-set-stats">
                         <div className="rest-stat">
                             <span className="rest-stat-value">{lastSetResult.reps}</span>
@@ -87,7 +103,9 @@ export function RestScreen({
 
                 {/* Countdown */}
                 <div className="rest-countdown-section">
-                    <p className="rest-countdown-label">Next set in</p>
+                    <p className="rest-countdown-label">
+                        {isExerciseTransition ? 'Next exercise in' : 'Next set in'}
+                    </p>
                     <div className="rest-countdown-timer">
                         <span className="rest-countdown-digits">
                             {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
@@ -100,7 +118,9 @@ export function RestScreen({
                         />
                     </div>
                     <p className="rest-up-next">
-                        Up next: Set {completedSet + 1}/{totalSets}
+                        {isExerciseTransition && nextExerciseLabel
+                            ? `Up next: ${nextExerciseLabel}`
+                            : `Up next: Set ${completedSet + 1}/${totalSets}`}
                     </p>
                 </div>
 

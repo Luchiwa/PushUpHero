@@ -30,7 +30,13 @@ export function StatsScreen({ onClose }: StatsScreenProps) {
     const filteredSessions = useMemo(
         () => exerciseFilter === 'all'
             ? sessions
-            : sessions.filter(s => (s.exerciseType ?? 'pushup') === exerciseFilter),
+            : sessions.filter(s => {
+                // Multi-exercise sessions: include if any block matches the filter
+                if (s.isMultiExercise && s.blocks) {
+                    return s.blocks.some(b => b.exerciseType === exerciseFilter);
+                }
+                return (s.exerciseType ?? 'pushup') === exerciseFilter;
+            }),
         [sessions, exerciseFilter],
     );
 
@@ -104,7 +110,7 @@ export function StatsScreen({ onClose }: StatsScreenProps) {
                         </div>
                     ) : hasActivity ? (
                         <div className="stats-chart-wrap">
-                            <WeeklyChart sessions={filteredSessions} weekOffset={weekOffset} />
+                            <WeeklyChart sessions={filteredSessions} weekOffset={weekOffset} exerciseFilter={exerciseFilter} />
                         </div>
                     ) : (
                         <div className="stats-empty-week">

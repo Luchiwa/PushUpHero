@@ -38,6 +38,44 @@ export interface SetRecord {
     setMode: 'reps' | 'time';
     goalReps?: number;          // if mode is reps
     timeGoal?: number;          // if mode is time (seconds)
+    exerciseType?: ExerciseType; // exercise for this set (multi-exercise workouts)
+}
+
+// ── Multi-exercise workout plan ──────────────────────────────────
+
+export interface TimeDuration {
+    minutes: number;
+    seconds: number;
+}
+
+/** A single exercise block in a workout plan */
+export interface WorkoutBlock {
+    exerciseType: ExerciseType;
+    numberOfSets: number;
+    sessionMode: 'reps' | 'time';
+    goalReps: number;
+    timeGoal: TimeDuration;
+    restBetweenSets: TimeDuration;
+    /** Rest AFTER this block, before the next exercise. Last block's value is ignored. */
+    restAfterBlock: TimeDuration;
+}
+
+/** Full workout plan — ordered list of exercise blocks */
+export interface WorkoutPlan {
+    blocks: WorkoutBlock[];
+}
+
+/** Create a default WorkoutBlock for a given exercise */
+export function createDefaultBlock(exerciseType: ExerciseType = 'pushup'): WorkoutBlock {
+    return {
+        exerciseType,
+        numberOfSets: 3,
+        sessionMode: 'reps',
+        goalReps: 10,
+        timeGoal: { minutes: 0, seconds: 30 },
+        restBetweenSets: { minutes: 1, seconds: 0 },
+        restAfterBlock: { minutes: 2, seconds: 0 },
+    };
 }
 
 export interface ExerciseState {

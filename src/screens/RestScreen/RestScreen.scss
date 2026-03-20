@@ -37,6 +37,13 @@
     border-radius: $radius-pill;
 }
 
+.rest-exercise-label {
+    font-size: $font-sm;
+    font-weight: 600;
+    color: $text-muted;
+    letter-spacing: 0.03em;
+}
+
 .rest-set-stats {
     display: flex;
     align-items: center;
@@ -73,11 +80,25 @@
 }
 
 // ── Grade colors (reuse from SummaryScreen pattern) ─────────────
-.rest-stat-value.grade-s { color: #a855f7; }
-.rest-stat-value.grade-a { color: $green; }
-.rest-stat-value.grade-b { color: #3b82f6; }
-.rest-stat-value.grade-c { color: $amber; }
-.rest-stat-value.grade-d { color: $red; }
+.rest-stat-value.grade-s {
+    color: #a855f7;
+}
+
+.rest-stat-value.grade-a {
+    color: $green;
+}
+
+.rest-stat-value.grade-b {
+    color: #3b82f6;
+}
+
+.rest-stat-value.grade-c {
+    color: $amber;
+}
+
+.rest-stat-value.grade-d {
+    color: $red;
+}
 
 // ── Countdown section ───────────────────────────────────────────
 .rest-countdown-section {
@@ -135,9 +156,23 @@
         gap: 1.25rem;
     }
 
-    .rest-set-badge { font-size: 0.82rem; }
-    .rest-stat-value { font-size: 2rem; }
-    .rest-stat-value.grade { font-size: 1.5rem; }
-    .rest-countdown-digits { font-size: 3rem; }
-    .rest-up-next { font-size: 0.75rem; }
+    .rest-set-badge {
+        font-size: 0.82rem;
+    }
+
+    .rest-stat-value {
+        font-size: 2rem;
+    }
+
+    .rest-stat-value.grade {
+        font-size: 1.5rem;
+    }
+
+    .rest-countdown-digits {
+        font-size: 3rem;
+    }
+
+    .rest-up-next {
+        font-size: 0.75rem;
+    }
 }

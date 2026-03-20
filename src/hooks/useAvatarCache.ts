@@ -39,7 +39,7 @@ export async function getCachedAvatarUrl(originalUrl: string): Promise<string> {
         }
 
         // Fetch and cache
-        const response = await fetch(originalUrl);
+        const response = await fetch(originalUrl, { mode: 'cors' });
         if (!response.ok) return originalUrl; // fallback to original
 
         // Store a clone in cache (keyed without token)

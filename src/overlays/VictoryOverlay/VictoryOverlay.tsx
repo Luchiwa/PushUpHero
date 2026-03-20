@@ -19,6 +19,7 @@ interface VictoryOverlayProps {
     sessionMode?: 'reps' | 'time';
     elapsedTime?: number;
     totalSets?: number;
+    isMultiExercise?: boolean;
 }
 
 function createParticles(canvas: HTMLCanvasElement) {
@@ -38,7 +39,7 @@ function createParticles(canvas: HTMLCanvasElement) {
     }));
 }
 
-export function VictoryOverlay({ exerciseType, repCount, soundEnabled, onComplete, sessionMode, elapsedTime, totalSets }: VictoryOverlayProps) {
+export function VictoryOverlay({ exerciseType, repCount, soundEnabled, onComplete, sessionMode, elapsedTime, totalSets, isMultiExercise }: VictoryOverlayProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const animRef = useRef<number | null>(null);
     const { initAudio, playVictorySound } = useSoundEffect();
@@ -55,15 +56,17 @@ export function VictoryOverlay({ exerciseType, repCount, soundEnabled, onComplet
 
     // Confetti canvas animation (runs independently of the auto-transition timer)
     useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
+        const cvs = canvasRef.current;
+        if (!cvs) return;
+        const ctx = cvs.getContext('2d');
         if (!ctx) return;
 
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        // Local aliases with definite types (TS can't narrow outer const in nested fn)
+        const c: CanvasRenderingContext2D = ctx;
+        const w = cvs.width = window.innerWidth;
+        const h = cvs.height = window.innerHeight;
 
-        const particles = createParticles(canvas);
+        const particles = createParticles(cvs);
         let elapsed = 0;
         let lastTime = performance.now();
 
@@ -72,7 +75,7 @@ export function VictoryOverlay({ exerciseType, repCount, soundEnabled, onComplet
             lastTime = now;
             elapsed += dt * 16.67;
 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            c.clearRect(0, 0, w, h);
 
             for (const p of particles) {
                 p.x += p.vx * dt;
@@ -82,13 +85,13 @@ export function VictoryOverlay({ exerciseType, repCount, soundEnabled, onComplet
                 // Confetti fades out in the first 3s, then canvas is cleared
                 p.opacity = Math.max(0, 1 - elapsed / 3000);
 
-                ctx.save();
-                ctx.globalAlpha = p.opacity;
-                ctx.translate(p.x, p.y);
-                ctx.rotate((p.rotation * Math.PI) / 180);
-                ctx.fillStyle = p.color;
-                ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
-                ctx.restore();
+                c.save();
+                c.globalAlpha = p.opacity;
+                c.translate(p.x, p.y);
+                c.rotate((p.rotation * Math.PI) / 180);
+                c.fillStyle = p.color;
+                c.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+                c.restore();
             }
 
             animRef.current = requestAnimationFrame(animate);
@@ -112,9 +115,14 @@ export function VictoryOverlay({ exerciseType, repCount, soundEnabled, onComplet
             <div className="victory-content">
                 <div className="victory-emoji">🏆</div>
                 <h1 className="victory-title">
-                    {totalSets != null && totalSets > 1 ? 'WORKOUT COMPLETE!' : 'GOAL REACHED!'}
+                    {isMultiExercise || (totalSets != null && totalSets > 1) ? 'WORKOUT COMPLETE!' : 'GOAL REACHED!'}
                 </h1>
-                {sessionMode === 'time' ? (
+                {isMultiExercise ? (
+                    <>
+                        <p className="victory-reps">{formattedTime}</p>
+                        <p className="victory-subtitle">{repCount} reps · {totalSets} sets</p>
+                    </>
+                ) : sessionMode === 'time' ? (
                     <>
                         <p className="victory-reps">{formattedTime}</p>
                         <p className="victory-subtitle">{repCount} {getExerciseLabel(exerciseType).toLowerCase()}{totalSets != null && totalSets > 1 ? ` · ${totalSets} sets` : ''}</p>

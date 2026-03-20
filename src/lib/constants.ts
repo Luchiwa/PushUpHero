@@ -31,6 +31,12 @@ export const MAX_REST_SECONDS = 300; // 5 minutes
 /** Default rest duration between sets (seconds) */
 export const DEFAULT_REST_SECONDS = 60;
 
+// ── Multi-Exercise ───────────────────────────────────────────────
+/** Maximum rest between exercises (seconds) */
+export const MAX_EXERCISE_REST_SECONDS = 600; // 10 minutes
+/** Default rest between exercises (seconds) */
+export const DEFAULT_EXERCISE_REST_SECONDS = 120; // 2 minutes
+
 // ── Grade system ─────────────────────────────────────────────────────────────
 // Unified thresholds — used everywhere: SummaryScreen, FriendsFeedPanel, ActivityFeed
 

@@ -17,6 +17,9 @@ export interface ActivityEvent {
     goalReps: number;
     elapsedTime?: number;
     numberOfSets?: number;
+    exerciseType?: 'pushup' | 'squat';
+    isMultiExercise?: boolean;
+    blockSummaries?: { label: string; reps: number }[];
     createdAt: number; // Unix ms
 }
 
@@ -34,17 +37,32 @@ export function formatRelativeTime(ms: number): string {
 
 export function buildEventMessage(event: ActivityEvent): string {
     const grade = getGradeLetter(event.averageScore);
+
+    // ── Multi-exercise workout ──
+    if (event.isMultiExercise) {
+        const mins = event.elapsedTime ? Math.floor(event.elapsedTime / 60) : 0;
+        const secs = event.elapsedTime ? event.elapsedTime % 60 : 0;
+        const duration = mins > 0 ? `${mins}min${secs > 0 ? `${secs}s` : ''}` : `${secs}s`;
+
+        // e.g. "3 Push-ups + 5 Squats"
+        const breakdown = event.blockSummaries?.map(b => `${b.reps} ${b.label}`).join(' + ') ?? `${event.reps} reps`;
+
+        return `completed a workout in ${duration} — ${breakdown} · Grade ${grade} 🏋️`;
+    }
+
+    // ── Single-exercise ──
+    const exerciseName = event.exerciseType === 'squat' ? 'squats' : 'push-ups';
     const setsInfo = event.numberOfSets && event.numberOfSets > 1 ? ` (${event.numberOfSets} sets)` : '';
     if (event.sessionMode === 'time') {
         const mins = event.elapsedTime ? Math.floor(event.elapsedTime / 60) : 0;
         const secs = event.elapsedTime ? event.elapsedTime % 60 : 0;
         const duration = mins > 0 ? `${mins}min${secs > 0 ? `${secs}s` : ''}` : `${secs}s`;
-        return `did ${event.reps} push-ups in ${duration}${setsInfo} · Grade ${grade}`;
+        return `did ${event.reps} ${exerciseName} in ${duration}${setsInfo} · Grade ${grade}`;
     }
     const goalReached = event.reps >= event.goalReps;
     return goalReached
-        ? `hit their goal of ${event.goalReps} push-ups${setsInfo}! Grade ${grade} 🏆`
-        : `did ${event.reps}/${event.goalReps} push-ups${setsInfo} · Grade ${grade}`;
+        ? `hit their goal of ${event.goalReps} ${exerciseName}${setsInfo}! Grade ${grade} 🏆`
+        : `did ${event.reps}/${event.goalReps} ${exerciseName}${setsInfo} · Grade ${grade}`;
 }
 
 export function useActivityFeed(friends: Friend[]) {
@@ -85,6 +103,9 @@ export function useActivityFeed(friends: Friend[]) {
                                 goalReps: data.goalReps ?? 0,
                                 elapsedTime: data.elapsedTime,
                                 numberOfSets: data.numberOfSets,
+                                exerciseType: data.exerciseType,
+                                isMultiExercise: data.isMultiExercise,
+                                blockSummaries: data.blockSummaries,
                                 createdAt: ts ? ts.toMillis() : Date.now(),
                             };
                         });

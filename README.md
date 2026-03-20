@@ -1,93 +1,220 @@
 # Push-Up Hero 💪
 
-Un jeu web interactif en Réalité Augmentée (IA) qui compte tes pompes en temps réel grâce à la webcam, suit ta progression dans le Cloud, et te donne un feedback audio/visuel dynamique pour t'encourager.
+A real-time AI workout app. Your webcam analyzes your posture, counts your reps, and tracks your progress in the cloud — no equipment needed, just a browser.
 
-## 🚀 Fonctionnalités
+## Features
 
-- **Détection IA en temps réel** : Utilise TensorFlow.js (MoveNet) pour analyser ta posture et compter tes répétitions automatiquement.
-- **Progression & Niveaux** : Un système d'expérience (XP) où chaque pompe te fait monter en niveau, avec un aperçu du niveau suivant.
-- **Deux modes de session** :
-  - 🔢 **Mode Répétitions** : Définis un objectif de reps à atteindre. La session se termine automatiquement une fois l'objectif atteint.
-  - ⏱️ **Mode Chronomètre** : Définis une durée (minutes / secondes). Fais un maximum de pompes avant la fin du temps.
-- **Historique des sessions** : Consulte tes sessions passées directement depuis ton profil.
-- **Système d'amis** : Ajoute des amis par pseudonyme, envoie et accepte des demandes d'amis, et consulte leur profil depuis le tien.
-- **Sauvegarde Cloud Firebase** : Synchronisation de tes sessions d'entraînement et de ton niveau de manière transparente.
-- **Mode Invité (Offline)** : Joue sans compte, tes données sont enregistrées localement dans ton navigateur.
-- **Retour audio/visuel** : Sons de feedback à chaque répétition, animations flottantes sur le compteur, et overlay de victoire à la fin d'une session.
-- **Guide de position** : Indication visuelle en temps réel si ta posture sort du cadre de détection.
-- **PWA Ready** : Installable sur mobile et bureau pour une expérience native.
-
----
-
-## 🛠️ Pré-requis
-
-Avant de lancer le projet, assure-toi d'avoir installé sur ta machine :
-
-- [Node.js](https://nodejs.org/) (Version 18+ recommandée)
-- [npm](https://www.npmjs.com/) ou [pnpm](https://pnpm.io/)
+- **Real-time AI detection** — MediaPipe analyzes your posture and counts reps automatically
+- **Multi-exercise workouts** — Push-ups, squats, and more to come. Chain multiple exercises into a full workout
+- **Level system** — Every rep contributes XP and levels you up
+- **Two session modes** — Rep goal or timer, configurable per exercise
+- **Configurable rest** — Rest time between sets and between exercises
+- **Session history** — Review all past sessions with per-set breakdowns
+- **Friends system** — Add friends by username, view their stats, send encouragements
+- **Push notifications** — Get notified when a friend sends a request or encouragement
+- **Cloud sync** — Seamless sync via Firebase (Auth + Firestore + Storage)
+- **Guest mode** — Play without an account, everything is saved locally in the browser
+- **PWA** — Installable on mobile and desktop like a native app
 
 ---
 
-## ⚙️ Configuration Initiale (Environnement)
+## Prerequisites
 
-Ce projet nécessite une configuration Firebase pour fonctionner, notamment pour l'authentification et la base de données de scores.
-
-1. Crée un fichier nommé `.env` à la racine du projet (au même niveau que `package.json`).
-2. Ajoute les variables d'environnement suivantes dans ce fichier (remplace les valeurs par celles de ton projet Firebase) :
-
-```env
-VITE_FIREBASE_API_KEY="ton-api-key"
-VITE_FIREBASE_AUTH_DOMAIN="ton-projet.firebaseapp.com"
-VITE_FIREBASE_PROJECT_ID="ton-projet-id"
-VITE_FIREBASE_STORAGE_BUCKET="ton-projet.firebasestorage.app"
-VITE_FIREBASE_MESSAGING_SENDER_ID="sender-id"
-VITE_FIREBASE_APP_ID="app-id"
-VITE_FIREBASE_MEASUREMENT_ID="G-mesure"
-```
-
-> **Attention :** Le fichier `.env` est exclu du dépôt Git (via `.gitignore`) pour des raisons de sécurité. Ne commite jamais tes clés en clair si tu n'en as pas besoin.
+- [Node.js 18+](https://nodejs.org/) — check with `node -v`
+- A [Firebase](https://firebase.google.com/) account (free, Spark plan is enough to get started)
 
 ---
 
-## 💻 Démarrage du projet
-
-Une fois ton fichier `.env` configuré, ouvre un terminal dans le dossier du projet et exécute les commandes suivantes :
-
-### 1. Installer les dépendances
+## 1. Clone the project
 
 ```bash
+git clone https://github.com/Luchiwa/PushUpHero.git
+cd PushUpHero
 npm install
-# ou
-pnpm install
 ```
 
-### 2. Lancer le serveur de développement
+---
+
+## 2. Set up Firebase
+
+> If you just want to run the app locally without cloud features, skip to step 3 — the app works in offline guest mode.
+
+### 2.1 Create a Firebase project
+
+1. Go to [console.firebase.google.com](https://console.firebase.google.com)
+2. Click **Add project**, give it a name (e.g. `pushup-hero`)
+3. Disable Google Analytics if you don't need it (optional)
+
+### 2.2 Enable Authentication
+
+1. Left menu: **Build → Authentication → Get started**
+2. **Sign-in method** tab → enable **Email/Password** and **Google**
+
+### 2.3 Create the Firestore database
+
+1. **Build → Firestore Database → Create database**
+2. Choose **Production** mode
+3. Pick the region closest to you (e.g. `europe-west1`)
+4. Once created, go to the **Rules** tab and replace the content with:
+
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+
+      match /sessions/{sessionId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      match /notifications/{notifId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+  }
+}
+```
+
+### 2.4 Enable Firebase Storage (avatars)
+
+1. **Build → Storage → Get started**
+2. Choose the same region as Firestore
+3. In the **Rules** tab, replace with:
+
+```
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /avatars/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId
+                   && request.resource.size < 2 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+  }
+}
+```
+
+### 2.5 Configure CORS for Storage (required for localhost)
+
+The `cors.json` file is already at the root of the project. Apply it once with `gsutil`:
+
+```bash
+# Install gcloud SDK if not already installed:
+#   macOS  → brew install --cask google-cloud-sdk
+#   others → https://cloud.google.com/sdk/docs/install
+
+gcloud auth login
+gsutil cors set cors.json gs://YOUR_STORAGE_BUCKET
+```
+
+Replace `YOUR_STORAGE_BUCKET` with the value of `VITE_FIREBASE_STORAGE_BUCKET` from your `.env` (e.g. `pushup-hero-ad32d.firebasestorage.app`).
+
+> Without this step, avatars still display — but a CORS error will appear in the dev console.
+
+### 2.6 Get your Firebase config keys
+
+1. **Project Settings** (gear icon, top left) → **General** tab
+2. Scroll to **Your apps** → click **Add app** → Web icon (`</>`)
+3. Give it a name (e.g. `pushup-hero-web`), **do not check** Firebase Hosting
+4. Copy the `firebaseConfig` object shown
+
+---
+
+## 3. Configure environment variables
+
+Create a `.env` file at the project root (next to `package.json`):
+
+```env
+VITE_FIREBASE_API_KEY="your-value"
+VITE_FIREBASE_AUTH_DOMAIN="your-project.firebaseapp.com"
+VITE_FIREBASE_PROJECT_ID="your-project-id"
+VITE_FIREBASE_STORAGE_BUCKET="your-project.firebasestorage.app"
+VITE_FIREBASE_MESSAGING_SENDER_ID="123456789"
+VITE_FIREBASE_APP_ID="1:123456789:web:abcdef"
+VITE_FIREBASE_MEASUREMENT_ID="G-XXXXXXXXXX"
+
+# Optional — for Push Notifications (see section 5)
+VITE_FIREBASE_VAPID_KEY=""
+```
+
+> The `.env` file is in `.gitignore` — it will never be committed.
+
+---
+
+## 4. Run locally
 
 ```bash
 npm run dev
-# ou
-pnpm run dev
 ```
 
-Le projet sera accessible sur ton navigateur à l'adresse : `http://localhost:5173`. L'autorisation d'accès à la webcam est requise pour utiliser l'application.
-
-### 3. Compiler pour la production
-
-```bash
-npm run build
-# ou
-pnpm run build
-```
-
-Le code de production optimisé sera généré dans le dossier `/dist`.
+Open [http://localhost:5173](http://localhost:5173) in your browser. Camera access will be requested on launch.
 
 ---
 
-## 🏗️ Stack Technique
+## 5. (Optional) Push Notifications
 
-- **React.js** (Vite)
-- **TypeScript**
-- **Sass (SCSS)** pour le styling modulé
-- **TensorFlow.js (Pose Detection)**
-- **Firebase** (Auth, Firestore)
-- **Vite PWA Plugin**
+Notifications require Firebase Cloud Messaging and Cloud Functions.
+
+### 5.1 Generate a VAPID key
+
+1. **Project Settings → Cloud Messaging** → **Web configuration** section
+2. Click **Generate key pair** under *Web Push certificates*
+3. Copy the key and add it to `.env`: `VITE_FIREBASE_VAPID_KEY="your-vapid-key"`
+
+### 5.2 Deploy Cloud Functions
+
+```bash
+npm install -g firebase-tools
+firebase login
+cd functions && npm install && cd ..
+firebase deploy --only functions
+```
+
+> Functions are in `functions/src/index.ts`. They run on `europe-west1` and send a Push notification whenever a document is created in `users/{uid}/notifications`.
+
+---
+
+## 6. Deploy to production
+
+The project deploys to Firebase Hosting:
+
+```bash
+npm run deploy
+# equivalent to: npm run build && firebase deploy --only hosting
+```
+
+Make sure you're logged in (`firebase login`) and that `.firebaserc` points to your project.
+
+---
+
+## Tech stack
+
+| Layer | Tech |
+|---|---|
+| UI | React 19 + TypeScript |
+| Build | Vite 7 |
+| Styling | SCSS with design tokens |
+| AI / Pose | MediaPipe Tasks Vision |
+| Backend | Firebase (Auth, Firestore, Storage, Functions) |
+| Push | Firebase Cloud Messaging (FCM) |
+| PWA | vite-plugin-pwa + Service Worker |
+
+---
+
+## Project structure
+
+```
+src/
+├── app/            # App.tsx, workout state machine, providers
+├── components/     # Shared components (PoseOverlay, DragNumberPicker…)
+├── exercises/      # Exercise detectors (PushUpDetector, SquatDetector…)
+├── hooks/          # React hooks (camera, pose, auth, sessions…)
+├── lib/            # Firebase init, constants
+├── overlays/       # Camera overlays (Dashboard, VictoryOverlay…)
+├── screens/        # Main screens (StartScreen, SummaryScreen…)
+└── styles/         # SCSS variables, mixins, reset
+functions/          # Firebase Cloud Functions (Push notifications)
+cors.json           # CORS config for Firebase Storage
+```

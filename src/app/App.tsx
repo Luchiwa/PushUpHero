@@ -2,7 +2,7 @@
  * App — Root component. Wires camera, pose detection, and renders
  * the current screen. All workout logic lives in useWorkoutStateMachine.
  */
-import { useMemo, useState, useRef, useEffect } from 'react';
+import { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { useCamera } from '@hooks/useCamera';
 import type { FacingMode } from '@hooks/useCamera';
 import { usePoseDetection } from '@hooks/usePoseDetection';
@@ -10,7 +10,7 @@ import { useExerciseDetector } from '@hooks/useExerciseDetector';
 import { PushUpDetector } from '@exercises/pushup/PushUpDetector';
 import { SquatDetector } from '@exercises/squat/SquatDetector';
 import type { ExerciseType } from '@exercises/types';
-import { useWorkoutStateMachine } from './useWorkoutStateMachine';
+import { useWorkoutStateMachine, durationToSeconds } from './useWorkoutStateMachine';
 import { StartScreen } from '@screens/StartScreen/StartScreen';
 import { WorkoutConfigScreen } from '@screens/WorkoutConfigScreen/WorkoutConfigScreen';
 import { RestScreen } from '@screens/RestScreen/RestScreen';
@@ -22,6 +22,7 @@ import { PoseOverlay } from '@components/PoseOverlay/PoseOverlay';
 import type { PoseOverlayHandle } from '@components/PoseOverlay/PoseOverlay';
 import { PositionGuide } from '@components/PositionGuide/PositionGuide';
 import { ReloadPrompt } from '@components/ReloadPrompt/ReloadPrompt';
+import { getExerciseLabel } from '@exercises/types';
 import './App.scss';
 
 function App() {
@@ -33,8 +34,6 @@ function App() {
   );
 
   // ── Exercise detector ────────────────────────────────────────────
-  // isActive is synced from wm.screen via useEffect (one render behind).
-  // processLandmarks uses a ref internally so the guard is always current.
   const [isActive, setIsActive] = useState(false);
   const { exerciseState, processLandmarks, resetDetector } = useExerciseDetector({
     detector,
@@ -46,16 +45,18 @@ function App() {
     useCamera({ facingMode, enabled: isActive });
 
   // ── Workout state machine ────────────────────────────────────────
+  const handleExerciseTypeChange = useCallback((type: ExerciseType) => {
+    setExerciseType(type);
+  }, []);
+
   const wm = useWorkoutStateMachine({
     exerciseState,
     resetDetector,
     startCamera,
+    onExerciseTypeChange: handleExerciseTypeChange,
   });
 
-  // Sync isActive from state machine screen — intentional cascading render
-  // on (rare) screen transitions; ref-based isActive in the detector ensures
-  // processLandmarks always reads the latest value.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
+  // Sync isActive from state machine screen
   useEffect(() => { setIsActive(wm.screen === 'active'); }, [wm.screen]);
 
   // ── Pose detection ───────────────────────────────────────────────
@@ -114,8 +115,10 @@ function App() {
             onSoundToggle={() => wm.setSoundEnabled(s => !s)}
             level={wm.liveLevel}
             levelProgressPct={wm.liveProgressPct}
-            currentSet={wm.currentSetIndex + 1}
-            totalSets={wm.totalSets}
+            currentSet={wm.flatSetIndex + 1}
+            totalSets={wm.totalSetsAllBlocks}
+            currentBlock={wm.isMultiExercise ? wm.currentBlockIndex + 1 : undefined}
+            totalBlocks={wm.isMultiExercise ? wm.totalBlocks : undefined}
           />
         </>
       )}
@@ -127,7 +130,9 @@ function App() {
           exerciseType={exerciseType}
           onExerciseTypeChange={(t) => {
             setExerciseType(t);
-            wm.setWorkoutConfig(prev => ({ ...prev, exerciseType: t }));
+            wm.setWorkoutPlan(prev => ({
+              blocks: prev.blocks.map((b, i) => i === 0 ? { ...b, exerciseType: t } : b),
+            }));
           }}
           goalReps={wm.goalReps}
           onGoalChange={wm.setGoalReps}
@@ -142,11 +147,8 @@ function App() {
 
       {wm.screen === 'config' && (
         <WorkoutConfigScreen
-          config={wm.workoutConfig}
-          onConfigChange={(cfg) => {
-            wm.setWorkoutConfig(cfg);
-            setExerciseType(cfg.exerciseType);
-          }}
+          plan={wm.workoutPlan}
+          onPlanChange={wm.setWorkoutPlan}
           onStart={wm.handleWorkoutStart}
           onBack={wm.handleBackToIdle}
           isReady={isModelReady}
@@ -155,11 +157,29 @@ function App() {
 
       {wm.screen === 'rest' && wm.completedSets.length > 0 && (
         <RestScreen
-          restDuration={wm.workoutConfig.restTime.minutes * 60 + wm.workoutConfig.restTime.seconds}
+          restDuration={durationToSeconds(wm.currentBlock.restBetweenSets)}
           completedSet={wm.currentSetIndex + 1}
-          totalSets={wm.totalSets}
+          totalSets={wm.totalSetsInBlock}
           lastSetResult={wm.completedSets[wm.completedSets.length - 1]}
           onRestComplete={wm.handleRestComplete}
+          exerciseLabel={getExerciseLabel(wm.currentBlock.exerciseType)}
+        />
+      )}
+
+      {wm.screen === 'exercise-rest' && wm.completedSets.length > 0 && (
+        <RestScreen
+          restDuration={durationToSeconds(wm.currentBlock.restAfterBlock)}
+          completedSet={wm.currentBlockIndex + 1}
+          totalSets={wm.totalBlocks}
+          lastSetResult={wm.completedSets[wm.completedSets.length - 1]}
+          onRestComplete={wm.handleExerciseRestComplete}
+          exerciseLabel={getExerciseLabel(wm.currentBlock.exerciseType)}
+          isExerciseTransition
+          nextExerciseLabel={
+            wm.currentBlockIndex + 1 < wm.totalBlocks
+              ? getExerciseLabel(wm.workoutPlan.blocks[wm.currentBlockIndex + 1].exerciseType)
+              : undefined
+          }
         />
       )}
 
@@ -168,6 +188,7 @@ function App() {
           exerciseType={exerciseType}
           exerciseState={exerciseState}
           completedSets={wm.completedSets}
+          workoutPlan={wm.isMultiExercise ? wm.workoutPlan : undefined}
           onReset={wm.handleReset}
           sessionMode={wm.sessionMode}
           elapsedTime={wm.elapsedTime}
@@ -190,7 +211,8 @@ function App() {
           onComplete={wm.handleVictoryComplete}
           sessionMode={wm.sessionMode}
           elapsedTime={wm.elapsedTime}
-          totalSets={wm.totalSets}
+          totalSets={wm.totalSetsAllBlocks}
+          isMultiExercise={wm.isMultiExercise}
         />
       )}
 

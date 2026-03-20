@@ -1,6 +1,6 @@
 /**
  * useWorkoutStateMachine — Encapsulates the entire workout state machine:
- * screen transitions, multi-set logic, session saving, level tracking.
+ * screen transitions, multi-set + multi-exercise logic, session saving, level tracking.
  *
  * App.tsx only needs to wire camera/pose and render the JSX.
  */
@@ -9,24 +9,30 @@ import { useSessionHistory } from '@hooks/useSessionHistory';
 import { useAuth } from '@hooks/useAuth';
 import { useSoundEffect } from '@hooks/useSoundEffect';
 import { calculateLevelFromTotalReps, calculateTotalRepsForLevel } from '@hooks/useLevelSystem';
-import type { ExerciseState } from '@exercises/types';
-import type { SetRecord } from '@exercises/types';
-import type { WorkoutConfig } from '@screens/WorkoutConfigScreen/WorkoutConfigScreen';
+import type { ExerciseState, ExerciseType, SetRecord, WorkoutBlock, WorkoutPlan, TimeDuration } from '@exercises/types';
+import { createDefaultBlock } from '@exercises/types';
 
 // ── Public types ────────────────────────────────────────────────
-export type AppScreen = 'idle' | 'config' | 'active' | 'rest' | 'victory' | 'stopped' | 'levelup';
+export type AppScreen = 'idle' | 'config' | 'active' | 'rest' | 'exercise-rest' | 'victory' | 'stopped' | 'levelup';
 export type SessionMode = 'reps' | 'time';
+
+export function durationToSeconds(d: TimeDuration): number {
+  return d.minutes * 60 + d.seconds;
+}
 
 interface UseWorkoutStateMachineProps {
   exerciseState: ExerciseState;
   resetDetector: () => void;
   startCamera: (mode?: 'user' | 'environment') => void;
+  /** Called when the active exercise type changes mid-workout (multi-exercise) */
+  onExerciseTypeChange: (type: ExerciseType) => void;
 }
 
 export function useWorkoutStateMachine({
   exerciseState,
   resetDetector,
   startCamera,
+  onExerciseTypeChange,
 }: UseWorkoutStateMachineProps) {
   // ── Core state ──────────────────────────────────────────────────
   const [screen, setScreen] = useState<AppScreen>('idle');
@@ -47,24 +53,36 @@ export function useWorkoutStateMachine({
   const [elapsedTime, setElapsedTime] = useState(0);
   const sessionSavedRef = useRef(false);
 
-  // ── Multi-set state ─────────────────────────────────────────────
-  const [workoutConfig, setWorkoutConfig] = useState<WorkoutConfig>({
-    exerciseType: 'pushup',
-    numberOfSets: 3,
-    sessionMode: 'reps',
-    goalReps: 10,
-    timeGoal: { minutes: 0, seconds: 30 },
-    restTime: { minutes: 1, seconds: 0 },
+  // ── Workout plan (multi-exercise) ──────────────────────────────
+  const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlan>({
+    blocks: [createDefaultBlock('pushup')],
   });
+  const [currentBlockIndex, setCurrentBlockIndex] = useState(0);
   const [currentSetIndex, setCurrentSetIndex] = useState(0);
   const [completedSets, setCompletedSets] = useState<SetRecord[]>([]);
   const [completedSetsReps, setCompletedSetsReps] = useState(0);
   const setStartTimeRef = useRef(0);
   const workoutStartTimeRef = useRef(0);
 
-  const isMultiSet = workoutConfig.numberOfSets > 1
-    && (screen === 'active' || screen === 'rest' || screen === 'victory' || screen === 'stopped' || screen === 'levelup');
-  const totalSets = isMultiSet ? workoutConfig.numberOfSets : 1;
+  // ── Derived: current block config ───────────────────────────────
+  const currentBlock = workoutPlan.blocks[currentBlockIndex]
+    ?? workoutPlan.blocks[0]
+    ?? createDefaultBlock('pushup');
+  const isMultiExercise = workoutPlan.blocks.length > 1;
+  const isMultiSet = currentBlock.numberOfSets > 1;
+  const totalSetsInBlock = currentBlock.numberOfSets;
+  const totalBlocks = workoutPlan.blocks.length;
+
+  /** Total sets across all blocks (for summary) */
+  const totalSetsAllBlocks = workoutPlan.blocks.reduce((sum, b) => sum + b.numberOfSets, 0);
+
+  /** Flat set index across the entire workout (for progress display) */
+  const flatSetIndex = workoutPlan.blocks
+    .slice(0, currentBlockIndex)
+    .reduce((sum, b) => sum + b.numberOfSets, 0) + currentSetIndex;
+
+  // ── Active exercise type (from current block) ───────────────────
+  const activeExerciseType = currentBlock.exerciseType;
 
   // ── Live level projection ───────────────────────────────────────
   const currentSetReps = screen === 'active' ? exerciseState.repCount : 0;
@@ -83,12 +101,13 @@ export function useWorkoutStateMachine({
       averageScore: Math.round(exerciseState.averageScore),
       repHistory: [...exerciseState.repHistory],
       duration: setDuration,
-      setMode: sessionMode,
+      setMode: currentBlock.sessionMode,
+      exerciseType: currentBlock.exerciseType,
     };
-    if (sessionMode === 'reps') record.goalReps = goalReps;
-    if (sessionMode === 'time') record.timeGoal = timeGoal.minutes * 60 + timeGoal.seconds;
+    if (currentBlock.sessionMode === 'reps') record.goalReps = currentBlock.goalReps;
+    if (currentBlock.sessionMode === 'time') record.timeGoal = durationToSeconds(currentBlock.timeGoal);
     return record;
-  }, [exerciseState, sessionMode, goalReps, timeGoal]);
+  }, [exerciseState, currentBlock]);
 
   // ── Save the entire workout as one session ──────────────────────
   const saveWorkoutSession = useCallback((allSets: SetRecord[]) => {
@@ -96,68 +115,90 @@ export function useWorkoutStateMachine({
     const totalReps = allSets.reduce((sum, s) => sum + s.reps, 0);
     if (totalReps === 0) return;
 
-    // Snapshot the level we should reach BEFORE totalLifetimeReps is incremented
-    // to avoid double-counting (allSessionReps + updated totalLifetimeReps).
     savedLevelRef.current = calculateLevelFromTotalReps(totalLifetimeReps + totalReps);
     sessionSavedRef.current = true;
+
     const weightedScoreSum = allSets.reduce((sum, s) => sum + s.averageScore * s.reps, 0);
     const avgScore = totalReps > 0 ? Math.round(weightedScoreSum / totalReps) : 0;
     const totalWorkoutDuration = Math.round((Date.now() - workoutStartTimeRef.current) / 1000);
-    const restSeconds = workoutConfig.restTime.minutes * 60 + workoutConfig.restTime.seconds;
-    const isMultiSetSession = allSets.length > 1;
+
+    // Determine the primary exercise type (the one with the most reps, or first)
+    const repsByType: Record<string, number> = {};
+    for (const s of allSets) {
+      const t = s.exerciseType ?? 'pushup';
+      repsByType[t] = (repsByType[t] ?? 0) + s.reps;
+    }
+    const primaryExercise = (Object.entries(repsByType).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'pushup') as ExerciseType;
+    const hasMultipleExercises = Object.keys(repsByType).length > 1;
+
+    // For single-block workouts, use the block's rest config
+    const restSeconds = isMultiExercise
+      ? undefined
+      : durationToSeconds(currentBlock.restBetweenSets);
 
     addSession({
       reps: totalReps,
       averageScore: avgScore,
-      goalReps: isMultiSetSession ? goalReps * allSets.length : goalReps,
-      sessionMode,
-      exerciseType: workoutConfig.exerciseType,
-      elapsedTime: sessionMode === 'time' ? elapsedTimeRef.current : undefined,
-      numberOfSets: isMultiSetSession ? allSets.length : undefined,
-      restDuration: isMultiSetSession ? restSeconds : undefined,
-      sets: isMultiSetSession ? allSets : undefined,
-      totalDuration: isMultiSetSession ? totalWorkoutDuration : undefined,
+      goalReps: allSets.reduce((sum, s) => sum + (s.goalReps ?? 0), 0),
+      sessionMode: currentBlock.sessionMode,
+      exerciseType: primaryExercise,
+      elapsedTime: totalWorkoutDuration,
+      numberOfSets: allSets.length > 1 ? allSets.length : undefined,
+      restDuration: allSets.length > 1 ? restSeconds : undefined,
+      sets: allSets.length > 1 ? allSets : undefined,
+      totalDuration: allSets.length > 1 ? totalWorkoutDuration : undefined,
+      blocks: hasMultipleExercises ? workoutPlan.blocks : undefined,
+      isMultiExercise: hasMultipleExercises || undefined,
     }).catch(err => {
       console.error('Failed to save session:', err);
       sessionSavedRef.current = false;
     });
-  }, [addSession, goalReps, sessionMode, workoutConfig.restTime, workoutConfig.exerciseType, totalLifetimeReps]);
+  }, [addSession, currentBlock, isMultiExercise, workoutPlan.blocks, totalLifetimeReps]);
 
-  // ── Handlers ────────────────────────────────────────────────────
+  // ── Start helpers ───────────────────────────────────────────────
 
-  const handleStart = () => {
+  /** Reset all workout state for a fresh start */
+  const resetWorkoutState = useCallback(() => {
     elapsedTimeRef.current = 0;
     sessionSavedRef.current = false;
     savedLevelRef.current = null;
     setLevelBefore(liveLevel);
+    setCurrentBlockIndex(0);
     setCurrentSetIndex(0);
     setCompletedSets([]);
     setCompletedSetsReps(0);
     setStartTimeRef.current = Date.now();
     workoutStartTimeRef.current = Date.now();
-    setWorkoutConfig(prev => ({ ...prev, numberOfSets: 1, sessionMode, goalReps, timeGoal, exerciseType: prev.exerciseType }));
+  }, [liveLevel]);
+
+  // ── Quick Start (single exercise, 1 set) ───────────────────────
+  const handleStart = () => {
+    resetWorkoutState();
+    const block: WorkoutBlock = {
+      ...createDefaultBlock(workoutPlan.blocks[0]?.exerciseType ?? 'pushup'),
+      numberOfSets: 1,
+      sessionMode,
+      goalReps,
+      timeGoal,
+    };
+    setWorkoutPlan({ blocks: [block] });
+    onExerciseTypeChange(block.exerciseType);
     startCamera();
     setScreen('active');
   };
 
   const handleOpenConfig = () => {
-    setWorkoutConfig(prev => ({ ...prev, sessionMode, goalReps, timeGoal }));
     setScreen('config');
   };
 
+  // ── Workout Start (from config screen) ──────────────────────────
   const handleWorkoutStart = () => {
-    elapsedTimeRef.current = 0;
-    sessionSavedRef.current = false;
-    savedLevelRef.current = null;
-    setLevelBefore(liveLevel);
-    setCurrentSetIndex(0);
-    setCompletedSets([]);
-    setCompletedSetsReps(0);
-    setStartTimeRef.current = Date.now();
-    workoutStartTimeRef.current = Date.now();
-    setSessionMode(workoutConfig.sessionMode);
-    setGoalReps(workoutConfig.goalReps);
-    setTimeGoal(workoutConfig.timeGoal);
+    resetWorkoutState();
+    const firstBlock = workoutPlan.blocks[0];
+    setSessionMode(firstBlock.sessionMode);
+    setGoalReps(firstBlock.goalReps);
+    setTimeGoal(firstBlock.timeGoal);
+    onExerciseTypeChange(firstBlock.exerciseType);
     startCamera();
     setScreen('active');
   };
@@ -166,75 +207,135 @@ export function useWorkoutStateMachine({
     setScreen('idle');
   };
 
+  // ── Set / Block completion logic ────────────────────────────────
+
   const handleSetComplete = useCallback(() => {
     const setRecord = buildCurrentSetRecord();
     const newCompletedSets = [...completedSets, setRecord];
     setCompletedSets(newCompletedSets);
     setCompletedSetsReps(prev => prev + setRecord.reps);
 
-    const isLastSet = currentSetIndex >= totalSets - 1;
+    const isLastSetInBlock = currentSetIndex >= totalSetsInBlock - 1;
+    const isLastBlock = currentBlockIndex >= totalBlocks - 1;
 
-    if (isLastSet) {
-      setElapsedTime(elapsedTimeRef.current);
+    if (isLastSetInBlock && isLastBlock) {
+      // ── Entire workout finished ──
+      const totalElapsed = Math.round((Date.now() - workoutStartTimeRef.current) / 1000);
+      elapsedTimeRef.current = totalElapsed;
+      setElapsedTime(totalElapsed);
       const totalReps = newCompletedSets.reduce((sum, s) => sum + s.reps, 0);
 
       if (totalReps === 0) {
-        // No reps at all → go straight back to start screen
         setScreen('idle');
-      } else if (sessionMode === 'reps' && exerciseState.repCount >= goalReps) {
+      } else if (currentBlock.sessionMode === 'reps' && exerciseState.repCount >= currentBlock.goalReps) {
         setScreen('victory');
-      } else if (sessionMode === 'time') {
+      } else if (currentBlock.sessionMode === 'time') {
         setScreen('victory');
       } else {
         saveWorkoutSession(newCompletedSets);
         setScreen('stopped');
       }
+    } else if (isLastSetInBlock && !isLastBlock) {
+      // ── Block finished, more blocks to go → exercise rest ──
+      resetDetector();
+      setScreen('exercise-rest');
     } else {
+      // ── More sets in current block → set rest ──
       resetDetector();
       setScreen('rest');
     }
-  }, [buildCurrentSetRecord, completedSets, currentSetIndex, totalSets, sessionMode, goalReps, exerciseState.repCount, resetDetector, saveWorkoutSession]);
+  }, [buildCurrentSetRecord, completedSets, currentSetIndex, totalSetsInBlock, currentBlockIndex, totalBlocks, currentBlock, exerciseState.repCount, resetDetector, saveWorkoutSession]);
 
   const handleSetCompleteRef = useRef(handleSetComplete);
   useEffect(() => { handleSetCompleteRef.current = handleSetComplete; }, [handleSetComplete]);
 
   const handleStop = () => {
-    if (isMultiSet && currentSetIndex < totalSets - 1) {
-      const setRecord = buildCurrentSetRecord();
-      const allSets = [...completedSets, setRecord];
-      setCompletedSets(allSets);
-      setCompletedSetsReps(prev => prev + setRecord.reps);
-      saveWorkoutSession(allSets);
-      const totalReps = allSets.reduce((sum, s) => sum + s.reps, 0);
-      if (totalReps === 0) {
-        setScreen('idle');
-      } else {
-        setElapsedTime(elapsedTimeRef.current);
-        setScreen('stopped');
-      }
+    const setRecord = buildCurrentSetRecord();
+    const allSets = [...completedSets, setRecord];
+    setCompletedSets(allSets);
+    setCompletedSetsReps(prev => prev + setRecord.reps);
+    saveWorkoutSession(allSets);
+    const totalReps = allSets.reduce((sum, s) => sum + s.reps, 0);
+    if (totalReps === 0) {
+      setScreen('idle');
     } else {
-      handleSetComplete();
+      const totalElapsed = Math.round((Date.now() - workoutStartTimeRef.current) / 1000);
+      elapsedTimeRef.current = totalElapsed;
+      setElapsedTime(totalElapsed);
+      setScreen('stopped');
     }
   };
 
   const handleTimerEnd = () => {
-    setElapsedTime(elapsedTimeRef.current);
+    const totalElapsed = Math.round((Date.now() - workoutStartTimeRef.current) / 1000);
+    elapsedTimeRef.current = totalElapsed;
+    setElapsedTime(totalElapsed);
     handleSetCompleteRef.current();
   };
 
   const handleVictoryComplete = () => {
     saveWorkoutSession(completedSets);
-    setElapsedTime(elapsedTimeRef.current);
+    const totalElapsed = Math.round((Date.now() - workoutStartTimeRef.current) / 1000);
+    elapsedTimeRef.current = totalElapsed;
+    setElapsedTime(totalElapsed);
     setScreen('stopped');
   };
 
+  // ── Rest between sets (same exercise) ───────────────────────────
   const handleRestComplete = () => {
     resetDetector();
     setCurrentSetIndex(prev => prev + 1);
     setStartTimeRef.current = Date.now();
-    elapsedTimeRef.current = 0;
     startCamera();
     setScreen('active');
+  };
+
+  // ── Rest between exercises (different blocks) ───────────────────
+  const handleExerciseRestComplete = () => {
+    resetDetector();
+    const nextBlockIndex = currentBlockIndex + 1;
+    const nextBlock = workoutPlan.blocks[nextBlockIndex];
+    setCurrentBlockIndex(nextBlockIndex);
+    setCurrentSetIndex(0);
+    setStartTimeRef.current = Date.now();
+    setSessionMode(nextBlock.sessionMode);
+    setGoalReps(nextBlock.goalReps);
+    setTimeGoal(nextBlock.timeGoal);
+    onExerciseTypeChange(nextBlock.exerciseType);
+    startCamera();
+    setScreen('active');
+  };
+
+  // ── Skip entire current block ───────────────────────────────────
+  const handleSkipBlock = () => {
+    const remainingSets = totalSetsInBlock - currentSetIndex;
+    const skippedSets: SetRecord[] = Array.from({ length: remainingSets }, () => ({
+      reps: 0,
+      averageScore: 0,
+      repHistory: [],
+      duration: 0,
+      setMode: currentBlock.sessionMode,
+      exerciseType: currentBlock.exerciseType,
+    }));
+    const newCompleted = [...completedSets, ...skippedSets];
+    setCompletedSets(newCompleted);
+
+    const isLastBlock = currentBlockIndex >= totalBlocks - 1;
+    if (isLastBlock) {
+      const totalReps = newCompleted.reduce((sum, s) => sum + s.reps, 0);
+      if (totalReps === 0) {
+        setScreen('idle');
+      } else {
+        saveWorkoutSession(newCompleted);
+        const totalElapsed = Math.round((Date.now() - workoutStartTimeRef.current) / 1000);
+        elapsedTimeRef.current = totalElapsed;
+        setElapsedTime(totalElapsed);
+        setScreen('stopped');
+      }
+    } else {
+      resetDetector();
+      setScreen('exercise-rest');
+    }
   };
 
   const handleReset = () => {
@@ -245,6 +346,7 @@ export function useWorkoutStateMachine({
     }
     resetDetector();
     elapsedTimeRef.current = 0;
+    setCurrentBlockIndex(0);
     setCurrentSetIndex(0);
     setCompletedSets([]);
     setCompletedSetsReps(0);
@@ -255,6 +357,7 @@ export function useWorkoutStateMachine({
   const handleLevelUpContinue = () => {
     resetDetector();
     elapsedTimeRef.current = 0;
+    setCurrentBlockIndex(0);
     setCurrentSetIndex(0);
     setCompletedSets([]);
     setCompletedSetsReps(0);
@@ -275,25 +378,32 @@ export function useWorkoutStateMachine({
 
   // Auto-complete set when rep goal reached
   useEffect(() => {
-    if (screen === 'active' && sessionMode === 'reps' && exerciseState.repCount >= goalReps) {
-      setElapsedTime(elapsedTimeRef.current);
+    if (screen === 'active' && currentBlock.sessionMode === 'reps' && exerciseState.repCount >= currentBlock.goalReps) {
+      const totalElapsed = Math.round((Date.now() - workoutStartTimeRef.current) / 1000);
+      elapsedTimeRef.current = totalElapsed;
+      setElapsedTime(totalElapsed);
       handleSetCompleteRef.current();
     }
-  }, [exerciseState.repCount, screen, sessionMode, goalReps]);
+  }, [exerciseState.repCount, screen, currentBlock.sessionMode, currentBlock.goalReps]);
 
   // ── Return ──────────────────────────────────────────────────────
   return {
     // Screen
     screen,
-    // Session config
+    // Session config (active block's values)
     goalReps, setGoalReps,
     sessionMode, setSessionMode,
     timeGoal, setTimeGoal,
     soundEnabled, setSoundEnabled,
-    // Multi-set
-    workoutConfig, setWorkoutConfig,
-    currentSetIndex, completedSets, completedSetsReps,
-    isMultiSet, totalSets,
+    // Workout plan
+    workoutPlan, setWorkoutPlan,
+    currentBlock,
+    currentBlockIndex, currentSetIndex,
+    completedSets, completedSetsReps,
+    isMultiSet, isMultiExercise,
+    totalSetsInBlock, totalBlocks, totalSetsAllBlocks,
+    flatSetIndex,
+    activeExerciseType,
     // Level
     liveLevel, liveProgressPct, levelBefore,
     savedLevel: savedLevelRef.current,
@@ -302,6 +412,8 @@ export function useWorkoutStateMachine({
     // Handlers
     handleStart, handleOpenConfig, handleWorkoutStart, handleBackToIdle,
     handleStop, handleTimerEnd, handleVictoryComplete,
-    handleRestComplete, handleReset, handleLevelUpContinue,
+    handleRestComplete, handleExerciseRestComplete,
+    handleSkipBlock,
+    handleReset, handleLevelUpContinue,
   };
 }

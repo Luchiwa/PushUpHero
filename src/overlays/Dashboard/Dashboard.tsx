@@ -22,6 +22,10 @@ interface DashboardProps {
     levelProgressPct: number;
     currentSet?: number;
     totalSets?: number;
+    /** Current exercise block (1-based), only for multi-exercise workouts */
+    currentBlock?: number;
+    /** Total exercise blocks, only for multi-exercise workouts */
+    totalBlocks?: number;
 }
 
 function ScoreRing({ score }: { score: number }) {
@@ -88,7 +92,7 @@ function GoalProgressBar({ current, goal }: { current: number; goal: number }) {
     );
 }
 
-export function Dashboard({ exerciseType, exerciseState, goalReps, sessionMode, timeGoal, onStop, onTimerEnd, elapsedTimeRef, onFlipCamera, facingMode, soundEnabled, onSoundToggle, level, levelProgressPct, currentSet, totalSets }: DashboardProps) {
+export function Dashboard({ exerciseType, exerciseState, goalReps, sessionMode, timeGoal, onStop, onTimerEnd, elapsedTimeRef, onFlipCamera, facingMode, soundEnabled, onSoundToggle, level, levelProgressPct, currentSet, totalSets, currentBlock, totalBlocks }: DashboardProps) {
     const { repCount, averageScore, lastRepResult, isValidPosition, isCalibrated } = exerciseState;
 
     const { showInvalidBanner, timeRemaining } = useDashboardLogic({
@@ -146,7 +150,9 @@ export function Dashboard({ exerciseType, exerciseState, goalReps, sessionMode, 
 
             {totalSets != null && totalSets > 1 && currentSet != null && (
                 <div className="set-indicator">
-                    Set {currentSet}/{totalSets}
+                    {currentBlock != null && totalBlocks != null && totalBlocks > 1
+                        ? `Ex ${currentBlock}/${totalBlocks} · Set ${currentSet}/${totalSets}`
+                        : `Set ${currentSet}/${totalSets}`}
                 </div>
             )}
 

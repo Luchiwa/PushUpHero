@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import type { SessionRecord } from '@hooks/useSessionHistory';
+import type { ExerciseType } from '@exercises/types';
 import './WeeklyChart.scss';
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -13,12 +14,19 @@ const PAD_BOTTOM = 34;
 const PLOT_W = CHART_W - PAD_LEFT - PAD_RIGHT;
 const PLOT_H = CHART_H - PAD_TOP - PAD_BOTTOM;
 
+type ExerciseFilter = 'all' | ExerciseType;
+
 interface Props {
     sessions: SessionRecord[];
     weekOffset: number;  // 0 = current week
+    exerciseFilter?: ExerciseFilter;
 }
 
-function buildDayTotals(sessions: SessionRecord[], weekOffset: number): number[] {
+/**
+ * Count reps per day, respecting the exercise filter.
+ * For multi-exercise sessions filtered by type, only count reps from matching blocks.
+ */
+function buildDayTotals(sessions: SessionRecord[], weekOffset: number, exerciseFilter: ExerciseFilter = 'all'): number[] {
     const totals = [0, 0, 0, 0, 0, 0, 0];
     // Sunday of the displayed week at local midnight
     const now = new Date();
@@ -29,7 +37,21 @@ function buildDayTotals(sessions: SessionRecord[], weekOffset: number): number[]
         const d = new Date(s.date);
         const localDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
         const diff = Math.round((localDay.getTime() - sunday.getTime()) / 86_400_000);
-        if (diff >= 0 && diff <= 6) totals[diff] += s.reps;
+        if (diff < 0 || diff > 6) return;
+
+        // For multi-exercise sessions with a specific filter, count only matching block reps
+        if (exerciseFilter !== 'all' && s.isMultiExercise && s.blocks && s.sets) {
+            let setIdx = 0;
+            for (const block of s.blocks) {
+                const blockSets = s.sets.slice(setIdx, setIdx + block.numberOfSets);
+                setIdx += block.numberOfSets;
+                if (block.exerciseType === exerciseFilter) {
+                    totals[diff] += blockSets.reduce((sum, st) => sum + st.reps, 0);
+                }
+            }
+        } else {
+            totals[diff] += s.reps;
+        }
     });
     return totals;
 }
@@ -42,8 +64,8 @@ function niceMax(value: number): number {
     return nice * magnitude;
 }
 
-export function WeeklyChart({ sessions, weekOffset }: Props) {
-    const totals = buildDayTotals(sessions, weekOffset);
+export function WeeklyChart({ sessions, weekOffset, exerciseFilter }: Props) {
+    const totals = buildDayTotals(sessions, weekOffset, exerciseFilter);
     const maxReps = niceMax(Math.max(...totals));
 
     // Today's day index (0–6), only relevant for current week

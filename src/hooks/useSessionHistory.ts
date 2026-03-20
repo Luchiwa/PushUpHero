@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useAuth } from './useAuth';
 import { saveSession } from '@lib/userService';
 import { MAX_LOCAL_SESSIONS } from '@lib/constants';
-import type { SetRecord } from '@exercises/types';
+import type { SetRecord, WorkoutBlock } from '@exercises/types';
 
 const STORAGE_KEY = 'pushup-sessions';
 const STORAGE_TOTAL_KEY = 'pushup_game_total_sessions';
@@ -22,6 +22,12 @@ export interface SessionRecord {
     restDuration?: number;         // configured rest between sets (seconds)
     sets?: SetRecord[];            // per-set breakdown
     totalDuration?: number;        // total workout duration including rest (seconds)
+
+    // ── Multi-exercise fields ──
+    /** Workout plan blocks (present when workout has multiple exercises) */
+    blocks?: WorkoutBlock[];
+    /** True when the workout contains more than one exercise type */
+    isMultiExercise?: boolean;
 }
 
 function saveLocalSessions(sessions: SessionRecord[]): void {
@@ -53,6 +59,8 @@ export function useSessionHistory() {
         if (newSession.restDuration === undefined) delete newSession.restDuration;
         if (newSession.sets === undefined) delete newSession.sets;
         if (newSession.totalDuration === undefined) delete newSession.totalDuration;
+        if (newSession.blocks === undefined) delete newSession.blocks;
+        if (newSession.isMultiExercise === undefined) delete newSession.isMultiExercise;
 
         if (user) {
             await saveSession({
