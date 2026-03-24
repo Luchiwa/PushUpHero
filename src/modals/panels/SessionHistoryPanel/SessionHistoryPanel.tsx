@@ -7,14 +7,13 @@ import { useState } from 'react';
 import { useSessionHistory } from '@hooks/useSessionHistory';
 import type { SessionRecord } from '@hooks/useSessionHistory';
 import type { TimeDuration } from '@exercises/types';
-import { getExerciseLabel } from '@exercises/types';
+import { getExerciseLabel, EXERCISE_META } from '@exercises/types';
 import { getGradeLetter, getGradeClass, formatElapsedTime } from '@lib/constants';
 import './SessionHistoryPanel.scss';
 
-const EXERCISE_EMOJI: Record<string, string> = {
-    pushup: '💪',
-    squat: '🦵',
-};
+const EXERCISE_EMOJI: Record<string, string> = Object.fromEntries(
+    EXERCISE_META.map(m => [m.type, m.emoji]),
+);
 
 interface SessionHistoryPanelProps {
     sessions?: SessionRecord[];

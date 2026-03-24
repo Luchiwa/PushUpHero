@@ -31,7 +31,7 @@ Le squat est la référence (×1.0).
 | -------- | ----------- | ------------ |
 | **Squat**  | ×1.0 | Référence — grand groupe musculaire, accessible |
 | **Push-up** | ×1.3 | Haut du corps complet, technique plus stricte |
-| **Traction** | ×2.5 | Poids du corps complet, très peu de gens en font 20+ |
+| **Pull-up** | ×2.5 | Poids du corps complet, très peu de gens en font 20+ |
 
 ### Exemples comparatifs (Grade C, pas de bonus)
 
@@ -39,7 +39,7 @@ Le squat est la référence (×1.0).
 | -------- | ----------------------- | --------- |
 | Squat   | 20 × 10 × 1.0 | **200 XP** |
 | Push-up | 20 × 10 × 1.3 | **260 XP** |
-| Traction | 20 × 10 × 2.5 | **500 XP** |
+| Pull-up | 20 × 10 × 2.5 | **500 XP** |
 
 > **Ordre des calculs :** XP grade → × coefficient difficulté → × multiplicateur bonus session
 
@@ -148,7 +148,7 @@ Session terminée
   ├─ Ventilation par exercice :
   │    ├─ XP Push-up += XP pondérée push-up × multiplicateur
   │    ├─ XP Squat  += XP pondérée squat × multiplicateur
-  │    └─ XP Traction += XP pondérée traction × multiplicateur
+  │    └─ XP Pull-up += XP pondérée pull-up × multiplicateur
   │
   └─ XP Global += XP finale totale
 ```

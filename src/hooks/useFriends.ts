@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
     collection, doc, getDoc, setDoc, deleteDoc,
-    onSnapshot, addDoc, serverTimestamp
+    onSnapshot, addDoc, serverTimestamp, updateDoc, increment
 } from 'firebase/firestore';
 import { db } from '@lib/firebase';
 import { useAuth } from './useAuth';
@@ -293,6 +293,10 @@ export function useFriends() {
             fromUsername: dbUser.displayName,
             sentAt: serverTimestamp(),
             read: false,
+        });
+        // Track total encouragements sent for achievements
+        await updateDoc(doc(db, 'users', user.uid), {
+            totalEncouragementsSent: increment(1),
         });
     }, [user, dbUser]);
 

@@ -45,6 +45,14 @@ export function StartScreen({
     const [showProfileModal, setShowProfileModal] = useState(isDeepLinkFriends);
     const [profileInitialTab, setProfileInitialTab] = useState<'history' | 'friends' | 'feed'>(isDeepLinkFriends ? 'friends' : 'history');
 
+    // XP bar: 12 segments
+    const XP_SEG_IDS = ['s0','s1','s2','s3','s4','s5','s6','s7','s8','s9','s10','s11'];
+    const filledSegments = Math.round(levelProgressPct / 100 * XP_SEG_IDS.length);
+
+    // Tier based on level: bronze / silver / gold / diamond
+    const tier = level >= 35 ? 'diamond' : level >= 20 ? 'gold' : level >= 10 ? 'silver' : 'bronze';
+    const streak = dbUser?.streak ?? 0;
+
     // Clean up deep link hash after reading it
     useEffect(() => {
         if (isDeepLinkFriends) {
@@ -60,36 +68,63 @@ export function StartScreen({
             <InstallBanner />
 
             <div className="start-content">
-                <div className="start-brand">
-                    <div className="start-brand-header">
-                        {user ? (
-                            <button type="button" className="user-profile-tag" onClick={() => setShowProfileModal(true)} title="Mon profil">
+                <div className="player-hud">
+                    {user ? (
+                        <button type="button" className={`player-hud-card tier-${tier}`} onClick={() => setShowProfileModal(true)} title="Mon profil">
+                            {/* Left: avatar + level badge */}
+                            <div className="hud-avatar-wrap">
                                 <Avatar
                                     photoURL={dbUser?.photoURL}
                                     initials={dbUser?.displayName || 'U'}
-                                    size={32}
-                                    className="user-avatar"
+                                    size={44}
+                                    className="hud-avatar"
                                 />
-                                <span className="user-name">{dbUser?.displayName || 'Level ' + level}</span>
-                                {(dbUser?.streak ?? 0) > 0 && (
-                                    <>
-                                        <span className="user-streak-sep">·</span>
-                                        <span className="user-streak">{dbUser?.streak} 🔥</span>
-                                    </>
-                                )}
-                            </button>
-                        ) : (
-                            <button type="button" className="btn-primary-sm" onClick={() => setShowAuthModal(true)}>
+                                <span className={`hud-level-badge tier-${tier}`}>LV{level}</span>
+                            </div>
+
+                            {/* Center: name + XP bar + stats row */}
+                            <div className="hud-info">
+                                <div className="hud-top-row">
+                                    <span className="hud-name">{dbUser?.displayName || 'Player'}</span>
+                                    {streak > 0 && (
+                                        <span className={`hud-streak${streak >= 7 ? ' on-fire' : ''}`}>
+                                            {streak}<span className="hud-streak-icon">🔥</span>
+                                        </span>
+                                    )}
+                                    <span className="hud-total-xp">⚡{totalXp.toLocaleString()}</span>
+                                </div>
+
+                                {/* Segmented XP bar */}
+                                <div className="hud-xp-bar" role="progressbar" aria-valuenow={xpIntoCurrentLevel} aria-valuemax={xpNeededForNextLevel}>
+                                    {XP_SEG_IDS.map((id, i) => (
+                                        <div
+                                            key={id}
+                                            className={`hud-xp-seg${i < filledSegments ? ' filled' : ''}${i === filledSegments - 1 && filledSegments > 0 ? ' tip' : ''}`}
+                                            style={{ animationDelay: `${i * 60}ms` }}
+                                        />
+                                    ))}
+                                </div>
+
+                                <div className="hud-xp-label">
+                                    <span>{xpIntoCurrentLevel.toLocaleString()} XP</span>
+                                    <span className="hud-xp-next">→ LV{level + 1} in {(xpNeededForNextLevel - xpIntoCurrentLevel).toLocaleString()} XP</span>
+                                </div>
+                            </div>
+
+                            {/* Right: chevron */}
+                            <span className="hud-chevron">›</span>
+                        </button>
+                    ) : (
+                        <div className="player-hud-guest">
+                            <div className="hud-guest-info">
+                                <span className="hud-guest-label">🎮 Playing as Guest</span>
+                                <span className="hud-guest-sub">Sign in to save your progress</span>
+                            </div>
+                            <button type="button" className="hud-signin-btn" onClick={() => setShowAuthModal(true)}>
                                 Sign in
                             </button>
-                        )}
-                        <p className="start-brand-stats">Level {level} • {totalXp.toLocaleString()} XP</p>
-                    </div>
-
-                    <div className="level-preview-bar">
-                        <div className="level-preview-fill" style={{ width: `${levelProgressPct}%` }} />
-                        <span className="level-preview-text">{(xpNeededForNextLevel - xpIntoCurrentLevel).toLocaleString()} XP to Level {level + 1}</span>
-                    </div>
+                        </div>
+                    )}
                 </div>
 
                 <div className="start-card-divider" />

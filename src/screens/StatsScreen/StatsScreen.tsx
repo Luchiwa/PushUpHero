@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useWeekSessions, getWeekStart, formatWeekRange } from '@hooks/useWeekSessions';
 import type { ExerciseType } from '@exercises/types';
+import { EXERCISE_META } from '@exercises/types';
 import type { SessionRecord } from '@hooks/useSessionHistory';
 import { WeeklyChart } from './WeeklyChart';
 import { SessionHistoryPanel } from '@modals/panels/SessionHistoryPanel/SessionHistoryPanel';
+import { PageLayout } from '@components/PageLayout/PageLayout';
 import './StatsScreen.scss';
 import './WeeklyChart.scss';
 
@@ -12,8 +14,7 @@ export type MetricMode = 'xp' | 'reps';
 
 const FILTERS: { value: ExerciseFilter; emoji: string; label: string }[] = [
     { value: 'all', emoji: '🏋️', label: 'All' },
-    { value: 'pushup', emoji: '💪', label: 'Push-ups' },
-    { value: 'squat', emoji: '🦵', label: 'Squats' },
+    ...EXERCISE_META.map(m => ({ value: m.type as ExerciseFilter, emoji: m.emoji, label: m.label })),
 ];
 
 // ── Weekly Summary helpers ──────────────────────────────────────
@@ -182,19 +183,7 @@ export function StatsScreen({ onClose }: StatsScreenProps) {
     const swipeHandlers = useSwipe(goNext, goPrev); // swipe left = next, swipe right = prev
 
     return (
-        <div className="stats-screen">
-            {/* Top bar */}
-            <div className="stats-topbar">
-                <button type="button" className="btn-icon stats-back-btn" onClick={onClose} aria-label="Back">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <polyline points="15 18 9 12 15 6" />
-                    </svg>
-                </button>
-                <span className="stats-topbar-title">Statistics</span>
-                <div style={{ width: 40 }} />
-            </div>
-
-            <div className="stats-body">
+        <PageLayout title="Statistics" onClose={onClose} zIndex={200} bodyClassName="stats-body">
                 <div className="stats-fixed-top">
 
                 {/* Exercise type filter */}
@@ -330,7 +319,6 @@ export function StatsScreen({ onClose }: StatsScreenProps) {
                         <p className="stats-sessions-empty">No sessions to display.</p>
                     )}
                 </div>
-            </div>{/* end stats-body */}
-        </div>
+        </PageLayout>
     );
 }

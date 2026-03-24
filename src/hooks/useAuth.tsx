@@ -18,6 +18,17 @@ export interface DbUser {
     lastSessionDate?: string; // UTC date string YYYY-MM-DD
     exerciseXp?: ExerciseXpMap;
     exerciseLevels?: Partial<Record<ExerciseType, number>>;
+
+    // ── Achievements & Records ───────────────────────────────────────────
+    bestStreak?: number;
+    totalEncouragementsSent?: number;
+    sGradeCount?: number;
+    /** Lifetime reps per exercise (for achievement tracking) */
+    lifetimeReps?: Partial<Record<ExerciseType, number>>;
+    /** Map of achievementId → unlock timestamp (millis) */
+    achievements?: Record<string, number>;
+    /** Personal records */
+    records?: import('@lib/achievementEngine').RecordsMap;
 }
 
 export interface AuthContextType {

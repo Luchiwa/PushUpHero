@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import './Dashboard.scss';
 import type { ExerciseState, ExerciseType } from '@exercises/types';
 import { getExerciseLabel } from '@exercises/types';
@@ -28,7 +29,7 @@ interface DashboardProps {
     totalBlocks?: number;
 }
 
-function ScoreRing({ score }: { score: number }) {
+const ScoreRing = memo(function ScoreRing({ score }: { score: number }) {
     const radius = 40;
     const circumference = 2 * Math.PI * radius;
     const offset = circumference - (score / 100) * circumference;
@@ -60,9 +61,9 @@ function ScoreRing({ score }: { score: number }) {
             </defs>
         </svg>
     );
-}
+});
 
-function LevelBadge({ level, progressPct }: { level: number, progressPct: number }) {
+const LevelBadge = memo(function LevelBadge({ level, progressPct }: { level: number, progressPct: number }) {
     return (
         <div className="level-badge">
             <div className="level-badge-ring" style={{ background: `conic-gradient(var(--accent) ${progressPct}%, rgba(255,255,255,0.1) ${progressPct}%)` }}>
@@ -73,9 +74,9 @@ function LevelBadge({ level, progressPct }: { level: number, progressPct: number
             </div>
         </div>
     );
-}
+});
 
-function GoalProgressBar({ current, goal }: { current: number; goal: number }) {
+const GoalProgressBar = memo(function GoalProgressBar({ current, goal }: { current: number; goal: number }) {
     const pct = Math.min(100, (current / goal) * 100);
     const done = current >= goal;
     return (
@@ -90,9 +91,9 @@ function GoalProgressBar({ current, goal }: { current: number; goal: number }) {
             <span className="goal-vertical-count">{current}/{goal}</span>
         </div>
     );
-}
+});
 
-export function Dashboard({ exerciseType, exerciseState, goalReps, sessionMode, timeGoal, onStop, onTimerEnd, elapsedTimeRef, onFlipCamera, facingMode, soundEnabled, onSoundToggle, level, levelProgressPct, currentSet, totalSets, currentBlock, totalBlocks }: DashboardProps) {
+export const Dashboard = memo(function Dashboard({ exerciseType, exerciseState, goalReps, sessionMode, timeGoal, onStop, onTimerEnd, elapsedTimeRef, onFlipCamera, facingMode, soundEnabled, onSoundToggle, level, levelProgressPct, currentSet, totalSets, currentBlock, totalBlocks }: DashboardProps) {
     const { repCount, averageScore, lastRepResult, isValidPosition, isCalibrated } = exerciseState;
 
     const { showInvalidBanner, timeRemaining } = useDashboardLogic({
@@ -215,4 +216,4 @@ export function Dashboard({ exerciseType, exerciseState, goalReps, sessionMode, 
             )}
         </div>
     );
-}
+});

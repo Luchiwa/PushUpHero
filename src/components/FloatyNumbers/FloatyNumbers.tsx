@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 import './FloatyNumbers.scss';
 
 interface FloatyNumbersProps {
@@ -10,7 +10,7 @@ interface FloatyLabel {
     amount: number;
 }
 
-export function FloatyNumbers({ repCount }: FloatyNumbersProps) {
+export const FloatyNumbers = memo(function FloatyNumbers({ repCount }: FloatyNumbersProps) {
     const [labels, setLabels] = useState<FloatyLabel[]>([]);
     const prevRepsRef = useRef(repCount);
 
@@ -39,4 +39,4 @@ export function FloatyNumbers({ repCount }: FloatyNumbersProps) {
             ))}
         </div>
     );
-}
+});

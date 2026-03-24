@@ -1,58 +1,8 @@
 @use 'variables' as *;
 @use 'mixins' as *;
 
-// ── Full-screen overlay (same pattern as ProfileModal) ──────────────────────
-.stats-screen {
-    position: fixed;
-    inset: 0;
-    z-index: 200;
-    background: $bg;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-// ── Top bar ─────────────────────────────────────────────────────────────────
-.stats-topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: $spacing-sm $spacing-md;
-    border-bottom: 1px solid $border;
-    flex-shrink: 0;
-}
-
-.stats-back-btn {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: $radius-sm;
-    color: $text;
-    transition: background $transition-fast;
-
-    &:hover {
-        background: $surface-hover;
-    }
-}
-
-.stats-topbar-title {
-    font-size: $font-lg;
-    font-weight: 700;
-    color: $text;
-}
-
-// ── Outer body — desktop centering ──────────────────────────────────────────
-// On desktop, cap width like profile-content (480px centered)
+// ── Body overrides (extends .page-body via bodyClassName) ────────
 .stats-body {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden; // children manage their own scroll
-    max-width: 480px;
-    width: 100%;
-    margin: 0 auto;
     padding: 0 $spacing-md;
 }
 
@@ -68,10 +18,19 @@
     display: flex;
     gap: $spacing-sm;
     margin-bottom: $spacing-sm;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px; // room for focus ring
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
 }
 
 .stats-filter-pill {
-    flex: 1;
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -83,6 +42,8 @@
     color: $text-muted;
     background: $surface;
     border: 1.5px solid transparent;
+    white-space: nowrap;
+    scroll-snap-align: start;
     transition: background $transition-fast, color $transition-fast, border-color $transition-fast;
     cursor: pointer;
 

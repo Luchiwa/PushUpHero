@@ -1,0 +1,52 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// ── Full-screen page shell ──────────────────────────────────────
+.page-layout {
+  position: fixed;
+  inset: 0;
+  z-index: 40; // default — overridable via style prop
+  background: $bg;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: screen-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+// ── Topbar ──────────────────────────────────────────────────────
+.page-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-sm $spacing-md;
+  border-bottom: 1px solid $border;
+  flex-shrink: 0;
+}
+
+.page-back-btn {
+  color: $text;
+}
+
+.page-topbar-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: $text;
+  letter-spacing: -0.01em;
+}
+
+// Empty spacer keeps the title centred when there is no right action
+.page-topbar-spacer {
+  width: 38px; // matches .btn-icon width
+}
+
+// ── Body (centred column, 480 px cap) ───────────────────────────
+.page-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; // children manage their own scroll
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 $spacing-md;
+}

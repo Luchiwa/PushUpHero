@@ -4,6 +4,7 @@
  * Shown on the camera feed when the user is not yet in a valid position.
  * Fades out automatically once calibration completes.
  */
+import { memo } from 'react';
 import type { ExerciseType } from '@exercises/types';
 import './PositionGuide.scss';
 
@@ -34,7 +35,7 @@ const GUIDE_CONFIG: Record<ExerciseType, { emoji: string; title: string; descrip
   },
 };
 
-export function PositionGuide({ exerciseType, isCalibrated, calibratingPercentage }: PositionGuideProps) {
+export const PositionGuide = memo(function PositionGuide({ exerciseType, isCalibrated, calibratingPercentage }: PositionGuideProps) {
   const isHidden = isCalibrated;
   const guide = GUIDE_CONFIG[exerciseType];
 
@@ -57,4 +58,4 @@ export function PositionGuide({ exerciseType, isCalibrated, calibratingPercentag
       </div>
     </div>
   );
-}
+});

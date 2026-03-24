@@ -1,48 +1,12 @@
 @use 'variables' as *;
 @use 'mixins' as *;
 
-// ── Full-screen wizard (same shell as ProfileModal / StatsScreen) ────────────
-.workout-config-screen {
-    position: fixed;
-    inset: 0;
-    z-index: 200;
-    background: $bg;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    animation: screen-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-// ── Top bar ─────────────────────────────────────────────────────────────────
-.wc-topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: $spacing-sm $spacing-md;
-    border-bottom: 1px solid $border;
-    flex-shrink: 0;
-}
-
-.wc-back-btn {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: $radius-sm;
-    color: $text;
-    transition: background $transition-fast;
-
-    &:hover {
-        background: $surface-hover;
-    }
-}
-
-.wc-topbar-title {
-    font-size: $font-lg;
-    font-weight: 700;
-    color: $text;
-    letter-spacing: -0.01em;
+// ── Body override — removes default page-body constraints ────────────────────
+// WorkoutConfigScreen children (wc-progress, wc-body, wc-bottom-bar) handle
+// their own max-width / centering.
+.wc-layout {
+    max-width: none;
+    padding: 0;
 }
 
 // ── Progress dots ───────────────────────────────────────────────────────────

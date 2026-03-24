@@ -7,9 +7,11 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSessionHistory } from '@hooks/useSessionHistory';
 import { useAuth } from '@hooks/useAuth';
+import { useFriends } from '@hooks/useFriends';
 import { useSoundEffect } from '@hooks/useSoundEffect';
 import { levelFromTotalXp, totalXpForLevel, calculateSessionXp } from '@lib/xpSystem';
 import type { BonusContext, SessionXpResult } from '@lib/xpSystem';
+import type { SaveSessionResult } from '@lib/userService';
 import type { ExerciseState, ExerciseType, SetRecord, WorkoutBlock, WorkoutPlan, TimeDuration } from '@exercises/types';
 import { createDefaultBlock } from '@exercises/types';
 
@@ -45,6 +47,7 @@ export function useWorkoutStateMachine({
   const { addSession } = useSessionHistory();
   const { initAudio, playLevelUpSound } = useSoundEffect();
   const { totalXp, dbUser } = useAuth();
+  const { friends } = useFriends();
 
   // ── Level tracking ──────────────────────────────────────────────
   const prevLevelRef = useRef(0);
@@ -115,8 +118,8 @@ export function useWorkoutStateMachine({
   }, [exerciseState, currentBlock]);
 
   // ── Save the entire workout as one session ──────────────────────
-  /** Last session XP result for display on SummaryScreen */
-  const [lastSessionXp, setLastSessionXp] = useState<SessionXpResult | null>(null);
+  /** Last session XP result + achievements for display on SummaryScreen */
+  const [lastSessionXp, setLastSessionXp] = useState<(SessionXpResult & Partial<SaveSessionResult>) | null>(null);
   const [goalReached, setGoalReached] = useState(false);
 
   const saveWorkoutSession = useCallback((allSets: SetRecord[]) => {
@@ -177,13 +180,13 @@ export function useWorkoutStateMachine({
       totalDuration: allSets.length > 1 ? totalWorkoutDuration : undefined,
       blocks: hasMultipleExercises ? workoutPlan.blocks : undefined,
       isMultiExercise: hasMultipleExercises || undefined,
-    }, bonusCtx).then(result => {
+    }, bonusCtx, friends.length).then(result => {
       setLastSessionXp(result);
     }).catch(err => {
       console.error('Failed to save session:', err);
       sessionSavedRef.current = false;
     });
-  }, [addSession, currentBlock, isMultiExercise, workoutPlan.blocks, totalXp, dbUser]);
+  }, [addSession, currentBlock, isMultiExercise, workoutPlan.blocks, totalXp, dbUser, friends.length]);
 
   // ── Start helpers ───────────────────────────────────────────────
 

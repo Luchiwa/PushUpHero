@@ -19,10 +19,14 @@ import {
     deleteDoc,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { FEED_PRUNE_AGE_MS } from './constants';
+import { FEED_PRUNE_AGE_MS, getGradeLetter } from './constants';
 import { levelFromTotalXp } from '@lib/xpSystem';
 import type { SessionRecord } from '@hooks/useSessionHistory';
 import type { DbUser } from '@hooks/useAuth';
+import type { ExerciseType } from '@exercises/types';
+import { evaluateAchievements, evaluateRecords, emptyRecords, computeLifetimeReps, countSGrades, bulkEvaluateRecords } from './achievementEngine';
+import type { UserStats, AchievementMap, RecordsMap, RecordUpdate } from './achievementEngine';
+import type { AchievementDef } from './achievements';
 
 // ─── Date helpers ────────────────────────────────────────────────────────────
 
@@ -65,6 +69,17 @@ export interface SaveSessionParams {
     /** Current per-exercise XP BEFORE this session */
     currentExerciseXp: Partial<Record<string, number>>;
     dbUser: DbUser | null;
+    /** All sessions (including the new one) for records evaluation */
+    allSessions: SessionRecord[];
+    /** Current friend count (for social achievements) */
+    friendsCount: number;
+    /** Current total session count BEFORE this session */
+    currentTotalSessions: number;
+}
+
+export interface SaveSessionResult {
+    newAchievements: AchievementDef[];
+    brokenRecords: RecordUpdate[];
 }
 
 /**
@@ -72,14 +87,21 @@ export interface SaveSessionParams {
  *   1. The session document
  *   2. totalXp increment + level + exerciseXp + exerciseLevels + streak + lastSessionDate
  *   3. An activity feed event
+ *   4. Achievement unlocks + record updates
  *
  * Fire-and-forget pruning of old feed events runs after the batch.
+ *
+ * @returns Newly unlocked achievements and broken records (for toast/summary display)
  */
-export async function saveSession({ uid, session, currentTotalXp, sessionXp, exerciseXpDeltas, currentExerciseXp, dbUser }: SaveSessionParams): Promise<void> {
+export async function saveSession({
+    uid, session, currentTotalXp, sessionXp, exerciseXpDeltas, currentExerciseXp, dbUser,
+    allSessions, friendsCount, currentTotalSessions,
+}: SaveSessionParams): Promise<SaveSessionResult> {
     const todayLocal = localDateString();
     const newTotalXp = currentTotalXp + sessionXp;
     const newLevel = levelFromTotalXp(newTotalXp);
     const newStreak = computeNewStreak(dbUser, todayLocal);
+    const newBestStreak = Math.max(dbUser?.bestStreak ?? 0, newStreak);
 
     // Compute new per-exercise XP and levels
     const newExerciseXp: Record<string, number> = {};
@@ -93,6 +115,52 @@ export async function saveSession({ uid, session, currentTotalXp, sessionXp, exe
     for (const [type, xp] of Object.entries(newExerciseXp)) {
         newExerciseLevels[type] = levelFromTotalXp(xp ?? 0);
     }
+
+    // ── Lifetime reps per exercise (for achievements) ────────────────────
+    const exerciseType = (session.exerciseType ?? 'pushup') as ExerciseType;
+    const sessionRepsMap: Partial<Record<ExerciseType, number>> = {};
+    if (session.sets && session.sets.length > 0) {
+        for (const set of session.sets) {
+            const ex = (set.exerciseType ?? exerciseType) as ExerciseType;
+            sessionRepsMap[ex] = (sessionRepsMap[ex] ?? 0) + set.reps;
+        }
+    } else {
+        sessionRepsMap[exerciseType] = session.reps;
+    }
+
+    const prevLifetimeReps = dbUser?.lifetimeReps ?? {};
+    const newLifetimeReps: Partial<Record<ExerciseType, number>> = { ...prevLifetimeReps };
+    for (const [ex, reps] of Object.entries(sessionRepsMap)) {
+        newLifetimeReps[ex as ExerciseType] = (newLifetimeReps[ex as ExerciseType] ?? 0) + reps;
+    }
+
+    // ── S-grade tracking ─────────────────────────────────────────────────
+    const isS = getGradeLetter(session.averageScore) === 'S';
+    const newSGradeCount = (dbUser?.sGradeCount ?? 0) + (isS ? 1 : 0);
+    const newTotalSessions = currentTotalSessions + 1;
+
+    // ── Evaluate achievements ────────────────────────────────────────────
+    const currentAchievements: AchievementMap = { ...(dbUser?.achievements ?? {}) };
+    const stats: UserStats = {
+        lifetimeRepsByExercise: newLifetimeReps,
+        sessionRepsByExercise: sessionRepsMap,
+        totalSessions: newTotalSessions,
+        bestStreak: newBestStreak,
+        friendsCount,
+        totalEncouragementsSent: dbUser?.totalEncouragementsSent ?? 0,
+        sGradeCount: newSGradeCount,
+        sessionXp: session.xpEarned ?? 0,
+        globalLevel: newLevel,
+    };
+    const newAchievements = evaluateAchievements(stats, currentAchievements);
+
+    // ── Evaluate records ─────────────────────────────────────────────────
+    const currentRecords: RecordsMap = dbUser?.records ?? emptyRecords();
+    const { records: updatedRecords, broken: brokenRecords } = evaluateRecords(
+        currentRecords, session, allSessions, newBestStreak,
+    );
+
+    // ── Firestore batch ──────────────────────────────────────────────────
 
     const batch = writeBatch(db);
 
@@ -111,6 +179,12 @@ export async function saveSession({ uid, session, currentTotalXp, sessionXp, exe
         exerciseLevels: newExerciseLevels,
         streak: newStreak,
         lastSessionDate: todayLocal,
+        // New achievement-related fields
+        bestStreak: newBestStreak,
+        sGradeCount: newSGradeCount,
+        lifetimeReps: newLifetimeReps,
+        achievements: currentAchievements,   // includes newly unlocked
+        records: updatedRecords,
     });
 
     // 3. Activity feed event
@@ -152,6 +226,8 @@ export async function saveSession({ uid, session, currentTotalXp, sessionXp, exe
         collection(db, 'users', uid, 'activityFeed'),
         where('createdAt', '<', cutoff),
     )).then(snap => snap.forEach(d => { deleteDoc(d.ref); })).catch(() => { /* non-critical */ });
+
+    return { newAchievements, brokenRecords };
 }
 
 // ─── Merge local guest data into Firestore on first login ────────────────────
@@ -231,9 +307,52 @@ export async function mergeLocalDataToCloud({
                 }
             }
             profileUpdate.streak = streak;
+            profileUpdate.bestStreak = streak;
             profileUpdate.lastSessionDate = mostRecentDate;
         }
     }
+
+    // ── Bulk-evaluate achievements & records from merged sessions ────────
+    const newTotalSessions = cloudSessions + localSessions.length;
+    const lifetimeReps = computeLifetimeReps(localSessions);
+    const sGradeCount = countSGrades(localSessions);
+    const bestStreak = (profileUpdate.bestStreak as number) ?? 0;
+
+    // Find max XP earned in any single session
+    let maxSessionXp = 0;
+    for (const s of localSessions) {
+        if ((s.xpEarned ?? 0) > maxSessionXp) maxSessionXp = s.xpEarned ?? 0;
+    }
+
+    const achievementMap: AchievementMap = {};
+    const stats: UserStats = {
+        lifetimeRepsByExercise: lifetimeReps,
+        sessionRepsByExercise: {}, // Will check per-session below
+        totalSessions: newTotalSessions,
+        bestStreak,
+        friendsCount: 0, // No friends context during merge
+        totalEncouragementsSent: 0,
+        sGradeCount,
+        sessionXp: maxSessionXp,
+        globalLevel: newLevel,
+    };
+
+    // Check single-session achievements by finding max reps per exercise across all sessions
+    for (const s of localSessions) {
+        const ex = (s.exerciseType ?? 'pushup') as ExerciseType;
+        const currentMax = stats.sessionRepsByExercise[ex] ?? 0;
+        if (s.reps > currentMax) {
+            stats.sessionRepsByExercise[ex] = s.reps;
+        }
+    }
+
+    evaluateAchievements(stats, achievementMap);
+    const records = bulkEvaluateRecords(localSessions, bestStreak);
+
+    profileUpdate.lifetimeReps = lifetimeReps;
+    profileUpdate.sGradeCount = sGradeCount;
+    profileUpdate.achievements = achievementMap;
+    profileUpdate.records = records;
 
     batch.set(userRef, profileUpdate, { merge: true });
 
@@ -243,4 +362,26 @@ export async function mergeLocalDataToCloud({
     });
 
     await batch.commit();
+}
+
+// ─── Live achievement check ──────────────────────────────────────────────────
+// Some achievements (social: friends count, encouragements) depend on state that
+// changes outside of sessions. This function evaluates them and persists any
+// newly unlocked achievements to Firestore without requiring a session save.
+
+import { updateDoc } from 'firebase/firestore';
+
+export async function checkLiveAchievements(
+    uid: string,
+    stats: UserStats,
+    currentAchievements: AchievementMap,
+): Promise<AchievementDef[]> {
+    const newlyUnlocked = evaluateAchievements(stats, currentAchievements);
+    if (newlyUnlocked.length === 0) return [];
+
+    // currentAchievements was mutated in-place by evaluateAchievements (timestamps added)
+    const userRef = doc(db, 'users', uid);
+    await updateDoc(userRef, { achievements: currentAchievements });
+
+    return newlyUnlocked;
 }

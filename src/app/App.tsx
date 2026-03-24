@@ -9,6 +9,7 @@ import { usePoseDetection } from '@hooks/usePoseDetection';
 import { useExerciseDetector } from '@hooks/useExerciseDetector';
 import { PushUpDetector } from '@exercises/pushup/PushUpDetector';
 import { SquatDetector } from '@exercises/squat/SquatDetector';
+import { PullUpDetector } from '@exercises/pullup/PullUpDetector';
 import type { ExerciseType } from '@exercises/types';
 import { useWorkoutStateMachine, durationToSeconds } from './useWorkoutStateMachine';
 import { totalXpForLevel } from '@lib/xpSystem';
@@ -28,10 +29,13 @@ import './App.scss';
 function App() {
   const [facingMode, setFacingMode] = useState<FacingMode>('user');
   const [exerciseType, setExerciseType] = useState<ExerciseType>('pushup');
-  const detector = useMemo(
-    () => (exerciseType === 'squat' ? new SquatDetector() : new PushUpDetector()),
-    [exerciseType],
-  );
+  const detector = useMemo(() => {
+    switch (exerciseType) {
+      case 'squat':  return new SquatDetector();
+      case 'pullup': return new PullUpDetector();
+      default:       return new PushUpDetector();
+    }
+  }, [exerciseType]);
 
   // ── Exercise detector ────────────────────────────────────────────
   const [isActive, setIsActive] = useState(false);
@@ -64,7 +68,7 @@ function App() {
   const exerciseStateRef = useRef(exerciseState);
   useEffect(() => { exerciseStateRef.current = exerciseState; }, [exerciseState]);
 
-  const { isModelReady } = usePoseDetection({
+  const { isModelReady, modelError } = usePoseDetection({
     videoRef,
     isVideoReady: isCameraReady,
     isActive: wm.screen === 'active',
@@ -126,7 +130,7 @@ function App() {
       {wm.screen === 'idle' && (
         <StartScreen
           isModelReady={isModelReady}
-          cameraError={cameraError}
+          cameraError={modelError ?? cameraError}
           exerciseType={exerciseType}
           onExerciseTypeChange={(t) => {
             setExerciseType(t);
@@ -195,6 +199,8 @@ function App() {
           sessionXp={wm.lastSessionXp ?? undefined}
           soundEnabled={wm.soundEnabled}
           goalReached={wm.goalReached}
+          newAchievements={wm.lastSessionXp?.newAchievements}
+          brokenRecords={wm.lastSessionXp?.brokenRecords}
         />
       )}
 

@@ -9,6 +9,11 @@ import { useSoundEffect } from '@hooks/useSoundEffect';
 import { AuthModal } from '@modals/AuthModal/AuthModal';
 import { getGradeLetter, getGradeClass, formatElapsedTime } from '@lib/constants';
 import type { SessionXpResult } from '@lib/xpSystem';
+import type { AchievementDef } from '@lib/achievements';
+import { TIER_COLORS } from '@lib/achievements';
+import type { RecordUpdate } from '@lib/achievementEngine';
+import { RECORDS } from '@lib/achievements';
+import { AchievementToastQueue } from '@components/AchievementToastQueue/AchievementToastQueue';
 import './SummaryScreen.scss';
 
 // ── Confetti particles ────────────────────────────────────────────
@@ -46,13 +51,17 @@ interface SummaryProps {
     soundEnabled?: boolean;
     /** Whether the goal was reached (triggers celebration) */
     goalReached?: boolean;
+    /** Achievements unlocked during this session */
+    newAchievements?: AchievementDef[];
+    /** Records broken during this session */
+    brokenRecords?: RecordUpdate[];
 }
 
 function ScoreGrade({ score }: { score: number }) {
     return <span className={`grade ${getGradeClass(score)}`}>{getGradeLetter(score)}</span>;
 }
 
-export function SummaryScreen({ exerciseType, exerciseState, completedSets, onReset, sessionMode, elapsedTime, workoutPlan, sessionXp, soundEnabled, goalReached }: SummaryProps) {
+export function SummaryScreen({ exerciseType, exerciseState, completedSets, onReset, sessionMode, elapsedTime, workoutPlan, sessionXp, soundEnabled, goalReached, newAchievements, brokenRecords }: SummaryProps) {
     const { user, dbUser, level } = useAuth();
     const { shareSession } = useShareSession();
     const { initAudio, playVictorySound } = useSoundEffect();
@@ -331,6 +340,51 @@ export function SummaryScreen({ exerciseType, exerciseState, completedSets, onRe
                     </div>
                 )}
 
+                {/* ── New Achievements ───────────────────────────────── */}
+                {newAchievements && newAchievements.length > 0 && (
+                    <div className="summary-achievements">
+                        <p className="summary-section-title">🏆 Achievements Unlocked</p>
+                        <div className="summary-achievements-list">
+                            {newAchievements.map(ach => (
+                                <div
+                                    key={ach.id}
+                                    className="summary-achievement-chip"
+                                    style={{ borderColor: TIER_COLORS[ach.tier] }}
+                                >
+                                    <span className="summary-achievement-tier" style={{ color: TIER_COLORS[ach.tier] }}>
+                                        {ach.tier === 'bronze' ? '🥉' : ach.tier === 'silver' ? '🥈' : ach.tier === 'gold' ? '🥇' : '💎'}
+                                    </span>
+                                    <span className="summary-achievement-title">{ach.title}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* ── Broken Records ──────────────────────────────────── */}
+                {brokenRecords && brokenRecords.length > 0 && (
+                    <div className="summary-records">
+                        <p className="summary-section-title">🏅 New Records</p>
+                        <div className="summary-records-list">
+                            {brokenRecords.map(rec => {
+                                const def = RECORDS.find(r => r.key === rec.key);
+                                return (
+                                    <div key={rec.key} className="summary-record-chip">
+                                        <span className="summary-record-emoji">{def?.emoji ?? '🏅'}</span>
+                                        <span className="summary-record-label">{def?.label ?? rec.key}</span>
+                                        <span className="summary-record-value">
+                                            {rec.oldValue != null && (
+                                                <span className="summary-record-old">{rec.oldValue} →</span>
+                                            )}
+                                            {' '}{rec.newValue}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
                 {/* Per-block breakdown for multi-exercise workouts */}
                 {isMultiExercise && isMultiSet && completedSets != null && (() => {
                     // Group sets by block using workoutPlan
@@ -483,6 +537,11 @@ export function SummaryScreen({ exerciseType, exerciseState, completedSets, onRe
 
             {showPaywall && (
                 <AuthModal onClose={() => setShowPaywall(false)} />
+            )}
+
+            {/* Achievement toast queue (staggered pop-ins) */}
+            {newAchievements && newAchievements.length > 0 && (
+                <AchievementToastQueue achievements={newAchievements} />
             )}
         </div>
     );

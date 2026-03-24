@@ -10,17 +10,17 @@ import { DragNumberPicker } from '@components/DragNumberPicker/DragNumberPicker'
 import { TimePicker } from '@components/TimePicker/TimePicker';
 import { ExercisePicker } from '@components/ExercisePicker/ExercisePicker';
 import { MIN_SETS, MAX_SETS, MAX_REST_SECONDS, MAX_EXERCISE_REST_SECONDS } from '@lib/constants';
-import { getExerciseLabel } from '@exercises/types';
+import { getExerciseLabel, EXERCISE_META } from '@exercises/types';
 import type { WorkoutPlan, WorkoutBlock } from '@exercises/types';
 import { createDefaultBlock } from '@exercises/types';
+import { PageLayout } from '@components/PageLayout/PageLayout';
 import './WorkoutConfigScreen.scss';
 
-// ── Helpers ──────────────────────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────────────────
 
-const EXERCISE_EMOJI: Record<string, string> = {
-    pushup: '💪',
-    squat: '🦵',
-};
+const EXERCISE_EMOJI: Record<string, string> = Object.fromEntries(
+    EXERCISE_META.map(m => [m.type, m.emoji]),
+);
 
 function formatDuration(d: { minutes: number; seconds: number }): string {
     if (d.minutes > 0 && d.seconds > 0) return `${d.minutes}min${d.seconds}s`;
@@ -152,20 +152,12 @@ export function WorkoutConfigScreen({
         const maxExerciseRestMinutes = Math.floor(MAX_EXERCISE_REST_SECONDS / 60);
 
         return (
-            <div className="workout-config-screen">
-                <div className="wc-topbar">
-                    <button type="button" className="btn-icon wc-back-btn" onClick={handleBlockBack} aria-label="Back">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <title>Back</title>
-                            <polyline points="15 18 9 12 15 6" />
-                        </svg>
-                    </button>
-                    <span className="wc-topbar-title">
-                        {isAddingNew ? 'Add Exercise' : `Edit Exercise ${editingBlockIndex + 1}`}
-                    </span>
-                    <div style={{ width: 40 }} />
-                </div>
-
+            <PageLayout
+                title={isAddingNew ? 'Add Exercise' : `Edit Exercise ${editingBlockIndex + 1}`}
+                onClose={handleBlockBack}
+                zIndex={200}
+                bodyClassName="wc-layout"
+            >
                 <div className="wc-progress">
                     {blockSteps.map((s, i) => (
                         <div
@@ -298,7 +290,7 @@ export function WorkoutConfigScreen({
                         Step {blockStepIndex + 1} of {blockSteps.length}
                     </span>
                 </div>
-            </div>
+            </PageLayout>
         );
     }
 
@@ -312,18 +304,7 @@ export function WorkoutConfigScreen({
     const allReps = blocks.every(b => b.sessionMode === 'reps');
 
     return (
-        <div className="workout-config-screen">
-            <div className="wc-topbar">
-                <button type="button" className="btn-icon wc-back-btn" onClick={handleTopBack} aria-label="Back">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <title>Back</title>
-                        <polyline points="15 18 9 12 15 6" />
-                    </svg>
-                </button>
-                <span className="wc-topbar-title">Workout Setup</span>
-                <div style={{ width: 40 }} />
-            </div>
-
+        <PageLayout title="Workout Setup" onClose={handleTopBack} zIndex={200} bodyClassName="wc-layout">
             <div className="wc-body wc-body--list">
                 {/* Block cards */}
                 {blocks.length === 0 && (
@@ -457,6 +438,6 @@ export function WorkoutConfigScreen({
                     {!isReady ? 'Getting Ready…' : `🚀 Start Workout`}
                 </button>
             </div>
-        </div>
+        </PageLayout>
     );
 }

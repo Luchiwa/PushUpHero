@@ -273,6 +273,108 @@
     font-weight: 500;
 }
 
+// ── Achievements section ─────────────────────────────────────────
+.summary-section-title {
+    @include label(0.75rem);
+    margin-bottom: 0.5rem;
+    text-align: left;
+    width: 100%;
+}
+
+.summary-achievements {
+    width: 100%;
+    margin-top: 0.25rem;
+}
+
+.summary-achievements-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.summary-achievement-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.3rem 0.6rem;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1.5px solid;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    animation: chip-pop 0.4s ease-out both;
+}
+
+.summary-achievement-tier {
+    font-size: 0.85rem;
+}
+
+.summary-achievement-title {
+    color: $text;
+    white-space: nowrap;
+}
+
+@keyframes chip-pop {
+    0% {
+        opacity: 0;
+        transform: scale(0.7);
+    }
+
+    60% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+// ── Records section ──────────────────────────────────────────────
+.summary-records {
+    width: 100%;
+    margin-top: 0.25rem;
+}
+
+.summary-records-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.summary-record-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.6rem;
+    background: rgba(255, 215, 0, 0.08);
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    border-radius: $radius-sm;
+    font-size: 0.72rem;
+    animation: chip-pop 0.4s ease-out both;
+}
+
+.summary-record-emoji {
+    font-size: 1rem;
+}
+
+.summary-record-label {
+    flex: 1;
+    font-weight: 600;
+    color: $text;
+}
+
+.summary-record-value {
+    font-weight: 700;
+    color: #ffd700;
+}
+
+.summary-record-old {
+    color: $text-muted;
+    font-weight: 500;
+    font-size: 0.65rem;
+}
+
 // ── Rep history ──────────────────────────────────────────────────
 .rep-history {
     width: 100%;

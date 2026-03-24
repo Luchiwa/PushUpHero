@@ -7,13 +7,27 @@ export interface Landmark {
 
 export type ExerciseType = 'pushup' | 'squat' | 'pullup';
 
-const EXERCISE_LABELS: Record<ExerciseType, string> = {
-    pushup: 'Push-ups',
-    squat: 'Squats',
-    pullup: 'Tractions',
-};
+/** All exercise types in display order. Single source of truth. */
+export const EXERCISE_TYPES: ExerciseType[] = ['pushup', 'squat', 'pullup'];
 
-/** Human-readable label: 'Push-ups', 'Squats' */
+export interface ExerciseMeta {
+    type: ExerciseType;
+    label: string;
+    emoji: string;
+}
+
+/** Display metadata per exercise — drives pickers, filters, etc. */
+export const EXERCISE_META: ExerciseMeta[] = [
+    { type: 'pushup', label: 'Push-ups', emoji: '💪' },
+    { type: 'squat',  label: 'Squats',   emoji: '🦵' },
+    { type: 'pullup', label: 'Pull-ups', emoji: '🏋️' },
+];
+
+const EXERCISE_LABELS: Record<ExerciseType, string> = Object.fromEntries(
+    EXERCISE_META.map(m => [m.type, m.label]),
+) as Record<ExerciseType, string>;
+
+/** Human-readable label: 'Push-ups', 'Squats', 'Pull-ups' */
 export function getExerciseLabel(type: ExerciseType): string {
     return EXERCISE_LABELS[type];
 }

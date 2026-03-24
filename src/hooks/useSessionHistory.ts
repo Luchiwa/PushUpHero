@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useAuth } from './useAuth';
 import { saveSession } from '@lib/userService';
+import type { SaveSessionResult } from '@lib/userService';
 import { calculateSessionXp } from '@lib/xpSystem';
 import type { BonusContext, SessionXpResult } from '@lib/xpSystem';
 import { MAX_LOCAL_SESSIONS } from '@lib/constants';
@@ -53,16 +54,18 @@ export function useSessionHistory() {
 
     /**
      * Save a completed session.
-     * - Logged in: one atomic writeBatch (session + profile stats + activity feed)
+     * - Logged in: one atomic writeBatch (session + profile stats + activity feed + achievements)
      * - Guest: localStorage only
      *
      * @param bonusCtx - Context for XP bonus calculation
-     * @returns The computed XP result for display on SummaryScreen
+     * @param friendsCount - Current number of friends (for social achievements)
+     * @returns The computed XP result + newly unlocked achievements/records
      */
     const addSession = useCallback(async (
         entry: Omit<SessionRecord, 'id' | 'date' | 'xpEarned' | 'xpRaw' | 'xpMultiplier' | 'xpBonuses' | 'xpPerExercise'>,
         bonusCtx: BonusContext,
-    ): Promise<SessionXpResult> => {
+        friendsCount: number = 0,
+    ): Promise<SessionXpResult & Partial<SaveSessionResult>> => {
         // Build sets for XP calculation — use per-set breakdown or fake a single set
         const setsForXp: SetRecord[] = entry.sets ?? [{
             reps: entry.reps,
@@ -99,7 +102,8 @@ export function useSessionHistory() {
         if (newSession.isMultiExercise === undefined) delete newSession.isMultiExercise;
 
         if (user) {
-            await saveSession({
+            const allSessions = [newSession, ...sessions];
+            const { newAchievements, brokenRecords } = await saveSession({
                 uid: user.uid,
                 session: newSession,
                 currentTotalXp: totalXp,
@@ -110,7 +114,11 @@ export function useSessionHistory() {
                 })),
                 currentExerciseXp: exerciseXp,
                 dbUser,
+                allSessions,
+                friendsCount,
+                currentTotalSessions: totalSessionCount,
             });
+            return { ...xpResult, newAchievements, brokenRecords };
         } else {
             const updated = [newSession, ...sessions].slice(0, MAX_LOCAL_SESSIONS);
             setSessions(updated);

@@ -1,0 +1,280 @@
+@use '../../styles/variables' as *;
+
+// ── Body override ────────────────────────────────────────────────
+.progression-body {
+  padding: $spacing-md $spacing-md $spacing-xl;
+  overflow-y: auto;
+  gap: 0;
+}
+
+// ── Sections ─────────────────────────────────────────────────────
+.progression-section {
+  margin-bottom: $spacing-xl;
+}
+
+.progression-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.progression-section-title {
+  font-size: $font-lg;
+  font-weight: 700;
+  color: $text;
+  margin-bottom: $spacing-md;
+}
+
+.progression-section-count {
+  font-size: $font-sm;
+  font-weight: 600;
+  color: $text-muted;
+  background: $surface;
+  padding: 2px $spacing-sm;
+  border-radius: $radius-pill;
+}
+
+// ── Level cards ──────────────────────────────────────────────────
+.level-card {
+  background: $surface;
+  border-radius: $radius-sm;
+  padding: $spacing-md;
+  margin-bottom: $spacing-sm;
+}
+
+.level-card--global {
+  background: $gradient-accent;
+  color: #fff;
+
+  .level-card-label,
+  .level-card-level,
+  .level-progress-text {
+    color: #fff;
+  }
+
+  .level-progress-bar {
+    background: rgba(#fff, 0.25);
+  }
+
+  .level-progress-fill {
+    background: #fff;
+  }
+}
+
+.level-card-header {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-sm;
+}
+
+.level-card-emoji {
+  font-size: 1.2rem;
+}
+
+.level-card-label {
+  font-size: $font-md;
+  font-weight: 600;
+  color: $text;
+  flex: 1;
+}
+
+.level-card-level {
+  font-size: $font-lg;
+  font-weight: 800;
+  color: $accent;
+  min-width: 32px;
+  text-align: right;
+}
+
+.level-progress-bar {
+  height: 6px;
+  background: $border;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.level-progress-fill {
+  height: 100%;
+  background: $accent;
+  border-radius: 3px;
+  transition: width $transition;
+}
+
+.level-progress-text {
+  font-size: $font-xs;
+  color: $text-muted;
+}
+
+.level-cards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+// ── Achievement category ─────────────────────────────────────────
+.achievement-category {
+  margin-bottom: $spacing-lg;
+}
+
+.achievement-category-header {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-sm;
+}
+
+.achievement-category-emoji {
+  font-size: 1rem;
+}
+
+.achievement-category-label {
+  font-size: $font-md;
+  font-weight: 600;
+  color: $text;
+  flex: 1;
+}
+
+.achievement-category-count {
+  font-size: $font-xs;
+  color: $text-muted;
+}
+
+// ── Achievement grid ─────────────────────────────────────────────
+.achievement-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: $spacing-sm;
+}
+
+.achievement-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: $spacing-sm;
+  border-radius: $radius-sm;
+  background: $surface;
+  gap: 4px;
+  transition: transform $transition-fast;
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+.achievement-badge--locked {
+  opacity: 0.5;
+  filter: grayscale(0.6);
+}
+
+.achievement-badge--unlocked {
+  opacity: 1;
+  filter: none;
+}
+
+.achievement-badge-ring {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 3px solid $border;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+
+  .achievement-badge--unlocked & {
+    border-width: 3px;
+    box-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
+  }
+}
+
+.achievement-badge-title {
+  font-size: $font-xs;
+  font-weight: 600;
+  color: $text;
+  line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.achievement-badge-date {
+  font-size: 0.6rem;
+  color: $text-muted;
+}
+
+// ── Achievement progress bar ─────────────────────────────────────
+.achievement-badge-progress {
+  width: 100%;
+}
+
+.achievement-badge-bar {
+  height: 4px;
+  background: $border;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 2px;
+}
+
+.achievement-badge-bar-fill {
+  height: 100%;
+  background: $accent;
+  border-radius: 2px;
+  transition: width $transition;
+}
+
+.achievement-badge-progress-text {
+  font-size: 0.6rem;
+  color: $text-muted;
+}
+
+// ── Records grid ─────────────────────────────────────────────────
+.records-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-sm;
+}
+
+.record-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: $spacing-md $spacing-sm;
+  background: $surface;
+  border-radius: $radius-sm;
+  gap: 4px;
+}
+
+.record-card--empty {
+  opacity: 0.5;
+}
+
+.record-card-emoji {
+  font-size: 1.5rem;
+}
+
+.record-card-label {
+  font-size: $font-xs;
+  font-weight: 600;
+  color: $text-muted;
+  line-height: 1.2;
+}
+
+.record-card-value {
+  font-size: $font-lg;
+  font-weight: 800;
+  color: $text;
+}
+
+.record-card-date {
+  font-size: 0.6rem;
+  color: $text-muted;
+}

@@ -2,64 +2,26 @@
 @use 'variables' as *;
 @use 'mixins' as *;
 
-// ── Full-screen profile page ──────────────────────────────────────
-.profile-fullscreen {
-    position: fixed;
-    inset: 0;
-    z-index: 40;
-    background: #ffffff;
-    display: flex;
-    flex-direction: column;
-    animation: screen-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.profile-topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid $border;
-    flex-shrink: 0;
-}
-
-// .profile-back-btn → inherits from .btn-icon in TSX
-// Override: color $text (not $text-muted), hover is bg only
-.profile-back-btn {
-    color: $text;
-}
-
-.profile-topbar-title {
-    font-size: 1rem;
-    font-weight: 700;
-    color: $text;
-    letter-spacing: -0.01em;
-}
-
-// .profile-settings-btn → inherits from .btn-icon in TSX
-// Override: hover rotate
+// ── Settings button (right slot in PageLayout topbar) ────────────
 .profile-settings-btn {
     &:hover {
         transform: rotate(30deg);
     }
 }
 
+// ── Content overrides (extends .page-body via bodyClassName) ─────
 .profile-content {
-    flex: 1;
-    overflow: hidden; // ne scroll plus — les tab-panels gèrent leur propre scroll
-    padding: $spacing-xl $spacing-lg 0;
-    display: flex;
-    flex-direction: column;
+    padding-top: $spacing-xl;
     gap: $spacing-lg;
-    max-width: 480px;
-    width: 100%;
-    margin: 0 auto;
 }
 
 // ── Header ──────────────────────────────────────────────────────
 .profile-header {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: $spacing-md;
+    margin-top: $spacing-sm;
 }
 
 .profile-avatar-wrapper {
@@ -159,6 +121,36 @@
 
 .profile-stat-label {
     @include label;
+}
+
+// ── Progression button ───────────────────────────────────────────
+.profile-progression-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $spacing-sm;
+    width: 100%;
+    padding: $spacing-sm $spacing-md;
+    background: $surface;
+    border: 1px solid $border;
+    border-radius: $radius-sm;
+    font-size: $font-md;
+    font-weight: 600;
+    color: $text;
+    cursor: pointer;
+    transition: background $transition-fast;
+
+    svg {
+        color: $text-muted;
+    }
+
+    &:hover {
+        background: $surface-hover;
+    }
+
+    &:active {
+        transform: scale(0.98);
+    }
 }
 
 // ── Profile Tabs ──────────────────────────────────────────────────

@@ -1,7 +1,8 @@
+import { memo } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import './ReloadPrompt.scss';
 
-export function ReloadPrompt() {
+export const ReloadPrompt = memo(function ReloadPrompt() {
     const {
         needRefresh: [needRefresh, setNeedRefresh],
         updateServiceWorker,
@@ -30,4 +31,4 @@ export function ReloadPrompt() {
             </div>
         </div>
     );
-}
+});
