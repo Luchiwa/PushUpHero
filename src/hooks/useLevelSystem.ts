@@ -1,59 +1,152 @@
+/**
+ * useLevelSystem.ts
+ *
+ * Manages the XP-based level system: global level + per-exercise levels.
+ * Pure state holder — Firestore sync is handled by useSyncCloud.
+ *
+ * @see src/lib/xpSystem.ts        for pure XP calculation functions
+ * @see src/lib/LEVEL_DESIGN.md    for the full design document
+ */
 import { useState, useCallback } from 'react';
 import { useAuth } from './useAuth';
+import { levelFromTotalXp, totalXpForLevel } from '@lib/xpSystem';
+import type { ExerciseType } from '@exercises/types';
 
-// ─── Pure level-formula functions (no React, importable anywhere) ─────────────
+// ─── Re-export pure functions so existing imports keep working ────────────────
+export { levelFromTotalXp, totalXpForLevel } from '@lib/xpSystem';
 
-export function calculateLevelFromTotalReps(totalReps: number): number {
-    if (totalReps <= 0) return 0;
-    const n = (-1 + Math.sqrt(1 + 8 * totalReps)) / 2;
-    return Math.floor(n);
-}
+// ─── Backward-compat aliases (used by userService, state machine, etc.) ──────
+/** @deprecated Use levelFromTotalXp — kept for call-site compat during migration */
+export const calculateLevelFromTotalReps = levelFromTotalXp;
+/** @deprecated Use totalXpForLevel — kept for call-site compat during migration */
+export const calculateTotalRepsForLevel = totalXpForLevel;
 
-export function calculateTotalRepsForLevel(level: number): number {
-    return (level * (level + 1)) / 2;
-}
+// ─── LocalStorage keys (XP-based) ───────────────────────────────────────────
+const STORAGE_TOTAL_XP = 'pushup_hero_total_xp';
+const STORAGE_EXERCISE_XP = 'pushup_hero_exercise_xp';
 
-// ─── Hook: derived level state ─────────────────────────────────────────────────
-
-const STORAGE_KEY = 'pushup_game_total_reps';
+// ─── Types ───────────────────────────────────────────────────────────────────
+export type ExerciseXpMap = Partial<Record<ExerciseType, number>>;
 
 export function useLevelSystem() {
-    const { user, dbUser } = useAuth();
+    const { user } = useAuth();
 
-    const [totalLifetimeReps, setTotalLifetimeRepsState] = useState<number>(() => {
-        const stored = localStorage.getItem(STORAGE_KEY);
+    // ── Global XP ────────────────────────────────────────────────────────────
+    const [totalXp, setTotalXpState] = useState<number>(() => {
+        const stored = localStorage.getItem(STORAGE_TOTAL_XP);
         return stored ? parseInt(stored, 10) : 0;
     });
 
-    // Exposed so AppServices can wire useSyncCloud into this setter
-    const setTotalLifetimeReps = useCallback((reps: number) => {
-        setTotalLifetimeRepsState(reps);
+    // ── Per-exercise XP ──────────────────────────────────────────────────────
+    const [exerciseXp, setExerciseXpState] = useState<ExerciseXpMap>(() => {
+        try {
+            const raw = localStorage.getItem(STORAGE_EXERCISE_XP);
+            return raw ? JSON.parse(raw) : {};
+        } catch { return {}; }
+    });
+
+    // Setters for useSyncCloud to wire into
+    const setTotalXp = useCallback((xp: number) => {
+        setTotalXpState(xp);
     }, []);
 
-    // For guest mode: update totalReps in state + localStorage atomically
-    const addGuestReps = useCallback((repsToAdd: number) => {
+    const setExerciseXp = useCallback((map: ExerciseXpMap) => {
+        setExerciseXpState(map);
+    }, []);
+
+    // ── Backward-compat aliases ─────────────────────────────────────────────
+    /** @deprecated Alias for totalXp — used by old call sites */
+    const totalLifetimeReps = totalXp;
+    /** @deprecated Alias for setTotalXp — used by useSyncCloud wiring */
+    const setTotalLifetimeReps = setTotalXp;
+
+    // ── Guest mode: add XP locally ──────────────────────────────────────────
+    const addGuestXp = useCallback((globalXp: number, perExercise: { exerciseType: ExerciseType; xp: number }[]) => {
         if (user) return;
-        setTotalLifetimeRepsState(prev => {
-            const next = prev + repsToAdd;
-            localStorage.setItem(STORAGE_KEY, next.toString());
+
+        setTotalXpState(prev => {
+            const next = prev + globalXp;
+            localStorage.setItem(STORAGE_TOTAL_XP, next.toString());
+            return next;
+        });
+
+        setExerciseXpState(prev => {
+            const next = { ...prev };
+            for (const { exerciseType, xp } of perExercise) {
+                next[exerciseType] = (next[exerciseType] ?? 0) + xp;
+            }
+            localStorage.setItem(STORAGE_EXERCISE_XP, JSON.stringify(next));
             return next;
         });
     }, [user]);
 
-    const level = user ? (dbUser?.level ?? calculateLevelFromTotalReps(totalLifetimeReps)) : calculateLevelFromTotalReps(totalLifetimeReps);
-    const currentLevelBaseReps = calculateTotalRepsForLevel(level);
-    const nextLevelTotalReq = calculateTotalRepsForLevel(level + 1);
-    const repsIntoCurrentLevel = totalLifetimeReps - currentLevelBaseReps;
-    const repsNeededForNextLevel = nextLevelTotalReq - currentLevelBaseReps;
-    const levelProgressPct = (repsIntoCurrentLevel / repsNeededForNextLevel) * 100;
+    // ── Derived global level values ──────────────────────────────────────────
+    // Always derive level from totalXp — it's the source of truth.
+    // (dbUser.level is denormalised / may be stale from the old rep-based system)
+    const level = levelFromTotalXp(totalXp);
+    const currentLevelBaseXp = totalXpForLevel(level);
+    const nextLevelTotalReq = totalXpForLevel(level + 1);
+    const xpIntoCurrentLevel = totalXp - currentLevelBaseXp;
+    const xpNeededForNextLevel = nextLevelTotalReq - currentLevelBaseXp;
+    const levelProgressPct = xpNeededForNextLevel > 0
+        ? (xpIntoCurrentLevel / xpNeededForNextLevel) * 100
+        : 0;
+
+    // ── Per-exercise derived levels ──────────────────────────────────────────
+    const getExerciseLevel = useCallback((type: ExerciseType) => {
+        const xp = exerciseXp[type] ?? 0;
+        return levelFromTotalXp(xp);
+    }, [exerciseXp]);
+
+    const getExerciseXp = useCallback((type: ExerciseType) => {
+        return exerciseXp[type] ?? 0;
+    }, [exerciseXp]);
+
+    const getExerciseLevelProgress = useCallback((type: ExerciseType) => {
+        const xp = exerciseXp[type] ?? 0;
+        const lvl = levelFromTotalXp(xp);
+        const base = totalXpForLevel(lvl);
+        const next = totalXpForLevel(lvl + 1);
+        const needed = next - base;
+        return {
+            level: lvl,
+            xp,
+            xpIntoLevel: xp - base,
+            xpNeeded: needed,
+            progressPct: needed > 0 ? ((xp - base) / needed) * 100 : 0,
+        };
+    }, [exerciseXp]);
 
     return {
+        // Global XP
+        totalXp,
+        setTotalXp,
+        level,
+        xpIntoCurrentLevel,
+        xpNeededForNextLevel,
+        levelProgressPct,
+
+        // Per-exercise XP
+        exerciseXp,
+        setExerciseXp,
+        getExerciseLevel,
+        getExerciseXp,
+        getExerciseLevelProgress,
+
+        // Guest mode
+        addGuestXp,
+
+        // ── Backward-compat (used by existing call sites) ────────────────
         totalLifetimeReps,
         setTotalLifetimeReps,
-        level,
-        repsIntoCurrentLevel,
-        repsNeededForNextLevel,
-        levelProgressPct,
-        addGuestReps,
+        /** @deprecated Use addGuestXp instead */
+        addGuestReps: (_reps: number) => {
+            // No-op: old rep-based guest add is replaced by XP-based flow.
+            // This stub exists so TypeScript doesn't break during migration.
+            console.warn('[useLevelSystem] addGuestReps is deprecated — use addGuestXp');
+        },
+        // Old field aliases for progress display
+        repsIntoCurrentLevel: xpIntoCurrentLevel,
+        repsNeededForNextLevel: xpNeededForNextLevel,
     };
 }

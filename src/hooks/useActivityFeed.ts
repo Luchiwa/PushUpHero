@@ -4,6 +4,7 @@ import type { Timestamp } from 'firebase/firestore';
 import { db } from '@lib/firebase';
 import { useAuth } from './useAuth';
 import type { Friend } from './useFriends';
+import type { ExerciseType } from '@exercises/types';
 
 export interface ActivityEvent {
     id: string;
@@ -17,7 +18,7 @@ export interface ActivityEvent {
     goalReps: number;
     elapsedTime?: number;
     numberOfSets?: number;
-    exerciseType?: 'pushup' | 'squat';
+    exerciseType?: ExerciseType;
     isMultiExercise?: boolean;
     blockSummaries?: { label: string; reps: number }[];
     createdAt: number; // Unix ms

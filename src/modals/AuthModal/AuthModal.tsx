@@ -80,8 +80,11 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
                         uid: user.uid,
                         displayName: username.trim(),
                         level: 0,
+                        totalXp: 0,
                         totalReps: 0,
                         totalSessions: 0,
+                        exerciseXp: {},
+                        exerciseLevels: {},
                         createdAt: Date.now()
                     });
                 });

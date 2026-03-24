@@ -19,7 +19,7 @@ interface ProfileModalProps {
 }
 
 export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
-    const { user, dbUser, level, totalLifetimeReps, uploadAvatar } = useAuth();
+    const { user, dbUser, level, totalXp, uploadAvatar } = useAuth();
     const { sessions, totalSessionCount } = useSessionHistory();
     const { friends, incomingRequests } = useFriends();
 
@@ -117,8 +117,8 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
                         <span className="profile-stat-label">Level</span>
                     </div>
                     <div className="profile-stat-box">
-                        <span className="profile-stat-value">{totalLifetimeReps}</span>
-                        <span className="profile-stat-label">Total Reps</span>
+                        <span className="profile-stat-value">{totalXp.toLocaleString()}</span>
+                        <span className="profile-stat-label">Total XP</span>
                     </div>
                     <div className="profile-stat-box">
                         <span className="profile-stat-value">{totalSessionCount}</span>

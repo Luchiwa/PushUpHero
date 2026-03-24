@@ -35,6 +35,7 @@ export function formatWeekRange(weekOffset: number): string {
 
 export interface UseWeekSessionsReturn {
     sessions: SessionRecord[];
+    prevSessions: SessionRecord[];     // previous week (weekOffset - 1) for comparison
     loading: boolean;
     firstSessionDate: number | null;   // ms timestamp of the oldest session ever
     fetchWeek: (weekOffset: number) => Promise<void>;
@@ -43,6 +44,7 @@ export interface UseWeekSessionsReturn {
 export function useWeekSessions(): UseWeekSessionsReturn {
     const { user } = useAuth();
     const [sessions, setSessions] = useState<SessionRecord[]>([]);
+    const [prevSessions, setPrevSessions] = useState<SessionRecord[]>([]);
     const [loading, setLoading] = useState(false);
     const [firstSessionDate, setFirstSessionDate] = useState<number | null>(null);
 
@@ -57,6 +59,11 @@ export function useWeekSessions(): UseWeekSessionsReturn {
         // Serve from cache if available
         if (cache.current.has(weekOffset)) {
             setSessions(cache.current.get(weekOffset) ?? []);
+            // Also serve prev week from cache for comparison
+            const prevOffset = weekOffset - 1;
+            if (cache.current.has(prevOffset)) {
+                setPrevSessions(cache.current.get(prevOffset) ?? []);
+            }
             return;
         }
 
@@ -100,7 +107,31 @@ export function useWeekSessions(): UseWeekSessionsReturn {
         } finally {
             setLoading(false);
         }
+
+        // Also fetch previous week for comparison (non-blocking)
+        const prevOffset = weekOffset - 1;
+        if (cache.current.has(prevOffset)) {
+            setPrevSessions(cache.current.get(prevOffset) ?? []);
+        } else {
+            try {
+                const prevStart = getWeekStart(prevOffset).getTime();
+                const prevEnd = getWeekEnd(prevOffset).getTime();
+                const prevSnap = await getDocs(
+                    query(
+                        sessionsRef,
+                        where('date', '>=', prevStart),
+                        where('date', '<=', prevEnd),
+                        orderBy('date', 'desc')
+                    )
+                );
+                const prevResult = prevSnap.docs.map(d => d.data() as SessionRecord);
+                cache.current.set(prevOffset, prevResult);
+                setPrevSessions(prevResult);
+            } catch {
+                setPrevSessions([]);
+            }
+        }
     };
 
-    return { sessions, loading, firstSessionDate, fetchWeek };
+    return { sessions, prevSessions, loading, firstSessionDate, fetchWeek };
 }

@@ -151,6 +151,9 @@ export function SessionHistoryPanel({ sessions: sessionsProp, title, onViewAll }
                                 </div>
 
                                 <div className="session-history-right">
+                                    {s.xpEarned != null && s.xpEarned > 0 && (
+                                        <span className="session-xp-badge">+{s.xpEarned.toLocaleString()} XP</span>
+                                    )}
                                     <span
                                         className="session-score"
                                         style={{ color: scoreColor(s.averageScore) }}

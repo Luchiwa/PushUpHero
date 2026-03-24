@@ -21,7 +21,7 @@ function AppServices({ children }: { children: React.ReactNode }) {
     const [totalSessionCount, setTotalSessionCount] = useState<number>(0);
 
     // SINGLE useSyncCloud instance for the entire app
-    useSyncCloud(levelSystem.setTotalLifetimeReps, setSessions, setTotalSessionCount);
+    useSyncCloud(levelSystem.setTotalXp, levelSystem.setExerciseXp, setSessions, setTotalSessionCount);
 
     return (
         <AuthContext.Consumer>
@@ -139,11 +139,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user, dbUser, loading, loginWithGoogle, logout, uploadAvatar,
         // placeholders overridden by AppServices below
         level: 0,
+        totalXp: 0,
+        xpIntoCurrentLevel: 0,
+        xpNeededForNextLevel: 1,
+        levelProgressPct: 0,
+        exerciseXp: {} as import('@hooks/useAuth').ExerciseXpMap,
+        setExerciseXp: () => {},
+        getExerciseLevel: () => 0,
+        getExerciseXp: () => 0,
+        getExerciseLevelProgress: () => ({ level: 0, xp: 0, xpIntoLevel: 0, xpNeeded: 1, progressPct: 0 }),
+        addGuestXp: () => {},
+        // Backward-compat
         totalLifetimeReps: 0,
+        setTotalLifetimeReps: () => {},
+        setTotalXp: () => {},
+        addGuestReps: () => {},
         repsIntoCurrentLevel: 0,
         repsNeededForNextLevel: 1,
-        levelProgressPct: 0,
-        addGuestReps: () => {},
         sessions: [] as import('@hooks/useSessionHistory').SessionRecord[],
         setSessions: () => {},
         totalSessionCount: 0,

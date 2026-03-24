@@ -20,7 +20,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { FEED_PRUNE_AGE_MS } from './constants';
-import { calculateLevelFromTotalReps } from '@hooks/useLevelSystem';
+import { levelFromTotalXp } from '@lib/xpSystem';
 import type { SessionRecord } from '@hooks/useSessionHistory';
 import type { DbUser } from '@hooks/useAuth';
 
@@ -56,24 +56,43 @@ export function computeNewStreak(dbUser: DbUser | null, todayLocal: string): num
 export interface SaveSessionParams {
     uid: string;
     session: SessionRecord;
-    /** Lifetime reps BEFORE this session (already synced from Firestore via onSnapshot) */
-    currentTotalReps: number;
+    /** Lifetime total XP BEFORE this session */
+    currentTotalXp: number;
+    /** XP earned this session (after bonuses) */
+    sessionXp: number;
+    /** Per-exercise XP earned this session */
+    exerciseXpDeltas: { exerciseType: string; xp: number }[];
+    /** Current per-exercise XP BEFORE this session */
+    currentExerciseXp: Partial<Record<string, number>>;
     dbUser: DbUser | null;
 }
 
 /**
  * Atomically writes in one batch:
  *   1. The session document
- *   2. totalReps increment + level + streak + lastSessionDate on the user profile
+ *   2. totalXp increment + level + exerciseXp + exerciseLevels + streak + lastSessionDate
  *   3. An activity feed event
  *
  * Fire-and-forget pruning of old feed events runs after the batch.
  */
-export async function saveSession({ uid, session, currentTotalReps, dbUser }: SaveSessionParams): Promise<void> {
+export async function saveSession({ uid, session, currentTotalXp, sessionXp, exerciseXpDeltas, currentExerciseXp, dbUser }: SaveSessionParams): Promise<void> {
     const todayLocal = localDateString();
-    const newTotal = currentTotalReps + session.reps;
-    const newLevel = calculateLevelFromTotalReps(newTotal);
+    const newTotalXp = currentTotalXp + sessionXp;
+    const newLevel = levelFromTotalXp(newTotalXp);
     const newStreak = computeNewStreak(dbUser, todayLocal);
+
+    // Compute new per-exercise XP and levels
+    const newExerciseXp: Record<string, number> = {};
+    for (const [type, xp] of Object.entries(currentExerciseXp)) {
+        if (xp !== undefined) newExerciseXp[type] = xp;
+    }
+    const newExerciseLevels: Record<string, number> = {};
+    for (const { exerciseType, xp } of exerciseXpDeltas) {
+        newExerciseXp[exerciseType] = (newExerciseXp[exerciseType] ?? 0) + xp;
+    }
+    for (const [type, xp] of Object.entries(newExerciseXp)) {
+        newExerciseLevels[type] = levelFromTotalXp(xp ?? 0);
+    }
 
     const batch = writeBatch(db);
 
@@ -84,9 +103,12 @@ export async function saveSession({ uid, session, currentTotalReps, dbUser }: Sa
     // 2. User profile
     const userRef = doc(db, 'users', uid);
     batch.update(userRef, {
+        totalXp: newTotalXp,
         totalReps: increment(session.reps),
         totalSessions: increment(1),
         level: newLevel,
+        exerciseXp: newExerciseXp,
+        exerciseLevels: newExerciseLevels,
         streak: newStreak,
         lastSessionDate: todayLocal,
     });
@@ -136,32 +158,49 @@ export async function saveSession({ uid, session, currentTotalReps, dbUser }: Sa
 
 export interface MergeLocalDataParams {
     uid: string;
-    localReps: number;
+    localXp: number;
+    localExerciseXp: Partial<Record<string, number>>;
     localSessions: SessionRecord[];
-    cloudReps: number;
+    cloudXp: number;
     cloudSessions: number;
+    cloudExerciseXp: Partial<Record<string, number>>;
 }
 
 export async function mergeLocalDataToCloud({
     uid,
-    localReps,
+    localXp,
+    localExerciseXp,
     localSessions,
-    cloudReps,
+    cloudXp,
     cloudSessions,
+    cloudExerciseXp,
 }: MergeLocalDataParams): Promise<void> {
     const batch = writeBatch(db);
     const userRef = doc(db, 'users', uid);
 
-    const newTotalReps = cloudReps + localReps;
-    const newLevel = calculateLevelFromTotalReps(newTotalReps);
+    const newTotalXp = cloudXp + localXp;
+    const newLevel = levelFromTotalXp(newTotalXp);
+
+    // Merge per-exercise XP
+    const mergedExerciseXp: Record<string, number> = {};
+    for (const [type, xp] of Object.entries(cloudExerciseXp)) {
+        if (xp !== undefined) mergedExerciseXp[type] = xp;
+    }
+    for (const [type, xp] of Object.entries(localExerciseXp)) {
+        mergedExerciseXp[type] = (mergedExerciseXp[type] ?? 0) + (xp ?? 0);
+    }
+    const mergedExerciseLevels: Record<string, number> = {};
+    for (const [type, xp] of Object.entries(mergedExerciseXp)) {
+        mergedExerciseLevels[type] = levelFromTotalXp(xp ?? 0);
+    }
 
     // ── Compute streak from local sessions ─────────────────────────────────
-    // Find the most recent guest session date, then compute the streak
-    // by walking sessions sorted newest-first and counting consecutive days.
     const profileUpdate: Record<string, unknown> = {
-        totalReps: newTotalReps,
+        totalXp: newTotalXp,
         totalSessions: cloudSessions + localSessions.length,
         level: newLevel,
+        exerciseXp: mergedExerciseXp,
+        exerciseLevels: mergedExerciseLevels,
     };
 
     if (localSessions.length > 0) {

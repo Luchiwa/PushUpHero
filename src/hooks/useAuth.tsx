@@ -1,16 +1,23 @@
 import { createContext, useContext } from 'react';
 import type { User } from 'firebase/auth';
 import type { SessionRecord } from './useSessionHistory';
+import type { ExerciseType } from '@exercises/types';
+
+export type ExerciseXpMap = Partial<Record<ExerciseType, number>>;
 
 export interface DbUser {
     uid: string;
     displayName: string;
     level: number;
-    totalReps: number;
+    totalXp: number;
+    /** @deprecated Legacy field — use totalXp */
+    totalReps?: number;
     createdAt?: number;
     photoURL?: string;
     streak?: number;
     lastSessionDate?: string; // UTC date string YYYY-MM-DD
+    exerciseXp?: ExerciseXpMap;
+    exerciseLevels?: Partial<Record<ExerciseType, number>>;
 }
 
 export interface AuthContextType {
@@ -20,13 +27,34 @@ export interface AuthContextType {
     loginWithGoogle: () => Promise<void>;
     logout: () => Promise<void>;
     uploadAvatar: (file: File) => Promise<void>;
-    // Level system
+    // XP-based level system
     level: number;
+    totalXp: number;
+    xpIntoCurrentLevel: number;
+    xpNeededForNextLevel: number;
+    levelProgressPct: number;
+    // Per-exercise XP
+    exerciseXp: ExerciseXpMap;
+    setExerciseXp: (map: ExerciseXpMap) => void;
+    getExerciseLevel: (type: ExerciseType) => number;
+    getExerciseXp: (type: ExerciseType) => number;
+    getExerciseLevelProgress: (type: ExerciseType) => {
+        level: number;
+        xp: number;
+        xpIntoLevel: number;
+        xpNeeded: number;
+        progressPct: number;
+    };
+    // Guest XP
+    addGuestXp: (globalXp: number, perExercise: { exerciseType: ExerciseType; xp: number }[]) => void;
+    // Backward-compat aliases
+    /** @deprecated Use totalXp */
     totalLifetimeReps: number;
+    setTotalLifetimeReps: (xp: number) => void;
+    setTotalXp: (xp: number) => void;
+    addGuestReps: (reps: number) => void;
     repsIntoCurrentLevel: number;
     repsNeededForNextLevel: number;
-    levelProgressPct: number;
-    addGuestReps: (reps: number) => void;
     // Sessions (synced from Firestore via useSyncCloud)
     sessions: SessionRecord[];
     setSessions: (sessions: SessionRecord[]) => void;

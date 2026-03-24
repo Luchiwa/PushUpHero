@@ -8,12 +8,13 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSessionHistory } from '@hooks/useSessionHistory';
 import { useAuth } from '@hooks/useAuth';
 import { useSoundEffect } from '@hooks/useSoundEffect';
-import { calculateLevelFromTotalReps, calculateTotalRepsForLevel } from '@hooks/useLevelSystem';
+import { levelFromTotalXp, totalXpForLevel, calculateSessionXp } from '@lib/xpSystem';
+import type { BonusContext, SessionXpResult } from '@lib/xpSystem';
 import type { ExerciseState, ExerciseType, SetRecord, WorkoutBlock, WorkoutPlan, TimeDuration } from '@exercises/types';
 import { createDefaultBlock } from '@exercises/types';
 
 // ── Public types ────────────────────────────────────────────────
-export type AppScreen = 'idle' | 'config' | 'active' | 'rest' | 'exercise-rest' | 'victory' | 'stopped' | 'levelup';
+export type AppScreen = 'idle' | 'config' | 'active' | 'rest' | 'exercise-rest' | 'stopped' | 'levelup';
 export type SessionMode = 'reps' | 'time';
 
 export function durationToSeconds(d: TimeDuration): number {
@@ -43,7 +44,7 @@ export function useWorkoutStateMachine({
 
   const { addSession } = useSessionHistory();
   const { initAudio, playLevelUpSound } = useSoundEffect();
-  const { totalLifetimeReps } = useAuth();
+  const { totalXp, dbUser } = useAuth();
 
   // ── Level tracking ──────────────────────────────────────────────
   const prevLevelRef = useRef(0);
@@ -84,14 +85,18 @@ export function useWorkoutStateMachine({
   // ── Active exercise type (from current block) ───────────────────
   const activeExerciseType = currentBlock.exerciseType;
 
-  // ── Live level projection ───────────────────────────────────────
+  // ── Live level projection (XP-based) ─────────────────────────────────────
   const currentSetReps = screen === 'active' ? exerciseState.repCount : 0;
   const allSessionReps = completedSetsReps + currentSetReps;
-  const liveTotal = totalLifetimeReps + allSessionReps;
-  const liveLevel = calculateLevelFromTotalReps(liveTotal);
-  const liveLevelBase = calculateTotalRepsForLevel(liveLevel);
-  const liveLevelNext = calculateTotalRepsForLevel(liveLevel + 1);
-  const liveProgressPct = ((liveTotal - liveLevelBase) / (liveLevelNext - liveLevelBase)) * 100;
+  // Estimate live XP: approximate using average 10 XP/rep (Grade C baseline)
+  // For accurate projection we'd need per-rep scores, but this is good enough for the ring
+  const liveXpEstimate = totalXp + allSessionReps * 10;
+  const liveLevel = levelFromTotalXp(liveXpEstimate);
+  const liveLevelBase = totalXpForLevel(liveLevel);
+  const liveLevelNext = totalXpForLevel(liveLevel + 1);
+  const liveProgressPct = liveLevelNext > liveLevelBase
+    ? ((liveXpEstimate - liveLevelBase) / (liveLevelNext - liveLevelBase)) * 100
+    : 0;
 
   // ── Build a SetRecord from the current exerciseState ────────────
   const buildCurrentSetRecord = useCallback((): SetRecord => {
@@ -110,17 +115,40 @@ export function useWorkoutStateMachine({
   }, [exerciseState, currentBlock]);
 
   // ── Save the entire workout as one session ──────────────────────
+  /** Last session XP result for display on SummaryScreen */
+  const [lastSessionXp, setLastSessionXp] = useState<SessionXpResult | null>(null);
+  const [goalReached, setGoalReached] = useState(false);
+
   const saveWorkoutSession = useCallback((allSets: SetRecord[]) => {
     if (sessionSavedRef.current) return;
     const totalReps = allSets.reduce((sum, s) => sum + s.reps, 0);
     if (totalReps === 0) return;
 
-    savedLevelRef.current = calculateLevelFromTotalReps(totalLifetimeReps + totalReps);
-    sessionSavedRef.current = true;
-
+    // Compute XP for level-up detection
+    const streak = dbUser?.streak ?? 0;
+    const totalWorkoutDuration = Math.round((Date.now() - workoutStartTimeRef.current) / 1000);
     const weightedScoreSum = allSets.reduce((sum, s) => sum + s.averageScore * s.reps, 0);
     const avgScore = totalReps > 0 ? Math.round(weightedScoreSum / totalReps) : 0;
-    const totalWorkoutDuration = Math.round((Date.now() - workoutStartTimeRef.current) / 1000);
+
+    // Check if all goals were met
+    const allGoalsMet = allSets.every(s => {
+      if (s.setMode === 'time') return true; // time mode always counts as met
+      return s.goalReps !== undefined ? s.reps >= s.goalReps : true;
+    });
+
+    const bonusCtx: BonusContext = {
+      streak,
+      elapsedTime: totalWorkoutDuration,
+      averageScore: avgScore,
+      allGoalsMet,
+      isMultiExercise: isMultiExercise,
+    };
+
+    // Pre-calculate XP for level-up check
+    const xpResult = calculateSessionXp(allSets, bonusCtx);
+    const newTotalXp = totalXp + xpResult.totalXp;
+    savedLevelRef.current = levelFromTotalXp(newTotalXp);
+    sessionSavedRef.current = true;
 
     // Determine the primary exercise type (the one with the most reps, or first)
     const repsByType: Record<string, number> = {};
@@ -149,11 +177,13 @@ export function useWorkoutStateMachine({
       totalDuration: allSets.length > 1 ? totalWorkoutDuration : undefined,
       blocks: hasMultipleExercises ? workoutPlan.blocks : undefined,
       isMultiExercise: hasMultipleExercises || undefined,
+    }, bonusCtx).then(result => {
+      setLastSessionXp(result);
     }).catch(err => {
       console.error('Failed to save session:', err);
       sessionSavedRef.current = false;
     });
-  }, [addSession, currentBlock, isMultiExercise, workoutPlan.blocks, totalLifetimeReps]);
+  }, [addSession, currentBlock, isMultiExercise, workoutPlan.blocks, totalXp, dbUser]);
 
   // ── Start helpers ───────────────────────────────────────────────
 
@@ -227,11 +257,11 @@ export function useWorkoutStateMachine({
 
       if (totalReps === 0) {
         setScreen('idle');
-      } else if (currentBlock.sessionMode === 'reps' && exerciseState.repCount >= currentBlock.goalReps) {
-        setScreen('victory');
-      } else if (currentBlock.sessionMode === 'time') {
-        setScreen('victory');
       } else {
+        const isGoalReached =
+          (currentBlock.sessionMode === 'reps' && exerciseState.repCount >= currentBlock.goalReps)
+          || currentBlock.sessionMode === 'time';
+        setGoalReached(isGoalReached);
         saveWorkoutSession(newCompletedSets);
         setScreen('stopped');
       }
@@ -259,6 +289,7 @@ export function useWorkoutStateMachine({
     if (totalReps === 0) {
       setScreen('idle');
     } else {
+      setGoalReached(false); // Manual stop = no celebration
       const totalElapsed = Math.round((Date.now() - workoutStartTimeRef.current) / 1000);
       elapsedTimeRef.current = totalElapsed;
       setElapsedTime(totalElapsed);
@@ -271,14 +302,6 @@ export function useWorkoutStateMachine({
     elapsedTimeRef.current = totalElapsed;
     setElapsedTime(totalElapsed);
     handleSetCompleteRef.current();
-  };
-
-  const handleVictoryComplete = () => {
-    saveWorkoutSession(completedSets);
-    const totalElapsed = Math.round((Date.now() - workoutStartTimeRef.current) / 1000);
-    elapsedTimeRef.current = totalElapsed;
-    setElapsedTime(totalElapsed);
-    setScreen('stopped');
   };
 
   // ── Rest between sets (same exercise) ───────────────────────────
@@ -351,6 +374,7 @@ export function useWorkoutStateMachine({
     setCompletedSets([]);
     setCompletedSetsReps(0);
     savedLevelRef.current = null;
+    setGoalReached(false);
     setScreen('idle');
   };
 
@@ -362,6 +386,7 @@ export function useWorkoutStateMachine({
     setCompletedSets([]);
     setCompletedSetsReps(0);
     savedLevelRef.current = null;
+    setGoalReached(false);
     setScreen('idle');
   };
 
@@ -404,14 +429,16 @@ export function useWorkoutStateMachine({
     totalSetsInBlock, totalBlocks, totalSetsAllBlocks,
     flatSetIndex,
     activeExerciseType,
-    // Level
+    // Level & XP
     liveLevel, liveProgressPct, levelBefore,
     savedLevel: savedLevelRef.current,
+    lastSessionXp,
+    goalReached,
     // Timing
     elapsedTime, elapsedTimeRef,
     // Handlers
     handleStart, handleOpenConfig, handleWorkoutStart, handleBackToIdle,
-    handleStop, handleTimerEnd, handleVictoryComplete,
+    handleStop, handleTimerEnd,
     handleRestComplete, handleExerciseRestComplete,
     handleSkipBlock,
     handleReset, handleLevelUpContinue,

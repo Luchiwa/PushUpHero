@@ -135,6 +135,17 @@
     flex-shrink: 0;
 }
 
+.session-xp-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: $accent;
+    background: rgba($accent, 0.1);
+    padding: 0.1rem 0.4rem;
+    border-radius: $radius-pill;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
 .session-chevron {
     font-size: 0.7rem;
     color: $text-muted;
@@ -296,5 +307,10 @@
     .session-score {
         font-size: 0.75rem;
         min-width: 2.5rem;
+    }
+
+    .session-xp-badge {
+        font-size: 0.55rem;
+        padding: 0.08rem 0.3rem;
     }
 }

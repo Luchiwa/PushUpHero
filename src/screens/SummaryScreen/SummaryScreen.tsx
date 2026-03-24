@@ -1,13 +1,35 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ExerciseState, ExerciseType, WorkoutPlan } from '@exercises/types';
 import type { SetRecord } from '@exercises/types';
 import { getExerciseLabel } from '@exercises/types';
 import { useAuth } from '@hooks/useAuth';
 import { useShareSession } from '@hooks/useShareSession';
 import type { ShareSessionData } from '@hooks/useShareSession';
+import { useSoundEffect } from '@hooks/useSoundEffect';
 import { AuthModal } from '@modals/AuthModal/AuthModal';
 import { getGradeLetter, getGradeClass, formatElapsedTime } from '@lib/constants';
+import type { SessionXpResult } from '@lib/xpSystem';
 import './SummaryScreen.scss';
+
+// ── Confetti particles ────────────────────────────────────────────
+const PARTICLE_COUNT = 60;
+
+function createParticles(canvas: HTMLCanvasElement) {
+    const W = canvas.width;
+    const H = canvas.height;
+    return Array.from({ length: PARTICLE_COUNT }, () => ({
+        x: W / 2 + (Math.random() - 0.5) * W * 0.5,
+        y: H / 2 + (Math.random() - 0.5) * H * 0.3,
+        vx: (Math.random() - 0.5) * 14,
+        vy: -Math.random() * 14 - 4,
+        size: Math.random() * 8 + 4,
+        color: ['#f59e0b', '#6366f1', '#22c55e', '#ef4444', '#a5f3fc', '#fbbf24'][Math.floor(Math.random() * 6)],
+        gravity: 0.4,
+        opacity: 1,
+        rotation: Math.random() * 360,
+        rotationSpeed: (Math.random() - 0.5) * 10,
+    }));
+}
 
 interface SummaryProps {
     exerciseType: ExerciseType;
@@ -18,15 +40,24 @@ interface SummaryProps {
     elapsedTime?: number;
     /** Provided when the session was a multi-exercise workout */
     workoutPlan?: WorkoutPlan;
+    /** XP result from the completed session */
+    sessionXp?: SessionXpResult;
+    /** Whether sound is enabled (for victory sound) */
+    soundEnabled?: boolean;
+    /** Whether the goal was reached (triggers celebration) */
+    goalReached?: boolean;
 }
 
 function ScoreGrade({ score }: { score: number }) {
     return <span className={`grade ${getGradeClass(score)}`}>{getGradeLetter(score)}</span>;
 }
 
-export function SummaryScreen({ exerciseType, exerciseState, completedSets, onReset, sessionMode, elapsedTime, workoutPlan }: SummaryProps) {
+export function SummaryScreen({ exerciseType, exerciseState, completedSets, onReset, sessionMode, elapsedTime, workoutPlan, sessionXp, soundEnabled, goalReached }: SummaryProps) {
     const { user, dbUser, level } = useAuth();
     const { shareSession } = useShareSession();
+    const { initAudio, playVictorySound } = useSoundEffect();
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const animRef = useRef<number | null>(null);
     const [sharing, setSharing] = useState(false);
     const [shareError, setShareError] = useState('');
     const [showPaywall, setShowPaywall] = useState(false);
@@ -46,6 +77,57 @@ export function SummaryScreen({ exerciseType, exerciseState, completedSets, onRe
     const allRepHistory = isMultiSet
         ? completedSets.flatMap(s => s.repHistory)
         : exerciseState.repHistory;
+
+    // ── Victory celebration: sound + confetti ────────────────────────
+    useEffect(() => {
+        if (!goalReached) return;
+        initAudio();
+        if (soundEnabled) playVictorySound();
+    }, [goalReached, soundEnabled, initAudio, playVictorySound]);
+
+    useEffect(() => {
+        if (!goalReached) return;
+        const cvs = canvasRef.current;
+        if (!cvs) return;
+        const ctx = cvs.getContext('2d');
+        if (!ctx) return;
+
+        const c = ctx;
+        const w = cvs.width = window.innerWidth;
+        const h = cvs.height = window.innerHeight;
+        const particles = createParticles(cvs);
+        let elapsed = 0;
+        let lastTime = performance.now();
+
+        function animate(now: number) {
+            const dt = Math.min((now - lastTime) / 16.67, 3);
+            lastTime = now;
+            elapsed += dt * 16.67;
+
+            c.clearRect(0, 0, w, h);
+            for (const p of particles) {
+                p.x += p.vx * dt;
+                p.vy += p.gravity * dt;
+                p.y += p.vy * dt;
+                p.rotation += p.rotationSpeed * dt;
+                p.opacity = Math.max(0, 1 - elapsed / 3000);
+
+                c.save();
+                c.globalAlpha = p.opacity;
+                c.translate(p.x, p.y);
+                c.rotate((p.rotation * Math.PI) / 180);
+                c.fillStyle = p.color;
+                c.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+                c.restore();
+            }
+
+            if (elapsed < 3500) {
+                animRef.current = requestAnimationFrame(animate);
+            }
+        }
+        animRef.current = requestAnimationFrame(animate);
+        return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
+    }, [goalReached]);
 
     const handleShare = async () => {
         if (!user || !dbUser) return;
@@ -104,11 +186,27 @@ export function SummaryScreen({ exerciseType, exerciseState, completedSets, onRe
     }, [totalReps, level, user]);
 
     return (
-        <div className="summary-screen">
+        <div className={`summary-screen${goalReached ? ' summary-screen--victory' : ''}`}>
+            {/* Confetti canvas (victory only) */}
+            {goalReached && <canvas ref={canvasRef} className="summary-confetti-canvas" />}
+
             <div className="summary-card">
-                <h2 className="summary-title">
-                    {isMultiExercise ? 'Workout Complete' : isMultiSet ? 'Workout Complete' : 'Session Complete'}
-                </h2>
+                {/* Victory celebration header */}
+                {goalReached && (
+                    <div className="summary-victory-header">
+                        <span className="summary-victory-emoji">🏆</span>
+                        <h2 className="summary-victory-title">
+                            {isMultiExercise || isMultiSet ? 'WORKOUT COMPLETE!' : 'GOAL REACHED!'}
+                        </h2>
+                    </div>
+                )}
+
+                {/* Regular header (non-victory) */}
+                {!goalReached && (
+                    <h2 className="summary-title">
+                        {isMultiExercise ? 'Workout Complete' : isMultiSet ? 'Workout Complete' : 'Session Complete'}
+                    </h2>
+                )}
 
                 {isMultiExercise && (
                     <span className="summary-sets-badge">
@@ -188,6 +286,50 @@ export function SummaryScreen({ exerciseType, exerciseState, completedSets, onRe
                         </>
                     )}
                 </div>
+
+                {/* ── XP Breakdown ─────────────────────────────────────── */}
+                {sessionXp && (
+                    <div className="xp-breakdown">
+                        <div className="xp-breakdown-header">
+                            <span className="xp-breakdown-total">+{sessionXp.totalXp.toLocaleString()} XP</span>
+                            {sessionXp.multiplier > 1 && (
+                                <span className="xp-breakdown-multiplier">×{sessionXp.multiplier.toFixed(2)}</span>
+                            )}
+                        </div>
+
+                        {/* Per-exercise XP */}
+                        {sessionXp.perExercise.length > 0 && (
+                            <div className="xp-breakdown-exercises">
+                                {sessionXp.perExercise.map(ex => (
+                                    <span key={ex.exerciseType} className="xp-exercise-pill">
+                                        {getExerciseLabel(ex.exerciseType)} +{ex.finalXp.toLocaleString()}
+                                        {ex.difficultyCoefficient > 1.0 && (
+                                            <span className="xp-difficulty-badge">×{ex.difficultyCoefficient.toFixed(1)}</span>
+                                        )}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Bonus tags */}
+                        {sessionXp.bonuses.length > 0 && (
+                            <div className="xp-breakdown-bonuses">
+                                {sessionXp.bonuses.map(b => (
+                                    <span key={b.key} className="xp-bonus-tag">
+                                        {b.emoji} {b.label} <strong>+{b.pct}%</strong>
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Raw XP line */}
+                        {sessionXp.multiplier > 1 && (
+                            <span className="xp-breakdown-raw">
+                                XP brute : {sessionXp.rawXp.toLocaleString()}
+                            </span>
+                        )}
+                    </div>
+                )}
 
                 {/* Per-block breakdown for multi-exercise workouts */}
                 {isMultiExercise && isMultiSet && completedSets != null && (() => {

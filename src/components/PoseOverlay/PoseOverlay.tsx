@@ -17,6 +17,7 @@ const POSE_CONNECTIONS: [number, number][] = [
 const KEY_JOINTS_MAP: Record<ExerciseType, Set<number>> = {
     pushup: new Set([11, 12, 13, 14, 15, 16, 23, 24]),        // shoulders, elbows, wrists, hips
     squat: new Set([11, 12, 23, 24, 25, 26, 27, 28]),          // shoulders, hips, knees, ankles
+    pullup: new Set([11, 12, 13, 14, 15, 16, 23, 24]),         // same as pushup — arms & shoulders
 };
 
 export interface PoseOverlayHandle {

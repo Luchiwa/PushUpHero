@@ -6,20 +6,22 @@ import './WeeklyChart.scss';
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const CHART_W = 320;
-const CHART_H = 170;
-const PAD_LEFT = 56;
-const PAD_RIGHT = 22;
-const PAD_TOP = 26;
-const PAD_BOTTOM = 34;
+const CHART_H = 150;
+const PAD_LEFT = 48;
+const PAD_RIGHT = 16;
+const PAD_TOP = 22;
+const PAD_BOTTOM = 30;
 const PLOT_W = CHART_W - PAD_LEFT - PAD_RIGHT;
 const PLOT_H = CHART_H - PAD_TOP - PAD_BOTTOM;
 
 type ExerciseFilter = 'all' | ExerciseType;
+type MetricMode = 'xp' | 'reps';
 
 interface Props {
     sessions: SessionRecord[];
     weekOffset: number;  // 0 = current week
     exerciseFilter?: ExerciseFilter;
+    metric?: MetricMode;
 }
 
 /**
@@ -56,6 +58,33 @@ function buildDayTotals(sessions: SessionRecord[], weekOffset: number, exerciseF
     return totals;
 }
 
+/**
+ * Sum XP per day. Uses xpEarned from each session.
+ * For filtered exercises, uses xpPerExercise breakdown when available.
+ */
+function buildDayTotalsXp(sessions: SessionRecord[], weekOffset: number, exerciseFilter: ExerciseFilter = 'all'): number[] {
+    const totals = [0, 0, 0, 0, 0, 0, 0];
+    const now = new Date();
+    const todayDay = now.getDay();
+    const sunday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - todayDay + weekOffset * 7);
+
+    sessions.forEach(s => {
+        const d = new Date(s.date);
+        const localDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        const diff = Math.round((localDay.getTime() - sunday.getTime()) / 86_400_000);
+        if (diff < 0 || diff > 6) return;
+
+        if (exerciseFilter !== 'all' && s.xpPerExercise) {
+            // Only count XP from the matching exercise type
+            const match = s.xpPerExercise.find(e => e.exerciseType === exerciseFilter);
+            if (match) totals[diff] += match.finalXp;
+        } else {
+            totals[diff] += s.xpEarned ?? 0;
+        }
+    });
+    return totals;
+}
+
 function niceMax(value: number): number {
     if (value <= 0) return 10;
     const magnitude = Math.pow(10, Math.floor(Math.log10(value)));
@@ -64,9 +93,12 @@ function niceMax(value: number): number {
     return nice * magnitude;
 }
 
-export function WeeklyChart({ sessions, weekOffset, exerciseFilter }: Props) {
-    const totals = buildDayTotals(sessions, weekOffset, exerciseFilter);
+export function WeeklyChart({ sessions, weekOffset, exerciseFilter, metric = 'xp' }: Props) {
+    const totals = metric === 'xp'
+        ? buildDayTotalsXp(sessions, weekOffset, exerciseFilter)
+        : buildDayTotals(sessions, weekOffset, exerciseFilter);
     const maxReps = niceMax(Math.max(...totals));
+    const metricLabel = metric === 'xp' ? 'XP' : 'reps';
 
     // Today's day index (0–6), only relevant for current week
     const todayIndex = weekOffset === 0 ? new Date().getDay() : -1;
@@ -196,7 +228,7 @@ export function WeeklyChart({ sessions, weekOffset, exerciseFilter }: Props) {
 
             {/* Tooltip */}
             {tooltip && (() => {
-                const RECT_W = 58;
+                const RECT_W = metric === 'xp' ? 72 : 58;
                 const RECT_H = 22;
                 // Centre horizontal : clamp pour rester dans le SVG
                 const tx = Math.max(RECT_W / 2 + 2, Math.min(CHART_W - RECT_W / 2 - 2, tooltip.x));
@@ -219,7 +251,7 @@ export function WeeklyChart({ sessions, weekOffset, exerciseFilter }: Props) {
                             dominantBaseline="central"
                             className="chart-tooltip-text"
                         >
-                            {tooltip.reps} reps
+                            {tooltip.reps.toLocaleString()} {metricLabel}
                         </text>
                     </g>
                 );

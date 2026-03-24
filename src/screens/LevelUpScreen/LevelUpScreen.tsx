@@ -5,6 +5,10 @@ interface LevelUpScreenProps {
     previousLevel: number;
     newLevel: number;
     onContinue: () => void;
+    /** Total XP earned this session (after bonuses) */
+    xpEarned?: number;
+    /** XP needed to reach the NEXT level after newLevel */
+    xpToNextLevel?: number;
 }
 
 const MOTIVATIONAL_MESSAGES = [
@@ -16,7 +20,7 @@ const MOTIVATIONAL_MESSAGES = [
     'Legend in the making! 🏆',
 ];
 
-export function LevelUpScreen({ previousLevel, newLevel, onContinue }: LevelUpScreenProps) {
+export function LevelUpScreen({ previousLevel, newLevel, onContinue, xpEarned, xpToNextLevel }: LevelUpScreenProps) {
     const [phase, setPhase] = useState<'enter' | 'roll' | 'land' | 'show'>('enter');
     const message = MOTIVATIONAL_MESSAGES[(newLevel - 1) % MOTIVATIONAL_MESSAGES.length];
 
@@ -70,6 +74,20 @@ export function LevelUpScreen({ previousLevel, newLevel, onContinue }: LevelUpSc
 
                 {/* Motivational subtitle */}
                 <p className={`levelup-message levelup-message--${phase}`}>{message}</p>
+
+                {/* XP info */}
+                {(xpEarned !== undefined || xpToNextLevel !== undefined) && (
+                    <div className={`levelup-xp-info levelup-xp-info--${phase}`}>
+                        {xpEarned !== undefined && (
+                            <span className="levelup-xp-earned">+{xpEarned.toLocaleString()} XP</span>
+                        )}
+                        {xpToNextLevel !== undefined && (
+                            <span className="levelup-xp-next">
+                                {xpToNextLevel.toLocaleString()} XP → Level {newLevel + 1}
+                            </span>
+                        )}
+                    </div>
+                )}
 
                 {/* Continue button */}
                 <button

@@ -5,11 +5,12 @@ export interface Landmark {
     visibility?: number;
 }
 
-export type ExerciseType = 'pushup' | 'squat';
+export type ExerciseType = 'pushup' | 'squat' | 'pullup';
 
 const EXERCISE_LABELS: Record<ExerciseType, string> = {
     pushup: 'Push-ups',
     squat: 'Squats',
+    pullup: 'Tractions',
 };
 
 /** Human-readable label: 'Push-ups', 'Squats' */

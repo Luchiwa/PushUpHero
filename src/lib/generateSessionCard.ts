@@ -3,6 +3,7 @@
  * 1080×1080 session card. No React dependency.
  */
 import { getGradeLetter, getGradeColor } from '@lib/constants';
+import type { ExerciseType } from '@exercises/types';
 
 export interface ShareSessionData {
     repCount: number;
@@ -14,7 +15,7 @@ export interface ShareSessionData {
     grade: string;
     numberOfSets?: number;
     bestScore?: number;
-    exerciseType?: 'pushup' | 'squat';
+    exerciseType?: ExerciseType;
     /** Multi-exercise workout fields */
     isMultiExercise?: boolean;
     numberOfExercises?: number;

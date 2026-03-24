@@ -26,6 +26,12 @@ const GUIDE_CONFIG: Record<ExerciseType, { emoji: string; title: string; descrip
     description: 'Step back so your full body is visible from head to feet.',
     calibrationText: 'Stand still…',
   },
+  pullup: {
+    emoji: '💪',
+    title: 'Hang from the bar',
+    description: 'Position the camera so your full body hangs visible, arms extended.',
+    calibrationText: 'Hold hang…',
+  },
 };
 
 export function PositionGuide({ exerciseType, isCalibrated, calibratingPercentage }: PositionGuideProps) {

@@ -59,15 +59,15 @@
 // ── Fixed (non-scrolling) top: week nav + chart ──────────────────────────────
 .stats-fixed-top {
     flex-shrink: 0;
-    padding-top: $spacing-md;
-    padding-bottom: $spacing-sm;
+    padding-top: $spacing-sm;
+    padding-bottom: 0;
 }
 
 // ── Exercise type filter pills ───────────────────────────────────────────────
 .stats-filter-row {
     display: flex;
     gap: $spacing-sm;
-    margin-bottom: $spacing-md;
+    margin-bottom: $spacing-sm;
 }
 
 .stats-filter-pill {
@@ -76,7 +76,7 @@
     align-items: center;
     justify-content: center;
     gap: 4px;
-    padding: $spacing-xs $spacing-sm;
+    padding: 5px $spacing-sm;
     border-radius: $radius-pill;
     font-size: $font-sm;
     font-weight: 600;
@@ -102,11 +102,49 @@
     line-height: 1;
 }
 
+// ── Metric toggle (XP / Reps) ────────────────────────────────────────────────
+.stats-metric-toggle {
+    display: flex;
+    gap: 0;
+    background: $surface;
+    border-radius: $radius-pill;
+    padding: 3px;
+    margin-bottom: $spacing-sm;
+}
+
+.stats-metric-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 5px $spacing-sm;
+    border-radius: $radius-pill;
+    font-size: $font-sm;
+    font-weight: 600;
+    color: $text-muted;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: background $transition-fast, color $transition-fast;
+
+    &:hover:not(.active) {
+        color: $text;
+    }
+
+    &.active {
+        color: $accent;
+        background: rgba($accent, 0.12);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    }
+}
+
 // ── Chart section ────────────────────────────────────────────────────────────
 .stats-chart-section {
     display: flex;
     flex-direction: column;
-    gap: $spacing-sm;
+    gap: 4px;
+    touch-action: pan-y; // allow vertical scroll but capture horizontal swipe
 }
 
 // Week navigation row
@@ -115,7 +153,7 @@
     align-items: center;
     justify-content: space-between;
     gap: $spacing-sm;
-    margin-bottom: $spacing-sm;
+    margin-bottom: 4px;
 }
 
 .stats-week-label {
@@ -127,13 +165,13 @@
 }
 
 .stats-nav-btn {
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: $radius-sm;
-    font-size: 1.4rem;
+    font-size: 1.3rem;
     line-height: 1;
     color: $accent;
     transition: background $transition-fast, opacity $transition-fast;
@@ -148,9 +186,68 @@
     }
 }
 
+// ── Weekly Summary KPI Grid ──────────────────────────────────────────────────
+.stats-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: $spacing-xs;
+    margin-bottom: 4px;
+}
+
+.stats-kpi {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    padding: 6px $spacing-xs;
+    background: $surface;
+    border-radius: $radius-sm;
+}
+
+.stats-kpi-emoji {
+    font-size: 0.95rem;
+    line-height: 1;
+}
+
+.stats-kpi-value {
+    font-size: $font-sm;
+    font-weight: 800;
+    color: $text;
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+    line-height: 1.2;
+}
+
+.stats-kpi-change {
+    font-size: 0.55rem;
+    font-weight: 700;
+    border-radius: $radius-pill;
+    padding: 1px 4px;
+    white-space: nowrap;
+
+    &.up {
+        color: $green;
+        background: rgba($green, 0.12);
+    }
+
+    &.down {
+        color: $red;
+        background: rgba($red, 0.1);
+    }
+}
+
+.stats-kpi-label {
+    font-size: $font-xs;
+    font-weight: 600;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
 // Loading placeholder (keeps chart height while fetching)
 .stats-chart-placeholder {
-    height: 170px;
+    height: 150px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -183,13 +280,13 @@
 .stats-chart-wrap {
     background: $surface;
     border-radius: $radius;
-    padding: $spacing-sm 0;
+    padding: 4px 0;
     overflow: hidden;
 }
 
 // Empty week state
 .stats-empty-week {
-    height: 170px;
+    height: 140px;
     display: flex;
     flex-direction: column;
     align-items: center;

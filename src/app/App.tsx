@@ -11,13 +11,13 @@ import { PushUpDetector } from '@exercises/pushup/PushUpDetector';
 import { SquatDetector } from '@exercises/squat/SquatDetector';
 import type { ExerciseType } from '@exercises/types';
 import { useWorkoutStateMachine, durationToSeconds } from './useWorkoutStateMachine';
+import { totalXpForLevel } from '@lib/xpSystem';
 import { StartScreen } from '@screens/StartScreen/StartScreen';
 import { WorkoutConfigScreen } from '@screens/WorkoutConfigScreen/WorkoutConfigScreen';
 import { RestScreen } from '@screens/RestScreen/RestScreen';
 import { SummaryScreen } from '@screens/SummaryScreen/SummaryScreen';
 import { LevelUpScreen } from '@screens/LevelUpScreen/LevelUpScreen';
 import { Dashboard } from '@overlays/Dashboard/Dashboard';
-import { VictoryOverlay } from '@overlays/VictoryOverlay/VictoryOverlay';
 import { PoseOverlay } from '@components/PoseOverlay/PoseOverlay';
 import type { PoseOverlayHandle } from '@components/PoseOverlay/PoseOverlay';
 import { PositionGuide } from '@components/PositionGuide/PositionGuide';
@@ -192,6 +192,9 @@ function App() {
           onReset={wm.handleReset}
           sessionMode={wm.sessionMode}
           elapsedTime={wm.elapsedTime}
+          sessionXp={wm.lastSessionXp ?? undefined}
+          soundEnabled={wm.soundEnabled}
+          goalReached={wm.goalReached}
         />
       )}
 
@@ -200,19 +203,11 @@ function App() {
           previousLevel={wm.levelBefore}
           newLevel={wm.savedLevel ?? wm.liveLevel}
           onContinue={wm.handleLevelUpContinue}
-        />
-      )}
-
-      {wm.screen === 'victory' && (
-        <VictoryOverlay
-          exerciseType={exerciseType}
-          repCount={wm.completedSetsReps}
-          soundEnabled={wm.soundEnabled}
-          onComplete={wm.handleVictoryComplete}
-          sessionMode={wm.sessionMode}
-          elapsedTime={wm.elapsedTime}
-          totalSets={wm.totalSetsAllBlocks}
-          isMultiExercise={wm.isMultiExercise}
+          xpEarned={wm.lastSessionXp?.totalXp}
+          xpToNextLevel={
+            totalXpForLevel((wm.savedLevel ?? wm.liveLevel) + 1)
+            - totalXpForLevel(wm.savedLevel ?? wm.liveLevel)
+          }
         />
       )}
 
