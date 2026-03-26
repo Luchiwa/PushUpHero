@@ -66,6 +66,8 @@ export interface UserStats {
     sessionXp: number;
     /** Current global level */
     globalLevel: number;
+    /** Cumulative training time in seconds */
+    lifetimeTrainingTime: number;
 }
 
 // ─── Evaluate achievements ───────────────────────────────────────────────────
@@ -117,6 +119,7 @@ function getStatValue(stats: UserStats, ach: AchievementDef): number {
         case 'sGradeCount':              return stats.sGradeCount;
         case 'sessionXp':                return stats.sessionXp;
         case 'globalLevel':              return stats.globalLevel;
+        case 'lifetimeTrainingTime':     return stats.lifetimeTrainingTime;
 
         default: return 0;
     }

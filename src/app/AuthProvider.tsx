@@ -55,22 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 const unsubUser = onSnapshot(userRef, (docSnap) => {
                     if (docSnap.exists()) {
                         const userData = docSnap.data() as DbUser;
-
-                        // Reset streak if no session was made yesterday or today (local calendar days)
-                        if (userData.lastSessionDate && (userData.streak ?? 0) > 0) {
-                            const now = new Date();
-                            const todayLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-                            const yesterday = new Date(now);
-                            yesterday.setDate(yesterday.getDate() - 1);
-                            const yesterdayLocal = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
-
-                            const isRecentEnough = userData.lastSessionDate === todayLocal || userData.lastSessionDate === yesterdayLocal;
-                            if (!isRecentEnough) {
-                                userData.streak = 0;
-                                updateDoc(userRef, { streak: 0 }).catch(() => {});
-                            }
-                        }
-
+                        // Streak reset is handled server-side by the resetExpiredStreaks Cloud Function (daily at 03:00 UTC)
                         setDbUser(userData);
                     } else {
                         setDbUser(null);

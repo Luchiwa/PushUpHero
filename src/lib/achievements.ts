@@ -8,7 +8,7 @@
  */
 
 import type { ExerciseType } from '@exercises/types';
-import { getExerciseLabel, EXERCISE_TYPES } from '@exercises/types';
+import { getExerciseLabel, getExerciseEmoji, EXERCISE_TYPES } from '@exercises/types';
 
 // ─── Rarity tiers ────────────────────────────────────────────────────────────
 
@@ -181,6 +181,27 @@ function encouragementsAchievements(): AchievementDef[] {
     }));
 }
 
+function trainingTimeAchievements(): AchievementDef[] {
+    const tiers: { threshold: number; tier: AchievementTier; title: string; description: string }[] = [
+        { threshold: 1800,   tier: 'bronze',   title: 'Warm Up',            description: 'Cumulate 30 minutes of training' },
+        { threshold: 3600,   tier: 'bronze',   title: 'One Hour Club',      description: 'Cumulate 1 hour of training' },
+        { threshold: 10800,  tier: 'silver',   title: 'Getting Serious',    description: 'Cumulate 3 hours of training' },
+        { threshold: 36000,  tier: 'silver',   title: 'Double Digits',      description: 'Cumulate 10 hours of training' },
+        { threshold: 86400,  tier: 'gold',     title: 'Full Day Warrior',   description: 'Cumulate 24 hours of training' },
+        { threshold: 180000, tier: 'gold',     title: 'Half Centurion',     description: 'Cumulate 50 hours of training' },
+        { threshold: 360000, tier: 'platinum', title: 'Centurion of Time',  description: 'Cumulate 100 hours of training' },
+    ];
+    return tiers.map(({ threshold, tier, title, description }) => ({
+        id: `training_time_${threshold}`,
+        category: 'discipline' as const,
+        tier,
+        title,
+        description,
+        statKey: 'lifetimeTrainingTime',
+        threshold,
+    }));
+}
+
 function performanceAchievements(): AchievementDef[] {
     return [
         // Grade S
@@ -206,6 +227,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     ...sessionRepsAchievements(),
     ...sessionsCountAchievements(),
     ...streakAchievements(),
+    ...trainingTimeAchievements(),
     ...friendsAchievements(),
     ...encouragementsAchievements(),
     ...performanceAchievements(),
@@ -241,7 +263,7 @@ export const RECORDS: RecordDef[] = [
         key: `maxRepsInSession.${ex}`,
         label: `Best ${getExerciseLabel(ex)} in a session`,
         unit: 'reps',
-        emoji: ex === 'pushup' ? '💪' : ex === 'squat' ? '🦵' : '🏋️',
+        emoji: getExerciseEmoji(ex),
         exerciseType: ex,
     })),
     // Global records

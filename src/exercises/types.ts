@@ -32,7 +32,31 @@ export function getExerciseLabel(type: ExerciseType): string {
     return EXERCISE_LABELS[type];
 }
 
+const EXERCISE_EMOJIS: Record<ExerciseType, string> = Object.fromEntries(
+    EXERCISE_META.map(m => [m.type, m.emoji]),
+) as Record<ExerciseType, string>;
+
+/** Emoji for an exercise: '💪', '🦵', '🏋️' */
+export function getExerciseEmoji(type: ExerciseType): string {
+    return EXERCISE_EMOJIS[type];
+}
+
 export type ExercisePhase = 'idle' | 'up' | 'down' | 'transition';
+
+/** Actionable feedback hint for a rep — used by the voice coach */
+export type RepFeedback =
+    | 'perfect'
+    | 'go_lower'
+    | 'arms_uneven'
+    | 'body_sagging'
+    | 'body_piking'
+    | 'too_fast'
+    | 'lean_forward'
+    | 'knees_caving'
+    | 'torso_lean'
+    | 'kipping'
+    | 'body_sway'
+    | 'good';
 
 export interface RepResult {
     /** Score 0–100 for this rep */
@@ -40,8 +64,10 @@ export interface RepResult {
     /** Score breakdown */
     amplitudeScore: number;
     alignmentScore: number;
-    /** Minimum angle reached (elbow) during this rep */
+    /** Minimum angle reached (elbow/knee) during this rep */
     minAngle: number;
+    /** Primary corrective feedback for this rep */
+    feedback: RepFeedback;
 }
 
 /** A completed set within a multi-set session */
@@ -105,4 +131,10 @@ export interface ExerciseState {
     isCalibrated: boolean;
     /** 0 to 100 representing calibration progress */
     calibratingPercentage: number;
+    /**
+     * Set when the user starts a rep but comes back up without reaching
+     * full depth. Cleared on the next frame. Allows the coach to give
+     * real-time "go lower" feedback even when no rep is counted.
+     */
+    incompleteRepFeedback: RepFeedback | null;
 }

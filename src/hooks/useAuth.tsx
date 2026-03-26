@@ -25,6 +25,8 @@ export interface DbUser {
     sGradeCount?: number;
     /** Lifetime reps per exercise (for achievement tracking) */
     lifetimeReps?: Partial<Record<ExerciseType, number>>;
+    /** Cumulative training time in seconds (for achievements) */
+    lifetimeTrainingTime?: number;
     /** Map of achievementId → unlock timestamp (millis) */
     achievements?: Record<string, number>;
     /** Personal records */

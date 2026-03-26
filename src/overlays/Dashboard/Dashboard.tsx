@@ -1,7 +1,8 @@
-import { memo } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import './Dashboard.scss';
 import type { ExerciseState, ExerciseType } from '@exercises/types';
 import { getExerciseLabel } from '@exercises/types';
+import { getGradeLetter, getGradeColor } from '@lib/constants';
 import { useDashboardLogic } from './useDashboardLogic';
 
 import { FloatyNumbers } from '@components/FloatyNumbers/FloatyNumbers';
@@ -23,80 +24,91 @@ interface DashboardProps {
     levelProgressPct: number;
     currentSet?: number;
     totalSets?: number;
-    /** Current exercise block (1-based), only for multi-exercise workouts */
     currentBlock?: number;
-    /** Total exercise blocks, only for multi-exercise workouts */
     totalBlocks?: number;
 }
 
+// ── Grade Pop — big letter that appears after each rep ───────────
+const GradePop = memo(function GradePop({ score, repKey }: { score: number; repKey: number }) {
+    const letter = getGradeLetter(score);
+    const color = getGradeColor(score);
+    return (
+        <div className="grade-pop" key={repKey} style={{ color }}>
+            <span className="grade-letter">{letter}</span>
+            <span className="grade-score">{score}</span>
+        </div>
+    );
+});
+
+// ── Combo counter ────────────────────────────────────────────────
+const ComboCounter = memo(function ComboCounter({ combo }: { combo: number }) {
+    if (combo < 2) return null;
+    return (
+        <div className="combo-badge" key={combo}>
+            <span className="combo-count">{combo}×</span>
+            <span className="combo-label">COMBO</span>
+        </div>
+    );
+});
+
+// ── Small inline score ring ──────────────────────────────────────
 const ScoreRing = memo(function ScoreRing({ score }: { score: number }) {
-    const radius = 40;
+    const radius = 18;
     const circumference = 2 * Math.PI * radius;
     const offset = circumference - (score / 100) * circumference;
-    const color = score >= 75 ? '#22c55e' : score >= 50 ? '#f59e0b' : '#ef4444';
+    const color = getGradeColor(score);
 
     return (
-        <svg className="score-ring" viewBox="0 0 100 100" width="100" height="100" aria-hidden="true">
-            <circle cx="50" cy="50" r={radius} fill="none" stroke="#e0e0e0" strokeWidth="10" />
+        <svg className="score-ring" viewBox="0 0 44 44" width="44" height="44" aria-hidden="true">
+            <circle cx="22" cy="22" r={radius} fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="4" />
             <circle
-                cx="50" cy="50" r={radius}
+                cx="22" cy="22" r={radius}
                 fill="none"
                 stroke={color}
-                strokeWidth="10"
+                strokeWidth="4"
                 strokeDasharray={circumference}
                 strokeDashoffset={offset}
                 strokeLinecap="round"
-                transform="rotate(-90 50 50)"
+                transform="rotate(-90 22 22)"
                 style={{ transition: 'stroke-dashoffset 0.4s ease, stroke 0.4s ease' }}
             />
-            <text x="50" y="57" textAnchor="middle" fontSize="26" fontWeight="900" fill="url(#score-gradient)">
+            <text x="22" y="27" textAnchor="middle" fontSize="14" fontWeight="900" fill="white">
                 {score}
             </text>
-            <defs>
-                <linearGradient id="score-gradient" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#ffb366" />
-                    <stop offset="50%" stopColor="#ff9c35" />
-                    <stop offset="100%" stopColor="#ff7f00" />
-                </linearGradient>
-            </defs>
         </svg>
     );
 });
 
-const LevelBadge = memo(function LevelBadge({ level, progressPct }: { level: number, progressPct: number }) {
+// ── Coach hint display ───────────────────────────────────────────
+function CoachHint({ text }: { text: string | null }) {
+    const [visible, setVisible] = useState(false);
+    const [displayText, setDisplayText] = useState('');
+    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => {
+        if (text) {
+            setDisplayText(text);
+            setVisible(true);
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => setVisible(false), 3000);
+        }
+        return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+    }, [text]);
+
+    if (!visible || !displayText) return null;
     return (
-        <div className="level-badge">
-            <div className="level-badge-ring" style={{ background: `conic-gradient(var(--accent) ${progressPct}%, rgba(255,255,255,0.1) ${progressPct}%)` }}>
-                <div className="level-badge-inner">
-                    <span className="level-label">LVL</span>
-                    <span className="level-number">{level}</span>
-                </div>
-            </div>
+        <div className="coach-hint">
+            <span className="coach-icon">🎙️</span>
+            <span className="coach-text">{displayText}</span>
         </div>
     );
-});
+}
 
-const GoalProgressBar = memo(function GoalProgressBar({ current, goal }: { current: number; goal: number }) {
-    const pct = Math.min(100, (current / goal) * 100);
-    const done = current >= goal;
-    return (
-        <div className="stat-card goal-card">
-            <span className="stat-label">Goal</span>
-            <div className="goal-vertical-track">
-                <div
-                    className={`goal-vertical-fill ${done ? 'goal-done' : ''}`}
-                    style={{ height: `${pct}%` }}
-                />
-            </div>
-            <span className="goal-vertical-count">{current}/{goal}</span>
-        </div>
-    );
-});
+export const Dashboard = memo(function Dashboard({ exerciseType, exerciseState, goalReps, sessionMode, timeGoal, onStop, onTimerEnd, elapsedTimeRef, onFlipCamera, facingMode, soundEnabled, onSoundToggle, currentSet, totalSets, currentBlock, totalBlocks }: DashboardProps) {
+    const { repCount, averageScore, lastRepResult, isValidPosition, isCalibrated, incompleteRepFeedback } = exerciseState;
 
-export const Dashboard = memo(function Dashboard({ exerciseType, exerciseState, goalReps, sessionMode, timeGoal, onStop, onTimerEnd, elapsedTimeRef, onFlipCamera, facingMode, soundEnabled, onSoundToggle, level, levelProgressPct, currentSet, totalSets, currentBlock, totalBlocks }: DashboardProps) {
-    const { repCount, averageScore, lastRepResult, isValidPosition, isCalibrated } = exerciseState;
-
-    const { showInvalidBanner, timeRemaining } = useDashboardLogic({
+    const { showInvalidBanner, timeRemaining, coachPhrase } = useDashboardLogic({
+        exerciseType,
         repCount,
         isCalibrated,
         isValidPosition,
@@ -105,115 +117,139 @@ export const Dashboard = memo(function Dashboard({ exerciseType, exerciseState, 
         timeGoal,
         elapsedTimeRef,
         onTimerEnd,
+        lastRepResult,
+        incompleteRepFeedback,
     });
+
+    // Combo: count consecutive reps with score >= 60 (B or above)
+    const comboRef = useRef(0);
+    const [combo, setCombo] = useState(0);
+
+    useEffect(() => {
+        if (lastRepResult) {
+            if (lastRepResult.score >= 60) {
+                comboRef.current++;
+            } else {
+                comboRef.current = 0;
+            }
+            setCombo(comboRef.current);
+        }
+    }, [lastRepResult]);
+
+    // Goal progress for reps mode
+    const goalPct = sessionMode === 'reps' ? Math.min(100, (repCount / goalReps) * 100) : 0;
+    const goalDone = repCount >= goalReps;
 
     return (
         <div className="dashboard">
+            {/* ══════════ TOP ROW ══════════ */}
             <div className="dashboard-top">
-                <LevelBadge level={level} progressPct={levelProgressPct} />
-                <div className="dashboard-actions">
-                    <button
-                        type="button"
-                        className="btn-sound"
-                        onClick={onFlipCamera}
-                        title={facingMode === 'user' ? 'Switch to rear camera' : 'Switch to front camera'}
-                    >
-                        {/* Camera flip icon */}
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                            <path d="M11 19H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h1l2-3h6l2 3h1a2 2 0 0 1 2 2v1" />
-                            <circle cx="9" cy="13" r="3" />
-                            <path d="M17 15v6M14 18l3-3 3 3" />
-                        </svg>
-                    </button>
-                    <button
-                        type="button"
-                        className={`btn-sound ${soundEnabled ? '' : 'btn-sound-muted'}`}
-                        onClick={onSoundToggle}
-                        title={soundEnabled ? 'Mute sound' : 'Enable sound'}
-                    >
-                        {soundEnabled ? (
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
-                            </svg>
-                        ) : (
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                                <line x1="23" y1="9" x2="17" y2="15"></line>
-                                <line x1="17" y1="9" x2="23" y2="15"></line>
-                            </svg>
-                        )}
-                    </button>
-                    <button className="btn-stop" onClick={onStop} type="button">■ Stop</button>
-                </div>
-            </div>
-
-            {totalSets != null && totalSets > 1 && currentSet != null && (
-                <div className="set-indicator">
-                    {currentBlock != null && totalBlocks != null && totalBlocks > 1
-                        ? `Ex ${currentBlock}/${totalBlocks} · Set ${currentSet}/${totalSets}`
-                        : `Set ${currentSet}/${totalSets}`}
-                </div>
-            )}
-
-            <div className="stats-row">
-                <div className="stat-card">
-                    <div className="rep-count-wrap">
+                {/* ── Left: rep counter + avg score ── */}
+                <div className="hud-left">
+                    <div className="hud-rep-block">
                         <FloatyNumbers repCount={repCount} />
-                        <span className="stat-value rep-count">{repCount}</span>
+                        <span className="hud-rep-count">{repCount}</span>
+                        <span className="hud-rep-label">{getExerciseLabel(exerciseType)}</span>
                     </div>
-                    <span className="stat-label">{getExerciseLabel(exerciseType)}</span>
+
+                    {isCalibrated && (
+                        <div className="hud-avg">
+                            <ScoreRing score={averageScore} />
+                            <span className="hud-avg-label">AVG</span>
+                        </div>
+                    )}
                 </div>
 
-                <div className="stat-card score-card">
-                    <ScoreRing score={averageScore} />
-                    <span className="stat-label">Avg Score</span>
-                </div>
+                {/* ── Right: actions + goal/timer ── */}
+                <div className="hud-right">
+                    {/* Set indicator */}
+                    {totalSets != null && totalSets > 1 && currentSet != null && (
+                        <span className="set-indicator">
+                            {currentBlock != null && totalBlocks != null && totalBlocks > 1
+                                ? `${currentBlock}/${totalBlocks} · ${currentSet}/${totalSets}`
+                                : `Set ${currentSet}/${totalSets}`}
+                        </span>
+                    )}
 
-                {sessionMode === 'time' ? (
-                    <div className="stat-card">
-                        <span className="timer-display">
+                    {/* Goal or timer */}
+                    {sessionMode === 'time' && (
+                        <span className="hud-timer">
                             {String(Math.floor(timeRemaining / 60)).padStart(2, '0')}:
                             {String(timeRemaining % 60).padStart(2, '0')}
                         </span>
-                        <span className="stat-label">Time Left</span>
+                    )}
+
+                    {sessionMode === 'reps' && (
+                        <div className="hud-goal">
+                            <div className="hud-goal-track">
+                                <div
+                                    className={`hud-goal-fill${goalDone ? ' hud-goal-fill--done' : ''}`}
+                                    style={{ width: `${goalPct}%` }}
+                                />
+                            </div>
+                            <span className="hud-goal-count">{repCount}/{goalReps}</span>
+                        </div>
+                    )}
+
+                    <div className="dashboard-actions">
+                        <button
+                            type="button"
+                            className="btn-icon"
+                            onClick={onFlipCamera}
+                            title={facingMode === 'user' ? 'Switch to rear camera' : 'Switch to front camera'}
+                        >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                <path d="M11 19H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h1l2-3h6l2 3h1a2 2 0 0 1 2 2v1" />
+                                <circle cx="9" cy="13" r="3" />
+                                <path d="M17 15v6M14 18l3-3 3 3" />
+                            </svg>
+                        </button>
+                        <button
+                            type="button"
+                            className={`btn-icon ${soundEnabled ? '' : 'btn-icon--muted'}`}
+                            onClick={onSoundToggle}
+                            title={soundEnabled ? 'Mute' : 'Unmute'}
+                        >
+                            {soundEnabled ? (
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                                </svg>
+                            ) : (
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                                    <line x1="23" y1="9" x2="17" y2="15" />
+                                    <line x1="17" y1="9" x2="23" y2="15" />
+                                </svg>
+                            )}
+                        </button>
+                        <button className="btn-stop" onClick={onStop} type="button">■</button>
                     </div>
-                ) : (
-                    <GoalProgressBar current={repCount} goal={goalReps} />
-                )}
+                </div>
             </div>
 
-            {/* Anti-cheat feedback banner — debounced, below stats */}
-            {showInvalidBanner && (
-                <div className="invalid-position-banner">
-                    {exerciseType === 'pushup'
-                        ? '⚠️ Get back into push-up position — body horizontal, hands on the ground'
-                        : '⚠️ Get back into squat position — stand upright facing the camera'}
+            {/* ══════════ CENTER (grade pop — only briefly visible) ══════════ */}
+            {lastRepResult && (
+                <div className="dashboard-center">
+                    <GradePop score={lastRepResult.score} repKey={repCount} />
+                    <ComboCounter combo={combo} />
                 </div>
             )}
 
-            {lastRepResult && (
-                <div className="last-rep-info">
-                    <span className="last-rep-title">Last rep</span>
-                    <div className="last-rep-bars">
-                        <div className="bar-row">
-                            <span>Amplitude</span>
-                            <div className="bar-track">
-                                <div className="bar-fill" style={{ width: `${lastRepResult.amplitudeScore}%` }} />
-                            </div>
-                            <span>{lastRepResult.amplitudeScore}</span>
-                        </div>
-                        <div className="bar-row">
-                            <span>Alignment</span>
-                            <div className="bar-track">
-                                <div className="bar-fill bar-fill-alt" style={{ width: `${lastRepResult.alignmentScore}%` }} />
-                            </div>
-                            <span>{lastRepResult.alignmentScore}</span>
-                        </div>
+            {/* ══════════ BOTTOM (coach hint + invalid banner) ══════════ */}
+            <div className="dashboard-bottom">
+                <CoachHint text={coachPhrase} />
+
+                {showInvalidBanner && (
+                    <div className="invalid-position-banner">
+                        {exerciseType === 'pushup'
+                            ? '⚠️ Get back into push-up position'
+                            : exerciseType === 'pullup'
+                                ? '⚠️ Get back into hang position'
+                                : '⚠️ Stand upright facing the camera'}
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 });

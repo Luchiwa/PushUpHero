@@ -1,4 +1,4 @@
-import type { ExerciseState, Landmark } from './types';
+import type { ExerciseState, Landmark, RepFeedback } from './types';
 
 /**
  * Abstract base class for all exercise detectors.
@@ -21,6 +21,7 @@ export abstract class BaseExerciseDetector {
             isValidPosition: false,
             isCalibrated: false,
             calibratingPercentage: 0,
+            incompleteRepFeedback: null,
         };
     }
 
@@ -52,10 +53,23 @@ export abstract class BaseExerciseDetector {
     }
 
     /**
+     * Utility: check that key landmarks have sufficient visibility.
+     * MediaPipe hallucinates positions for off-screen body parts with
+     * low visibility scores — we must reject those frames.
+     */
+    protected areLandmarksVisible(landmarks: Landmark[], indices: number[], minVisibility = 0.5): boolean {
+        for (const idx of indices) {
+            const lm = landmarks[idx];
+            if (!lm || (lm.visibility ?? 0) < minVisibility) return false;
+        }
+        return true;
+    }
+
+    /**
      * Utility: record a rep result and update running average.
      */
-    protected recordRep(score: number, amplitudeScore: number, alignmentScore: number, minAngle: number): void {
-        const repResult = { score, amplitudeScore, alignmentScore, minAngle };
+    protected recordRep(score: number, amplitudeScore: number, alignmentScore: number, minAngle: number, feedback: RepFeedback = 'good'): void {
+        const repResult = { score, amplitudeScore, alignmentScore, minAngle, feedback };
         this.state.repHistory.push(repResult);
         this.state.lastRepResult = repResult;
         this.state.repCount += 1;

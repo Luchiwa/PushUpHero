@@ -14,6 +14,7 @@ import type { BonusContext, SessionXpResult } from '@lib/xpSystem';
 import type { SaveSessionResult } from '@lib/userService';
 import type { ExerciseState, ExerciseType, SetRecord, WorkoutBlock, WorkoutPlan, TimeDuration } from '@exercises/types';
 import { createDefaultBlock } from '@exercises/types';
+import { warmUpSpeech } from '@lib/speechEngine';
 
 // ── Public types ────────────────────────────────────────────────
 export type AppScreen = 'idle' | 'config' | 'active' | 'rest' | 'exercise-rest' | 'stopped' | 'levelup';
@@ -207,6 +208,8 @@ export function useWorkoutStateMachine({
   // ── Quick Start (single exercise, 1 set) ───────────────────────
   const handleStart = () => {
     resetWorkoutState();
+    // Unlock speechSynthesis from this user gesture (Safari/iOS requirement)
+    warmUpSpeech();
     const block: WorkoutBlock = {
       ...createDefaultBlock(workoutPlan.blocks[0]?.exerciseType ?? 'pushup'),
       numberOfSets: 1,
@@ -227,6 +230,8 @@ export function useWorkoutStateMachine({
   // ── Workout Start (from config screen) ──────────────────────────
   const handleWorkoutStart = () => {
     resetWorkoutState();
+    // Unlock speechSynthesis from this user gesture (Safari/iOS requirement)
+    warmUpSpeech();
     const firstBlock = workoutPlan.blocks[0];
     setSessionMode(firstBlock.sessionMode);
     setGoalReps(firstBlock.goalReps);

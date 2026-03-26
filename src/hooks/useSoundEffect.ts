@@ -11,6 +11,7 @@ export function useSoundEffect() {
     const playLevelUpSound = useCallback(() => engine.playLevelUpSound(), []);
     const playVictorySound = useCallback(() => engine.playVictorySound(), []);
     const playStartReadySound = useCallback(() => engine.playStartReadySound(), []);
+    const playAchievementSound = useCallback(() => engine.playAchievementSound(), []);
 
-    return { initAudio, playRepSound, playLevelUpSound, playVictorySound, playStartReadySound };
+    return { initAudio, playRepSound, playLevelUpSound, playVictorySound, playStartReadySound, playAchievementSound };
 }

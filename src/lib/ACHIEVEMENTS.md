@@ -25,6 +25,7 @@
 {
   bestStreak: number;                  // highest streak ever reached
   totalEncouragementsSent: number;     // lifetime encouragement count
+  lifetimeTrainingTime: number;        // cumulative training time in seconds
 
   // Map of achievementId → unlock timestamp (millis)
   achievements: Record<string, number>;
@@ -130,6 +131,20 @@ For **each** exercise type:
 
 **Total: 6 achievements**
 
+### 📅 Discipline – Cumulative training time
+
+| ID | Threshold | Tier | Title | Description |
+|---|---|---|---|---|
+| `training_time_1800` | 30 min (1 800s) | Bronze | Warm Up | Cumulate 30 minutes of training |
+| `training_time_3600` | 1 h (3 600s) | Bronze | One Hour Club | Cumulate 1 hour of training |
+| `training_time_10800` | 3 h (10 800s) | Silver | Getting Serious | Cumulate 3 hours of training |
+| `training_time_36000` | 10 h (36 000s) | Silver | Double Digits | Cumulate 10 hours of training |
+| `training_time_86400` | 24 h (86 400s) | Gold | Full Day Warrior | Cumulate 24 hours of training |
+| `training_time_180000` | 50 h (180 000s) | Gold | Half Centurion | Cumulate 50 hours of training |
+| `training_time_360000` | 100 h (360 000s) | Platinum | Centurion of Time | Cumulate 100 hours of training |
+
+**Total: 7 achievements**
+
 ### 👥 Social – Friends
 
 | ID | Threshold | Tier | Title |
@@ -171,7 +186,7 @@ For **each** exercise type:
 
 ---
 
-## Grand total: **70 achievements**
+## Grand total: **77 achievements**
 
 ---
 

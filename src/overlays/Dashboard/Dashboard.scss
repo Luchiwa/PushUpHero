@@ -1,214 +1,344 @@
 @use 'variables' as *;
 @use 'mixins' as *;
 
-// ── Dashboard layout ─────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+// Dashboard HUD — frames the camera feed without obstructing center
+//
+// Layout:
+//   ┌───────────────────────────────┐
+//   │ [REP + AVG]     [goal] [⚙ ■] │  ← top bar
+//   │                               │
+//   │          (camera feed)        │
+//   │         [ GRADE POP ]         │  ← ephemeral center
+//   │                               │
+//   │      [🎙️ coach hint]          │
+//   │   [⚠️ invalid position]       │  ← bottom (above PositionGuide)
+//   └───────────────────────────────┘
+// ══════════════════════════════════════════════════════════════════
+
 .dashboard {
     @include fill;
     z-index: 10;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
     pointer-events: none;
 }
 
+// ── TOP BAR ──────────────────────────────────────────────────────
 .dashboard-top {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    // iOS PWA: push below the notch / Dynamic Island
-    padding-top: max(1rem, env(safe-area-inset-top));
-    padding-right: 1.25rem;
-    padding-bottom: 1rem;
-    padding-left: 1.25rem;
+    align-items: flex-start;
+    padding: max(0.6rem, env(safe-area-inset-top)) 0.75rem 0;
     pointer-events: all;
+    gap: 0.5rem;
 }
 
-// ── Set indicator badge ──────────────────────────────────────────
-.set-indicator {
-    align-self: center;
-    pointer-events: none;
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba($accent, 0.3);
-    border-radius: $radius-pill;
-    padding: 0.3rem 0.9rem;
-    font-size: $font-sm;
-    font-weight: 800;
-    color: $accent;
-    letter-spacing: 0.04em;
-    margin-bottom: 0.5rem;
-}
-
-// ── Stats row ────────────────────────────────────────────────────
-.stats-row {
+// ── Left cluster: rep count + avg ────────────────────────────────
+.hud-left {
     display: flex;
-    justify-content: space-around;
-    padding: 0 1.25rem;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.6rem;
 }
 
-// ── Stat card ────────────────────────────────────────────────────
-.stat-card {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur($blur);
-    -webkit-backdrop-filter: blur($blur);
-    border: 1px solid rgba(26, 26, 26, 0.15);
-    border-radius: $radius;
-    padding: 1.25rem 1.5rem;
+.hud-rep-block {
+    position: relative; // for FloatyNumbers
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    align-items: baseline;
     gap: 0.3rem;
-    min-width: 110px;
-    transition: $transition;
-    pointer-events: all;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.stat-value {
-    font-size: 1rem;
-    font-weight: 700;
-    color: $text;
-}
-
-.stat-label {
-    @include label(0.7rem);
-}
-
-// ── Rep counter ──────────────────────────────────────────────────
-.rep-count-wrap {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.rep-count {
-    font-size: 3rem;
+.hud-rep-count {
+    font-size: 2.4rem;
     line-height: 1;
     font-weight: 900;
-    @include text-gradient($gradient-accent-rich);
+    color: white;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
     animation: rep-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
-// ── Timer display ────────────────────────────────────────────────
-.timer-display {
-    font-size: 2.5rem;
-    line-height: 1;
-    font-weight: 900;
-    font-family: 'Courier New', monospace;
-    @include text-gradient($gradient-accent-rich);
-    letter-spacing: 0.05em;
+.hud-rep-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.6);
+    align-self: flex-end;
+    margin-bottom: 0.25rem;
 }
 
-// ── Score ring ───────────────────────────────────────────────────
+.hud-avg {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+}
+
+.hud-avg-label {
+    font-size: 0.55rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.5);
+}
+
 .score-ring {
     display: block;
 }
 
-// ── Level Badge ──────────────────────────────────────────────────
-.level-badge {
-    @include flex-center;
-}
-
-.level-badge-ring {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    @include flex-center;
-}
-
-.level-badge-inner {
-    width: 38px;
-    height: 38px;
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 50%;
+// ── Right cluster: goal / timer / actions ────────────────────────
+.hud-right {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    gap: 0.5rem;
 }
 
-.level-label {
-    font-size: 0.5rem;
+.set-indicator {
+    font-size: 0.7rem;
     font-weight: 800;
-    color: #6b7280;
-    line-height: 1;
-    margin-top: 2px;
+    color: rgba(255, 255, 255, 0.7);
+    background: rgba(0, 0, 0, 0.35);
+    padding: 0.2rem 0.55rem;
+    border-radius: $radius-pill;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
 }
 
-.level-number {
-    font-size: 1rem;
+.hud-timer {
+    font-size: 1.3rem;
+    font-weight: 900;
+    font-family: 'Courier New', monospace;
+    color: white;
+    text-shadow: 0 0 8px rgba($accent, 0.4);
+    letter-spacing: 0.04em;
+}
+
+// Goal progress bar (horizontal, compact)
+.hud-goal {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.hud-goal-track {
+    width: 48px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.hud-goal-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, $accent, $accent-light);
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &--done {
+        background: $gradient-green;
+        box-shadow: 0 0 6px rgba($green, 0.5);
+    }
+}
+
+.hud-goal-count {
+    font-size: 0.72rem;
     font-weight: 800;
-    color: $text;
-    line-height: 1;
+    color: rgba(255, 255, 255, 0.8);
+    white-space: nowrap;
 }
 
 // ── Action buttons ───────────────────────────────────────────────
 .dashboard-actions {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.3rem;
 }
 
-.btn-sound {
-    padding: 0.45rem;
+// Scoped to .dashboard so we don't bleed into the global .btn-icon
+.dashboard .btn-icon {
+    padding: 0.35rem;
     border-radius: 50%;
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
     @include flex-center;
-    background: rgba(255, 127, 0, 0.25);
-    border: 1px solid rgba(255, 127, 0, 0.4);
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     color: white;
-    font-size: 1rem;
     cursor: pointer;
     transition: $transition;
     backdrop-filter: blur($blur);
-    font-weight: 700;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 
-    &:hover {
-        background: rgba(255, 127, 0, 0.35);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    &:hover,
+    &:active {
+        background: rgba(0, 0, 0, 0.55);
+    }
+
+    &--muted {
+        opacity: 0.5;
     }
 }
 
-.btn-sound-muted {
-    opacity: 0.75;
-}
-
-.btn-stop {
-    padding: 0.45rem 1rem;
+.dashboard .btn-stop {
+    padding: 0.35rem 0.6rem;
     border-radius: $radius-pill;
-    background: rgba(239, 68, 68, 0.3);
-    border: 1px solid rgba(239, 68, 68, 0.5);
+    background: rgba(239, 68, 68, 0.35);
+    border: 1px solid rgba(239, 68, 68, 0.45);
     color: white;
-    font-size: 0.82rem;
+    font-size: 0.85rem;
     font-weight: 700;
     font-family: inherit;
     cursor: pointer;
     transition: $transition;
     backdrop-filter: blur($blur);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    line-height: 1;
 
-    &:hover {
-        background: rgba(239, 68, 68, 0.4);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    &:hover,
+    &:active {
+        background: rgba(239, 68, 68, 0.55);
     }
+}
+
+// ══════════ CENTER (ephemeral grade pop) ═════════════════════════
+.dashboard-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    pointer-events: none;
+}
+
+.grade-pop {
+    display: flex;
+    align-items: baseline;
+    gap: 0.2rem;
+    animation: grade-burst 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.grade-letter {
+    font-size: 4rem;
+    font-weight: 900;
+    line-height: 1;
+    text-shadow:
+        0 2px 10px rgba(0, 0, 0, 0.5),
+        0 0 30px currentColor;
+}
+
+.grade-score {
+    font-size: 1.1rem;
+    font-weight: 800;
+    opacity: 0.65;
+    color: white;
+}
+
+@keyframes grade-burst {
+    0% {
+        transform: scale(0.2);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+// ── Combo badge ──────────────────────────────────────────────────
+.combo-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: rgba(255, 127, 0, 0.2);
+    border: 1px solid rgba(255, 127, 0, 0.45);
+    border-radius: $radius-pill;
+    padding: 0.15rem 0.6rem;
+    animation: combo-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    backdrop-filter: blur(6px);
+}
+
+.combo-count {
+    font-size: 1rem;
+    font-weight: 900;
+    color: $accent;
+    text-shadow: 0 0 6px rgba($accent, 0.5);
+}
+
+.combo-label {
+    font-size: 0.55rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+@keyframes combo-pop {
+    0% {
+        transform: scale(0.4);
+        opacity: 0;
+    }
+
+    60% {
+        transform: scale(1.15);
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+// ══════════ BOTTOM (above PositionGuide zone) ════════════════════
+.dashboard-bottom {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    // Leave enough space for PositionGuide card below
+    padding: 0 0.75rem;
+    margin-bottom: 13rem; // clears the PositionGuide card
+}
+
+// ── Coach hint bubble ────────────────────────────────────────────
+.coach-hint {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: $radius-pill;
+    padding: 0.3rem 0.75rem;
+    animation: slide-up 0.3s ease both;
+    pointer-events: none;
+}
+
+.coach-icon {
+    font-size: 0.85rem;
+}
+
+.coach-text {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 0.02em;
 }
 
 // ── Anti-cheat banner ────────────────────────────────────────────
 .invalid-position-banner {
-    margin: 0 1.25rem;
-    padding: 0.6rem 1rem;
-    background: rgba($red, 0.1);
-    border: 1px solid rgba($red, 0.2);
+    padding: 0.4rem 0.7rem;
+    background: rgba($red, 0.2);
+    border: 1px solid rgba($red, 0.3);
     border-radius: $radius-sm;
-    color: $red;
-    font-size: 0.8rem;
+    color: white;
+    font-size: 0.72rem;
     font-weight: 600;
     text-align: center;
     backdrop-filter: blur($blur);
@@ -216,128 +346,27 @@
     animation: slide-up 0.25s ease both;
 }
 
-// ── Last rep breakdown ───────────────────────────────────────────
-.last-rep-info {
-    margin: auto 1.25rem 1.25rem;
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur($blur);
-    -webkit-backdrop-filter: blur($blur);
-    border: 1px solid rgba(26, 26, 26, 0.1);
-    border-radius: $radius;
-    padding: 1rem 1.25rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    pointer-events: all;
-    animation: slide-up 0.3s ease both;
-}
-
-.last-rep-title {
-    @include label(0.72rem);
-}
-
-.last-rep-bars {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.bar-row {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    font-size: 0.78rem;
-    color: $text-muted;
-
-    >span:first-child {
-        width: 70px;
-        flex-shrink: 0;
-    }
-
-    >span:last-child {
-        width: 28px;
-        text-align: right;
-        font-weight: 600;
-        color: $text;
-    }
-}
-
-.bar-track {
-    flex: 1;
-    @include progress-track;
-}
-
-.bar-fill {
-    @include progress-fill;
-
-    &-alt {
-        background: $gradient-green;
-    }
-}
-
-// ── Goal card (vertical progress bar) ────────────────────────────
-.goal-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.6rem;
-    padding: 0.85rem 1rem;
-}
-
-.goal-vertical-track {
-    width: 14px;
-    height: 60px;
-    background: #e0e0e0;
-    border-radius: $radius-pill;
-    overflow: hidden;
-    display: flex;
-    align-items: flex-end;
-}
-
-.goal-vertical-fill {
-    width: 100%;
-    border-radius: $radius-pill;
-    background: linear-gradient(0deg, $accent, $accent-light);
-    transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-
-    &.goal-done {
-        background: $gradient-green;
-        box-shadow: 0 0 10px rgba($green, 0.5);
-    }
-}
-
-.goal-vertical-count {
-    font-size: 0.85rem;
-    font-weight: 800;
-    color: $text;
-}
-
 // ── Mobile responsive ────────────────────────────────────────────
 @media (max-width: 480px) {
-    .stats-row {
-        padding: 0 0.75rem;
-        gap: 0.6rem;
+    .hud-rep-count {
+        font-size: 2rem;
     }
 
-    .stat-card {
-        padding: 0.85rem 1rem;
-        min-width: 90px;
-        border-radius: $radius-sm;
-    }
-
-    .rep-count {
-        font-size: 2.25rem;
+    .grade-letter {
+        font-size: 3rem;
     }
 
     .dashboard-top {
-        padding-top: max(0.75rem, env(safe-area-inset-top));
-        padding-right: 0.75rem;
-        padding-bottom: 0.75rem;
-        padding-left: 0.75rem;
+        padding-top: max(0.4rem, env(safe-area-inset-top));
+        padding-right: 0.5rem;
+        padding-left: 0.5rem;
     }
 
-    .last-rep-info {
-        margin: auto 0.75rem 0.75rem;
-        border-radius: $radius-sm;
+    .dashboard-bottom {
+        margin-bottom: 10rem;
+    }
+
+    .hud-goal-track {
+        width: 36px;
     }
 }

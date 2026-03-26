@@ -5,6 +5,7 @@ import { db } from '@lib/firebase';
 import { useAuth } from './useAuth';
 import type { Friend } from './useFriends';
 import type { ExerciseType } from '@exercises/types';
+import { getExerciseLabel } from '@exercises/types';
 
 export interface ActivityEvent {
     id: string;
@@ -52,7 +53,7 @@ export function buildEventMessage(event: ActivityEvent): string {
     }
 
     // ── Single-exercise ──
-    const exerciseName = event.exerciseType === 'squat' ? 'squats' : 'push-ups';
+    const exerciseName = event.exerciseType ? getExerciseLabel(event.exerciseType).toLowerCase() : 'reps';
     const setsInfo = event.numberOfSets && event.numberOfSets > 1 ? ` (${event.numberOfSets} sets)` : '';
     if (event.sessionMode === 'time') {
         const mins = event.elapsedTime ? Math.floor(event.elapsedTime / 60) : 0;

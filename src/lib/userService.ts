@@ -24,6 +24,7 @@ import { levelFromTotalXp } from '@lib/xpSystem';
 import type { SessionRecord } from '@hooks/useSessionHistory';
 import type { DbUser } from '@hooks/useAuth';
 import type { ExerciseType } from '@exercises/types';
+import { getExerciseLabel } from '@exercises/types';
 import { evaluateAchievements, evaluateRecords, emptyRecords, computeLifetimeReps, countSGrades, bulkEvaluateRecords } from './achievementEngine';
 import type { UserStats, AchievementMap, RecordsMap, RecordUpdate } from './achievementEngine';
 import type { AchievementDef } from './achievements';
@@ -139,6 +140,10 @@ export async function saveSession({
     const newSGradeCount = (dbUser?.sGradeCount ?? 0) + (isS ? 1 : 0);
     const newTotalSessions = currentTotalSessions + 1;
 
+    // ── Cumulative training time ─────────────────────────────────────────
+    const sessionDuration = session.totalDuration ?? session.elapsedTime ?? 0;
+    const newLifetimeTrainingTime = (dbUser?.lifetimeTrainingTime ?? 0) + sessionDuration;
+
     // ── Evaluate achievements ────────────────────────────────────────────
     const currentAchievements: AchievementMap = { ...(dbUser?.achievements ?? {}) };
     const stats: UserStats = {
@@ -151,6 +156,7 @@ export async function saveSession({
         sGradeCount: newSGradeCount,
         sessionXp: session.xpEarned ?? 0,
         globalLevel: newLevel,
+        lifetimeTrainingTime: newLifetimeTrainingTime,
     };
     const newAchievements = evaluateAchievements(stats, currentAchievements);
 
@@ -183,6 +189,7 @@ export async function saveSession({
         bestStreak: newBestStreak,
         sGradeCount: newSGradeCount,
         lifetimeReps: newLifetimeReps,
+        lifetimeTrainingTime: newLifetimeTrainingTime,
         achievements: currentAchievements,   // includes newly unlocked
         records: updatedRecords,
     });
@@ -209,7 +216,7 @@ export async function saveSession({
                 const blockSets = session.sets.slice(si, si + block.numberOfSets);
                 si += block.numberOfSets;
                 const reps = blockSets.reduce((s, st) => s + st.reps, 0);
-                const label = block.exerciseType === 'squat' ? 'Squats' : 'Push-ups';
+                const label = getExerciseLabel(block.exerciseType);
                 summaries.push({ label, reps });
             }
             feedEvent.blockSummaries = summaries;
@@ -324,6 +331,11 @@ export async function mergeLocalDataToCloud({
         if ((s.xpEarned ?? 0) > maxSessionXp) maxSessionXp = s.xpEarned ?? 0;
     }
 
+    // Compute total training time from local sessions
+    const totalTrainingTime = localSessions.reduce(
+        (sum, s) => sum + (s.totalDuration ?? s.elapsedTime ?? 0), 0,
+    );
+
     const achievementMap: AchievementMap = {};
     const stats: UserStats = {
         lifetimeRepsByExercise: lifetimeReps,
@@ -335,6 +347,7 @@ export async function mergeLocalDataToCloud({
         sGradeCount,
         sessionXp: maxSessionXp,
         globalLevel: newLevel,
+        lifetimeTrainingTime: totalTrainingTime,
     };
 
     // Check single-session achievements by finding max reps per exercise across all sessions
@@ -351,6 +364,7 @@ export async function mergeLocalDataToCloud({
 
     profileUpdate.lifetimeReps = lifetimeReps;
     profileUpdate.sGradeCount = sGradeCount;
+    profileUpdate.lifetimeTrainingTime = totalTrainingTime;
     profileUpdate.achievements = achievementMap;
     profileUpdate.records = records;
 
@@ -376,6 +390,7 @@ export async function checkLiveAchievements(
     stats: UserStats,
     currentAchievements: AchievementMap,
 ): Promise<AchievementDef[]> {
+    // Note: stats.lifetimeTrainingTime should be provided by callers
     const newlyUnlocked = evaluateAchievements(stats, currentAchievements);
     if (newlyUnlocked.length === 0) return [];
 

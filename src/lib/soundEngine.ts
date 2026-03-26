@@ -165,3 +165,44 @@ export function playStartReadySound(): void {
     playNote(493.88, 0.15, 0.2);
     playNote(587.33, 0.3, 0.3);
 }
+
+/** "Achievement Unlock" — sparkly ascending arpeggio + shimmer. */
+export function playAchievementSound(): void {
+    const ctx = getCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    // Sparkle arpeggio: C5 → E5 → G5 → C6
+    const notes = [523.25, 659.25, 783.99, 1046.5];
+    notes.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const start = now + i * 0.08;
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, start);
+
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(0.25, start + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.01, start + 0.35);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + 0.4);
+    });
+
+    // Shimmer layer — high-frequency triangle wash
+    const shimmer = ctx.createOscillator();
+    const shimmerGain = ctx.createGain();
+    shimmer.type = 'triangle';
+    shimmer.frequency.setValueAtTime(2000, now + 0.2);
+    shimmer.frequency.exponentialRampToValueAtTime(4000, now + 0.6);
+    shimmerGain.gain.setValueAtTime(0, now + 0.2);
+    shimmerGain.gain.linearRampToValueAtTime(0.08, now + 0.3);
+    shimmerGain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+    shimmer.connect(shimmerGain);
+    shimmerGain.connect(ctx.destination);
+    shimmer.start(now + 0.2);
+    shimmer.stop(now + 0.75);
+}

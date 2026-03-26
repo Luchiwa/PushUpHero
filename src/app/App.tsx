@@ -24,6 +24,8 @@ import type { PoseOverlayHandle } from '@components/PoseOverlay/PoseOverlay';
 import { PositionGuide } from '@components/PositionGuide/PositionGuide';
 import { ReloadPrompt } from '@components/ReloadPrompt/ReloadPrompt';
 import { getExerciseLabel } from '@exercises/types';
+import { useInGameAchievements } from '@hooks/useInGameAchievements';
+import { AchievementToast } from '@components/AchievementToast/AchievementToast';
 import './App.scss';
 
 function App() {
@@ -62,6 +64,15 @@ function App() {
 
   // Sync isActive from state machine screen
   useEffect(() => { setIsActive(wm.screen === 'active'); }, [wm.screen]);
+
+  // ── In-game achievements ─────────────────────────────────────────
+  const { achievementQueue, dismissFirst, shownIdsRef: inGameShownRef } = useInGameAchievements({
+    exerciseType,
+    exerciseState,
+    completedSetsReps: wm.completedSetsReps,
+    isActive: wm.screen === 'active',
+    soundEnabled: wm.soundEnabled,
+  });
 
   // ── Pose detection ───────────────────────────────────────────────
   const poseOverlayRef = useRef<PoseOverlayHandle>(null);
@@ -124,6 +135,14 @@ function App() {
             currentBlock={wm.isMultiExercise ? wm.currentBlockIndex + 1 : undefined}
             totalBlocks={wm.isMultiExercise ? wm.totalBlocks : undefined}
           />
+          {/* In-game achievement toast */}
+          {achievementQueue.length > 0 && (
+            <AchievementToast
+              key={achievementQueue[0].id}
+              achievement={achievementQueue[0]}
+              onDone={dismissFirst}
+            />
+          )}
         </>
       )}
 
@@ -199,7 +218,11 @@ function App() {
           sessionXp={wm.lastSessionXp ?? undefined}
           soundEnabled={wm.soundEnabled}
           goalReached={wm.goalReached}
-          newAchievements={wm.lastSessionXp?.newAchievements}
+          newAchievements={
+            wm.lastSessionXp?.newAchievements?.filter(
+              a => !inGameShownRef.current.has(a.id),
+            )
+          }
           brokenRecords={wm.lastSessionXp?.brokenRecords}
         />
       )}

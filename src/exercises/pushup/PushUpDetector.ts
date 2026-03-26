@@ -1,5 +1,5 @@
 import { BaseExerciseDetector } from '../BaseExerciseDetector';
-import type { ExerciseState, Landmark } from '../types';
+import type { ExerciseState, Landmark, RepFeedback } from '../types';
 import { CALIBRATION_FRAMES_REQUIRED } from '@lib/constants';
 
 /**
@@ -20,50 +20,55 @@ const LM = {
 } as const;
 
 // ── Elbow angle thresholds ────────────────────────────────────────
-/** Elbow angle above which the position is considered "UP" (arms straight).
- * Raised to 155 so it works on both mobile (~175° up) and desktop webcam (~165° up) */
+/** Elbow angle above which the position is considered "UP" (arms straight). */
 const ANGLE_UP_THRESHOLD = 155;
 /** Elbow angle below which the position is considered "DOWN" (arms bent).
- * Raised to 145 so it captures desktop push-ups (~136-145°) as well as deep mobile reps (~61-93°) */
-const ANGLE_DOWN_THRESHOLD = 145;
+ *  Desktop webcams see shallower angles (~136-145°), mobile sees deeper (~61-93°). */
+const ANGLE_DOWN_THRESHOLD = 140;
 /** Perfect amplitude target — angle ≤ this gives full amplitude score */
-const PERFECT_AMPLITUDE_ANGLE = 90;
+const PERFECT_AMPLITUDE_ANGLE = 80;
 /** Number of frames to smooth the angle signal */
 const SMOOTHING_WINDOW = 5;
 
 // ── Anti-cheat positional constraints ────────────────────────────
-/**
- * Maximum allowed vertical spread between shoulder and ankle (normalized 0–1).
- * In a push-up (horizontal body): spread is small (~0.10–0.35).
- * Standing/seated: spread is large (~0.50–0.80).
- * 0.65 is very permissive for phones placed on the floor looking up at a steep angle.
- */
 const MAX_BODY_VERTICAL_SPREAD = 0.65;
-
-/**
- * Wrists must be BELOW (higher Y value) the shoulders for a valid push-up.
- * In push-up: hands are on the floor → wrist.y > shoulder.y.
- * Arms raised while seated: wrist.y < shoulder.y.
- * A larger negative margin (-0.15) allows for extreme camera angles (e.g. phone flat on ground).
- */
 const WRIST_BELOW_SHOULDER_MARGIN = -0.15;
+
+// ── Alignment thresholds (front-facing camera) ───────────────────
+/** Max elbow angle difference (L vs R) before penalising arm symmetry */
+const ARM_SYMMETRY_TOLERANCE = 15; // degrees
+/** Hip sag/pike: deviation of hip Y from shoulder-ankle midline (normalised) */
+const HIP_DEVIATION_TOLERANCE = 0.04;
 
 export class PushUpDetector extends BaseExerciseDetector {
     private angleHistory: number[] = [];
     private minAngleThisRep: number = 180;
-    private bestAlignmentThisRep: number = 100;
+    private bestAlignmentThisRep: number = 0; // FIX: was 100, never updated
     private hasReachedValidDown = false;
+    private lastRepTimestamp: number = 0;
+
+    // Alignment tracking across frames within a rep
+    private worstHipDeviation: number = 0;
+    private worstArmAsymmetry: number = 0;
+
+    // Track whether user was descending (to detect incomplete reps)
+    private wasDescending: boolean = false;
 
     // ── Calibration State ──
     private calibrationFrames: { spread: number, wristOffset: number }[] = [];
-
-    // Calibrated personalized thresholds
     private calibratedMaxBodyVerticalSpread = MAX_BODY_VERTICAL_SPREAD;
     private calibratedWristBelowShoulderMargin = WRIST_BELOW_SHOULDER_MARGIN;
 
-    // Override reset to clear calibration as well
     reset(): void {
         super.reset();
+        this.angleHistory = [];
+        this.minAngleThisRep = 180;
+        this.bestAlignmentThisRep = 0;
+        this.hasReachedValidDown = false;
+        this.lastRepTimestamp = 0;
+        this.worstHipDeviation = 0;
+        this.worstArmAsymmetry = 0;
+        this.wasDescending = false;
         this.calibrationFrames = [];
         this.calibratedMaxBodyVerticalSpread = MAX_BODY_VERTICAL_SPREAD;
         this.calibratedWristBelowShoulderMargin = WRIST_BELOW_SHOULDER_MARGIN;
@@ -104,94 +109,116 @@ export class PushUpDetector extends BaseExerciseDetector {
         const smoothedAngle =
             this.angleHistory.reduce((s, v) => s + v, 0) / this.angleHistory.length;
 
-        // ── 2. Positional validity checks (anti-cheat) & Calibration ─
+        // ── 2. Positional validity checks & Calibration ─────────────
         const midShoulderY = (leftShoulder.y + rightShoulder.y) / 2;
         const midAnkleY = (leftAnkle.y + rightAnkle.y) / 2;
         const midWristY = (leftWrist.y + rightWrist.y) / 2;
 
         const bodyVerticalSpread = Math.abs(midShoulderY - midAnkleY);
-        const wristOffset = midShoulderY - midWristY; // Negative means wrists are below shoulder
+        const wristOffset = midShoulderY - midWristY;
 
-        // ── 2.5 Calibration logic ──
         if (!this.state.isCalibrated) {
-            // Check if they are in a "rough" plank position using default wide thresholds
             const isRoughlyPlank = bodyVerticalSpread < MAX_BODY_VERTICAL_SPREAD && wristOffset < WRIST_BELOW_SHOULDER_MARGIN;
 
             if (isRoughlyPlank) {
-                this.calibrationFrames.push({ spread: bodyVerticalSpread, wristOffset: wristOffset });
+                this.calibrationFrames.push({ spread: bodyVerticalSpread, wristOffset });
                 this.state.calibratingPercentage = Math.min(100, Math.round((this.calibrationFrames.length / CALIBRATION_FRAMES_REQUIRED) * 100));
 
                 if (this.calibrationFrames.length >= CALIBRATION_FRAMES_REQUIRED) {
-                    // Compute averages
                     const avgSpread = this.calibrationFrames.reduce((s, f) => s + f.spread, 0) / this.calibrationFrames.length;
                     const avgWrist = this.calibrationFrames.reduce((s, f) => s + f.wristOffset, 0) / this.calibrationFrames.length;
 
-                    // Set personalized thresholds with extra slack for various camera angles
-                    this.calibratedMaxBodyVerticalSpread = avgSpread + 0.30; // More permissive for desktop/front cams
-                    this.calibratedWristBelowShoulderMargin = avgWrist + 0.15; // Same
+                    this.calibratedMaxBodyVerticalSpread = avgSpread + 0.30;
+                    this.calibratedWristBelowShoulderMargin = avgWrist + 0.15;
 
                     this.state.isCalibrated = true;
                     this.state.isValidPosition = true;
                 }
             } else {
-                // If they break the rough plank entirely, reset calibration progress
-                // We add a tiny buffer so it doesn't flicker immediately, but resetting is safer
                 this.calibrationFrames = [];
                 this.state.calibratingPercentage = 0;
                 this.state.isValidPosition = false;
             }
-
-            // Do not evaluate reps during calibration
             return this.getState();
         }
 
-        // Use calibrated personalized thresholds for reps
-        const isBodyHorizontal = bodyVerticalSpread < this.calibratedMaxBodyVerticalSpread;
-        const areWristsBelowShoulders = wristOffset < this.calibratedWristBelowShoulderMargin;
-
-        const isValidPushUpPosition = isBodyHorizontal && areWristsBelowShoulders;
-
-
-
-        // ── 3. Alignment score ───────────────────────────────────────
-        const alignmentScore = this.computeAlignmentScore(
-            leftShoulder, rightShoulder,
-            leftHip, rightHip,
-            leftAnkle, rightAnkle
+        // Ensure key landmarks are actually visible (not hallucinated off-screen)
+        const keyLandmarksVisible = this.areLandmarksVisible(
+            landmarks,
+            [LM.LEFT_SHOULDER, LM.RIGHT_SHOULDER, LM.LEFT_ELBOW, LM.RIGHT_ELBOW, LM.LEFT_HIP, LM.RIGHT_HIP],
+            0.4,
         );
 
-        // Always expose position validity for real-time UI feedback
+        const isBodyHorizontal = bodyVerticalSpread < this.calibratedMaxBodyVerticalSpread;
+        const areWristsBelowShoulders = wristOffset < this.calibratedWristBelowShoulderMargin;
+        const isValidPushUpPosition = keyLandmarksVisible && isBodyHorizontal && areWristsBelowShoulders;
+
+        // ── 3. Alignment metrics (computed every frame, tracked per rep) ──
+        const armAsymmetry = Math.abs(leftElbowAngle - rightElbowAngle);
+
+        // Hip deviation from shoulder-ankle line (vertical axis)
+        const midHipY = (leftHip.y + rightHip.y) / 2;
+        const expectedHipY = (midShoulderY + midAnkleY) / 2;
+        const hipDeviation = midHipY - expectedHipY; // positive = sagging, negative = piking
+
+        const alignmentScore = this.computeAlignmentScore(armAsymmetry, hipDeviation);
+
         this.state.isValidPosition = isValidPushUpPosition;
 
         // ── 4. State machine ─────────────────────────────────────────
         const prevPhase = this.state.currentPhase;
+        this.state.incompleteRepFeedback = null; // clear each frame
 
         if (smoothedAngle >= ANGLE_UP_THRESHOLD) {
-            // UP phase reached — if we had a valid DOWN, count the rep
+            // Detect incomplete rep: user was descending but came back up
+            // without reaching ANGLE_DOWN_THRESHOLD
+            if (this.wasDescending && !this.hasReachedValidDown && this.minAngleThisRep < 170) {
+                this.state.incompleteRepFeedback = 'go_lower';
+            }
+            this.wasDescending = false;
+
             if (this.hasReachedValidDown) {
                 const repAmplitudeScore = this.computeAmplitudeScore(this.minAngleThisRep);
+
+                // Use worst alignment seen during this rep (not best — we penalise bad form)
                 const repAlignmentScore = this.bestAlignmentThisRep;
+
                 const repScore = Math.round(repAmplitudeScore * 0.6 + repAlignmentScore * 0.4);
-                this.recordRep(repScore, repAmplitudeScore, repAlignmentScore, this.minAngleThisRep);
+
+                // Determine feedback
+                const now = Date.now();
+                const repDuration = this.lastRepTimestamp > 0 ? now - this.lastRepTimestamp : 2000;
+                const feedback = this.determineFeedback(
+                    repAmplitudeScore, repAlignmentScore,
+                    this.worstHipDeviation, this.worstArmAsymmetry,
+                    repDuration,
+                );
+                this.lastRepTimestamp = now;
+
+                this.recordRep(repScore, repAmplitudeScore, repAlignmentScore, this.minAngleThisRep, feedback);
 
                 // Reset for next rep
                 this.minAngleThisRep = 180;
-                this.bestAlignmentThisRep = 100;
+                this.bestAlignmentThisRep = 0;
                 this.hasReachedValidDown = false;
+                this.worstHipDeviation = 0;
+                this.worstArmAsymmetry = 0;
             }
             this.state.currentPhase = 'up';
 
         } else if (smoothedAngle <= ANGLE_DOWN_THRESHOLD) {
-            // DOWN phase — require body to be horizontal to avoid counting when standing up
             if (isBodyHorizontal) {
                 this.hasReachedValidDown = true;
             } else {
-                // User is standing/vertical — clear any pending DOWN to prevent false reps
                 this.hasReachedValidDown = false;
             }
+            this.wasDescending = true;
             this.state.currentPhase = 'down';
-
         } else {
+            // In transition zone — mark as descending if angle is decreasing
+            if (prevPhase === 'up' || prevPhase === 'idle') {
+                this.wasDescending = true;
+            }
             this.state.currentPhase = 'transition';
         }
 
@@ -202,6 +229,13 @@ export class PushUpDetector extends BaseExerciseDetector {
             }
             if (alignmentScore > this.bestAlignmentThisRep) {
                 this.bestAlignmentThisRep = alignmentScore;
+            }
+            // Track worst deviations for feedback
+            if (Math.abs(hipDeviation) > Math.abs(this.worstHipDeviation)) {
+                this.worstHipDeviation = hipDeviation;
+            }
+            if (armAsymmetry > this.worstArmAsymmetry) {
+                this.worstArmAsymmetry = armAsymmetry;
             }
         }
 
@@ -217,22 +251,52 @@ export class PushUpDetector extends BaseExerciseDetector {
     }
 
     /**
-     * Body alignment: measures deviation of hip midpoint from shoulder-ankle line.
+     * Alignment score for front-facing push-ups:
+     * 1. Arm symmetry: penalise if one arm bends more than the other
+     * 2. Hip line: penalise sagging (positive deviation) or piking (negative)
      */
-    private computeAlignmentScore(
-        leftShoulder: Landmark, rightShoulder: Landmark,
-        leftHip: Landmark, rightHip: Landmark,
-        leftAnkle: Landmark, rightAnkle: Landmark
-    ): number {
-        const shoulder = { x: (leftShoulder.x + rightShoulder.x) / 2, y: (leftShoulder.y + rightShoulder.y) / 2 };
-        const hip = { x: (leftHip.x + rightHip.x) / 2, y: (leftHip.y + rightHip.y) / 2 };
-        const ankle = { x: (leftAnkle.x + rightAnkle.x) / 2, y: (leftAnkle.y + rightAnkle.y) / 2 };
+    private computeAlignmentScore(armAsymmetry: number, hipDeviation: number): number {
+        // Arm symmetry: 0-15° diff → 100, 15-45° → linear decay to 0
+        const symScore = armAsymmetry <= ARM_SYMMETRY_TOLERANCE
+            ? 100
+            : Math.max(0, 100 - ((armAsymmetry - ARM_SYMMETRY_TOLERANCE) / 30) * 100);
 
-        const t = (ankle.y - shoulder.y) !== 0
-            ? (hip.y - shoulder.y) / (ankle.y - shoulder.y)
-            : 0;
-        const expectedHipX = shoulder.x + t * (ankle.x - shoulder.x);
-        const deviation = Math.abs(hip.x - expectedHipX);
-        return Math.min(100, Math.round(Math.max(0, 100 - (deviation / 0.1) * 100)));
+        // Hip line: 0-0.04 deviation → 100, 0.04-0.12 → linear decay to 0
+        const absHipDev = Math.abs(hipDeviation);
+        const hipScore = absHipDev <= HIP_DEVIATION_TOLERANCE
+            ? 100
+            : Math.max(0, 100 - ((absHipDev - HIP_DEVIATION_TOLERANCE) / 0.08) * 100);
+
+        return Math.min(100, Math.round(symScore * 0.5 + hipScore * 0.5));
+    }
+
+    /**
+     * Determine the single most important feedback for this rep.
+     * Priority: amplitude > hip sag/pike > arm asymmetry > speed > good/perfect
+     */
+    private determineFeedback(
+        amplitudeScore: number,
+        alignmentScore: number,
+        worstHipDev: number,
+        worstArmAsym: number,
+        repDurationMs: number,
+    ): RepFeedback {
+        // Perfect rep
+        if (amplitudeScore >= 90 && alignmentScore >= 85) return 'perfect';
+
+        // Amplitude is the #1 issue
+        if (amplitudeScore < 60) return 'go_lower';
+
+        // Hip issues
+        if (worstHipDev > HIP_DEVIATION_TOLERANCE * 2) return 'body_sagging';
+        if (worstHipDev < -HIP_DEVIATION_TOLERANCE * 2) return 'body_piking';
+
+        // Arm symmetry
+        if (worstArmAsym > ARM_SYMMETRY_TOLERANCE * 2) return 'arms_uneven';
+
+        // Too fast (less than 800ms per rep)
+        if (repDurationMs < 800 && repDurationMs > 0) return 'too_fast';
+
+        return 'good';
     }
 }

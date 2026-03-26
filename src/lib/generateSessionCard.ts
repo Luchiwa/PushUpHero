@@ -4,6 +4,7 @@
  */
 import { getGradeLetter, getGradeColor } from '@lib/constants';
 import type { ExerciseType } from '@exercises/types';
+import { getExerciseLabel } from '@exercises/types';
 
 export interface ShareSessionData {
     repCount: number;
@@ -333,7 +334,7 @@ export function generateSessionCard(data: ShareSessionData): HTMLCanvasElement {
         if (data.sessionMode === 'time') {
             stats.push({ value: formatTime(data.elapsedTime), label: 'Duration' });
         }
-        const repLabel = data.exerciseType === 'squat' ? 'Squats' : 'Push-ups';
+        const repLabel = data.exerciseType ? getExerciseLabel(data.exerciseType) : 'Reps';
         stats.push({ value: String(data.repCount), label: repLabel, accent: true });
         stats.push({ value: String(data.averageScore), label: 'Avg Score' });
         if (data.bestScore != null && data.bestScore !== data.averageScore) {

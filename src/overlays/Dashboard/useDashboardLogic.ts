@@ -1,13 +1,17 @@
 /**
  * useDashboardLogic — Encapsulates all Dashboard side-effects:
- * sound triggers, invalid-position banner debouncing, and countdown timer.
+ * sound triggers, invalid-position banner debouncing, countdown timer,
+ * and vocal coach integration.
  *
  * Keeps Dashboard.tsx as a pure render component.
  */
 import { useEffect, useRef, useState } from 'react';
 import { useSoundEffect } from '@hooks/useSoundEffect';
+import type { RepResult, ExerciseType, RepFeedback } from '@exercises/types';
+import { processRepFeedback, resetCoach, speakCalibrationGuide, processIncompleteRep } from '@lib/coachEngine';
 
 interface UseDashboardLogicProps {
+    exerciseType: ExerciseType;
     repCount: number;
     isCalibrated: boolean;
     isValidPosition: boolean;
@@ -16,9 +20,12 @@ interface UseDashboardLogicProps {
     timeGoal: { minutes: number; seconds: number };
     elapsedTimeRef?: React.MutableRefObject<number>;
     onTimerEnd: () => void;
+    lastRepResult: RepResult | null;
+    incompleteRepFeedback: RepFeedback | null;
 }
 
 export function useDashboardLogic({
+    exerciseType,
     repCount,
     isCalibrated,
     isValidPosition,
@@ -27,10 +34,50 @@ export function useDashboardLogic({
     timeGoal,
     elapsedTimeRef,
     onTimerEnd,
+    lastRepResult,
+    incompleteRepFeedback,
 }: UseDashboardLogicProps) {
     const { initAudio, playRepSound, playStartReadySound } = useSoundEffect();
     const prevRepCountRef = useRef(repCount);
     const prevCalibratedRef = useRef(isCalibrated);
+
+    // ── Coach vocal phrase (shown in UI) ─────────────────────────
+    const [coachPhrase, setCoachPhrase] = useState<string | null>(null);
+
+    // ── Calibration vocal guidance ───────────────────────────────
+    useEffect(() => {
+        if (isCalibrated || !soundEnabled) {
+            resetCoach();
+            return;
+        }
+
+        // Cancel any lingering speech from a previous mount (StrictMode)
+        speechSynthesis.cancel();
+        resetCoach();
+
+        // Small delay so the cancel() fully clears the queue before we enqueue
+        const firstTimeout = setTimeout(() => {
+            const phrase = speakCalibrationGuide(exerciseType);
+            if (phrase) setCoachPhrase(phrase);
+        }, 80);
+
+        const intervalId = setInterval(() => {
+            const p = speakCalibrationGuide(exerciseType);
+            if (p) setCoachPhrase(p);
+        }, 8_500);
+
+        return () => {
+            clearTimeout(firstTimeout);
+            clearInterval(intervalId);
+        };
+    }, [isCalibrated, soundEnabled, exerciseType]);
+
+    // ── Incomplete rep coaching ───────────────────────────────────
+    useEffect(() => {
+        if (!incompleteRepFeedback || !soundEnabled || !isCalibrated) return;
+        const phrase = processIncompleteRep(exerciseType);
+        if (phrase) setCoachPhrase(phrase);
+    }, [incompleteRepFeedback, soundEnabled, isCalibrated, exerciseType]);
 
     // ── Invalid-position banner (debounced ~2s at 30fps) ─────────
     const invalidFramesRef = useRef(0);
@@ -57,13 +104,19 @@ export function useDashboardLogic({
         if (soundEnabled) initAudio();
     }, [soundEnabled, initAudio]);
 
-    // Play rep sound
+    // Play rep sound + vocal coach
     useEffect(() => {
         if (repCount > prevRepCountRef.current) {
             if (soundEnabled) playRepSound();
+
+            // Coach vocal feedback (only when sound is on)
+            if (soundEnabled && lastRepResult) {
+                const phrase = processRepFeedback(lastRepResult.feedback, lastRepResult.score);
+                if (phrase) setCoachPhrase(phrase);
+            }
         }
         prevRepCountRef.current = repCount;
-    }, [repCount, playRepSound, soundEnabled]);
+    }, [repCount, playRepSound, soundEnabled, lastRepResult]);
 
     // Play "ready to start" sound when calibration completes
     useEffect(() => {
@@ -135,5 +188,5 @@ export function useDashboardLogic({
         }
     }, [timeRemaining, sessionMode, onTimerEnd]);
 
-    return { showInvalidBanner, timeRemaining };
+    return { showInvalidBanner, timeRemaining, coachPhrase };
 }

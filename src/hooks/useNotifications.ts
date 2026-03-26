@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 import {
     collection, query, where, onSnapshot,
-    updateDoc, doc,
+    deleteDoc, doc, updateDoc,
 } from 'firebase/firestore';
 import { db, getFcmToken } from '@lib/firebase';
 import { useAuth } from './useAuth';
@@ -21,18 +21,6 @@ async function registerFcmToken(uid: string): Promise<void> {
     const token = await getFcmToken();
     if (!token) return;
     await updateDoc(doc(db, 'users', uid), { fcmToken: token });
-}
-
-// ─── In-app notification fallback (when app is open) ─────────────────────────
-// When the app is open, the SW push may not show (browser suppresses it).
-// We use the Firestore onSnapshot to show a native notification directly,
-// and mark it as read so the Cloud Function doesn't retry.
-
-const ICON = '/pwa-192x192.png';
-
-function showNativeNotification(title: string, body: string) {
-    if (!('Notification' in window) || Notification.permission !== 'granted') return;
-    new Notification(title, { body, icon: ICON });
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -61,8 +49,11 @@ export function useNotifications() {
         setup();
     }, [user]);
 
-    // 2. While app is open: listen for unread notifications → show in-app + mark read
-    //    (The Cloud Function handles background push via FCM — this is the foreground fallback)
+    // 2. While app is open: listen for unread notifications and delete them.
+    //    Push display is handled exclusively by FCM → Service Worker.
+    //    This listener only cleans up the Firestore document so it doesn't
+    //    pile up. We skip docs older than 30s to avoid mass-deleting on
+    //    initial snapshot load (those will be purged by the daily Cloud Function).
     useEffect(() => {
         if (!user) return;
 
@@ -73,24 +64,17 @@ export function useNotifications() {
             for (const change of snap.docChanges()) {
                 if (change.type !== 'added') continue;
 
-                const data = change.doc.data() as Omit<AppNotification, 'id'>;
+                const data = change.doc.data();
+                const sentAt = data.sentAt?.toMillis?.() ?? data.sentAt ?? 0;
+                const age = Date.now() - sentAt;
 
-                if (data.type === 'encouragement') {
-                    showNativeNotification(
-                        '💪 Encouragement!',
-                        `${data.fromUsername} believes in you — go crush it!`,
-                    );
-                } else if (data.type === 'friend_request') {
-                    showNativeNotification(
-                        '🤝 Friend request',
-                        `${data.fromUsername} wants to be your friend!`,
+                // Only auto-delete fresh notifications (< 30s)
+                // Older ones are left for the daily server-side purge
+                if (age < 30_000) {
+                    await deleteDoc(
+                        doc(db, 'users', user.uid, 'notifications', change.doc.id),
                     );
                 }
-
-                await updateDoc(
-                    doc(db, 'users', user.uid, 'notifications', change.doc.id),
-                    { read: true },
-                );
             }
         });
 

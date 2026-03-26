@@ -41,6 +41,8 @@ export function ProgressionScreen({ onClose }: ProgressionScreenProps) {
     // Build user stats for achievement progress
     const stats: UserStats = useMemo(() => {
         const lifetimeReps = dbUser?.lifetimeReps ?? computeLifetimeReps(sessions);
+        const lifetimeTrainingTime = dbUser?.lifetimeTrainingTime
+            ?? sessions.reduce((sum, s) => sum + (s.totalDuration ?? s.elapsedTime ?? 0), 0);
         return {
             lifetimeRepsByExercise: lifetimeReps,
             sessionRepsByExercise: {}, // Not relevant for progression screen (no active session)
@@ -51,6 +53,7 @@ export function ProgressionScreen({ onClose }: ProgressionScreenProps) {
             sGradeCount: dbUser?.sGradeCount ?? countSGrades(sessions),
             sessionXp: 0,
             globalLevel: level,
+            lifetimeTrainingTime,
         };
     }, [dbUser, sessions, totalSessionCount, friends.length, level]);
 

@@ -43,6 +43,12 @@ export const PoseOverlay = memo(forwardRef<PoseOverlayHandle, PoseOverlayProps>(
         exerciseTypeRef.current = exerciseType;
 
         // ── Init OffscreenCanvas worker ──────────────────────────────
+        // NOTE: We must NOT terminate the worker on cleanup because
+        // transferControlToOffscreen is irreversible — once transferred
+        // the canvas can never get a 2D context again. In React StrictMode
+        // (dev) effects run twice; terminating the worker on the first
+        // cleanup leaves workerRef null while the canvas is transferred,
+        // causing the fallback getContext('2d') to throw.
         useEffect(() => {
             const canvas = canvasRef.current;
             if (!canvas || !supportsOffscreen || offscreenTransferred.current) return;
@@ -61,10 +67,8 @@ export const PoseOverlay = memo(forwardRef<PoseOverlayHandle, PoseOverlayProps>(
                 console.warn('PoseOverlay: OffscreenCanvas transfer failed, using main thread');
             }
 
-            return () => {
-                workerRef.current?.terminate();
-                workerRef.current = null;
-            };
+            // No cleanup: worker + transferred canvas must persist for the
+            // lifetime of this canvas element.
         }, []);
 
         // ── Imperative draw handle ───────────────────────────────────
@@ -92,6 +96,8 @@ export const PoseOverlay = memo(forwardRef<PoseOverlayHandle, PoseOverlayProps>(
                 }
 
                 // ── Fallback: main-thread drawing ────────────────────
+                // If canvas was transferred to offscreen, we can't draw on it
+                if (offscreenTransferred.current) return;
                 const canvas = canvasRef.current;
                 if (!canvas) return;
                 const ctx = canvas.getContext('2d');

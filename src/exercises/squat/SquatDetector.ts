@@ -1,5 +1,5 @@
 import { BaseExerciseDetector } from '../BaseExerciseDetector';
-import type { ExerciseState, Landmark } from '../types';
+import type { ExerciseState, Landmark, RepFeedback } from '../types';
 import { CALIBRATION_FRAMES_REQUIRED } from '@lib/constants';
 
 /**
@@ -18,51 +18,38 @@ const LM = {
 } as const;
 
 // ── Knee angle thresholds ─────────────────────────────────────────
-/**
- * Knee angle above which the position is considered "UP" (legs straight).
- * Standing: ~170-180°. We use 160° as threshold.
- */
 const ANGLE_UP_THRESHOLD = 160;
-/**
- * Knee angle below which the position is considered "DOWN" (deep squat).
- * Deep squat target: ≤90°. We use 110° as the threshold to enter DOWN phase.
- */
 const ANGLE_DOWN_THRESHOLD = 110;
-/** Perfect amplitude target — knee angle ≤ this gives full amplitude score */
 const PERFECT_AMPLITUDE_ANGLE = 80;
-/** Number of frames to smooth the angle signal */
 const SMOOTHING_WINDOW = 5;
 
 // ── Positional constraints ───────────────────────────────────────
-/**
- * Minimum vertical spread between shoulder and ankle (normalized 0–1).
- * Standing facing camera: spread is large (~0.45–0.75).
- * If only upper body is visible, spread is tiny.
- */
 const MIN_BODY_VERTICAL_SPREAD = 0.35;
-
-/**
- * Shoulders must be ABOVE (lower Y value) the hips.
- * This ensures the user is upright, not lying down.
- */
 const SHOULDER_ABOVE_HIP_MARGIN = 0.04;
-
-/**
- * Minimum visibility score for key lower-body landmarks.
- * MediaPipe returns low visibility when limbs are off-screen or occluded.
- */
 const MIN_LANDMARK_VISIBILITY = 0.5;
+
+// ── Alignment thresholds (front-facing camera) ───────────────────
+/** Max knee X deviation from ankle X before penalising (normalised) */
+const KNEE_TRACKING_TOLERANCE = 0.04;
+/** Max torso lean: shoulder-hip horizontal deviation (normalised) */
+const TORSO_LEAN_TOLERANCE = 0.03;
 
 export class SquatDetector extends BaseExerciseDetector {
     private angleHistory: number[] = [];
     private minAngleThisRep: number = 180;
-    private bestAlignmentThisRep: number = 100;
+    private bestAlignmentThisRep: number = 0; // FIX: was 100
     private hasReachedValidDown = false;
+    private lastRepTimestamp: number = 0;
+
+    // Worst deviations tracking for feedback
+    private worstKneeDeviation: number = 0;
+    private worstTorsoLean: number = 0;
+
+    // Track whether user was descending (to detect incomplete reps)
+    private wasDescending: boolean = false;
 
     // ── Calibration State ──
     private calibrationFrames: { spread: number; shoulderHipDiff: number }[] = [];
-
-    // Calibrated personalized thresholds
     private calibratedMinBodyVerticalSpread = MIN_BODY_VERTICAL_SPREAD;
     private calibratedShoulderAboveHipMargin = SHOULDER_ABOVE_HIP_MARGIN;
 
@@ -70,8 +57,12 @@ export class SquatDetector extends BaseExerciseDetector {
         super.reset();
         this.angleHistory = [];
         this.minAngleThisRep = 180;
-        this.bestAlignmentThisRep = 100;
+        this.bestAlignmentThisRep = 0;
         this.hasReachedValidDown = false;
+        this.lastRepTimestamp = 0;
+        this.worstKneeDeviation = 0;
+        this.worstTorsoLean = 0;
+        this.wasDescending = false;
         this.calibrationFrames = [];
         this.calibratedMinBodyVerticalSpread = MIN_BODY_VERTICAL_SPREAD;
         this.calibratedShoulderAboveHipMargin = SHOULDER_ABOVE_HIP_MARGIN;
@@ -90,7 +81,6 @@ export class SquatDetector extends BaseExerciseDetector {
         const rightAnkle = landmarks[LM.RIGHT_ANKLE];
 
         // ── 1. Compute smoothed knee angle ──────────────────────────
-        // Knee angle = angle at the knee joint (hip → knee → ankle)
         const leftKneeAngle = this.computeAngle(leftHip, leftKnee, leftAnkle);
         const rightKneeAngle = this.computeAngle(rightHip, rightKnee, rightAnkle);
 
@@ -117,28 +107,24 @@ export class SquatDetector extends BaseExerciseDetector {
         const midAnkleY = (leftAnkle.y + rightAnkle.y) / 2;
 
         const bodyVerticalSpread = Math.abs(midShoulderY - midAnkleY);
-        const shoulderHipDiff = midHipY - midShoulderY; // positive = shoulders above hips (correct)
+        const shoulderHipDiff = midHipY - midShoulderY;
 
-        // ── 2.5 Calibration logic ──
         if (!this.state.isCalibrated) {
-            // Require key lower-body landmarks to actually be visible
             const kneeVis = Math.max(leftKnee.visibility ?? 0, rightKnee.visibility ?? 0);
             const ankleVis = Math.max(leftAnkle.visibility ?? 0, rightAnkle.visibility ?? 0);
             const areLowerLandmarksVisible =
                 kneeVis > MIN_LANDMARK_VISIBILITY && ankleVis > MIN_LANDMARK_VISIBILITY;
 
-            // Verify vertical ordering: shoulders above hips above knees above ankles
             const midKneeY = (leftKnee.y + rightKnee.y) / 2;
             const isVerticallyOrdered =
                 midShoulderY < midHipY && midHipY < midKneeY && midKneeY < midAnkleY;
 
-            // Check if the user is roughly standing upright with full body visible
             const isRoughlyStanding =
                 areLowerLandmarksVisible &&
                 isVerticallyOrdered &&
                 bodyVerticalSpread > MIN_BODY_VERTICAL_SPREAD &&
                 shoulderHipDiff > SHOULDER_ABOVE_HIP_MARGIN &&
-                smoothedAngle > ANGLE_UP_THRESHOLD; // legs should be straight during calibration
+                smoothedAngle > ANGLE_UP_THRESHOLD;
 
             if (isRoughlyStanding) {
                 this.calibrationFrames.push({ spread: bodyVerticalSpread, shoulderHipDiff });
@@ -155,8 +141,7 @@ export class SquatDetector extends BaseExerciseDetector {
                         this.calibrationFrames.reduce((s, f) => s + f.shoulderHipDiff, 0) /
                         this.calibrationFrames.length;
 
-                    // Personalized thresholds with extra slack
-                    this.calibratedMinBodyVerticalSpread = avgSpread * 0.4; // allow significant shrink during deep squat
+                    this.calibratedMinBodyVerticalSpread = avgSpread * 0.4;
                     this.calibratedShoulderAboveHipMargin = avgShoulderHipDiff * 0.3;
 
                     this.state.isCalibrated = true;
@@ -171,39 +156,66 @@ export class SquatDetector extends BaseExerciseDetector {
             return this.getState();
         }
 
-        // Use calibrated thresholds
+        // Ensure key landmarks are actually visible (not hallucinated off-screen)
+        const keyLandmarksVisible = this.areLandmarksVisible(
+            landmarks,
+            [LM.LEFT_HIP, LM.RIGHT_HIP, LM.LEFT_KNEE, LM.RIGHT_KNEE, LM.LEFT_ANKLE, LM.RIGHT_ANKLE],
+            0.4,
+        );
+
         const isUpright =
+            keyLandmarksVisible &&
             bodyVerticalSpread > this.calibratedMinBodyVerticalSpread &&
             shoulderHipDiff > this.calibratedShoulderAboveHipMargin;
 
         const isValidSquatPosition = isUpright;
 
-        // ── 3. Alignment score ───────────────────────────────────────
-        // For squats: how well the knees track over the ankles (not caving in).
-        // We measure the horizontal deviation of knee midpoint from ankle midpoint.
-        const alignmentScore = this.computeSquatAlignmentScore(
-            leftKnee, rightKnee,
-            leftAnkle, rightAnkle,
-            leftHip, rightHip,
-        );
+        // ── 3. Alignment metrics ─────────────────────────────────────
+        const kneeMidX = (leftKnee.x + rightKnee.x) / 2;
+        const ankleMidX = (leftAnkle.x + rightAnkle.x) / 2;
+        const shoulderMidX = (leftShoulder.x + rightShoulder.x) / 2;
+        const hipMidX = (leftHip.x + rightHip.x) / 2;
+
+        const kneeDeviation = Math.abs(kneeMidX - ankleMidX);
+        const torsoLean = Math.abs(shoulderMidX - hipMidX);
+
+        const alignmentScore = this.computeSquatAlignmentScore(kneeDeviation, torsoLean);
 
         this.state.isValidPosition = isValidSquatPosition;
 
         // ── 4. State machine ─────────────────────────────────────────
         const prevPhase = this.state.currentPhase;
+        this.state.incompleteRepFeedback = null; // clear each frame
 
         if (smoothedAngle >= ANGLE_UP_THRESHOLD) {
-            // UP phase — if we had a valid DOWN, count the rep
+            // Detect incomplete rep: user was descending but came back up
+            if (this.wasDescending && !this.hasReachedValidDown && this.minAngleThisRep < 170) {
+                this.state.incompleteRepFeedback = 'go_lower';
+            }
+            this.wasDescending = false;
+
             if (this.hasReachedValidDown) {
                 const repAmplitudeScore = this.computeAmplitudeScore(this.minAngleThisRep);
                 const repAlignmentScore = this.bestAlignmentThisRep;
                 const repScore = Math.round(repAmplitudeScore * 0.6 + repAlignmentScore * 0.4);
-                this.recordRep(repScore, repAmplitudeScore, repAlignmentScore, this.minAngleThisRep);
+
+                const now = Date.now();
+                const repDuration = this.lastRepTimestamp > 0 ? now - this.lastRepTimestamp : 2000;
+                const feedback = this.determineFeedback(
+                    repAmplitudeScore, repAlignmentScore,
+                    this.worstKneeDeviation, this.worstTorsoLean,
+                    repDuration,
+                );
+                this.lastRepTimestamp = now;
+
+                this.recordRep(repScore, repAmplitudeScore, repAlignmentScore, this.minAngleThisRep, feedback);
 
                 // Reset for next rep
                 this.minAngleThisRep = 180;
-                this.bestAlignmentThisRep = 100;
+                this.bestAlignmentThisRep = 0;
                 this.hasReachedValidDown = false;
+                this.worstKneeDeviation = 0;
+                this.worstTorsoLean = 0;
             }
             this.state.currentPhase = 'up';
         } else if (smoothedAngle <= ANGLE_DOWN_THRESHOLD) {
@@ -212,8 +224,12 @@ export class SquatDetector extends BaseExerciseDetector {
             } else {
                 this.hasReachedValidDown = false;
             }
+            this.wasDescending = true;
             this.state.currentPhase = 'down';
         } else {
+            if (prevPhase === 'up' || prevPhase === 'idle') {
+                this.wasDescending = true;
+            }
             this.state.currentPhase = 'transition';
         }
 
@@ -224,6 +240,12 @@ export class SquatDetector extends BaseExerciseDetector {
             }
             if (alignmentScore > this.bestAlignmentThisRep) {
                 this.bestAlignmentThisRep = alignmentScore;
+            }
+            if (kneeDeviation > this.worstKneeDeviation) {
+                this.worstKneeDeviation = kneeDeviation;
+            }
+            if (torsoLean > this.worstTorsoLean) {
+                this.worstTorsoLean = torsoLean;
             }
         }
 
@@ -239,27 +261,40 @@ export class SquatDetector extends BaseExerciseDetector {
     }
 
     /**
-     * Squat alignment: measures how well the torso stays vertically aligned.
-     * Computes deviation of shoulder midpoint from hip midpoint horizontally.
-     * A good squat keeps the torso relatively vertical.
+     * Squat alignment for front-facing camera:
+     * 1. Knee tracking: knees should stay over ankles (not caving in/out)
+     * 2. Torso lean: shoulders should stay roughly above hips (not leaning forward)
      */
-    private computeSquatAlignmentScore(
-        leftKnee: Landmark, rightKnee: Landmark,
-        leftAnkle: Landmark, rightAnkle: Landmark,
-        leftHip: Landmark, rightHip: Landmark,
-    ): number {
-        const kneeMidX = (leftKnee.x + rightKnee.x) / 2;
-        const ankleMidX = (leftAnkle.x + rightAnkle.x) / 2;
-        const hipMidX = (leftHip.x + rightHip.x) / 2;
+    private computeSquatAlignmentScore(kneeDeviation: number, torsoLean: number): number {
+        // Knee tracking: 0-0.04 → 100, 0.04-0.12 → linear decay
+        const kneeScore = kneeDeviation <= KNEE_TRACKING_TOLERANCE
+            ? 100
+            : Math.max(0, 100 - ((kneeDeviation - KNEE_TRACKING_TOLERANCE) / 0.08) * 100);
 
-        // Knee tracking: knees should stay over ankles
-        const kneeDeviation = Math.abs(kneeMidX - ankleMidX);
-        const kneeScore = Math.max(0, 100 - (kneeDeviation / 0.08) * 100);
+        // Torso lean: 0-0.03 → 100, 0.03-0.10 → linear decay
+        const torsoScore = torsoLean <= TORSO_LEAN_TOLERANCE
+            ? 100
+            : Math.max(0, 100 - ((torsoLean - TORSO_LEAN_TOLERANCE) / 0.07) * 100);
 
-        // Hip alignment: hips should stay over ankles (not leaning forward)
-        const hipDeviation = Math.abs(hipMidX - ankleMidX);
-        const hipScore = Math.max(0, 100 - (hipDeviation / 0.12) * 100);
+        return Math.min(100, Math.round(kneeScore * 0.5 + torsoScore * 0.5));
+    }
 
-        return Math.min(100, Math.round(kneeScore * 0.6 + hipScore * 0.4));
+    /**
+     * Determine the most important feedback for this rep.
+     * Priority: amplitude > knees caving > torso lean > speed > good/perfect
+     */
+    private determineFeedback(
+        amplitudeScore: number,
+        alignmentScore: number,
+        worstKneeDev: number,
+        worstTorsoLean: number,
+        repDurationMs: number,
+    ): RepFeedback {
+        if (amplitudeScore >= 90 && alignmentScore >= 85) return 'perfect';
+        if (amplitudeScore < 60) return 'go_lower';
+        if (worstKneeDev > KNEE_TRACKING_TOLERANCE * 2.5) return 'knees_caving';
+        if (worstTorsoLean > TORSO_LEAN_TOLERANCE * 2.5) return 'lean_forward';
+        if (repDurationMs < 800 && repDurationMs > 0) return 'too_fast';
+        return 'good';
     }
 }
