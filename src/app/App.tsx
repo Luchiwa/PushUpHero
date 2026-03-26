@@ -7,6 +7,7 @@ import { useCamera } from '@hooks/useCamera';
 import type { FacingMode } from '@hooks/useCamera';
 import { usePoseDetection } from '@hooks/usePoseDetection';
 import { useExerciseDetector } from '@hooks/useExerciseDetector';
+import { useLevel } from '@hooks/useAuth';
 import { PushUpDetector } from '@exercises/pushup/PushUpDetector';
 import { SquatDetector } from '@exercises/squat/SquatDetector';
 import { PullUpDetector } from '@exercises/pullup/PullUpDetector';
@@ -25,6 +26,8 @@ import { PositionGuide } from '@components/PositionGuide/PositionGuide';
 import { ReloadPrompt } from '@components/ReloadPrompt/ReloadPrompt';
 import { getExerciseLabel } from '@exercises/types';
 import { useInGameAchievements } from '@hooks/useInGameAchievements';
+import { useBodyProfile } from '@hooks/useBodyProfile';
+import { getActiveQuest, getAvailableQuests } from '@lib/quests';
 import { AchievementToast } from '@components/AchievementToast/AchievementToast';
 import './App.scss';
 
@@ -41,9 +44,15 @@ function App() {
 
   // ── Exercise detector ────────────────────────────────────────────
   const [isActive, setIsActive] = useState(false);
-  const { exerciseState, processLandmarks, resetDetector } = useExerciseDetector({
+  const { bodyProfile, questProgress, saveBodyProfile, completeQuests, acceptQuest } = useBodyProfile();
+  const { level: userLevel } = useLevel();
+  const activeQuest = getActiveQuest(questProgress, userLevel);
+  const availableQuests = getAvailableQuests(questProgress, userLevel);
+
+  const { exerciseState, processLandmarks, resetDetector, getCapturedRatios } = useExerciseDetector({
     detector,
     isActive,
+    bodyProfile,
   });
 
   // ── Camera ───────────────────────────────────────────────────────
@@ -60,6 +69,12 @@ function App() {
     resetDetector,
     startCamera,
     onExerciseTypeChange: handleExerciseTypeChange,
+    activeQuest,
+    availableQuests,
+    bodyProfile,
+    onSaveBodyProfile: saveBodyProfile,
+    onCompleteQuests: completeQuests,
+    getCapturedRatios,
   });
 
   // Sync isActive from state machine screen
@@ -165,6 +180,10 @@ function App() {
           onTimeGoalChange={wm.setTimeGoal}
           onStart={wm.handleStart}
           onOpenWorkoutConfig={wm.handleOpenConfig}
+          activeQuest={activeQuest}
+          questProgress={questProgress}
+          userLevel={userLevel}
+          onAcceptQuest={acceptQuest}
         />
       )}
 
@@ -224,6 +243,7 @@ function App() {
             )
           }
           brokenRecords={wm.lastSessionXp?.brokenRecords}
+          questCompleted={wm.questCompletedThisSession}
         />
       )}
 

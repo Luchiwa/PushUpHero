@@ -13,6 +13,9 @@ import { auth, db, storage } from '@lib/firebase';
 /**
  * Deletes the current user's account and all associated Firestore data.
  * Mirrors the logic of scripts/cleanFirestore.js, using the client SDK.
+ *
+ * Strategy: clean Firestore & Storage FIRST (while we still have auth),
+ * then delete the Firebase Auth account last (which revokes the token).
  */
 export async function deleteCurrentAccount(): Promise<void> {
     const user = auth.currentUser;
@@ -21,12 +24,7 @@ export async function deleteCurrentAccount(): Promise<void> {
     const uid = user.uid;
     const userRef = doc(db, 'users', uid);
 
-    // ── 1. Delete Firebase Auth account FIRST (fail-fast before any data mutation)
-    //       If the session is stale this throws auth/requires-recent-login before
-    //       we touch Firestore, keeping data and Auth in sync.
-    await deleteUser(user);
-
-    // ── 2. Release username claim ────────────────────────────────
+    // ── 1. Release username claim ────────────────────────────────
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
         const displayName = userSnap.data().displayName;
@@ -36,17 +34,16 @@ export async function deleteCurrentAccount(): Promise<void> {
         }
     }
 
-    // ── 3. Read cross-user references BEFORE deleting own data ───
+    // ── 2. Read cross-user references BEFORE deleting own data ───
     const [friendsSnap, sentSnap, receivedSnap] = await Promise.all([
         getDocs(collection(userRef, 'friends')),
         getDocs(collection(userRef, 'friendRequestsSent')),
         getDocs(collection(userRef, 'friendRequests')),
     ]);
 
-    // ── 4. Clean cross-user data ─────────────────────────────────
+    // ── 3. Clean cross-user data ─────────────────────────────────
     const crossBatch = writeBatch(db);
 
-    // Remove this user from friends' lists & their pending requests
     for (const friendDoc of friendsSnap.docs) {
         const friendUid = friendDoc.id;
         const base = doc(db, 'users', friendUid);
@@ -55,13 +52,11 @@ export async function deleteCurrentAccount(): Promise<void> {
         crossBatch.delete(doc(collection(base, 'friendRequestsSent'), uid));
     }
 
-    // Remove sent requests at recipients
     for (const sentDoc of sentSnap.docs) {
         const toUid = sentDoc.id;
         crossBatch.delete(doc(collection(doc(db, 'users', toUid), 'friendRequests'), uid));
     }
 
-    // Remove received requests at senders
     for (const receivedDoc of receivedSnap.docs) {
         const fromUid = receivedDoc.id;
         crossBatch.delete(doc(collection(doc(db, 'users', fromUid), 'friendRequestsSent'), uid));
@@ -69,7 +64,7 @@ export async function deleteCurrentAccount(): Promise<void> {
 
     await crossBatch.commit();
 
-    // ── 5. Delete own subcollections ─────────────────────────────
+    // ── 4. Delete own subcollections ─────────────────────────────
     const subcollections = [
         'sessions',
         'friends',
@@ -88,16 +83,23 @@ export async function deleteCurrentAccount(): Promise<void> {
         }
     }
 
-    // ── 6. Delete user profile document ─────────────────────────
+    // ── 5. Delete user profile document ─────────────────────────
     await deleteDoc(userRef);
 
-    // ── 7. Delete avatar from Storage (ignore if not found) ──────
+    // ── 6. Delete avatar from Storage (ignore if not found) ──────
     try {
         await deleteObject(ref(storage, `avatars/${uid}.jpg`));
     } catch {
         // File may not exist if user never uploaded an avatar
     }
 
-    // ── 8. Clear local storage ───────────────────────────────────
+    // ── 7. Delete Firebase Auth account LAST ─────────────────────
+    //       This revokes the token and triggers onAuthStateChanged(null),
+    //       which clears localStorage and tears down Firestore listeners.
+    await deleteUser(user);
+
+    // ── 8. Belt-and-suspenders: clear localStorage ───────────────
+    //       onAuthStateChanged handler also does this, but ensure it
+    //       happens even if the handler fires asynchronously.
     localStorage.clear();
 }

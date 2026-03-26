@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { EmailAuthProvider, GoogleAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, updatePassword } from 'firebase/auth';
 import { auth } from '@lib/firebase';
-import { useAuth } from '@hooks/useAuth';
+import { useAuthCore } from '@hooks/useAuth';
 import { deleteCurrentAccount } from '@hooks/useDeleteAccount';
 import './SettingsModal.scss';
 
@@ -36,7 +36,7 @@ function SettingsAccordion({ title, danger, isOpen, onToggle, children }: {
 }
 
 export function SettingsModal({ onClose, onAccountDeleted }: SettingsModalProps) {
-    const { user, logout } = useAuth();
+    const { user, logout } = useAuthCore();
 
     const handleLogout = async () => {
         await logout();

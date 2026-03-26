@@ -3,7 +3,7 @@ import './AuthModal.scss';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, runTransaction } from 'firebase/firestore';
 import { auth, db } from '@lib/firebase';
-import { useAuth } from '@hooks/useAuth';
+import { useAuthCore } from '@hooks/useAuth';
 
 interface AuthModalProps {
     onClose: () => void;
@@ -11,7 +11,7 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
-    const { loginWithGoogle } = useAuth();
+    const { loginWithGoogle } = useAuthCore();
     const [mode, setMode] = useState<'login' | 'register'>('login');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');

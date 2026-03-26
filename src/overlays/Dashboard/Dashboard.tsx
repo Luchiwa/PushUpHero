@@ -1,7 +1,7 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import './Dashboard.scss';
 import type { ExerciseState, ExerciseType } from '@exercises/types';
-import { getExerciseLabel } from '@exercises/types';
+import { getExerciseLabel, getInvalidPositionMessage } from '@exercises/types';
 import { getGradeLetter, getGradeColor } from '@lib/constants';
 import { useDashboardLogic } from './useDashboardLogic';
 
@@ -105,7 +105,7 @@ function CoachHint({ text }: { text: string | null }) {
 }
 
 export const Dashboard = memo(function Dashboard({ exerciseType, exerciseState, goalReps, sessionMode, timeGoal, onStop, onTimerEnd, elapsedTimeRef, onFlipCamera, facingMode, soundEnabled, onSoundToggle, currentSet, totalSets, currentBlock, totalBlocks }: DashboardProps) {
-    const { repCount, averageScore, lastRepResult, isValidPosition, isCalibrated, incompleteRepFeedback } = exerciseState;
+    const { repCount, averageScore, lastRepResult, isValidPosition, isCalibrated, incompleteRepFeedback, poseRejectedByLock } = exerciseState;
 
     const { showInvalidBanner, timeRemaining, coachPhrase } = useDashboardLogic({
         exerciseType,
@@ -241,12 +241,10 @@ export const Dashboard = memo(function Dashboard({ exerciseType, exerciseState, 
                 <CoachHint text={coachPhrase} />
 
                 {showInvalidBanner && (
-                    <div className="invalid-position-banner">
-                        {exerciseType === 'pushup'
-                            ? '⚠️ Get back into push-up position'
-                            : exerciseType === 'pullup'
-                                ? '⚠️ Get back into hang position'
-                                : '⚠️ Stand upright facing the camera'}
+                    <div className={`invalid-position-banner${poseRejectedByLock ? ' invalid-position-banner--lock' : ''}`}>
+                        {poseRejectedByLock
+                            ? '👤 Wrong person detected — get back in frame'
+                            : getInvalidPositionMessage(exerciseType)}
                     </div>
                 )}
             </div>

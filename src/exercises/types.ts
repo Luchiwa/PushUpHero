@@ -14,31 +14,41 @@ export interface ExerciseMeta {
     type: ExerciseType;
     label: string;
     emoji: string;
+    /** Banner shown when user leaves the valid position mid-session */
+    invalidPositionMessage: string;
+    /** Tagline for the share card */
+    shareTagline: string;
 }
 
 /** Display metadata per exercise — drives pickers, filters, etc. */
 export const EXERCISE_META: ExerciseMeta[] = [
-    { type: 'pushup', label: 'Push-ups', emoji: '💪' },
-    { type: 'squat',  label: 'Squats',   emoji: '🦵' },
-    { type: 'pullup', label: 'Pull-ups', emoji: '🏋️' },
+    { type: 'pushup', label: 'Push-ups', emoji: '💪', invalidPositionMessage: '⚠️ Get back into push-up position',  shareTagline: 'Track your push-ups with Push-Up Hero 💪' },
+    { type: 'squat',  label: 'Squats',   emoji: '🦵', invalidPositionMessage: '⚠️ Stand upright facing the camera',  shareTagline: 'Track your squats with Push-Up Hero 💪' },
+    { type: 'pullup', label: 'Pull-ups', emoji: '🏋️', invalidPositionMessage: '⚠️ Get back into hang position',     shareTagline: 'Track your pull-ups with Push-Up Hero 💪' },
 ];
 
-const EXERCISE_LABELS: Record<ExerciseType, string> = Object.fromEntries(
-    EXERCISE_META.map(m => [m.type, m.label]),
-) as Record<ExerciseType, string>;
+const META_MAP: Record<ExerciseType, ExerciseMeta> = Object.fromEntries(
+    EXERCISE_META.map(m => [m.type, m]),
+) as Record<ExerciseType, ExerciseMeta>;
 
 /** Human-readable label: 'Push-ups', 'Squats', 'Pull-ups' */
 export function getExerciseLabel(type: ExerciseType): string {
-    return EXERCISE_LABELS[type];
+    return META_MAP[type].label;
 }
-
-const EXERCISE_EMOJIS: Record<ExerciseType, string> = Object.fromEntries(
-    EXERCISE_META.map(m => [m.type, m.emoji]),
-) as Record<ExerciseType, string>;
 
 /** Emoji for an exercise: '💪', '🦵', '🏋️' */
 export function getExerciseEmoji(type: ExerciseType): string {
-    return EXERCISE_EMOJIS[type];
+    return META_MAP[type].emoji;
+}
+
+/** Banner text when user leaves valid position: '⚠️ Get back into push-up position' etc. */
+export function getInvalidPositionMessage(type: ExerciseType): string {
+    return META_MAP[type].invalidPositionMessage;
+}
+
+/** Tagline for share cards */
+export function getShareTagline(type: ExerciseType): string {
+    return META_MAP[type].shareTagline;
 }
 
 export type ExercisePhase = 'idle' | 'up' | 'down' | 'transition';
@@ -137,4 +147,10 @@ export interface ExerciseState {
      * real-time "go lower" feedback even when no rep is counted.
      */
     incompleteRepFeedback: RepFeedback | null;
+    /**
+     * True when the detected pose was rejected because its bounding box
+     * doesn't match the locked user (e.g. someone walking behind in a gym).
+     * Allows the UI to show a specific "wrong person" message.
+     */
+    poseRejectedByLock: boolean;
 }

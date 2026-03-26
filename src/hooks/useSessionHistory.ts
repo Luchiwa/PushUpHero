@@ -1,11 +1,24 @@
 import { useCallback } from 'react';
 import { useAuth } from './useAuth';
-import { saveSession } from '@lib/userService';
+import { saveSession, localDateString, yesterdayDateString } from '@lib/userService';
 import type { SaveSessionResult } from '@lib/userService';
 import { calculateSessionXp } from '@lib/xpSystem';
 import type { BonusContext, SessionXpResult } from '@lib/xpSystem';
-import { MAX_LOCAL_SESSIONS } from '@lib/constants';
+import { MAX_LOCAL_SESSIONS, getGradeLetter } from '@lib/constants';
 import type { SetRecord, WorkoutBlock, ExerciseType } from '@exercises/types';
+import { evaluateAchievements, evaluateRecords } from '@lib/achievementEngine';
+import type { AchievementMap, UserStats } from '@lib/achievementEngine';
+import {
+    getGuestStatsSnapshot,
+    setGuestAchievements,
+    setGuestRecords,
+    setGuestLifetimeReps,
+    setGuestBestStreak,
+    setGuestStreak,
+    setGuestLastSessionDate,
+    setGuestSGradeCount,
+    setGuestLifetimeTrainingTime,
+} from '@lib/guestStatsStore';
 
 const STORAGE_KEY = 'pushup-sessions';
 const STORAGE_TOTAL_KEY = 'pushup_game_total_sessions';
@@ -130,9 +143,81 @@ export function useSessionHistory() {
                 xpResult.totalXp,
                 xpResult.perExercise.map(e => ({ exerciseType: e.exerciseType, xp: e.finalXp })),
             );
-        }
 
-        return xpResult;
+            // ── Guest achievement & record evaluation ────────────────────
+            const guest = getGuestStatsSnapshot();
+            const exerciseType = (newSession.exerciseType ?? 'pushup') as ExerciseType;
+
+            // Build session reps map
+            const sessionRepsMap: Partial<Record<ExerciseType, number>> = {};
+            if (newSession.sets && newSession.sets.length > 0) {
+                for (const set of newSession.sets) {
+                    const ex = (set.exerciseType ?? exerciseType) as ExerciseType;
+                    sessionRepsMap[ex] = (sessionRepsMap[ex] ?? 0) + set.reps;
+                }
+            } else {
+                sessionRepsMap[exerciseType] = newSession.reps;
+            }
+
+            // Update lifetime reps
+            const newLifetimeReps = { ...guest.lifetimeReps };
+            for (const [ex, reps] of Object.entries(sessionRepsMap)) {
+                newLifetimeReps[ex as ExerciseType] = (newLifetimeReps[ex as ExerciseType] ?? 0) + reps;
+            }
+
+            // Streak
+            const todayLocal = localDateString();
+            let newStreak: number;
+            if (guest.lastSessionDate === todayLocal) {
+                newStreak = guest.streak;
+            } else if (guest.lastSessionDate === yesterdayDateString()) {
+                newStreak = guest.streak + 1;
+            } else {
+                newStreak = 1;
+            }
+            const newBestStreak = Math.max(guest.bestStreak, newStreak);
+
+            // S-grade count
+            const isS = getGradeLetter(newSession.averageScore) === 'S';
+            const newSGradeCount = guest.sGradeCount + (isS ? 1 : 0);
+
+            // Training time
+            const sessionDuration = newSession.totalDuration ?? newSession.elapsedTime ?? 0;
+            const newTrainingTime = guest.lifetimeTrainingTime + sessionDuration;
+
+            // Evaluate achievements
+            const currentAchievements: AchievementMap = { ...guest.achievements };
+            const stats: UserStats = {
+                lifetimeRepsByExercise: newLifetimeReps,
+                sessionRepsByExercise: sessionRepsMap,
+                totalSessions: newCount,
+                bestStreak: newBestStreak,
+                friendsCount: 0,
+                totalEncouragementsSent: 0,
+                sGradeCount: newSGradeCount,
+                sessionXp: newSession.xpEarned ?? 0,
+                globalLevel: 0,
+                lifetimeTrainingTime: newTrainingTime,
+            };
+            const newAchievements = evaluateAchievements(stats, currentAchievements);
+
+            // Evaluate records
+            const { records: updatedRecords, broken: brokenRecords } = evaluateRecords(
+                guest.records, newSession, updated, newBestStreak,
+            );
+
+            // Persist guest stats to localStorage
+            setGuestAchievements(currentAchievements); // mutated in-place by evaluateAchievements
+            setGuestRecords(updatedRecords);
+            setGuestLifetimeReps(newLifetimeReps);
+            setGuestStreak(newStreak);
+            setGuestBestStreak(newBestStreak);
+            setGuestLastSessionDate(todayLocal);
+            setGuestSGradeCount(newSGradeCount);
+            setGuestLifetimeTrainingTime(newTrainingTime);
+
+            return { ...xpResult, newAchievements, brokenRecords };
+        }
     }, [user, dbUser, totalXp, exerciseXp, sessions, totalSessionCount, addGuestXp, setSessions, setTotalSessionCount]);
 
     return { sessions, addSession, totalSessionCount };

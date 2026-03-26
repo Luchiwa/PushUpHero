@@ -28,6 +28,7 @@ import { getExerciseLabel } from '@exercises/types';
 import { evaluateAchievements, evaluateRecords, emptyRecords, computeLifetimeReps, countSGrades, bulkEvaluateRecords } from './achievementEngine';
 import type { UserStats, AchievementMap, RecordsMap, RecordUpdate } from './achievementEngine';
 import type { AchievementDef } from './achievements';
+import type { GuestStatsSnapshot } from './guestStatsStore';
 
 // ─── Date helpers ────────────────────────────────────────────────────────────
 
@@ -247,6 +248,8 @@ export interface MergeLocalDataParams {
     cloudXp: number;
     cloudSessions: number;
     cloudExerciseXp: Partial<Record<string, number>>;
+    /** Guest achievement stats accumulated while playing without an account */
+    guestStats?: GuestStatsSnapshot;
 }
 
 export async function mergeLocalDataToCloud({
@@ -257,6 +260,7 @@ export async function mergeLocalDataToCloud({
     cloudXp,
     cloudSessions,
     cloudExerciseXp,
+    guestStats,
 }: MergeLocalDataParams): Promise<void> {
     const batch = writeBatch(db);
     const userRef = doc(db, 'users', uid);
@@ -336,7 +340,14 @@ export async function mergeLocalDataToCloud({
         (sum, s) => sum + (s.totalDuration ?? s.elapsedTime ?? 0), 0,
     );
 
+    // Seed achievement map with guest-tracked achievements (keeps earliest unlock timestamp)
     const achievementMap: AchievementMap = {};
+    if (guestStats?.achievements) {
+        for (const [id, ts] of Object.entries(guestStats.achievements)) {
+            achievementMap[id] = ts;
+        }
+    }
+
     const stats: UserStats = {
         lifetimeRepsByExercise: lifetimeReps,
         sessionRepsByExercise: {}, // Will check per-session below
@@ -360,7 +371,10 @@ export async function mergeLocalDataToCloud({
     }
 
     evaluateAchievements(stats, achievementMap);
-    const records = bulkEvaluateRecords(localSessions, bestStreak);
+
+    // Seed records from guest stats, then bulk-evaluate from sessions on top
+    const guestRecords = guestStats?.records ?? emptyRecords();
+    const records = bulkEvaluateRecords(localSessions, bestStreak, guestRecords);
 
     profileUpdate.lifetimeReps = lifetimeReps;
     profileUpdate.sGradeCount = sGradeCount;

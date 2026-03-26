@@ -1,6 +1,8 @@
 import { BaseExerciseDetector } from '../BaseExerciseDetector';
 import type { ExerciseState, Landmark, RepFeedback } from '../types';
 import { CALIBRATION_FRAMES_REQUIRED } from '@lib/constants';
+import { getPullupThresholds } from '@lib/bodyProfile';
+import type { PullupThresholds } from '@lib/bodyProfile';
 
 /**
  * PullUpDetector — Detects pull-up reps using **shoulder vertical displacement**
@@ -28,13 +30,9 @@ const LM = {
     RIGHT_HIP: 24,
 } as const;
 
-// ── Shoulder rise thresholds (fraction of shoulder-hip distance) ──
-/** Minimum shoulder rise to count as "up" (e.g. 0.35 = 35% of torso length) */
-const RISE_UP_FRACTION = 0.35;
 /** Shoulder must return within this fraction of baseline to count as "back down" */
 const RISE_DOWN_FRACTION = 0.12;
-/** Perfect rep: shoulders rise by this much of torso length */
-const PERFECT_RISE_FRACTION = 0.55;
+const DYNAMIC_CAPTURE_REPS = 5;
 
 // ── Elbow angle — secondary confirmation ─────────────────────────
 /** Elbow angle must be below this to confirm "up" (prevents false positives) */
@@ -72,14 +70,23 @@ export class PullUpDetector extends BaseExerciseDetector {
     // Track whether user was ascending (to detect incomplete reps)
     private wasAscending: boolean = false;
 
+    // ── Adaptive thresholds ──
+    private thresholds: PullupThresholds;
+    private dynamicMaxRises: number[] = [];
+
     // ── Calibration State ──
-    private calibrationFrames: { spread: number; wristOffset: number; shoulderY: number }[] = [];
+    private calibrationFrames: { spread: number; wristOffset: number; shoulderY: number; armLen: number; torsoLen: number; elbowAngle: number }[] = [];
     private calibratedMinShoulderHipSpread = MIN_SHOULDER_HIP_SPREAD;
     private calibratedWristAboveShoulderMargin = WRIST_ABOVE_SHOULDER_MARGIN;
     /** Shoulder Y at dead-hang baseline (normalised) */
     private calibratedBaselineShoulderY = 0;
     /** Shoulder-hip distance at dead hang — used as the "torso length" reference */
     private calibratedTorsoLength = 0.2;
+
+    constructor() {
+        super();
+        this.thresholds = getPullupThresholds(this._bodyProfile?.pullup ?? undefined);
+    }
 
     reset(): void {
         super.reset();
@@ -95,11 +102,13 @@ export class PullUpDetector extends BaseExerciseDetector {
         this.worstArmAsymmetry = 0;
         this.worstBodySway = 0;
         this.wasAscending = false;
+        this.dynamicMaxRises = [];
         this.calibrationFrames = [];
         this.calibratedMinShoulderHipSpread = MIN_SHOULDER_HIP_SPREAD;
         this.calibratedWristAboveShoulderMargin = WRIST_ABOVE_SHOULDER_MARGIN;
         this.calibratedBaselineShoulderY = 0;
         this.calibratedTorsoLength = 0.2;
+        this.thresholds = getPullupThresholds(this._bodyProfile?.pullup ?? undefined);
     }
 
     processPose(landmarks: Landmark[]): ExerciseState {
@@ -174,13 +183,20 @@ export class PullUpDetector extends BaseExerciseDetector {
                     spread: shoulderHipSpread,
                     wristOffset,
                     shoulderY: midShoulderY,
+                    armLen: Math.sqrt(
+                        ((leftWrist.x + rightWrist.x) / 2 - (leftShoulder.x + rightShoulder.x) / 2) ** 2 +
+                        ((leftWrist.y + rightWrist.y) / 2 - midShoulderY) ** 2,
+                    ),
+                    torsoLen: shoulderHipSpread,
+                    elbowAngle: smoothedAngle,
                 });
+                const framesNeeded = this._bodyProfile?.pullup ? Math.round(CALIBRATION_FRAMES_REQUIRED / 2) : CALIBRATION_FRAMES_REQUIRED;
                 this.state.calibratingPercentage = Math.min(
                     100,
-                    Math.round((this.calibrationFrames.length / CALIBRATION_FRAMES_REQUIRED) * 100),
+                    Math.round((this.calibrationFrames.length / framesNeeded) * 100),
                 );
 
-                if (this.calibrationFrames.length >= CALIBRATION_FRAMES_REQUIRED) {
+                if (this.calibrationFrames.length >= framesNeeded) {
                     const n = this.calibrationFrames.length;
                     const avgSpread = this.calibrationFrames.reduce((s, f) => s + f.spread, 0) / n;
                     const avgWrist = this.calibrationFrames.reduce((s, f) => s + f.wristOffset, 0) / n;
@@ -191,8 +207,21 @@ export class PullUpDetector extends BaseExerciseDetector {
                     this.calibratedBaselineShoulderY = avgShoulderY;
                     this.calibratedTorsoLength = avgSpread; // shoulder-hip distance ≈ torso
 
+                    // ── Capture morphological ratios ──
+                    const avgArm = this.calibrationFrames.reduce((s, f) => s + f.armLen, 0) / n;
+                    const avgTorso = this.calibrationFrames.reduce((s, f) => s + f.torsoLen, 0) / n;
+                    const avgElbow = this.calibrationFrames.reduce((s, f) => s + f.elbowAngle, 0) / n;
+
+                    if (avgTorso > 0.01) {
+                        this._capturedRatios.pullup = {
+                            armToTorsoRatio: avgArm / avgTorso,
+                            naturalArmExtension: Math.round(avgElbow),
+                        };
+                    }
+
                     this.state.isCalibrated = true;
                     this.state.isValidPosition = true;
+                    this.lockBoundingBox(landmarks);
                 }
             } else {
                 this.calibrationFrames = [];
@@ -200,6 +229,12 @@ export class PullUpDetector extends BaseExerciseDetector {
                 this.state.isValidPosition = false;
             }
 
+            return this.getState();
+        }
+
+        // ── Bounding Box Lock: reject frames from a different person ──
+        if (!this.isWithinLockedRegion(landmarks)) {
+            this.state.isValidPosition = false;
             return this.getState();
         }
 
@@ -225,11 +260,12 @@ export class PullUpDetector extends BaseExerciseDetector {
         this.state.isValidPosition = isValidPullUpPosition;
 
         // ── 5. State machine (shoulder rise + elbow confirmation) ────
+        const { riseUpFraction: RISE_UP } = this.thresholds;
         const prevPhase = this.state.currentPhase;
         this.state.incompleteRepFeedback = null;
 
         // UP: body has risen enough AND elbows are bent enough
-        const isUp = riseFraction >= RISE_UP_FRACTION && smoothedAngle <= ELBOW_CONFIRM_UP;
+        const isUp = riseFraction >= RISE_UP && smoothedAngle <= ELBOW_CONFIRM_UP;
         // DOWN: body is back near baseline AND arms are relatively extended
         const isDown = riseFraction <= RISE_DOWN_FRACTION && smoothedAngle >= ELBOW_CONFIRM_DOWN;
 
@@ -250,6 +286,12 @@ export class PullUpDetector extends BaseExerciseDetector {
 
                 this.recordRep(repScore, repAmplitudeScore, repAlignmentScore, this.minAngleThisRep, feedback);
 
+                // ── Capture dynamic max rise for body profile ──
+                this.dynamicMaxRises.push(this.maxRiseThisRep);
+                if (this.dynamicMaxRises.length <= DYNAMIC_CAPTURE_REPS) {
+                    this._capturedRatios.dynamicMin = Math.max(...this.dynamicMaxRises);
+                }
+
                 this.minAngleThisRep = 180;
                 this.maxRiseThisRep = 0;
                 this.bestAlignmentThisRep = 0;
@@ -262,7 +304,7 @@ export class PullUpDetector extends BaseExerciseDetector {
 
         } else if (isDown) {
             // Detect incomplete rep: user was ascending but came back down
-            if (this.wasAscending && this.maxRiseThisRep > 0.1 && this.maxRiseThisRep < RISE_UP_FRACTION) {
+            if (this.wasAscending && this.maxRiseThisRep > 0.1 && this.maxRiseThisRep < RISE_UP) {
                 this.state.incompleteRepFeedback = 'go_lower'; // "pull higher"
             }
             this.wasAscending = false;
@@ -309,9 +351,10 @@ export class PullUpDetector extends BaseExerciseDetector {
 
     /** Amplitude score based on how high the shoulders rose (fraction of torso). */
     private computeAmplitudeScore(maxRise: number): number {
-        if (maxRise >= PERFECT_RISE_FRACTION) return 100;
-        if (maxRise <= RISE_UP_FRACTION) return 50; // minimum passing score
-        const score = 50 + ((maxRise - RISE_UP_FRACTION) / (PERFECT_RISE_FRACTION - RISE_UP_FRACTION)) * 50;
+        const { riseUpFraction, perfectRiseFraction } = this.thresholds;
+        if (maxRise >= perfectRiseFraction) return 100;
+        if (maxRise <= riseUpFraction) return 50; // minimum passing score
+        const score = 50 + ((maxRise - riseUpFraction) / (perfectRiseFraction - riseUpFraction)) * 50;
         return Math.round(Math.max(0, Math.min(100, score)));
     }
 

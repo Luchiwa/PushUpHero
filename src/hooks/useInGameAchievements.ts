@@ -11,8 +11,9 @@ import type { ExerciseType, ExerciseState } from '@exercises/types';
 import type { AchievementDef } from '@lib/achievements';
 import { ACHIEVEMENTS } from '@lib/achievements';
 import type { AchievementMap } from '@lib/achievementEngine';
-import { useAuth } from './useAuth';
+import { useAuthCore } from './useAuth';
 import { playAchievementSound } from '@lib/soundEngine';
+import { getGuestAchievements, getGuestLifetimeReps } from '@lib/guestStatsStore';
 
 /** statKeys that change with every rep */
 const LIVE_STAT_KEYS = new Set([
@@ -39,7 +40,7 @@ export function useInGameAchievements({
     isActive,
     soundEnabled,
 }: UseInGameAchievementsProps) {
-    const { dbUser } = useAuth();
+    const { dbUser } = useAuthCore();
     const [queue, setQueue] = useState<AchievementDef[]>([]);
 
     // Track which achievements we've already surfaced this session to avoid duplicates
@@ -57,7 +58,7 @@ export function useInGameAchievements({
 
     // Evaluate on every rep change
     useEffect(() => {
-        if (!isActive || !dbUser) return;
+        if (!isActive) return;
 
         const currentReps = exerciseState.repCount;
         // Only evaluate when reps actually increase
@@ -66,8 +67,10 @@ export function useInGameAchievements({
 
         const totalSessionReps = completedSetsReps + currentReps;
 
-        // Build a partial stats snapshot with only the live-changing values
-        const lifetimeReps = { ...dbUser.lifetimeReps };
+        // Build lifetime reps from either dbUser (logged in) or localStorage (guest)
+        const lifetimeReps: Partial<Record<ExerciseType, number>> = dbUser
+            ? { ...dbUser.lifetimeReps }
+            : { ...getGuestLifetimeReps() };
         // Add current session reps to the lifetime count
         lifetimeReps[exerciseType] = (lifetimeReps[exerciseType] ?? 0) + totalSessionReps;
 
@@ -75,7 +78,10 @@ export function useInGameAchievements({
             [exerciseType]: totalSessionReps,
         };
 
-        const alreadyUnlocked: AchievementMap = { ...dbUser.achievements };
+        // Build already-unlocked map from either dbUser or localStorage
+        const alreadyUnlocked: AchievementMap = dbUser
+            ? { ...dbUser.achievements }
+            : { ...getGuestAchievements() };
 
         // Also mark achievements already shown this session as "unlocked" so we don't re-queue
         for (const id of shownThisSessionRef.current) {

@@ -1,6 +1,8 @@
 import { BaseExerciseDetector } from '../BaseExerciseDetector';
 import type { ExerciseState, Landmark, RepFeedback } from '../types';
 import { CALIBRATION_FRAMES_REQUIRED } from '@lib/constants';
+import { getSquatThresholds } from '@lib/bodyProfile';
+import type { SquatThresholds } from '@lib/bodyProfile';
 
 /**
  * MediaPipe Pose landmark indices used for squat detection.
@@ -17,11 +19,10 @@ const LM = {
     RIGHT_ANKLE: 28,
 } as const;
 
-// ── Knee angle thresholds ─────────────────────────────────────────
-const ANGLE_UP_THRESHOLD = 160;
-const ANGLE_DOWN_THRESHOLD = 110;
-const PERFECT_AMPLITUDE_ANGLE = 80;
+// ── Knee angle thresholds (defaults — overridden by body profile) ─────
+const DEFAULT_ANGLE_UP_THRESHOLD = 160;
 const SMOOTHING_WINDOW = 5;
+const DYNAMIC_CAPTURE_REPS = 5;
 
 // ── Positional constraints ───────────────────────────────────────
 const MIN_BODY_VERTICAL_SPREAD = 0.35;
@@ -48,10 +49,19 @@ export class SquatDetector extends BaseExerciseDetector {
     // Track whether user was descending (to detect incomplete reps)
     private wasDescending: boolean = false;
 
+    // ── Adaptive thresholds ──
+    private thresholds: SquatThresholds;
+    private dynamicMinAngles: number[] = [];
+
     // ── Calibration State ──
-    private calibrationFrames: { spread: number; shoulderHipDiff: number }[] = [];
+    private calibrationFrames: { spread: number; shoulderHipDiff: number; legLen: number; torsoLen: number; stanceWidth: number; kneeAngle: number }[] = [];
     private calibratedMinBodyVerticalSpread = MIN_BODY_VERTICAL_SPREAD;
     private calibratedShoulderAboveHipMargin = SHOULDER_ABOVE_HIP_MARGIN;
+
+    constructor() {
+        super();
+        this.thresholds = getSquatThresholds(this._bodyProfile?.squat ?? undefined);
+    }
 
     reset(): void {
         super.reset();
@@ -63,9 +73,11 @@ export class SquatDetector extends BaseExerciseDetector {
         this.worstKneeDeviation = 0;
         this.worstTorsoLean = 0;
         this.wasDescending = false;
+        this.dynamicMinAngles = [];
         this.calibrationFrames = [];
         this.calibratedMinBodyVerticalSpread = MIN_BODY_VERTICAL_SPREAD;
         this.calibratedShoulderAboveHipMargin = SHOULDER_ABOVE_HIP_MARGIN;
+        this.thresholds = getSquatThresholds(this._bodyProfile?.squat ?? undefined);
     }
 
     processPose(landmarks: Landmark[]): ExerciseState {
@@ -109,13 +121,20 @@ export class SquatDetector extends BaseExerciseDetector {
         const bodyVerticalSpread = Math.abs(midShoulderY - midAnkleY);
         const shoulderHipDiff = midHipY - midShoulderY;
 
+        // ── Body profile ratio data ──
+        const torsoLen = Math.abs(midShoulderY - midHipY);
+        const midKneeY_cal = (leftKnee.y + rightKnee.y) / 2;
+        const legLen = Math.abs(midHipY - midAnkleY);
+        const stanceWidth = Math.abs(leftAnkle.x - rightAnkle.x);
+        const shoulderWidth = Math.abs(leftShoulder.x - rightShoulder.x);
+
         if (!this.state.isCalibrated) {
             const kneeVis = Math.max(leftKnee.visibility ?? 0, rightKnee.visibility ?? 0);
             const ankleVis = Math.max(leftAnkle.visibility ?? 0, rightAnkle.visibility ?? 0);
             const areLowerLandmarksVisible =
                 kneeVis > MIN_LANDMARK_VISIBILITY && ankleVis > MIN_LANDMARK_VISIBILITY;
 
-            const midKneeY = (leftKnee.y + rightKnee.y) / 2;
+            const midKneeY = midKneeY_cal;
             const isVerticallyOrdered =
                 midShoulderY < midHipY && midHipY < midKneeY && midKneeY < midAnkleY;
 
@@ -124,28 +143,50 @@ export class SquatDetector extends BaseExerciseDetector {
                 isVerticallyOrdered &&
                 bodyVerticalSpread > MIN_BODY_VERTICAL_SPREAD &&
                 shoulderHipDiff > SHOULDER_ABOVE_HIP_MARGIN &&
-                smoothedAngle > ANGLE_UP_THRESHOLD;
+                smoothedAngle > DEFAULT_ANGLE_UP_THRESHOLD;
 
             if (isRoughlyStanding) {
-                this.calibrationFrames.push({ spread: bodyVerticalSpread, shoulderHipDiff });
+                this.calibrationFrames.push({
+                    spread: bodyVerticalSpread,
+                    shoulderHipDiff,
+                    legLen,
+                    torsoLen,
+                    stanceWidth: shoulderWidth > 0.01 ? stanceWidth / shoulderWidth : 1,
+                    kneeAngle: smoothedAngle,
+                });
+                const framesNeeded = this._bodyProfile?.squat ? Math.round(CALIBRATION_FRAMES_REQUIRED / 2) : CALIBRATION_FRAMES_REQUIRED;
                 this.state.calibratingPercentage = Math.min(
                     100,
-                    Math.round((this.calibrationFrames.length / CALIBRATION_FRAMES_REQUIRED) * 100),
+                    Math.round((this.calibrationFrames.length / framesNeeded) * 100),
                 );
 
-                if (this.calibrationFrames.length >= CALIBRATION_FRAMES_REQUIRED) {
+                if (this.calibrationFrames.length >= framesNeeded) {
+                    const n = this.calibrationFrames.length;
                     const avgSpread =
-                        this.calibrationFrames.reduce((s, f) => s + f.spread, 0) /
-                        this.calibrationFrames.length;
+                        this.calibrationFrames.reduce((s, f) => s + f.spread, 0) / n;
                     const avgShoulderHipDiff =
-                        this.calibrationFrames.reduce((s, f) => s + f.shoulderHipDiff, 0) /
-                        this.calibrationFrames.length;
+                        this.calibrationFrames.reduce((s, f) => s + f.shoulderHipDiff, 0) / n;
 
                     this.calibratedMinBodyVerticalSpread = avgSpread * 0.4;
                     this.calibratedShoulderAboveHipMargin = avgShoulderHipDiff * 0.3;
 
+                    // ── Capture morphological ratios ──
+                    const avgTorso = this.calibrationFrames.reduce((s, f) => s + f.torsoLen, 0) / n;
+                    const avgLeg = this.calibrationFrames.reduce((s, f) => s + f.legLen, 0) / n;
+                    const avgStance = this.calibrationFrames.reduce((s, f) => s + f.stanceWidth, 0) / n;
+                    const avgKnee = this.calibrationFrames.reduce((s, f) => s + f.kneeAngle, 0) / n;
+
+                    if (avgTorso > 0.01) {
+                        this._capturedRatios.squat = {
+                            legToTorsoRatio: avgLeg / avgTorso,
+                            naturalKneeExtension: Math.round(avgKnee),
+                            stanceWidthRatio: avgStance,
+                        };
+                    }
+
                     this.state.isCalibrated = true;
                     this.state.isValidPosition = true;
+                    this.lockBoundingBox(landmarks);
                 }
             } else {
                 this.calibrationFrames = [];
@@ -153,6 +194,12 @@ export class SquatDetector extends BaseExerciseDetector {
                 this.state.isValidPosition = false;
             }
 
+            return this.getState();
+        }
+
+        // ── Bounding Box Lock: reject frames from a different person ──
+        if (!this.isWithinLockedRegion(landmarks)) {
+            this.state.isValidPosition = false;
             return this.getState();
         }
 
@@ -184,10 +231,11 @@ export class SquatDetector extends BaseExerciseDetector {
         this.state.isValidPosition = isValidSquatPosition;
 
         // ── 4. State machine ─────────────────────────────────────────
+        const { angleUpThreshold: ANGLE_UP, angleDownThreshold: ANGLE_DOWN } = this.thresholds;
         const prevPhase = this.state.currentPhase;
         this.state.incompleteRepFeedback = null; // clear each frame
 
-        if (smoothedAngle >= ANGLE_UP_THRESHOLD) {
+        if (smoothedAngle >= ANGLE_UP) {
             // Detect incomplete rep: user was descending but came back up
             if (this.wasDescending && !this.hasReachedValidDown && this.minAngleThisRep < 170) {
                 this.state.incompleteRepFeedback = 'go_lower';
@@ -210,6 +258,12 @@ export class SquatDetector extends BaseExerciseDetector {
 
                 this.recordRep(repScore, repAmplitudeScore, repAlignmentScore, this.minAngleThisRep, feedback);
 
+                // ── Capture dynamic min angle for body profile ──
+                this.dynamicMinAngles.push(this.minAngleThisRep);
+                if (this.dynamicMinAngles.length <= DYNAMIC_CAPTURE_REPS) {
+                    this._capturedRatios.dynamicMin = Math.min(...this.dynamicMinAngles);
+                }
+
                 // Reset for next rep
                 this.minAngleThisRep = 180;
                 this.bestAlignmentThisRep = 0;
@@ -218,7 +272,7 @@ export class SquatDetector extends BaseExerciseDetector {
                 this.worstTorsoLean = 0;
             }
             this.state.currentPhase = 'up';
-        } else if (smoothedAngle <= ANGLE_DOWN_THRESHOLD) {
+        } else if (smoothedAngle <= ANGLE_DOWN) {
             if (isUpright) {
                 this.hasReachedValidDown = true;
             } else {
@@ -253,10 +307,11 @@ export class SquatDetector extends BaseExerciseDetector {
     }
 
     private computeAmplitudeScore(minAngle: number): number {
-        if (minAngle <= PERFECT_AMPLITUDE_ANGLE) return 100;
-        if (minAngle >= ANGLE_DOWN_THRESHOLD) return 0;
+        const { angleDownThreshold, perfectAmplitudeAngle } = this.thresholds;
+        if (minAngle <= perfectAmplitudeAngle) return 100;
+        if (minAngle >= angleDownThreshold) return 0;
         const score =
-            ((ANGLE_DOWN_THRESHOLD - minAngle) / (ANGLE_DOWN_THRESHOLD - PERFECT_AMPLITUDE_ANGLE)) * 100;
+            ((angleDownThreshold - minAngle) / (angleDownThreshold - perfectAmplitudeAngle)) * 100;
         return Math.round(Math.max(0, Math.min(100, score)));
     }
 

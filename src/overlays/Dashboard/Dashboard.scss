@@ -344,6 +344,11 @@
     backdrop-filter: blur($blur);
     pointer-events: all;
     animation: slide-up 0.25s ease both;
+
+    &--lock {
+        background: rgba(#e040fb, 0.2);
+        border-color: rgba(#e040fb, 0.4);
+    }
 }
 
 // ── Mobile responsive ────────────────────────────────────────────

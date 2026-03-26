@@ -123,13 +123,20 @@
     @include label;
 }
 
-// ── Progression button ───────────────────────────────────────────
+// ── Nav buttons row ──────────────────────────────────────────────
+.profile-nav-buttons {
+    display: flex;
+    gap: $spacing-sm;
+    width: 100%;
+}
+
+// ── Progression / Quests button ──────────────────────────────────
 .profile-progression-btn {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: $spacing-sm;
-    width: 100%;
+    flex: 1;
     padding: $spacing-sm $spacing-md;
     background: $surface;
     border: 1px solid $border;
@@ -150,6 +157,16 @@
 
     &:active {
         transform: scale(0.98);
+    }
+}
+
+.profile-quests-btn {
+    background: linear-gradient(135deg, rgba(#6366f1, 0.08) 0%, rgba(#a855f7, 0.04) 100%);
+    border-color: rgba(#6366f1, 0.18);
+
+    &:hover {
+        background: linear-gradient(135deg, rgba(#6366f1, 0.14) 0%, rgba(#a855f7, 0.08) 100%);
+        border-color: rgba(#6366f1, 0.30);
     }
 }
 

@@ -1,45 +1,69 @@
-import { useState, useEffect } from 'react';
+/**
+ * AuthProvider — Three nested providers, no Consumer/Provider anti-pattern.
+ *
+ * Structure:
+ *   AuthCoreContext.Provider  (user, dbUser, auth methods)
+ *     └─ LevelAndSessionProvider  (mounts useLevelSystem + useSyncCloud once)
+ *         ├─ LevelContext.Provider  (XP, level, per-exercise)
+ *         └─ SessionContext.Provider  (sessions, count)
+ */
+import { useState, useEffect, useMemo } from 'react';
 import { onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { auth, db, storage } from '@lib/firebase';
-import { AuthContext } from '@hooks/useAuth';
-import type { DbUser } from '@hooks/useAuth';
+import { AuthCoreContext, LevelContext, SessionContext } from '@hooks/useAuth';
+import type { DbUser, AuthCoreContextType, LevelContextType, SessionContextType } from '@hooks/useAuth';
 import { useLevelSystem } from '@hooks/useLevelSystem';
 import { useNotifications } from '@hooks/useNotifications';
 import { useSyncCloud } from '@hooks/useSyncCloud';
+import { clearAllLocalStorage } from '@lib/clearLocalStorage';
 import { invalidateAvatarCache } from '@hooks/useAvatarCache';
 import type { SessionRecord } from '@hooks/useSessionHistory';
 
-function AppServices({ children }: { children: React.ReactNode }) {
-    // Mounted once at the top of the tree — single Firestore listener set
+// ── Inner provider: Level + Sessions (mounts expensive hooks once) ──
+
+function LevelAndSessionProvider({ children }: { children: React.ReactNode }) {
     const levelSystem = useLevelSystem();
     useNotifications();
 
-    // Sessions state — synced from Firestore by the single useSyncCloud instance below
     const [sessions, setSessions] = useState<SessionRecord[]>([]);
     const [totalSessionCount, setTotalSessionCount] = useState<number>(0);
 
-    // SINGLE useSyncCloud instance for the entire app
     useSyncCloud(levelSystem.setTotalXp, levelSystem.setExerciseXp, setSessions, setTotalSessionCount);
 
+    const levelValue = useMemo<LevelContextType>(() => levelSystem, [
+        levelSystem.totalXp,
+        levelSystem.exerciseXp,
+        levelSystem.level,
+        levelSystem.xpIntoCurrentLevel,
+        levelSystem.xpNeededForNextLevel,
+        levelSystem.levelProgressPct,
+        levelSystem.addGuestXp,
+        levelSystem.getExerciseLevel,
+        levelSystem.getExerciseXp,
+        levelSystem.getExerciseLevelProgress,
+        levelSystem.setTotalXp,
+        levelSystem.setExerciseXp,
+    ]);
+
+    const sessionValue = useMemo<SessionContextType>(() => ({
+        sessions,
+        setSessions,
+        totalSessionCount,
+        setTotalSessionCount,
+    }), [sessions, totalSessionCount]);
+
     return (
-        <AuthContext.Consumer>
-            {ctx => (
-                <AuthContext.Provider value={{
-                    ...ctx,
-                    ...levelSystem,
-                    sessions,
-                    setSessions,
-                    totalSessionCount,
-                    setTotalSessionCount,
-                }}>
-                    {children}
-                </AuthContext.Provider>
-            )}
-        </AuthContext.Consumer>
+        <LevelContext.Provider value={levelValue}>
+            <SessionContext.Provider value={sessionValue}>
+                {children}
+            </SessionContext.Provider>
+        </LevelContext.Provider>
     );
 }
+
+// ── Outer provider: Auth core ───────────────────────────────────
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState(null as import('firebase/auth').User | null);
@@ -47,30 +71,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        let prevUser: import('firebase/auth').User | null = null;
+        let unsubUserDoc: (() => void) | undefined;
+
         const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+            // Tear down the previous user's Firestore listener first
+            if (unsubUserDoc) {
+                unsubUserDoc();
+                unsubUserDoc = undefined;
+            }
+
+            // If user was logged in and is now null → logout or account deletion
+            // Clear localStorage synchronously BEFORE React re-renders child hooks
+            if (prevUser && !firebaseUser) {
+                clearAllLocalStorage();
+            }
+            prevUser = firebaseUser;
+
             setUser(firebaseUser);
             if (firebaseUser) {
-                // Realtime listener on the user profile — keeps dbUser (streak, level, etc.) always fresh
                 const userRef = doc(db, 'users', firebaseUser.uid);
-                const unsubUser = onSnapshot(userRef, (docSnap) => {
+                unsubUserDoc = onSnapshot(userRef, (docSnap) => {
                     if (docSnap.exists()) {
-                        const userData = docSnap.data() as DbUser;
-                        // Streak reset is handled server-side by the resetExpiredStreaks Cloud Function (daily at 03:00 UTC)
-                        setDbUser(userData);
+                        setDbUser(docSnap.data() as DbUser);
                     } else {
                         setDbUser(null);
                     }
                     setLoading(false);
                 });
-                return unsubUser;
             } else {
                 setDbUser(null);
                 setLoading(false);
-                return undefined;
             }
         });
 
-        return unsubscribe;
+        return () => {
+            unsubscribe();
+            if (unsubUserDoc) {
+                unsubUserDoc();
+            }
+        };
     }, []);
 
     const loginWithGoogle = async () => {
@@ -85,7 +125,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const uploadAvatar = async (file: File) => {
         if (!user) throw new Error('Not authenticated');
-        // Resize to max 512px before upload to save bandwidth
         const bitmap = await createImageBitmap(file);
         const size = Math.min(512, bitmap.width, bitmap.height);
         const canvas = document.createElement('canvas');
@@ -93,7 +132,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         canvas.height = size;
         const ctx = canvas.getContext('2d');
         if (!ctx) throw new Error('Canvas 2D context unavailable');
-        // Center-crop square
         const srcSize = Math.min(bitmap.width, bitmap.height);
         const sx = (bitmap.width - srcSize) / 2;
         const sy = (bitmap.height - srcSize) / 2;
@@ -102,10 +140,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             canvas.toBlob((b) => { if (b) resolve(b); else reject(new Error('toBlob failed')); }, 'image/jpeg', 0.85)
         );
         const storageRef = ref(storage, `avatars/${user.uid}.jpg`);
-        await user.getIdToken(true); // force token refresh
+        await user.getIdToken(true);
         await uploadBytes(storageRef, blob, { contentType: 'image/jpeg' });
         const url = await getDownloadURL(storageRef);
-        // Bust the avatar cache so the new image is fetched fresh
         if (dbUser?.photoURL) await invalidateAvatarCache(dbUser.photoURL);
         await updateDoc(doc(db, 'users', user.uid), { photoURL: url });
         setDbUser(prev => prev ? { ...prev, photoURL: url } : prev);
@@ -113,46 +150,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const logout = async () => {
         await signOut(auth);
-        localStorage.removeItem('pushup_game_total_reps');
-        localStorage.removeItem('pushup-sessions');
-        localStorage.removeItem('pushup_game_total_sessions');
-        localStorage.removeItem('pushup_merge_in_progress');
+        // localStorage is cleared in the onAuthStateChanged handler above
     };
 
-    // Provide base auth values; AppServices will merge level system + sessions on top
-    const baseValue = {
+    const authCoreValue = useMemo<AuthCoreContextType>(() => ({
         user, dbUser, loading, loginWithGoogle, logout, uploadAvatar,
-        // placeholders overridden by AppServices below
-        level: 0,
-        totalXp: 0,
-        xpIntoCurrentLevel: 0,
-        xpNeededForNextLevel: 1,
-        levelProgressPct: 0,
-        exerciseXp: {} as import('@hooks/useAuth').ExerciseXpMap,
-        setExerciseXp: () => {},
-        getExerciseLevel: () => 0,
-        getExerciseXp: () => 0,
-        getExerciseLevelProgress: () => ({ level: 0, xp: 0, xpIntoLevel: 0, xpNeeded: 1, progressPct: 0 }),
-        addGuestXp: () => {},
-        // Backward-compat
-        totalLifetimeReps: 0,
-        setTotalLifetimeReps: () => {},
-        setTotalXp: () => {},
-        addGuestReps: () => {},
-        repsIntoCurrentLevel: 0,
-        repsNeededForNextLevel: 1,
-        sessions: [] as import('@hooks/useSessionHistory').SessionRecord[],
-        setSessions: () => {},
-        totalSessionCount: 0,
-        setTotalSessionCount: () => {},
-    };
+    }), [user, dbUser, loading]);
 
     return (
-        <AuthContext.Provider value={baseValue}>
-            <AppServices>
+        <AuthCoreContext.Provider value={authCoreValue}>
+            <LevelAndSessionProvider>
                 {children}
-            </AppServices>
-        </AuthContext.Provider>
+            </LevelAndSessionProvider>
+        </AuthCoreContext.Provider>
     );
 }
-

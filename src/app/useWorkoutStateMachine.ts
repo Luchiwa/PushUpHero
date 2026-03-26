@@ -1,449 +1,348 @@
 /**
- * useWorkoutStateMachine — Encapsulates the entire workout state machine:
- * screen transitions, multi-set + multi-exercise logic, session saving, level tracking.
+ * useWorkoutStateMachine — Thin orchestrator that composes:
+ *   - workoutReducer  (explicit state machine for screen transitions)
+ *   - useWorkoutPlan  (plan config, derived values, set building)
+ *   - useWorkoutSession (async save, XP, quests, body profile)
  *
  * App.tsx only needs to wire camera/pose and render the JSX.
+ * The public API (return object) is unchanged from the original monolith.
  */
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { useSessionHistory } from '@hooks/useSessionHistory';
-import { useAuth } from '@hooks/useAuth';
-import { useFriends } from '@hooks/useFriends';
+import { useReducer, useRef, useEffect, useCallback } from 'react';
 import { useSoundEffect } from '@hooks/useSoundEffect';
-import { levelFromTotalXp, totalXpForLevel, calculateSessionXp } from '@lib/xpSystem';
-import type { BonusContext, SessionXpResult } from '@lib/xpSystem';
-import type { SaveSessionResult } from '@lib/userService';
-import type { ExerciseState, ExerciseType, SetRecord, WorkoutBlock, WorkoutPlan, TimeDuration } from '@exercises/types';
+import type { ExerciseState, ExerciseType, WorkoutBlock, SetRecord, TimeDuration } from '@exercises/types';
 import { createDefaultBlock } from '@exercises/types';
 import { warmUpSpeech } from '@lib/speechEngine';
+import type { QuestDef } from '@lib/quests';
+import type { BodyProfile } from '@lib/bodyProfile';
+import type { CapturedRatios } from '@exercises/BaseExerciseDetector';
+import { workoutReducer, INITIAL_WORKOUT_STATE } from './workoutReducer';
+import { useWorkoutPlan } from './useWorkoutPlan';
+import { useWorkoutSession } from './useWorkoutSession';
 
-// ── Public types ────────────────────────────────────────────────
-export type AppScreen = 'idle' | 'config' | 'active' | 'rest' | 'exercise-rest' | 'stopped' | 'levelup';
-export type SessionMode = 'reps' | 'time';
+// Re-export types for backward compatibility
+export { durationToSeconds } from './workoutTypes';
+export type { AppScreen, SessionMode } from './workoutTypes';
+import type { SessionMode } from './workoutTypes';
 
-export function durationToSeconds(d: TimeDuration): number {
-  return d.minutes * 60 + d.seconds;
-}
+// ── Props ────────────────────────────────────────────────────────
 
 interface UseWorkoutStateMachineProps {
   exerciseState: ExerciseState;
   resetDetector: () => void;
   startCamera: (mode?: 'user' | 'environment') => void;
-  /** Called when the active exercise type changes mid-workout (multi-exercise) */
   onExerciseTypeChange: (type: ExerciseType) => void;
+  activeQuest: QuestDef | null;
+  availableQuests: QuestDef[];
+  bodyProfile: BodyProfile;
+  onSaveBodyProfile: (profile: BodyProfile) => void;
+  onCompleteQuests: (questIds: string[]) => void;
+  getCapturedRatios: () => CapturedRatios;
 }
+
+// ── Hook ─────────────────────────────────────────────────────────
 
 export function useWorkoutStateMachine({
   exerciseState,
   resetDetector,
   startCamera,
   onExerciseTypeChange,
+  activeQuest,
+  availableQuests,
+  bodyProfile,
+  onSaveBodyProfile,
+  onCompleteQuests,
+  getCapturedRatios,
 }: UseWorkoutStateMachineProps) {
-  // ── Core state ──────────────────────────────────────────────────
-  const [screen, setScreen] = useState<AppScreen>('idle');
-  const [goalReps, setGoalReps] = useState(10);
-  const [sessionMode, setSessionMode] = useState<SessionMode>('reps');
-  const [timeGoal, setTimeGoal] = useState({ minutes: 0, seconds: 30 });
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  // ── Reducer (screen transitions + progression indexes) ─────
+  const [state, dispatch] = useReducer(workoutReducer, INITIAL_WORKOUT_STATE);
 
-  const { addSession } = useSessionHistory();
-  const { initAudio, playLevelUpSound } = useSoundEffect();
-  const { totalXp, dbUser } = useAuth();
-  const { friends } = useFriends();
-
-  // ── Level tracking ──────────────────────────────────────────────
-  const prevLevelRef = useRef(0);
-  const [levelBefore, setLevelBefore] = useState(0);
-  const savedLevelRef = useRef<number | null>(null);
-  const elapsedTimeRef = useRef(0);
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const sessionSavedRef = useRef(false);
-
-  // ── Workout plan (multi-exercise) ──────────────────────────────
-  const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlan>({
-    blocks: [createDefaultBlock('pushup')],
+  // ── Plan (config, derived values, set building) ────────────
+  const plan = useWorkoutPlan({
+    exerciseState,
+    currentBlockIndex: state.currentBlockIndex,
+    currentSetIndex: state.currentSetIndex,
   });
-  const [currentBlockIndex, setCurrentBlockIndex] = useState(0);
-  const [currentSetIndex, setCurrentSetIndex] = useState(0);
-  const [completedSets, setCompletedSets] = useState<SetRecord[]>([]);
-  const [completedSetsReps, setCompletedSetsReps] = useState(0);
-  const setStartTimeRef = useRef(0);
-  const workoutStartTimeRef = useRef(0);
 
-  // ── Derived: current block config ───────────────────────────────
-  const currentBlock = workoutPlan.blocks[currentBlockIndex]
-    ?? workoutPlan.blocks[0]
-    ?? createDefaultBlock('pushup');
-  const isMultiExercise = workoutPlan.blocks.length > 1;
-  const isMultiSet = currentBlock.numberOfSets > 1;
-  const totalSetsInBlock = currentBlock.numberOfSets;
-  const totalBlocks = workoutPlan.blocks.length;
+  // ── Session (save, XP, quests, body profile) ───────────────
+  const currentSetReps = state.screen === 'active' ? exerciseState.repCount : 0;
 
-  /** Total sets across all blocks (for summary) */
-  const totalSetsAllBlocks = workoutPlan.blocks.reduce((sum, b) => sum + b.numberOfSets, 0);
+  const session = useWorkoutSession({
+    workoutPlan: plan.workoutPlan,
+    currentBlock: plan.currentBlock,
+    isMultiExercise: plan.isMultiExercise,
+    completedSets: state.completedSets,
+    activeExerciseType: plan.activeExerciseType,
+    currentSetReps,
+    workoutStartTimeRef: plan.workoutStartTimeRef,
+    availableQuests,
+    bodyProfile,
+    onSaveBodyProfile,
+    onCompleteQuests,
+    getCapturedRatios,
+    dispatch,
+  });
 
-  /** Flat set index across the entire workout (for progress display) */
-  const flatSetIndex = workoutPlan.blocks
-    .slice(0, currentBlockIndex)
-    .reduce((sum, b) => sum + b.numberOfSets, 0) + currentSetIndex;
+  // ── Sound ──────────────────────────────────────────────────
+  const { initAudio, playLevelUpSound } = useSoundEffect();
+  const prevLevelRef = useRef(0);
 
-  // ── Active exercise type (from current block) ───────────────────
-  const activeExerciseType = currentBlock.exerciseType;
+  // ── Elapsed time ref (for timer callbacks) ─────────────────
+  const elapsedTimeRef = useRef(0);
 
-  // ── Live level projection (XP-based) ─────────────────────────────────────
-  const currentSetReps = screen === 'active' ? exerciseState.repCount : 0;
-  const allSessionReps = completedSetsReps + currentSetReps;
-  // Estimate live XP: approximate using average 10 XP/rep (Grade C baseline)
-  // For accurate projection we'd need per-rep scores, but this is good enough for the ring
-  const liveXpEstimate = totalXp + allSessionReps * 10;
-  const liveLevel = levelFromTotalXp(liveXpEstimate);
-  const liveLevelBase = totalXpForLevel(liveLevel);
-  const liveLevelNext = totalXpForLevel(liveLevel + 1);
-  const liveProgressPct = liveLevelNext > liveLevelBase
-    ? ((liveXpEstimate - liveLevelBase) / (liveLevelNext - liveLevelBase)) * 100
-    : 0;
+  // Keep elapsedTimeRef in sync with reducer state
+  useEffect(() => { elapsedTimeRef.current = state.elapsedTime; }, [state.elapsedTime]);
 
-  // ── Build a SetRecord from the current exerciseState ────────────
-  const buildCurrentSetRecord = useCallback((): SetRecord => {
-    const setDuration = Math.round((Date.now() - setStartTimeRef.current) / 1000);
-    const record: SetRecord = {
-      reps: exerciseState.repCount,
-      averageScore: Math.round(exerciseState.averageScore),
-      repHistory: [...exerciseState.repHistory],
-      duration: setDuration,
-      setMode: currentBlock.sessionMode,
-      exerciseType: currentBlock.exerciseType,
-    };
-    if (currentBlock.sessionMode === 'reps') record.goalReps = currentBlock.goalReps;
-    if (currentBlock.sessionMode === 'time') record.timeGoal = durationToSeconds(currentBlock.timeGoal);
-    return record;
-  }, [exerciseState, currentBlock]);
+  // ── Refs for latest config values (avoids stale closures in handleStart) ──
+  // We use wrapper setters that update the ref synchronously so handleStart
+  // always reads the freshest value — even when called in the same event handler.
+  const goalRepsRef = useRef(plan.goalReps);
+  const sessionModeRef = useRef(plan.sessionMode);
+  const timeGoalRef = useRef(plan.timeGoal);
+  useEffect(() => { goalRepsRef.current = plan.goalReps; }, [plan.goalReps]);
+  useEffect(() => { sessionModeRef.current = plan.sessionMode; }, [plan.sessionMode]);
+  useEffect(() => { timeGoalRef.current = plan.timeGoal; }, [plan.timeGoal]);
 
-  // ── Save the entire workout as one session ──────────────────────
-  /** Last session XP result + achievements for display on SummaryScreen */
-  const [lastSessionXp, setLastSessionXp] = useState<(SessionXpResult & Partial<SaveSessionResult>) | null>(null);
-  const [goalReached, setGoalReached] = useState(false);
-
-  const saveWorkoutSession = useCallback((allSets: SetRecord[]) => {
-    if (sessionSavedRef.current) return;
-    const totalReps = allSets.reduce((sum, s) => sum + s.reps, 0);
-    if (totalReps === 0) return;
-
-    // Compute XP for level-up detection
-    const streak = dbUser?.streak ?? 0;
-    const totalWorkoutDuration = Math.round((Date.now() - workoutStartTimeRef.current) / 1000);
-    const weightedScoreSum = allSets.reduce((sum, s) => sum + s.averageScore * s.reps, 0);
-    const avgScore = totalReps > 0 ? Math.round(weightedScoreSum / totalReps) : 0;
-
-    // Check if all goals were met
-    const allGoalsMet = allSets.every(s => {
-      if (s.setMode === 'time') return true; // time mode always counts as met
-      return s.goalReps !== undefined ? s.reps >= s.goalReps : true;
-    });
-
-    const bonusCtx: BonusContext = {
-      streak,
-      elapsedTime: totalWorkoutDuration,
-      averageScore: avgScore,
-      allGoalsMet,
-      isMultiExercise: isMultiExercise,
-    };
-
-    // Pre-calculate XP for level-up check
-    const xpResult = calculateSessionXp(allSets, bonusCtx);
-    const newTotalXp = totalXp + xpResult.totalXp;
-    savedLevelRef.current = levelFromTotalXp(newTotalXp);
-    sessionSavedRef.current = true;
-
-    // Determine the primary exercise type (the one with the most reps, or first)
-    const repsByType: Record<string, number> = {};
-    for (const s of allSets) {
-      const t = s.exerciseType ?? 'pushup';
-      repsByType[t] = (repsByType[t] ?? 0) + s.reps;
+  const setGoalReps = useCallback((v: number | ((prev: number) => number)) => {
+    if (typeof v === 'function') {
+      plan.setGoalReps((prev) => {
+        const next = v(prev);
+        goalRepsRef.current = next;
+        return next;
+      });
+    } else {
+      goalRepsRef.current = v;
+      plan.setGoalReps(v);
     }
-    const primaryExercise = (Object.entries(repsByType).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'pushup') as ExerciseType;
-    const hasMultipleExercises = Object.keys(repsByType).length > 1;
+  }, [plan.setGoalReps]);
 
-    // For single-block workouts, use the block's rest config
-    const restSeconds = isMultiExercise
-      ? undefined
-      : durationToSeconds(currentBlock.restBetweenSets);
+  const setSessionMode = useCallback((v: SessionMode | ((prev: SessionMode) => SessionMode)) => {
+    if (typeof v === 'function') {
+      plan.setSessionMode((prev) => {
+        const next = v(prev);
+        sessionModeRef.current = next;
+        return next;
+      });
+    } else {
+      sessionModeRef.current = v;
+      plan.setSessionMode(v);
+    }
+  }, [plan.setSessionMode]);
 
-    addSession({
-      reps: totalReps,
-      averageScore: avgScore,
-      goalReps: allSets.reduce((sum, s) => sum + (s.goalReps ?? 0), 0),
-      sessionMode: currentBlock.sessionMode,
-      exerciseType: primaryExercise,
-      elapsedTime: totalWorkoutDuration,
-      numberOfSets: allSets.length > 1 ? allSets.length : undefined,
-      restDuration: allSets.length > 1 ? restSeconds : undefined,
-      sets: allSets.length > 1 ? allSets : undefined,
-      totalDuration: allSets.length > 1 ? totalWorkoutDuration : undefined,
-      blocks: hasMultipleExercises ? workoutPlan.blocks : undefined,
-      isMultiExercise: hasMultipleExercises || undefined,
-    }, bonusCtx, friends.length).then(result => {
-      setLastSessionXp(result);
-    }).catch(err => {
-      console.error('Failed to save session:', err);
-      sessionSavedRef.current = false;
-    });
-  }, [addSession, currentBlock, isMultiExercise, workoutPlan.blocks, totalXp, dbUser, friends.length]);
+  const setTimeGoal = useCallback((v: TimeDuration | ((prev: TimeDuration) => TimeDuration)) => {
+    if (typeof v === 'function') {
+      plan.setTimeGoal((prev) => {
+        const next = v(prev);
+        timeGoalRef.current = next;
+        return next;
+      });
+    } else {
+      timeGoalRef.current = v;
+      plan.setTimeGoal(v);
+    }
+  }, [plan.setTimeGoal]);
 
-  // ── Start helpers ───────────────────────────────────────────────
+  // ── Handlers ───────────────────────────────────────────────
 
-  /** Reset all workout state for a fresh start */
-  const resetWorkoutState = useCallback(() => {
-    elapsedTimeRef.current = 0;
-    sessionSavedRef.current = false;
-    savedLevelRef.current = null;
-    setLevelBefore(liveLevel);
-    setCurrentBlockIndex(0);
-    setCurrentSetIndex(0);
-    setCompletedSets([]);
-    setCompletedSetsReps(0);
-    setStartTimeRef.current = Date.now();
-    workoutStartTimeRef.current = Date.now();
-  }, [liveLevel]);
-
-  // ── Quick Start (single exercise, 1 set) ───────────────────────
-  const handleStart = () => {
-    resetWorkoutState();
-    // Unlock speechSynthesis from this user gesture (Safari/iOS requirement)
+  const handleStart = useCallback(() => {
+    if (state.isSaving) return;
+    session.resetSessionState();
+    plan.resetTimingRefs();
     warmUpSpeech();
     const block: WorkoutBlock = {
-      ...createDefaultBlock(workoutPlan.blocks[0]?.exerciseType ?? 'pushup'),
+      ...createDefaultBlock(plan.workoutPlan.blocks[0]?.exerciseType ?? 'pushup'),
       numberOfSets: 1,
-      sessionMode,
-      goalReps,
-      timeGoal,
+      sessionMode: sessionModeRef.current,
+      goalReps: goalRepsRef.current,
+      timeGoal: timeGoalRef.current,
     };
-    setWorkoutPlan({ blocks: [block] });
+    plan.setWorkoutPlan({ blocks: [block] });
     onExerciseTypeChange(block.exerciseType);
     startCamera();
-    setScreen('active');
-  };
+    dispatch({ type: 'START_WORKOUT' });
+  }, [state.isSaving, session, plan, onExerciseTypeChange, startCamera]);
 
-  const handleOpenConfig = () => {
-    setScreen('config');
-  };
+  const handleOpenConfig = useCallback(() => {
+    dispatch({ type: 'OPEN_CONFIG' });
+  }, []);
 
-  // ── Workout Start (from config screen) ──────────────────────────
-  const handleWorkoutStart = () => {
-    resetWorkoutState();
-    // Unlock speechSynthesis from this user gesture (Safari/iOS requirement)
+  const handleWorkoutStart = useCallback(() => {
+    if (state.isSaving) return;
+    session.resetSessionState();
+    plan.resetTimingRefs();
     warmUpSpeech();
-    const firstBlock = workoutPlan.blocks[0];
-    setSessionMode(firstBlock.sessionMode);
-    setGoalReps(firstBlock.goalReps);
-    setTimeGoal(firstBlock.timeGoal);
+    const firstBlock = plan.workoutPlan.blocks[0];
+    plan.syncConfigFromBlock(firstBlock);
     onExerciseTypeChange(firstBlock.exerciseType);
     startCamera();
-    setScreen('active');
-  };
+    dispatch({ type: 'START_WORKOUT' });
+  }, [state.isSaving, session, plan, onExerciseTypeChange, startCamera]);
 
-  const handleBackToIdle = () => {
-    setScreen('idle');
-  };
-
-  // ── Set / Block completion logic ────────────────────────────────
+  const handleBackToIdle = useCallback(() => {
+    dispatch({ type: 'BACK_TO_IDLE' });
+  }, []);
 
   const handleSetComplete = useCallback(() => {
-    const setRecord = buildCurrentSetRecord();
-    const newCompletedSets = [...completedSets, setRecord];
-    setCompletedSets(newCompletedSets);
-    setCompletedSetsReps(prev => prev + setRecord.reps);
+    const setRecord = plan.buildCurrentSetRecord();
+    const totalReps = state.completedSets.reduce((sum, s) => sum + s.reps, 0) + setRecord.reps;
+    const isLastSetInBlock = state.currentSetIndex >= plan.totalSetsInBlock - 1;
+    const isLastBlock = state.currentBlockIndex >= plan.totalBlocks - 1;
+    const elapsedTime = Math.round((Date.now() - plan.workoutStartTimeRef.current) / 1000);
 
-    const isLastSetInBlock = currentSetIndex >= totalSetsInBlock - 1;
-    const isLastBlock = currentBlockIndex >= totalBlocks - 1;
+    const goalReached =
+      (plan.currentBlock.sessionMode === 'reps' && exerciseState.repCount >= plan.currentBlock.goalReps)
+      || plan.currentBlock.sessionMode === 'time';
 
-    if (isLastSetInBlock && isLastBlock) {
-      // ── Entire workout finished ──
-      const totalElapsed = Math.round((Date.now() - workoutStartTimeRef.current) / 1000);
-      elapsedTimeRef.current = totalElapsed;
-      setElapsedTime(totalElapsed);
-      const totalReps = newCompletedSets.reduce((sum, s) => sum + s.reps, 0);
-
-      if (totalReps === 0) {
-        setScreen('idle');
-      } else {
-        const isGoalReached =
-          (currentBlock.sessionMode === 'reps' && exerciseState.repCount >= currentBlock.goalReps)
-          || currentBlock.sessionMode === 'time';
-        setGoalReached(isGoalReached);
-        saveWorkoutSession(newCompletedSets);
-        setScreen('stopped');
-      }
-    } else if (isLastSetInBlock && !isLastBlock) {
-      // ── Block finished, more blocks to go → exercise rest ──
-      resetDetector();
-      setScreen('exercise-rest');
-    } else {
-      // ── More sets in current block → set rest ──
-      resetDetector();
-      setScreen('rest');
+    if (isLastSetInBlock && isLastBlock && totalReps > 0) {
+      session.saveWorkoutSession([...state.completedSets, setRecord]);
     }
-  }, [buildCurrentSetRecord, completedSets, currentSetIndex, totalSetsInBlock, currentBlockIndex, totalBlocks, currentBlock, exerciseState.repCount, resetDetector, saveWorkoutSession]);
+
+    if (!isLastSetInBlock || !isLastBlock) {
+      resetDetector();
+    }
+
+    dispatch({
+      type: 'SET_COMPLETE',
+      setRecord,
+      isLastSetInBlock,
+      isLastBlock,
+      goalReached,
+      elapsedTime,
+      totalReps,
+    });
+  }, [plan, state.completedSets, state.currentSetIndex, state.currentBlockIndex, exerciseState.repCount, session, resetDetector]);
 
   const handleSetCompleteRef = useRef(handleSetComplete);
   useEffect(() => { handleSetCompleteRef.current = handleSetComplete; }, [handleSetComplete]);
 
-  const handleStop = () => {
-    const setRecord = buildCurrentSetRecord();
-    const allSets = [...completedSets, setRecord];
-    setCompletedSets(allSets);
-    setCompletedSetsReps(prev => prev + setRecord.reps);
-    saveWorkoutSession(allSets);
+  const handleStop = useCallback(() => {
+    const setRecord = plan.buildCurrentSetRecord();
+    const allSets = [...state.completedSets, setRecord];
     const totalReps = allSets.reduce((sum, s) => sum + s.reps, 0);
-    if (totalReps === 0) {
-      setScreen('idle');
-    } else {
-      setGoalReached(false); // Manual stop = no celebration
-      const totalElapsed = Math.round((Date.now() - workoutStartTimeRef.current) / 1000);
-      elapsedTimeRef.current = totalElapsed;
-      setElapsedTime(totalElapsed);
-      setScreen('stopped');
+    const elapsedTime = Math.round((Date.now() - plan.workoutStartTimeRef.current) / 1000);
+
+    if (totalReps > 0) {
+      session.saveWorkoutSession(allSets);
     }
-  };
 
-  const handleTimerEnd = () => {
-    const totalElapsed = Math.round((Date.now() - workoutStartTimeRef.current) / 1000);
-    elapsedTimeRef.current = totalElapsed;
-    setElapsedTime(totalElapsed);
+    dispatch({ type: 'MANUAL_STOP', setRecord, elapsedTime, totalReps });
+  }, [plan, state.completedSets, session]);
+
+  const handleTimerEnd = useCallback(() => {
+    const elapsedTime = Math.round((Date.now() - plan.workoutStartTimeRef.current) / 1000);
+    dispatch({ type: 'TIMER_END', elapsedTime });
     handleSetCompleteRef.current();
-  };
+  }, [plan.workoutStartTimeRef]);
 
-  // ── Rest between sets (same exercise) ───────────────────────────
-  const handleRestComplete = () => {
+  const handleRestComplete = useCallback(() => {
     resetDetector();
-    setCurrentSetIndex(prev => prev + 1);
-    setStartTimeRef.current = Date.now();
+    plan.setStartTimeRef.current = Date.now();
     startCamera();
-    setScreen('active');
-  };
+    dispatch({ type: 'REST_COMPLETE' });
+  }, [resetDetector, startCamera, plan.setStartTimeRef]);
 
-  // ── Rest between exercises (different blocks) ───────────────────
-  const handleExerciseRestComplete = () => {
+  const handleExerciseRestComplete = useCallback(() => {
     resetDetector();
-    const nextBlockIndex = currentBlockIndex + 1;
-    const nextBlock = workoutPlan.blocks[nextBlockIndex];
-    setCurrentBlockIndex(nextBlockIndex);
-    setCurrentSetIndex(0);
-    setStartTimeRef.current = Date.now();
-    setSessionMode(nextBlock.sessionMode);
-    setGoalReps(nextBlock.goalReps);
-    setTimeGoal(nextBlock.timeGoal);
+    const nextBlockIndex = state.currentBlockIndex + 1;
+    const nextBlock = plan.workoutPlan.blocks[nextBlockIndex];
+    plan.setStartTimeRef.current = Date.now();
+    plan.syncConfigFromBlock(nextBlock);
     onExerciseTypeChange(nextBlock.exerciseType);
     startCamera();
-    setScreen('active');
-  };
+    dispatch({ type: 'EXERCISE_REST_COMPLETE', nextBlockIndex });
+  }, [resetDetector, state.currentBlockIndex, plan, onExerciseTypeChange, startCamera]);
 
-  // ── Skip entire current block ───────────────────────────────────
-  const handleSkipBlock = () => {
-    const remainingSets = totalSetsInBlock - currentSetIndex;
+  const handleSkipBlock = useCallback(() => {
+    const remainingSets = plan.totalSetsInBlock - state.currentSetIndex;
     const skippedSets: SetRecord[] = Array.from({ length: remainingSets }, () => ({
       reps: 0,
       averageScore: 0,
       repHistory: [],
       duration: 0,
-      setMode: currentBlock.sessionMode,
-      exerciseType: currentBlock.exerciseType,
+      setMode: plan.currentBlock.sessionMode,
+      exerciseType: plan.currentBlock.exerciseType,
     }));
-    const newCompleted = [...completedSets, ...skippedSets];
-    setCompletedSets(newCompleted);
+    const allSets = [...state.completedSets, ...skippedSets];
+    const isLastBlock = state.currentBlockIndex >= plan.totalBlocks - 1;
+    const elapsedTime = Math.round((Date.now() - plan.workoutStartTimeRef.current) / 1000);
+    const totalReps = allSets.reduce((sum, s) => sum + s.reps, 0);
 
-    const isLastBlock = currentBlockIndex >= totalBlocks - 1;
-    if (isLastBlock) {
-      const totalReps = newCompleted.reduce((sum, s) => sum + s.reps, 0);
-      if (totalReps === 0) {
-        setScreen('idle');
-      } else {
-        saveWorkoutSession(newCompleted);
-        const totalElapsed = Math.round((Date.now() - workoutStartTimeRef.current) / 1000);
-        elapsedTimeRef.current = totalElapsed;
-        setElapsedTime(totalElapsed);
-        setScreen('stopped');
-      }
-    } else {
-      resetDetector();
-      setScreen('exercise-rest');
+    if (isLastBlock && totalReps > 0) {
+      session.saveWorkoutSession(allSets);
     }
-  };
 
-  const handleReset = () => {
-    const effectiveLevel = savedLevelRef.current ?? liveLevel;
-    if (effectiveLevel > levelBefore) {
-      setScreen('levelup');
+    if (!isLastBlock) {
+      resetDetector();
+    }
+
+    dispatch({ type: 'SKIP_BLOCK', skippedSets, isLastBlock, elapsedTime, totalReps });
+  }, [plan, state.completedSets, state.currentSetIndex, state.currentBlockIndex, session, resetDetector]);
+
+  const handleReset = useCallback(() => {
+    const effectiveLevel = session.savedLevel ?? session.liveLevel;
+    if (effectiveLevel > session.levelBefore) {
+      dispatch({ type: 'SHOW_LEVEL_UP' });
       return;
     }
     resetDetector();
-    elapsedTimeRef.current = 0;
-    setCurrentBlockIndex(0);
-    setCurrentSetIndex(0);
-    setCompletedSets([]);
-    setCompletedSetsReps(0);
-    savedLevelRef.current = null;
-    setGoalReached(false);
-    setScreen('idle');
-  };
+    dispatch({ type: 'RESET_TO_IDLE' });
+  }, [session.savedLevel, session.liveLevel, session.levelBefore, resetDetector]);
 
-  const handleLevelUpContinue = () => {
+  const handleLevelUpContinue = useCallback(() => {
     resetDetector();
-    elapsedTimeRef.current = 0;
-    setCurrentBlockIndex(0);
-    setCurrentSetIndex(0);
-    setCompletedSets([]);
-    setCompletedSetsReps(0);
-    savedLevelRef.current = null;
-    setGoalReached(false);
-    setScreen('idle');
-  };
+    dispatch({ type: 'RESET_TO_IDLE' });
+  }, [resetDetector]);
 
-  // ── Side effects ────────────────────────────────────────────────
+  // ── Side effects ───────────────────────────────────────────
 
   // Level-up sound during active sessions
   useEffect(() => {
-    if (screen === 'active' && liveLevel > prevLevelRef.current) {
+    if (state.screen === 'active' && session.liveLevel > prevLevelRef.current) {
       initAudio();
-      if (soundEnabled) playLevelUpSound();
+      if (plan.soundEnabled) playLevelUpSound();
     }
-    prevLevelRef.current = liveLevel;
-  }, [liveLevel, screen, soundEnabled, playLevelUpSound, initAudio]);
+    prevLevelRef.current = session.liveLevel;
+  }, [session.liveLevel, state.screen, plan.soundEnabled, playLevelUpSound, initAudio]);
 
   // Auto-complete set when rep goal reached
   useEffect(() => {
-    if (screen === 'active' && currentBlock.sessionMode === 'reps' && exerciseState.repCount >= currentBlock.goalReps) {
-      const totalElapsed = Math.round((Date.now() - workoutStartTimeRef.current) / 1000);
-      elapsedTimeRef.current = totalElapsed;
-      setElapsedTime(totalElapsed);
+    if (
+      state.screen === 'active'
+      && plan.currentBlock.sessionMode === 'reps'
+      && exerciseState.repCount >= plan.currentBlock.goalReps
+    ) {
       handleSetCompleteRef.current();
     }
-  }, [exerciseState.repCount, screen, currentBlock.sessionMode, currentBlock.goalReps]);
+  }, [exerciseState.repCount, state.screen, plan.currentBlock.sessionMode, plan.currentBlock.goalReps]);
 
-  // ── Return ──────────────────────────────────────────────────────
+  // ── Return (same API as original) ─────────────────────────
   return {
     // Screen
-    screen,
-    // Session config (active block's values)
-    goalReps, setGoalReps,
-    sessionMode, setSessionMode,
-    timeGoal, setTimeGoal,
-    soundEnabled, setSoundEnabled,
+    screen: state.screen,
+    // Session config
+    goalReps: plan.goalReps, setGoalReps,
+    sessionMode: plan.sessionMode, setSessionMode,
+    timeGoal: plan.timeGoal, setTimeGoal,
+    soundEnabled: plan.soundEnabled, setSoundEnabled: plan.setSoundEnabled,
     // Workout plan
-    workoutPlan, setWorkoutPlan,
-    currentBlock,
-    currentBlockIndex, currentSetIndex,
-    completedSets, completedSetsReps,
-    isMultiSet, isMultiExercise,
-    totalSetsInBlock, totalBlocks, totalSetsAllBlocks,
-    flatSetIndex,
-    activeExerciseType,
+    workoutPlan: plan.workoutPlan, setWorkoutPlan: plan.setWorkoutPlan,
+    currentBlock: plan.currentBlock,
+    currentBlockIndex: state.currentBlockIndex, currentSetIndex: state.currentSetIndex,
+    completedSets: state.completedSets, completedSetsReps: state.completedSetsReps,
+    isMultiSet: plan.isMultiSet, isMultiExercise: plan.isMultiExercise,
+    totalSetsInBlock: plan.totalSetsInBlock, totalBlocks: plan.totalBlocks,
+    totalSetsAllBlocks: plan.totalSetsAllBlocks,
+    flatSetIndex: plan.flatSetIndex,
+    activeExerciseType: plan.activeExerciseType,
     // Level & XP
-    liveLevel, liveProgressPct, levelBefore,
-    savedLevel: savedLevelRef.current,
-    lastSessionXp,
-    goalReached,
+    liveLevel: session.liveLevel, liveProgressPct: session.liveProgressPct,
+    levelBefore: session.levelBefore,
+    savedLevel: session.savedLevel,
+    lastSessionXp: session.lastSessionXp,
+    goalReached: state.goalReached,
+    questCompletedThisSession: session.questCompletedThisSession,
+    activeQuest,
     // Timing
-    elapsedTime, elapsedTimeRef,
+    elapsedTime: state.elapsedTime, elapsedTimeRef,
     // Handlers
     handleStart, handleOpenConfig, handleWorkoutStart, handleBackToIdle,
     handleStop, handleTimerEnd,

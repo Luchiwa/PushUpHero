@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useAuth } from '@hooks/useAuth';
+import { useAuthCore, useLevel } from '@hooks/useAuth';
 import { Avatar } from '@components/Avatar/Avatar';
 import { useSessionHistory } from '@hooks/useSessionHistory';
 import { useFriends } from '@hooks/useFriends';
@@ -10,6 +10,8 @@ import { FriendsFeedPanel } from '@modals/panels/FriendsFeedPanel/FriendsFeedPan
 import { SettingsModal } from '@modals/SettingsModal/SettingsModal';
 import { StatsScreen } from '@screens/StatsScreen/StatsScreen';
 import { ProgressionScreen } from '@screens/ProgressionScreen/ProgressionScreen';
+import { QuestsScreen } from '@screens/QuestsScreen/QuestsScreen';
+import { useBodyProfile } from '@hooks/useBodyProfile';
 import { PageLayout } from '@components/PageLayout/PageLayout';
 import './ProfileModal.scss';
 
@@ -21,7 +23,8 @@ interface ProfileModalProps {
 }
 
 export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
-    const { user, dbUser, level, totalXp, uploadAvatar } = useAuth();
+    const { user, dbUser, uploadAvatar } = useAuthCore();
+    const { level, totalXp } = useLevel();
     const { sessions, totalSessionCount } = useSessionHistory();
     const { friends, incomingRequests } = useFriends();
 
@@ -29,6 +32,8 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
     const [showSettings, setShowSettings] = useState(false);
     const [showStats, setShowStats] = useState(false);
     const [showProgression, setShowProgression] = useState(false);
+    const [showQuests, setShowQuests] = useState(false);
+    const { questProgress, acceptQuest } = useBodyProfile();
     const [uploading, setUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -125,14 +130,24 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
                     </div>
                 </div>
 
-                <button
-                    type="button"
-                    className="profile-progression-btn"
-                    onClick={() => setShowProgression(true)}
-                >
-                    🏆 Progression
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
-                </button>
+                <div className="profile-nav-buttons">
+                    <button
+                        type="button"
+                        className="profile-progression-btn"
+                        onClick={() => setShowProgression(true)}
+                    >
+                        🏆 Progression
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+                    </button>
+                    <button
+                        type="button"
+                        className="profile-progression-btn profile-quests-btn"
+                        onClick={() => setShowQuests(true)}
+                    >
+                        📜 Quests
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+                    </button>
+                </div>
 
                 {/* Tab bar */}
                 <div className="profile-tabs">
@@ -195,6 +210,14 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
         )}
         {showProgression && (
             <ProgressionScreen onClose={() => setShowProgression(false)} />
+        )}
+        {showQuests && (
+            <QuestsScreen
+                onClose={() => setShowQuests(false)}
+                questProgress={questProgress}
+                userLevel={level}
+                onAcceptQuest={acceptQuest}
+            />
         )}
         </>
     );

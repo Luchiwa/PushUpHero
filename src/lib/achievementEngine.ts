@@ -289,9 +289,16 @@ export function countSGrades(sessions: SessionRecord[]): number {
 /**
  * Bulk-evaluate records from a full session list.
  * Used for first-login merge or rebuilding records.
+ *
+ * @param initialRecords - Optional starting records (e.g. from guest localStorage).
+ *                         Defaults to empty records.
  */
-export function bulkEvaluateRecords(sessions: SessionRecord[], bestStreak: number): RecordsMap {
-    let records = emptyRecords();
+export function bulkEvaluateRecords(
+    sessions: SessionRecord[],
+    bestStreak: number,
+    initialRecords?: RecordsMap,
+): RecordsMap {
+    let records = initialRecords ? JSON.parse(JSON.stringify(initialRecords)) as RecordsMap : emptyRecords();
     // Process sessions chronologically
     const sorted = [...sessions].sort((a, b) => a.date - b.date);
     for (const session of sorted) {

@@ -8,7 +8,7 @@
  * @see src/lib/LEVEL_DESIGN.md    for the full design document
  */
 import { useState, useCallback } from 'react';
-import { useAuth } from './useAuth';
+import { useAuthCore } from './useAuth';
 import { levelFromTotalXp, totalXpForLevel } from '@lib/xpSystem';
 import type { ExerciseType } from '@exercises/types';
 
@@ -29,7 +29,7 @@ const STORAGE_EXERCISE_XP = 'pushup_hero_exercise_xp';
 export type ExerciseXpMap = Partial<Record<ExerciseType, number>>;
 
 export function useLevelSystem() {
-    const { user } = useAuth();
+    const { user } = useAuthCore();
 
     // ── Global XP ────────────────────────────────────────────────────────────
     const [totalXp, setTotalXpState] = useState<number>(() => {

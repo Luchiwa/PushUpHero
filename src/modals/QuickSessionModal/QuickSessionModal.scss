@@ -1,0 +1,38 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.qs-overlay {
+  @include modal-overlay($z: 100);
+}
+
+.qs-card {
+  @include modal-card($width: 420px, $padding: 2rem 1.5rem);
+  gap: 1.1rem;
+  align-items: center;
+  position: relative;
+}
+
+.qs-close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1.25rem;
+  background: transparent;
+  border: none;
+  color: $text-muted;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: $transition;
+
+  &:hover {
+    color: $text;
+    transform: scale(1.1);
+  }
+}
+
+.qs-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: $text;
+  text-align: center;
+  margin: 0;
+}

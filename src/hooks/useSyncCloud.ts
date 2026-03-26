@@ -1,11 +1,12 @@
 import { useEffect, useCallback } from 'react';
 import { doc, getDoc, updateDoc, onSnapshot, collection, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '@lib/firebase';
-import { useAuth } from './useAuth';
+import { useAuthCore } from './useAuth';
 import { mergeLocalDataToCloud } from '@lib/userService';
 import { totalXpForLevel } from '@lib/xpSystem';
 import type { SessionRecord } from './useSessionHistory';
 import type { ExerciseXpMap } from './useLevelSystem';
+import { getGuestStatsSnapshot, clearGuestStats } from '@lib/guestStatsStore';
 
 const LOCAL_STORAGE_XP_KEY = 'pushup_hero_total_xp';
 const LOCAL_STORAGE_EXERCISE_XP_KEY = 'pushup_hero_exercise_xp';
@@ -28,7 +29,7 @@ export function useSyncCloud(
     setSessions: (sessions: SessionRecord[]) => void,
     setTotalSessionCount: (count: number) => void,
 ) {
-    const { user } = useAuth();
+    const { user } = useAuthCore();
 
     // ─── Merge guest data into Firestore on first login ───────────────────────
     const mergeLocalToCloud = useCallback(async (uid: string) => {
@@ -55,6 +56,10 @@ export function useSyncCloud(
         // Also clear legacy key
         localStorage.removeItem('pushup_game_total_reps');
 
+        // Snapshot guest achievement stats before clearing
+        const guestStats = getGuestStatsSnapshot();
+        clearGuestStats();
+
         if (localXp > 0 || localSessions.length > 0) {
             try {
                 const userDoc = await getDoc(doc(db, 'users', uid));
@@ -65,6 +70,7 @@ export function useSyncCloud(
                 await mergeLocalDataToCloud({
                     uid, localXp, localExerciseXp, localSessions,
                     cloudXp, cloudSessions, cloudExerciseXp,
+                    guestStats,
                 });
             } catch (e) {
                 console.error('[useSyncCloud] Merge failed:', e);

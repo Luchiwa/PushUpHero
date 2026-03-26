@@ -4,7 +4,7 @@ import {
     deleteDoc, doc, updateDoc,
 } from 'firebase/firestore';
 import { db, getFcmToken } from '@lib/firebase';
-import { useAuth } from './useAuth';
+import { useAuthCore } from './useAuth';
 
 export interface AppNotification {
     id: string;
@@ -26,7 +26,7 @@ async function registerFcmToken(uid: string): Promise<void> {
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useNotifications() {
-    const { user } = useAuth();
+    const { user } = useAuthCore();
     const tokenRegisteredRef = useRef(false);
 
     // 1. Request permission + register FCM token once user logs in

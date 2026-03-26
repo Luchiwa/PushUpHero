@@ -7,7 +7,7 @@
  * - Personal records cards
  */
 import { useMemo, useEffect, useRef } from 'react';
-import { useAuth } from '@hooks/useAuth';
+import { useAuthCore, useLevel } from '@hooks/useAuth';
 import { useSessionHistory } from '@hooks/useSessionHistory';
 import { useFriends } from '@hooks/useFriends';
 import { PageLayout } from '@components/PageLayout/PageLayout';
@@ -17,6 +17,7 @@ import { getAchievementProgress, computeLifetimeReps, countSGrades } from '@lib/
 import type { UserStats, AchievementMap, RecordsMap } from '@lib/achievementEngine';
 import { emptyRecords } from '@lib/achievementEngine';
 import { checkLiveAchievements } from '@lib/userService';
+import { getGuestStatsSnapshot } from '@lib/guestStatsStore';
 import { getExerciseLabel, EXERCISE_TYPES, EXERCISE_META } from '@exercises/types';
 import type { ExerciseType } from '@exercises/types';
 import { formatElapsedTime, getGradeLetter } from '@lib/constants';
@@ -31,34 +32,36 @@ const EXERCISE_EMOJIS: Record<ExerciseType, string> = Object.fromEntries(
 ) as Record<ExerciseType, string>;
 
 export function ProgressionScreen({ onClose }: ProgressionScreenProps) {
-    const {
-        level, xpIntoCurrentLevel, xpNeededForNextLevel, levelProgressPct,
-        getExerciseLevelProgress, dbUser,
-    } = useAuth();
+    const { dbUser } = useAuthCore();
+    const { level, xpIntoCurrentLevel, xpNeededForNextLevel, levelProgressPct, getExerciseLevelProgress } = useLevel();
     const { sessions, totalSessionCount } = useSessionHistory();
     const { friends } = useFriends();
 
     // Build user stats for achievement progress
+    const guestSnapshot = useMemo(() => dbUser ? null : getGuestStatsSnapshot(), [dbUser]);
     const stats: UserStats = useMemo(() => {
-        const lifetimeReps = dbUser?.lifetimeReps ?? computeLifetimeReps(sessions);
+        const lifetimeReps = dbUser?.lifetimeReps
+            ?? guestSnapshot?.lifetimeReps
+            ?? computeLifetimeReps(sessions);
         const lifetimeTrainingTime = dbUser?.lifetimeTrainingTime
+            ?? guestSnapshot?.lifetimeTrainingTime
             ?? sessions.reduce((sum, s) => sum + (s.totalDuration ?? s.elapsedTime ?? 0), 0);
         return {
             lifetimeRepsByExercise: lifetimeReps,
             sessionRepsByExercise: {}, // Not relevant for progression screen (no active session)
             totalSessions: totalSessionCount,
-            bestStreak: dbUser?.bestStreak ?? 0,
+            bestStreak: dbUser?.bestStreak ?? guestSnapshot?.bestStreak ?? 0,
             friendsCount: friends.length,
             totalEncouragementsSent: dbUser?.totalEncouragementsSent ?? 0,
-            sGradeCount: dbUser?.sGradeCount ?? countSGrades(sessions),
+            sGradeCount: dbUser?.sGradeCount ?? guestSnapshot?.sGradeCount ?? countSGrades(sessions),
             sessionXp: 0,
             globalLevel: level,
             lifetimeTrainingTime,
         };
-    }, [dbUser, sessions, totalSessionCount, friends.length, level]);
+    }, [dbUser, guestSnapshot, sessions, totalSessionCount, friends.length, level]);
 
-    const achievements: AchievementMap = dbUser?.achievements ?? {};
-    const records: RecordsMap = dbUser?.records ?? emptyRecords();
+    const achievements: AchievementMap = dbUser?.achievements ?? guestSnapshot?.achievements ?? {};
+    const records: RecordsMap = dbUser?.records ?? guestSnapshot?.records ?? emptyRecords();
 
     // ── Evaluate live (non-session) achievements on mount / when stats change ──
     const liveCheckedRef = useRef('');

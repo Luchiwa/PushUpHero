@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { collection, query, where, orderBy, getDocs, limit } from 'firebase/firestore';
 import { db } from '@lib/firebase';
-import { useAuth } from './useAuth';
+import { useAuthCore } from './useAuth';
 import type { SessionRecord } from './useSessionHistory';
 
 /** Returns the Sunday 00:00:00.000 local time for a given weekOffset (0 = current week). */
@@ -42,7 +42,7 @@ export interface UseWeekSessionsReturn {
 }
 
 export function useWeekSessions(): UseWeekSessionsReturn {
-    const { user } = useAuth();
+    const { user } = useAuthCore();
     const [sessions, setSessions] = useState<SessionRecord[]>([]);
     const [prevSessions, setPrevSessions] = useState<SessionRecord[]>([]);
     const [loading, setLoading] = useState(false);

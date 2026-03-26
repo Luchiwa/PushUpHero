@@ -2,9 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { ExerciseState, ExerciseType, WorkoutPlan } from '@exercises/types';
 import type { SetRecord } from '@exercises/types';
 import { getExerciseLabel } from '@exercises/types';
-import { useAuth } from '@hooks/useAuth';
-import { useShareSession } from '@hooks/useShareSession';
-import type { ShareSessionData } from '@hooks/useShareSession';
+import { useAuthCore, useLevel } from '@hooks/useAuth';
 import { useSoundEffect } from '@hooks/useSoundEffect';
 import { AuthModal } from '@modals/AuthModal/AuthModal';
 import { getGradeLetter, getGradeClass, formatElapsedTime } from '@lib/constants';
@@ -13,6 +11,7 @@ import type { AchievementDef } from '@lib/achievements';
 import { TIER_COLORS } from '@lib/achievements';
 import type { RecordUpdate } from '@lib/achievementEngine';
 import { RECORDS } from '@lib/achievements';
+import type { QuestDef } from '@lib/quests';
 import { AchievementToastQueue } from '@components/AchievementToastQueue/AchievementToastQueue';
 import './SummaryScreen.scss';
 
@@ -55,23 +54,21 @@ interface SummaryProps {
     newAchievements?: AchievementDef[];
     /** Records broken during this session */
     brokenRecords?: RecordUpdate[];
+    /** Quest completed during this session */
+    questCompleted?: QuestDef | null;
 }
 
 function ScoreGrade({ score }: { score: number }) {
     return <span className={`grade ${getGradeClass(score)}`}>{getGradeLetter(score)}</span>;
 }
 
-export function SummaryScreen({ exerciseType, exerciseState, completedSets, onReset, sessionMode, elapsedTime, workoutPlan, sessionXp, soundEnabled, goalReached, newAchievements, brokenRecords }: SummaryProps) {
-    const { user, dbUser, level } = useAuth();
-    const { shareSession } = useShareSession();
+export function SummaryScreen({ exerciseType, exerciseState, completedSets, onReset, sessionMode, elapsedTime, workoutPlan, sessionXp, soundEnabled, goalReached, newAchievements, brokenRecords, questCompleted }: SummaryProps) {
+    const { user } = useAuthCore();
+    const { level } = useLevel();
     const { initAudio, playVictorySound } = useSoundEffect();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const animRef = useRef<number | null>(null);
-    const [sharing, setSharing] = useState(false);
-    const [shareError, setShareError] = useState('');
     const [showPaywall, setShowPaywall] = useState(false);
-    const [expandedSet, setExpandedSet] = useState<number | null>(null);
-    const [expandedBlock, setExpandedBlock] = useState<number | null>(null);
 
     const isMultiSet = completedSets != null && completedSets.length > 1;
     const isMultiExercise = workoutPlan != null && workoutPlan.blocks.length > 1;
@@ -83,9 +80,6 @@ export function SummaryScreen({ exerciseType, exerciseState, completedSets, onRe
     const averageScore = isMultiSet
         ? (totalReps > 0 ? Math.round(completedSets.reduce((sum, s) => sum + s.averageScore * s.reps, 0) / totalReps) : 0)
         : exerciseState.averageScore;
-    const allRepHistory = isMultiSet
-        ? completedSets.flatMap(s => s.repHistory)
-        : exerciseState.repHistory;
 
     // ── Victory celebration: sound + confetti ────────────────────────
     useEffect(() => {
@@ -138,55 +132,6 @@ export function SummaryScreen({ exerciseType, exerciseState, completedSets, onRe
         return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
     }, [goalReached]);
 
-    const handleShare = async () => {
-        if (!user || !dbUser) return;
-        setSharing(true);
-        setShareError('');
-        try {
-            const grade = getGradeLetter(averageScore);
-            const bestScore = allRepHistory.length > 0
-                ? Math.max(...allRepHistory.map(r => r.score))
-                : undefined;
-            // Build per-block summaries for multi-exercise share card
-            const blockSummaries = isMultiExercise && completedSets ? (() => {
-                const summaries: { label: string; reps: number; sets: number; avgScore: number }[] = [];
-                let si = 0;
-                for (const block of workoutPlan.blocks) {
-                    const blockSets = completedSets.slice(si, si + block.numberOfSets);
-                    si += block.numberOfSets;
-                    const reps = blockSets.reduce((s, st) => s + st.reps, 0);
-                    const avg = reps > 0 ? Math.round(blockSets.reduce((s, st) => s + st.averageScore * st.reps, 0) / reps) : 0;
-                    summaries.push({ label: getExerciseLabel(block.exerciseType), reps, sets: blockSets.length, avgScore: avg });
-                }
-                return summaries;
-            })() : undefined;
-
-            const shareData: ShareSessionData = {
-                repCount: totalReps,
-                averageScore,
-                sessionMode: sessionMode ?? 'reps',
-                elapsedTime,
-                level,
-                username: dbUser.displayName,
-                grade,
-                numberOfSets: isMultiSet ? completedSets.length : undefined,
-                bestScore,
-                exerciseType,
-                isMultiExercise: isMultiExercise || undefined,
-                numberOfExercises: isMultiExercise ? workoutPlan.blocks.length : undefined,
-                blockSummaries,
-            };
-            await shareSession(shareData);
-        } catch (err: unknown) {
-            const msg = (err as Error)?.message ?? '';
-            if (!msg.includes('AbortError') && !msg.includes('cancel')) {
-                setShareError('Could not share. Try downloading instead.');
-            }
-        } finally {
-            setSharing(false);
-        }
-    };
-
     useEffect(() => {
         if (level >= 5 && !user && totalReps > 0) {
             const timer = setTimeout(() => setShowPaywall(true), 1500);
@@ -215,6 +160,18 @@ export function SummaryScreen({ exerciseType, exerciseState, completedSets, onRe
                     <h2 className="summary-title">
                         {isMultiExercise ? 'Workout Complete' : isMultiSet ? 'Workout Complete' : 'Session Complete'}
                     </h2>
+                )}
+
+                {/* Quest completion banner */}
+                {questCompleted && (
+                    <div className="summary-quest-banner">
+                        <span className="summary-quest-emoji">{questCompleted.emoji}</span>
+                        <div className="summary-quest-info">
+                            <span className="summary-quest-label">Quest Complete!</span>
+                            <span className="summary-quest-title">{questCompleted.title}</span>
+                        </div>
+                        <span className="summary-quest-xp">+{questCompleted.xpReward} XP</span>
+                    </div>
                 )}
 
                 {isMultiExercise && (
@@ -387,7 +344,6 @@ export function SummaryScreen({ exerciseType, exerciseState, completedSets, onRe
 
                 {/* Per-block breakdown for multi-exercise workouts */}
                 {isMultiExercise && isMultiSet && completedSets != null && (() => {
-                    // Group sets by block using workoutPlan
                     const blockGroups: { block: (typeof workoutPlan.blocks)[number]; sets: SetRecord[] }[] = [];
                     let setIdx = 0;
                     for (const block of workoutPlan.blocks) {
@@ -403,40 +359,14 @@ export function SummaryScreen({ exerciseType, exerciseState, completedSets, onRe
                                 const blockAvg = blockReps > 0
                                     ? Math.round(group.sets.reduce((s, set) => s + set.averageScore * set.reps, 0) / blockReps)
                                     : 0;
-                                const isOpen = expandedBlock === bi;
-                                const blockRepHistory = group.sets.flatMap(s => s.repHistory);
                                 return (
-                                    <div key={`block-${group.block.exerciseType}-${bi}`} className={`set-item ${isOpen ? 'set-item--expanded' : ''}`}>
-                                        <button
-                                            type="button"
-                                            className="set-item-header"
-                                            onClick={() => setExpandedBlock(isOpen ? null : bi)}
-                                        >
+                                    <div key={`block-${group.block.exerciseType}-${bi}`} className="set-item">
+                                        <div className="set-item-header">
                                             <span className="set-item-num">{getExerciseLabel(group.block.exerciseType)}</span>
                                             <span className="set-item-stats">
                                                 {blockReps} reps · {group.sets.length} set{group.sets.length > 1 ? 's' : ''} · <ScoreGrade score={blockAvg} />
                                             </span>
-                                            <span className="set-item-chevron">{isOpen ? '▲' : '▼'}</span>
-                                        </button>
-                                        {isOpen && blockRepHistory.length > 0 && (
-                                            <div className="set-item-reps">
-                                                {blockRepHistory.map((rep, ri) => (
-                                                    <div key={`block-${bi}-rep-${ri}`} className="rep-history-item">
-                                                        <span className="rep-num">#{ri + 1}</span>
-                                                        <div className="rep-mini-bar">
-                                                            <div
-                                                                className="rep-mini-fill"
-                                                                style={{
-                                                                    width: `${rep.score}%`,
-                                                                    background: rep.score >= 75 ? '#22c55e' : rep.score >= 50 ? '#f59e0b' : '#ef4444',
-                                                                }}
-                                                            />
-                                                        </div>
-                                                        <span className="rep-score">{rep.score}%</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
+                                        </div>
                                     </div>
                                 );
                             })}
@@ -449,90 +379,23 @@ export function SummaryScreen({ exerciseType, exerciseState, completedSets, onRe
                     <div className="sets-breakdown">
                         <p className="sets-breakdown-title">Sets breakdown</p>
                         {completedSets.map((set, i) => (
-                            <div key={`set-${set.reps}-${i}`} className={`set-item ${expandedSet === i ? 'set-item--expanded' : ''}`}>
-                                <button
-                                    type="button"
-                                    className="set-item-header"
-                                    onClick={() => setExpandedSet(expandedSet === i ? null : i)}
-                                >
+                            <div key={`set-${set.reps}-${i}`} className="set-item">
+                                <div className="set-item-header">
                                     <span className="set-item-num">Set {i + 1}</span>
                                     <span className="set-item-stats">
                                         {set.reps} reps · <ScoreGrade score={set.averageScore} /> · {set.averageScore}%
                                     </span>
-                                    <span className="set-item-chevron">{expandedSet === i ? '▲' : '▼'}</span>
-                                </button>
-                                {expandedSet === i && set.repHistory.length > 0 && (
-                                    <div className="set-item-reps">
-                                        {set.repHistory.map((rep, j) => (
-                                            <div key={`rep-${rep.score}-${j}`} className="rep-history-item">
-                                                <span className="rep-num">#{j + 1}</span>
-                                                <div className="rep-mini-bar">
-                                                    <div
-                                                        className="rep-mini-fill"
-                                                        style={{
-                                                            width: `${rep.score}%`,
-                                                            background: rep.score >= 75 ? '#22c55e' : rep.score >= 50 ? '#f59e0b' : '#ef4444',
-                                                        }}
-                                                    />
-                                                </div>
-                                                <span className="rep-score">{rep.score}%</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
+                                </div>
                             </div>
                         ))}
                     </div>
                 )}
 
-                {/* Rep breakdown for single-set sessions */}
-                {!isMultiSet && allRepHistory.length > 0 && (
-                    <div className="rep-history">
-                        <p className="rep-history-title">Rep breakdown</p>
-                        <div className="rep-history-list">
-                            {allRepHistory.map((rep, i) => (
-                                <div key={`rep-${rep.score}-${i}`} className="rep-history-item">
-                                    <span className="rep-num">#{i + 1}</span>
-                                    <div className="rep-mini-bar">
-                                        <div
-                                            className="rep-mini-fill"
-                                            style={{
-                                                width: `${rep.score}%`,
-                                                background: rep.score >= 75 ? '#22c55e' : rep.score >= 50 ? '#f59e0b' : '#ef4444',
-                                            }}
-                                        />
-                                    </div>
-                                    <span className="rep-score">{rep.score}%</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
                 <div className="summary-actions">
                     <button type="button" className="btn-primary" onClick={onReset}>
-                        🔁 Try Again
+                        🔁 Continue
                     </button>
-                    {user && dbUser && (
-                        <button
-                            type="button"
-                            className="btn-share"
-                            onClick={handleShare}
-                            disabled={sharing}
-                        >
-                            {sharing ? (
-                                <span className="btn-share-spinner" />
-                            ) : (
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-                                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-                                </svg>
-                            )}
-                            {sharing ? 'Generating…' : 'Share'}
-                        </button>
-                    )}
                 </div>
-                {shareError && <p className="summary-share-error">{shareError}</p>}
             </div>
 
             {showPaywall && (

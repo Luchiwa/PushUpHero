@@ -4,7 +4,7 @@ import {
     onSnapshot, addDoc, serverTimestamp, updateDoc, increment
 } from 'firebase/firestore';
 import { db } from '@lib/firebase';
-import { useAuth } from './useAuth';
+import { useAuthCore } from './useAuth';
 
 export interface FriendRequest {
     fromUid: string;
@@ -40,7 +40,7 @@ export type SearchResult = {
 };
 
 export function useFriends() {
-    const { user, dbUser } = useAuth();
+    const { user, dbUser } = useAuthCore();
 
     const [friends, setFriends] = useState<Friend[]>([]);
     const [incomingRequests, setIncomingRequests] = useState<FriendRequest[]>([]);

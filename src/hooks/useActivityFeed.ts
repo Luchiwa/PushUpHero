@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import type { Timestamp } from 'firebase/firestore';
 import { db } from '@lib/firebase';
-import { useAuth } from './useAuth';
+import { useAuthCore } from './useAuth';
 import type { Friend } from './useFriends';
 import type { ExerciseType } from '@exercises/types';
 import { getExerciseLabel } from '@exercises/types';
@@ -68,7 +68,7 @@ export function buildEventMessage(event: ActivityEvent): string {
 }
 
 export function useActivityFeed(friends: Friend[]) {
-    const { user } = useAuth();
+    const { user } = useAuthCore();
     const [feed, setFeed] = useState<ActivityEvent[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
