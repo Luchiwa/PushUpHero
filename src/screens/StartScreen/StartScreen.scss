@@ -3,11 +3,11 @@
 
 .start-screen {
     @include fill;
-    z-index: 5;
+    z-index: $z-raised;
     display: flex;
     flex-direction: column;
     background: $bg;
-    animation: screen-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: screen-in 0.45s $ease-out-expo both;
 }
 
 .camera-vignette {
@@ -17,7 +17,7 @@
 // ── Start content ───────────────────────────────────────────────
 .start-content {
     position: relative;
-    z-index: 2;
+    z-index: $z-content;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -98,11 +98,7 @@
 // ── Start brand / header section ────────────────────────────────
 // (legacy classes kept for reference, replaced by player-hud)
 
-// ── Tier color palette ──────────────────────────────────────────
-$tier-bronze: #cd7f32;
-$tier-silver: #a8a9ad;
-$tier-gold: #ffd700;
-$tier-diamond: #b9f2ff;
+// Tier colors — sourced from _variables.scss ($tier-*)
 
 // ── Player HUD ──────────────────────────────────────────────────
 .player-hud {
@@ -121,7 +117,7 @@ $tier-diamond: #b9f2ff;
     cursor: pointer;
     text-align: left;
     transition: background $transition-fast, border-color $transition-fast,
-        box-shadow $transition-fast, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        box-shadow $transition-fast, transform 0.2s $ease-out-back;
     box-shadow: 0 2px 12px rgba($accent, 0.08);
 
     // ── Tier variants ──
@@ -140,9 +136,9 @@ $tier-diamond: #b9f2ff;
         box-shadow: 0 2px 16px rgba($tier-gold, 0.18), inset 0 0 0 1px rgba($tier-gold, 0.08);
     }
 
-    &.tier-diamond {
-        border-color: rgba($tier-diamond, 0.55);
-        box-shadow: 0 2px 20px rgba($tier-diamond, 0.22), inset 0 0 0 1px rgba($tier-diamond, 0.12);
+    &.tier-platinum {
+        border-color: rgba($tier-platinum, 0.55);
+        box-shadow: 0 2px 20px rgba($tier-platinum, 0.22), inset 0 0 0 1px rgba($tier-platinum, 0.12);
         animation: diamond-shimmer 3s ease-in-out infinite;
     }
 
@@ -156,7 +152,7 @@ $tier-diamond: #b9f2ff;
 
     // ── Tap bounce (#8) ──
     &:active {
-        animation: tap-bounce 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        animation: tap-bounce 0.35s $ease-out-back;
     }
 }
 
@@ -182,11 +178,11 @@ $tier-diamond: #b9f2ff;
 
     0%,
     100% {
-        box-shadow: 0 2px 20px rgba($tier-diamond, 0.22), inset 0 0 0 1px rgba($tier-diamond, 0.12);
+        box-shadow: 0 2px 20px rgba($tier-platinum, 0.22), inset 0 0 0 1px rgba($tier-platinum, 0.12);
     }
 
     50% {
-        box-shadow: 0 2px 28px rgba($tier-diamond, 0.35), inset 0 0 0 1px rgba($tier-diamond, 0.20);
+        box-shadow: 0 2px 28px rgba($tier-platinum, 0.35), inset 0 0 0 1px rgba($tier-platinum, 0.20);
     }
 }
 
@@ -201,7 +197,7 @@ $tier-diamond: #b9f2ff;
     bottom: -5px;
     right: -7px;
     background: $accent;
-    color: #fff;
+    color: $white;
     font-size: 0.58rem;
     font-weight: 800;
     letter-spacing: 0.04em;
@@ -231,9 +227,9 @@ $tier-diamond: #b9f2ff;
         color: #5a4000;
     }
 
-    &.tier-diamond {
-        background: $tier-diamond;
-        box-shadow: 0 2px 8px rgba($tier-diamond, 0.6);
+    &.tier-platinum {
+        background: $tier-platinum;
+        box-shadow: 0 2px 8px rgba($tier-platinum, 0.6);
         color: #1a6a7a;
     }
 }
@@ -447,7 +443,7 @@ $tier-diamond: #b9f2ff;
     padding: 0.45rem 1rem;
     border-radius: $radius-pill;
     background: $accent;
-    color: #fff;
+    color: $white;
     font-size: 0.8rem;
     font-weight: 700;
     border: none;
@@ -462,24 +458,22 @@ $tier-diamond: #b9f2ff;
 }
 
 // ── Quest Card (hero card) ───────────────────────────────────────
-$quest-purple: #6366f1;
-$quest-purple-light: #a855f7;
 
 .quest-card {
     width: 100%;
     padding: 1rem 1.1rem;
-    background: linear-gradient(135deg, rgba($quest-purple, 0.12) 0%, rgba($quest-purple-light, 0.06) 100%);
-    border: 1px solid rgba($quest-purple, 0.28);
+    background: linear-gradient(135deg, rgba($indigo, 0.12) 0%, rgba($purple, 0.06) 100%);
+    border: 1px solid rgba($indigo, 0.28);
     border-radius: $radius-sm;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    animation: quest-slide-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: quest-slide-in 0.5s $ease-out-expo both;
     transition: border-color $transition-fast, box-shadow $transition-fast;
 
     &--active {
-        border-color: rgba($quest-purple, 0.45);
-        box-shadow: 0 2px 16px rgba($quest-purple, 0.12);
+        border-color: rgba($indigo, 0.45);
+        box-shadow: 0 2px 16px rgba($indigo, 0.12);
     }
 }
 
@@ -494,7 +488,7 @@ $quest-purple-light: #a855f7;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #fff;
+    color: $white;
     padding: 2px 8px;
     border-radius: $radius-pill;
     line-height: 1.5;
@@ -503,8 +497,8 @@ $quest-purple-light: #a855f7;
 .quest-card-status {
     font-size: $font-xs;
     font-weight: 700;
-    color: $quest-purple;
-    background: rgba($quest-purple, 0.12);
+    color: $indigo;
+    background: rgba($indigo, 0.12);
     padding: 2px 8px;
     border-radius: $radius-pill;
 }
@@ -513,8 +507,8 @@ $quest-purple-light: #a855f7;
     margin-left: auto;
     font-size: $font-xs;
     font-weight: 700;
-    color: $quest-purple-light;
-    background: rgba($quest-purple-light, 0.10);
+    color: $purple;
+    background: rgba($purple, 0.10);
     padding: 2px 8px;
     border-radius: $radius-pill;
 }
@@ -553,7 +547,7 @@ $quest-purple-light: #a855f7;
 
 .quest-card-hint {
     font-size: $font-xs;
-    color: rgba($quest-purple, 0.7);
+    color: rgba($indigo, 0.7);
     text-align: center;
     margin: 0;
     padding: 0.3rem 0;
@@ -587,18 +581,18 @@ $quest-purple-light: #a855f7;
 }
 
 .quest-card-accept {
-    background: linear-gradient(135deg, $quest-purple, $quest-purple-light);
-    color: #fff;
-    box-shadow: 0 3px 16px rgba($quest-purple, 0.35);
+    background: linear-gradient(135deg, $indigo, $purple);
+    color: $white;
+    box-shadow: 0 3px 16px rgba($indigo, 0.35);
 
     &:hover:not(:disabled) {
-        box-shadow: 0 4px 22px rgba($quest-purple, 0.5);
+        box-shadow: 0 4px 22px rgba($indigo, 0.5);
     }
 }
 
 .quest-card-start {
-    background: linear-gradient(135deg, $accent, darken($accent, 8%));
-    color: #fff;
+    background: linear-gradient(135deg, $accent, $accent-dark);
+    color: $white;
     box-shadow: 0 3px 16px rgba($accent, 0.35);
 
     &:hover:not(:disabled) {
@@ -606,35 +600,481 @@ $quest-purple-light: #a855f7;
     }
 }
 
-// ── Quest Browse Button ──────────────────────────────────────────
-.quest-browse-btn {
+// ── Quest Widget — Companion to Stats Widget ─────────────────────
+.quest-widget {
+    position: relative;
     width: 100%;
-    padding: 0.65rem 1rem;
-    background: rgba($quest-purple, 0.08);
-    border: 1px solid rgba($quest-purple, 0.22);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0.875rem;
+    border: 1px solid rgba($indigo, 0.18);
     border-radius: $radius-sm;
-    color: $quest-purple;
-    font-size: 0.85rem;
-    font-weight: 700;
+    background: linear-gradient(145deg,
+            rgba($indigo, 0.06) 0%,
+            rgba($purple, 0.03) 40%,
+            rgba($indigo, 0.04) 100%);
     cursor: pointer;
-    text-align: center;
-    transition: background $transition-fast, border-color $transition-fast, box-shadow $transition-fast;
+    overflow: hidden;
+    text-align: left;
+    font-family: inherit;
+    transition:
+        border-color 0.25s ease,
+        box-shadow 0.25s ease,
+        transform 0.2s $ease-out-back;
+    animation: stats-widget-in 0.55s $ease-out-expo 0.1s both;
 
     &:hover {
-        background: rgba($quest-purple, 0.14);
-        border-color: rgba($quest-purple, 0.4);
-        box-shadow: 0 2px 12px rgba($quest-purple, 0.12);
+        border-color: rgba($indigo, 0.38);
+        box-shadow:
+            0 6px 28px rgba($indigo, 0.14),
+            inset 0 0 0 1px rgba($indigo, 0.06);
+        transform: translateY(-2px);
+
+        .quest-widget-chevron {
+            transform: translateX(3px);
+        }
+
+        .quest-widget-icon {
+            filter: drop-shadow(0 0 4px rgba($indigo, 0.5));
+        }
     }
 
-    &--done {
-        color: $amber-dark;
-        background: rgba($amber, 0.08);
-        border-color: rgba($amber, 0.22);
+    &:active {
+        transform: translateY(0) scale(0.98);
+        transition-duration: 0.08s;
+    }
+}
 
-        &:hover {
-            background: rgba($amber, 0.14);
-            border-color: rgba($amber, 0.4);
+// ── Shine sweep (reuses same keyframe as stats-widget) ───────────
+.quest-widget-shine {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(105deg,
+            transparent 0%,
+            rgba($white, 0) 40%,
+            rgba($white, 0.30) 50%,
+            rgba($white, 0) 60%,
+            transparent 100%);
+    pointer-events: none;
+    animation: shine-sweep 5s ease-in-out 2s infinite;
+}
+
+// ── Scroll icon + notification badge ─────────────────────────────
+.quest-widget-icon-wrap {
+    position: relative;
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    @include flex-center;
+    background: rgba($indigo, 0.08);
+    border-radius: 10px;
+    transition: background 0.25s ease;
+
+    .quest-widget:hover & {
+        background: rgba($indigo, 0.14);
+    }
+}
+
+.quest-widget-icon {
+    color: $indigo;
+    transition: filter 0.25s ease;
+}
+
+.quest-widget-notif {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: $indigo;
+    color: $white;
+    font-size: 0.6rem;
+    font-weight: 800;
+    border-radius: $radius-pill;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    box-shadow: 0 2px 8px rgba($indigo, 0.4);
+    animation: quest-notif-pulse 2s ease-in-out infinite;
+}
+
+@keyframes quest-notif-pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 2px 8px rgba($indigo, 0.4);
+        transform: scale(1);
+    }
+
+    50% {
+        box-shadow: 0 2px 14px rgba($indigo, 0.7), 0 0 4px rgba($purple, 0.3);
+        transform: scale(1.08);
+    }
+}
+
+// ── Info section ─────────────────────────────────────────────────
+.quest-widget-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.quest-widget-top {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.quest-widget-title {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: $text;
+    letter-spacing: -0.01em;
+}
+
+.quest-widget-badge {
+    font-size: 0.58rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    padding: 2px 7px;
+    border-radius: $radius-pill;
+    background: rgba($indigo, 0.12);
+    color: $indigo;
+    white-space: nowrap;
+
+    &--done {
+        background: rgba($green, 0.12);
+        color: $green;
+    }
+}
+
+// ── Preview line (active quest or browse CTA) ────────────────────
+.quest-widget-preview {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-width: 0;
+}
+
+.quest-widget-quest-emoji {
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.quest-widget-quest-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: $text;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+.quest-widget-quest-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: $accent-dark;
+    background: rgba($accent, 0.10);
+    padding: 2px 7px;
+    border-radius: $radius-pill;
+    flex-shrink: 0;
+    white-space: nowrap;
+
+    &--new {
+        color: $indigo;
+        background: rgba($indigo, 0.10);
+
+        .quest-widget-quest-dot {
+            background: $indigo;
         }
+    }
+}
+
+.quest-widget-quest-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: $accent;
+    flex-shrink: 0;
+    animation: quest-dot-blink 1.6s ease-in-out infinite;
+}
+
+@keyframes quest-dot-blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.35;
+    }
+}
+
+.quest-widget-completed {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: $amber-dark;
+}
+
+.quest-widget-browse {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: $indigo;
+}
+
+// ── Chevron ──────────────────────────────────────────────────────
+.quest-widget-chevron {
+    flex-shrink: 0;
+    color: $text-muted;
+    opacity: 0.5;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+
+    .quest-widget:hover & {
+        opacity: 0.8;
+    }
+}
+
+// ── Stats Widget — Gaming Dashboard ──────────────────────────────
+.stats-widget {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0.875rem;
+    border: 1px solid rgba($accent, 0.18);
+    border-radius: $radius-sm;
+    background: linear-gradient(145deg,
+            rgba($accent, 0.06) 0%,
+            rgba($amber, 0.03) 40%,
+            rgba($indigo, 0.03) 100%);
+    cursor: pointer;
+    overflow: hidden;
+    text-align: left;
+    font-family: inherit;
+    transition:
+        border-color 0.25s ease,
+        box-shadow 0.25s ease,
+        transform 0.2s $ease-out-back;
+    animation: stats-widget-in 0.55s $ease-out-expo 0.15s both;
+
+    &:hover {
+        border-color: rgba($accent, 0.38);
+        box-shadow:
+            0 6px 28px rgba($accent, 0.14),
+            inset 0 0 0 1px rgba($accent, 0.06);
+        transform: translateY(-2px);
+
+        .stats-widget-cta svg {
+            transform: translateX(3px);
+        }
+
+        .stats-widget-ring-fill {
+            filter: drop-shadow(0 0 4px rgba($accent, 0.6));
+        }
+    }
+
+    &:active {
+        transform: translateY(0) scale(0.98);
+        transition-duration: 0.08s;
+    }
+}
+
+// ── Shine sweep effect ───────────────────────────────────────────
+.stats-widget-shine {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(105deg,
+            transparent 0%,
+            rgba($white, 0) 40%,
+            rgba($white, 0.35) 50%,
+            rgba($white, 0) 60%,
+            transparent 100%);
+    pointer-events: none;
+    animation: shine-sweep 4s ease-in-out 1.5s infinite;
+}
+
+@keyframes shine-sweep {
+    0% {
+        left: -100%;
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    40% {
+        left: 160%;
+        opacity: 1;
+    }
+
+    50% {
+        left: 160%;
+        opacity: 0;
+    }
+
+    100% {
+        left: 160%;
+        opacity: 0;
+    }
+}
+
+// ── Animated Streak Ring ─────────────────────────────────────────
+.stats-widget-ring-wrap {
+    position: relative;
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    @include flex-center;
+}
+
+.stats-widget-ring {
+    position: absolute;
+    inset: 0;
+    transform: rotate(-90deg);
+}
+
+.stats-widget-ring-track {
+    fill: none;
+    stroke: rgba($text, 0.06);
+    stroke-width: 4;
+}
+
+.stats-widget-ring-fill {
+    fill: none;
+    stroke: $accent;
+    stroke-width: 4;
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.8s $ease-out-expo, filter 0.25s ease;
+    animation: ring-draw 1s $ease-out-expo 0.4s both;
+}
+
+@keyframes ring-draw {
+    from {
+        stroke-dasharray: 0 125.6;
+    }
+}
+
+.stats-widget-ring-label {
+    position: relative;
+    z-index: 1;
+    font-size: 0.8rem;
+    font-weight: 900;
+    color: $text;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    font-variant-numeric: tabular-nums;
+}
+
+.stats-widget-ring-fire {
+    font-size: 0.6rem;
+    line-height: 1;
+    animation: flame-dance 0.6s ease-in-out infinite alternate;
+}
+
+// ── Stats columns ────────────────────────────────────────────────
+.stats-widget-data {
+    flex: 1;
+    min-width: 0;
+}
+
+.stats-widget-row {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.stats-widget-stat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.05rem;
+    max-width: 120px;
+}
+
+.stats-widget-icon {
+    color: $accent;
+    opacity: 0.7;
+    margin-bottom: 0.1rem;
+    flex-shrink: 0;
+}
+
+.stats-widget-val {
+    font-size: 1.05rem;
+    font-weight: 900;
+    color: $text;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+}
+
+.stats-widget-lbl {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: $text-muted;
+    line-height: 1.3;
+}
+
+// ── CTA badge ────────────────────────────────────────────────────
+.stats-widget-cta {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-shrink: 0;
+    padding: 0.3rem 0.55rem;
+    background: linear-gradient(135deg, rgba($accent, 0.12), rgba($accent, 0.06));
+    border: 1px solid rgba($accent, 0.15);
+    border-radius: $radius-pill;
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: $accent-dark;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+
+    svg {
+        transition: transform 0.2s ease;
+    }
+
+    .stats-widget:hover & {
+        background: linear-gradient(135deg, rgba($accent, 0.20), rgba($accent, 0.12));
+        border-color: rgba($accent, 0.30);
+        color: $accent;
+    }
+}
+
+@keyframes stats-widget-in {
+    0% {
+        opacity: 0;
+        transform: translateY(10px) scale(0.96);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
     }
 }
 
@@ -644,8 +1084,8 @@ $quest-purple-light: #a855f7;
     padding: 0.7rem 1rem;
     border: none;
     border-radius: $radius-sm;
-    background: linear-gradient(135deg, $accent, darken($accent, 6%));
-    color: #fff;
+    background: linear-gradient(135deg, $accent, $accent-dark);
+    color: $white;
     font-size: 0.92rem;
     font-weight: 800;
     cursor: pointer;
@@ -677,20 +1117,6 @@ $quest-purple-light: #a855f7;
         opacity: 1;
         transform: translateY(0) scale(1);
     }
-}
-
-// ── Remove legacy start-brand styles (kept as stubs to avoid SCSS errors) ───
-.start-brand,
-.start-brand-header,
-.user-profile-tag,
-.user-name,
-.user-streak-sep,
-.user-streak,
-.start-brand-stats,
-.level-preview-bar,
-.level-preview-fill,
-.level-preview-text {
-    display: none;
 }
 
 // ── Mobile responsive ────────────────────────────────────────────
@@ -752,5 +1178,61 @@ $quest-purple-light: #a855f7;
 
     .start-card-divider {
         margin: 0.5rem 0;
+    }
+
+    .stats-widget {
+        padding: 0.6rem 0.7rem;
+        gap: 0.6rem;
+    }
+
+    .quest-widget {
+        padding: 0.6rem 0.7rem;
+        gap: 0.6rem;
+    }
+
+    .quest-widget-icon-wrap {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+    }
+
+    .quest-widget-icon {
+        width: 22px;
+        height: 22px;
+    }
+
+    .quest-widget-title {
+        font-size: 0.78rem;
+    }
+
+    .quest-widget-quest-name {
+        font-size: 0.7rem;
+    }
+
+    .stats-widget-ring-wrap {
+        width: 42px;
+        height: 42px;
+    }
+
+    .stats-widget-ring-label {
+        font-size: 0.72rem;
+    }
+
+    .stats-widget-val {
+        font-size: 0.92rem;
+    }
+
+    .stats-widget-lbl {
+        font-size: 0.55rem;
+    }
+
+    .stats-widget-icon {
+        width: 13px;
+        height: 13px;
+    }
+
+    .stats-widget-cta {
+        padding: 0.25rem 0.45rem;
+        font-size: 0.6rem;
     }
 }

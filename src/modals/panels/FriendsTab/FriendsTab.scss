@@ -92,10 +92,10 @@
     height: 18px;
     padding: 0 5px;
     background: $accent;
-    color: white;
+    color: $white;
     font-size: 0.65rem;
     font-weight: 800;
-    border-radius: 999px;
+    border-radius: $radius-pill;
 }
 
 .friends-empty-msg {
@@ -216,7 +216,7 @@
 .btn-add-friend {
     padding: 0.4rem 0.85rem;
     background: $accent;
-    color: white;
+    color: $white;
     border: none;
     border-radius: $radius-sm;
     font-size: 0.8rem;
@@ -398,14 +398,14 @@
     font-size: 0.9rem;
     font-weight: 700;
     font-family: inherit;
-    color: white;
+    color: $white;
     cursor: pointer;
     transition: $transition;
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+    box-shadow: 0 4px 12px rgba($red, 0.2);
 
     &:hover:not(:disabled) {
         transform: translateY(-1px);
-        box-shadow: 0 6px 18px rgba(239, 68, 68, 0.35);
+        box-shadow: 0 6px 18px rgba($red, 0.35);
     }
     &:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 }

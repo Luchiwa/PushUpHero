@@ -5,38 +5,77 @@
 .page-layout {
   position: fixed;
   inset: 0;
-  z-index: 40; // default — overridable via style prop
+  z-index: $z-sticky; // default — overridable via style prop
   background: $bg;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: screen-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: screen-in 0.3s $ease-out-expo both;
 }
 
 // ── Topbar ──────────────────────────────────────────────────────
 .page-topbar {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: $spacing-sm $spacing-md;
-  border-bottom: 1px solid $border;
   flex-shrink: 0;
+
+  // Accent gradient tint background
+  background: linear-gradient(135deg,
+      rgba($accent, 0.06) 0%,
+      rgba($amber, 0.03) 50%,
+      rgba($accent, 0.04) 100%);
+
+  // Accent line instead of grey border
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: $spacing-md;
+    right: $spacing-md;
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent,
+        rgba($accent, 0.25) 20%,
+        rgba($accent, 0.25) 80%,
+        transparent);
+  }
 }
 
 .page-back-btn {
-  color: $text;
+  // Override .btn-icon for topbar: ghost style
+  background: transparent;
+  color: $accent;
+
+  &:hover {
+    background: rgba($accent, 0.08);
+    color: $accent-dark;
+  }
 }
 
 .page-topbar-title {
-  font-size: 1rem;
-  font-weight: 700;
-  color: $text;
-  letter-spacing: -0.01em;
+  font-size: $font-lg;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  @include text-gradient($gradient-accent);
 }
 
 // Empty spacer keeps the title centred when there is no right action
 .page-topbar-spacer {
   width: 38px; // matches .btn-icon width
+}
+
+// Right-slot icon buttons in topbar inherit ghost style
+.page-topbar .btn-icon {
+  background: transparent;
+  color: $accent;
+
+  &:hover {
+    background: rgba($accent, 0.08);
+    color: $accent-dark;
+  }
 }
 
 // ── Body (centred column, 480 px cap) ───────────────────────────

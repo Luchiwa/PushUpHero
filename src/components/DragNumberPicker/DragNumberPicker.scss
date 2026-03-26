@@ -21,7 +21,7 @@
     top: 0;
     bottom: 0;
     width: 4px;
-    @include progress-track($bg: #f0f0f0);
+    @include progress-track($bg: rgba($text, 0.06));
 }
 
 .drag-picker-fill {
@@ -42,9 +42,9 @@
 }
 
 .drag-picker-btn {
-    background: #f5f5f5;
-    border: 1px solid rgba(26, 26, 26, 0.1);
-    border-radius: 8px;
+    background: rgba($text, 0.04);
+    border: 1px solid rgba($text, 0.1);
+    border-radius: $radius-xs;
     color: $text-muted;
     font-size: 0.7rem;
     width: 36px;
@@ -55,7 +55,7 @@
     @include flex-center;
 
     &:hover {
-        background: #eeeeee;
+        background: rgba($text, 0.07);
         color: $text;
     }
 }

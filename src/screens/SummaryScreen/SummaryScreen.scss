@@ -6,8 +6,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: radial-gradient(ellipse at 50% 0%, rgba($accent, 0.08) 0%, #ffffff 70%);
-    z-index: 20;
+    background: radial-gradient(ellipse at 50% 0%, rgba($accent, 0.08) 0%, $bg 70%);
+    z-index: $z-overlay;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     // iOS PWA: push content below the status bar
@@ -15,7 +15,7 @@
     padding-bottom: env(safe-area-inset-bottom);
 
     &--victory {
-        animation: screen-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+        animation: screen-in 0.35s $ease-out-expo both;
     }
 }
 
@@ -26,7 +26,7 @@
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 1;
+    z-index: $z-base;
 }
 
 // ── Victory celebration header ───────────────────────────────────
@@ -35,7 +35,7 @@
     flex-direction: column;
     align-items: center;
     gap: 0.4rem;
-    animation: victory-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation: victory-pop 0.5s $ease-out-back both;
 }
 
 .summary-victory-emoji {
@@ -55,7 +55,7 @@
     @include modal-card($width: 380px, $padding: 1.5rem 1.5rem);
     @include glass;
     position: relative;
-    z-index: 2;
+    z-index: $z-content;
     gap: 1rem;
     align-items: center;
     box-shadow: $shadow-card;
@@ -83,10 +83,10 @@
     gap: 0.625rem;
     width: 100%;
     padding: 0.75rem 0.875rem;
-    background: linear-gradient(135deg, rgba(#6366f1, 0.14) 0%, rgba(#a855f7, 0.10) 100%);
-    border: 1px solid rgba(#6366f1, 0.30);
+    background: linear-gradient(135deg, rgba($indigo, 0.14) 0%, rgba($purple, 0.10) 100%);
+    border: 1px solid rgba($indigo, 0.30);
     border-radius: $radius-sm;
-    animation: quest-banner-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation: quest-banner-pop 0.6s $ease-out-back both;
     animation-delay: 0.4s;
 }
 
@@ -107,7 +107,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #6366f1;
+    color: $indigo;
 }
 
 .summary-quest-title {
@@ -119,9 +119,9 @@
 .summary-quest-xp {
     font-size: $font-sm;
     font-weight: 700;
-    color: #a855f7;
+    color: $purple;
     white-space: nowrap;
-    background: rgba(#a855f7, 0.12);
+    background: rgba($purple, 0.12);
     padding: 0.2rem 0.5rem;
     border-radius: $radius-pill;
 }
@@ -222,8 +222,8 @@
 }
 
 .grade-s {
-    color: #a855f7;
-    text-shadow: 0 0 20px rgba(168, 85, 247, 0.7);
+    color: $purple;
+    text-shadow: 0 0 20px rgba($purple, 0.7);
 }
 
 .grade-a {
@@ -232,8 +232,8 @@
 }
 
 .grade-b {
-    color: #3b82f6;
-    text-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
+    color: $blue;
+    text-shadow: 0 0 20px rgba($blue, 0.6);
 }
 
 .grade-c {
@@ -364,9 +364,9 @@
     align-items: center;
     gap: 0.3rem;
     padding: 0.3rem 0.6rem;
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba($white, 0.06);
     border: 1.5px solid;
-    border-radius: 999px;
+    border-radius: $radius-pill;
     font-size: 0.72rem;
     font-weight: 600;
     animation: chip-pop 0.4s ease-out both;
@@ -414,8 +414,8 @@
     align-items: center;
     gap: 0.4rem;
     padding: 0.35rem 0.6rem;
-    background: rgba(255, 215, 0, 0.08);
-    border: 1px solid rgba(255, 215, 0, 0.2);
+    background: rgba($tier-gold, 0.08);
+    border: 1px solid rgba($tier-gold, 0.2);
     border-radius: $radius-sm;
     font-size: 0.72rem;
     animation: chip-pop 0.4s ease-out both;
@@ -433,7 +433,7 @@
 
 .summary-record-value {
     font-weight: 700;
-    color: #ffd700;
+    color: $tier-gold;
 }
 
 .summary-record-old {

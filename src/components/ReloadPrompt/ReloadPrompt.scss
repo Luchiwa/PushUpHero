@@ -7,25 +7,25 @@
     left: 0;
     right: 0;
     padding: 1rem;
-    z-index: 1000;
+    z-index: $z-toast;
     display: flex;
     justify-content: center;
     pointer-events: none;
 }
 
 .reload-prompt-toast {
-    background: #ffffff;
-    border: 1px solid rgba(26, 26, 26, 0.1);
+    background: $bg;
+    border: 1px solid rgba($text, 0.1);
     border-radius: $radius-sm;
     padding: 1rem 1.25rem;
     display: flex;
     flex-direction: column;
     gap: 0.8rem;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 8px 32px rgba($black, 0.12);
+    backdrop-filter: blur($blur-sm);
+    -webkit-backdrop-filter: blur($blur-sm);
     pointer-events: all;
-    animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: slide-up 0.4s $ease-out-expo both;
     width: min(90vw, 360px);
 }
 
@@ -54,7 +54,7 @@
 
 .btn-reload {
     background: $gradient-green;
-    color: white;
+    color: $white;
     border: none;
     box-shadow: 0 0 16px rgba($green, 0.4);
 
@@ -62,9 +62,9 @@
 }
 
 .btn-close {
-    background: #f5f5f5;
+    background: rgba($text, 0.04);
     color: $text-muted;
-    border: 1px solid rgba(26, 26, 26, 0.1);
+    border: 1px solid rgba($text, 0.1);
 
-    &:active { background: #eeeeee; }
+    &:active { background: rgba($text, 0.07); }
 }

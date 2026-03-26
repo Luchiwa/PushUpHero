@@ -3,12 +3,12 @@
 
 .rest-screen {
     @include fill;
-    z-index: 5;
+    z-index: $z-raised;
     @include flex-center;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    animation: screen-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+    background: rgba($white, 0.95);
+    backdrop-filter: blur($blur);
+    -webkit-backdrop-filter: blur($blur);
+    animation: screen-in 0.4s $ease-out-expo both;
 }
 
 .rest-card {
@@ -81,7 +81,7 @@
 
 // ── Grade colors (reuse from SummaryScreen pattern) ─────────────
 .rest-stat-value.grade-s {
-    color: #a855f7;
+    color: $purple;
 }
 
 .rest-stat-value.grade-a {
@@ -89,7 +89,7 @@
 }
 
 .rest-stat-value.grade-b {
-    color: #3b82f6;
+    color: $blue;
 }
 
 .rest-stat-value.grade-c {
@@ -133,7 +133,7 @@
 
 .rest-countdown-bar {
     width: 100%;
-    @include progress-track($height: 8px, $bg: #f0f0f0);
+    @include progress-track($height: 8px, $bg: rgba($text, 0.06));
     border: 1px solid $border;
 }
 

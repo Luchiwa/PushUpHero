@@ -1,21 +1,17 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useAuthCore, useLevel } from '@hooks/useAuth';
 import { Avatar } from '@components/Avatar/Avatar';
 import { useSessionHistory } from '@hooks/useSessionHistory';
 import { useFriends } from '@hooks/useFriends';
 import { useActivityFeed } from '@hooks/useActivityFeed';
-import { SessionHistoryPanel } from '@modals/panels/SessionHistoryPanel/SessionHistoryPanel';
 import { FriendsTab } from '@modals/panels/FriendsTab/FriendsTab';
 import { FriendsFeedPanel } from '@modals/panels/FriendsFeedPanel/FriendsFeedPanel';
 import { SettingsModal } from '@modals/SettingsModal/SettingsModal';
-import { StatsScreen } from '@screens/StatsScreen/StatsScreen';
 import { ProgressionScreen } from '@screens/ProgressionScreen/ProgressionScreen';
-import { QuestsScreen } from '@screens/QuestsScreen/QuestsScreen';
-import { useBodyProfile } from '@hooks/useBodyProfile';
 import { PageLayout } from '@components/PageLayout/PageLayout';
 import './ProfileModal.scss';
 
-type ProfileTab = 'history' | 'friends' | 'feed';
+type ProfileTab = 'friends' | 'feed';
 
 interface ProfileModalProps {
     onClose: () => void;
@@ -24,16 +20,21 @@ interface ProfileModalProps {
 
 export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
     const { user, dbUser, uploadAvatar } = useAuthCore();
-    const { level, totalXp } = useLevel();
-    const { sessions, totalSessionCount } = useSessionHistory();
+    const { level, totalXp, xpIntoCurrentLevel, xpNeededForNextLevel, levelProgressPct } = useLevel();
+    const { totalSessionCount } = useSessionHistory();
     const { friends, incomingRequests } = useFriends();
 
-    const [activeTab, setActiveTab] = useState<ProfileTab>(initialTab ?? 'history');
+    // Tier based on level (same logic as StartScreen HUD)
+    const tier = level >= 35 ? 'platinum' : level >= 20 ? 'gold' : level >= 10 ? 'silver' : 'bronze';
+    const streak = dbUser?.streak ?? 0;
+
+    // XP bar: 12 segments (same as StartScreen HUD)
+    const XP_SEGS = useMemo(() => Array.from({ length: 12 }, (_, i) => i), []);
+    const filledSegments = Math.round((levelProgressPct / 100) * XP_SEGS.length);
+
+    const [activeTab, setActiveTab] = useState<ProfileTab>(initialTab ?? 'friends');
     const [showSettings, setShowSettings] = useState(false);
-    const [showStats, setShowStats] = useState(false);
     const [showProgression, setShowProgression] = useState(false);
-    const [showQuests, setShowQuests] = useState(false);
-    const { questProgress, acceptQuest } = useBodyProfile();
     const [uploading, setUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -84,15 +85,25 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
             }
             bodyClassName="profile-content"
         >
-                <div className="profile-header">
-                    <div className={`profile-avatar-wrapper ${uploading ? 'profile-avatar-wrapper--uploading' : ''}`}>
+                {/* ── Player Card ── */}
+                <div className={`player-card tier-${tier}`}>
+                    <div className="player-card-shine" />
+
+                    {/* Avatar with tier ring */}
+                    <div className={`player-card-avatar ${uploading ? 'player-card-avatar--uploading' : ''}`}>
+                        <svg className="player-card-ring" viewBox="0 0 96 96" width="88" height="88">
+                            <circle className="player-card-ring-track" cx="48" cy="48" r="44" />
+                            <circle className="player-card-ring-fill" cx="48" cy="48" r="44"
+                                strokeDasharray={`${(levelProgressPct / 100) * 276.5} 276.5`} />
+                        </svg>
                         <Avatar
                             photoURL={dbUser?.photoURL}
                             initials={dbUser?.displayName || 'U'}
-                            size={72}
+                            size={68}
                             onClick={handleAvatarClick}
                         />
-                        <span className="profile-avatar-edit-hint">✎</span>
+                        <span className="player-card-edit-hint">✎</span>
+                        <span className={`player-card-level tier-${tier}`}>LV{level}</span>
                     </div>
                     <input
                         ref={fileInputRef}
@@ -101,63 +112,68 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
                         style={{ display: 'none' }}
                         onChange={handleFileChange}
                     />
-                    <div className="profile-info">
-                        <h2>
-                            {dbUser?.displayName || 'User'}
-                            {(dbUser?.streak ?? 0) > 0 && (
-                                <>
-                                    <span className="profile-streak-sep">·</span>
-                                    <span className="profile-streak">{dbUser?.streak} 🔥 Streak</span>
-                                </>
-                            )}
-                        </h2>
-                        <span className="profile-member-since">Member since {memberSince}</span>
-                    </div>
-                </div>
 
-                <div className="profile-stats-grid">
-                    <div className="profile-stat-box">
-                        <span className="profile-stat-value">{level}</span>
-                        <span className="profile-stat-label">Level</span>
+                    {/* Name + streak */}
+                    <div className="player-card-identity">
+                        <h2 className="player-card-name">{dbUser?.displayName || 'User'}</h2>
+                        {streak > 0 && (
+                            <span className={`player-card-streak${streak >= 7 ? ' on-fire' : ''}`}>
+                                {streak}<span className="player-card-streak-icon">🔥</span>
+                            </span>
+                        )}
                     </div>
-                    <div className="profile-stat-box">
-                        <span className="profile-stat-value">{totalXp.toLocaleString()}</span>
-                        <span className="profile-stat-label">Total XP</span>
-                    </div>
-                    <div className="profile-stat-box">
-                        <span className="profile-stat-value">{totalSessionCount}</span>
-                        <span className="profile-stat-label">Sessions</span>
-                    </div>
-                </div>
+                    <span className="player-card-since">Member since {memberSince}</span>
 
-                <div className="profile-nav-buttons">
-                    <button
-                        type="button"
-                        className="profile-progression-btn"
-                        onClick={() => setShowProgression(true)}
-                    >
-                        🏆 Progression
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+                    {/* XP bar — tappable → opens Progression */}
+                    <button type="button" className="player-card-xp-btn" onClick={() => setShowProgression(true)}>
+                        <div className="player-card-xp-bar" role="progressbar" aria-valuenow={xpIntoCurrentLevel} aria-valuemax={xpNeededForNextLevel}>
+                            {XP_SEGS.map((i) => (
+                                <div
+                                    key={i}
+                                    className={`player-card-xp-seg${i < filledSegments ? ' filled' : ''}${i === filledSegments - 1 && filledSegments > 0 ? ' tip' : ''}`}
+                                    style={{ animationDelay: `${i * 60}ms` }}
+                                />
+                            ))}
+                        </div>
+                        <div className="player-card-xp-label">
+                            <span>{xpIntoCurrentLevel.toLocaleString()} XP</span>
+                            <span className="player-card-xp-next">→ LV{level + 1} in {(xpNeededForNextLevel - xpIntoCurrentLevel).toLocaleString()} XP</span>
+                        </div>
+                        <div className="player-card-xp-cta">
+                            <span>🏆</span>
+                            <span>Progression</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+                        </div>
                     </button>
-                    <button
-                        type="button"
-                        className="profile-progression-btn profile-quests-btn"
-                        onClick={() => setShowQuests(true)}
-                    >
-                        📜 Quests
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
-                    </button>
+
+                    {/* Stat mini-cards */}
+                    <div className="player-card-stats">
+                        <div className="player-card-stat">
+                            <svg className="player-card-stat-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                            </svg>
+                            <span className="player-card-stat-val">{totalXp.toLocaleString()}</span>
+                            <span className="player-card-stat-lbl">Total XP</span>
+                        </div>
+                        <div className="player-card-stat">
+                            <svg className="player-card-stat-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+                            </svg>
+                            <span className="player-card-stat-val">{totalSessionCount}</span>
+                            <span className="player-card-stat-lbl">Sessions</span>
+                        </div>
+                        <div className="player-card-stat">
+                            <svg className="player-card-stat-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                            </svg>
+                            <span className="player-card-stat-val">{friends.length}</span>
+                            <span className="player-card-stat-lbl">Friends</span>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Tab bar */}
                 <div className="profile-tabs">
-                    <button
-                        type="button"
-                        className={`profile-tab ${activeTab === 'history' ? 'profile-tab--active' : ''}`}
-                        onClick={() => setActiveTab('history')}
-                    >
-                        History
-                    </button>
                     <button
                         type="button"
                         className={`profile-tab ${activeTab === 'friends' ? 'profile-tab--active' : ''}`}
@@ -179,14 +195,6 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
                 </div>
 
                 {/* Tab content */}
-                {activeTab === 'history' && (
-                    <div className="profile-tab-panel">
-                        {sessions.length > 0
-                            ? <SessionHistoryPanel onViewAll={() => setShowStats(true)} />
-                            : <p className="friends-empty-msg">No sessions yet. Start your first workout!</p>
-                        }
-                    </div>
-                )}
                 {activeTab === 'friends' && (
                     <div className="profile-tab-panel">
                         <FriendsTab />
@@ -205,19 +213,8 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
                 onAccountDeleted={() => { onClose(); }}
             />
         )}
-        {showStats && (
-            <StatsScreen onClose={() => setShowStats(false)} />
-        )}
         {showProgression && (
             <ProgressionScreen onClose={() => setShowProgression(false)} />
-        )}
-        {showQuests && (
-            <QuestsScreen
-                onClose={() => setShowQuests(false)}
-                questProgress={questProgress}
-                userLevel={level}
-                onAcceptQuest={acceptQuest}
-            />
         )}
         </>
     );

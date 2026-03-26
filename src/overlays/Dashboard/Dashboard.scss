@@ -18,7 +18,7 @@
 
 .dashboard {
     @include fill;
-    z-index: 10;
+    z-index: $z-overlay;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -53,9 +53,9 @@
     font-size: 2.4rem;
     line-height: 1;
     font-weight: 900;
-    color: white;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
-    animation: rep-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    color: $white;
+    text-shadow: 0 2px 8px rgba($black, 0.6);
+    animation: rep-pop 0.3s $ease-out-back both;
 }
 
 .hud-rep-label {
@@ -63,7 +63,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba($white, 0.6);
     align-self: flex-end;
     margin-bottom: 0.25rem;
 }
@@ -80,7 +80,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba($white, 0.5);
 }
 
 .score-ring {
@@ -97,8 +97,8 @@
 .set-indicator {
     font-size: 0.7rem;
     font-weight: 800;
-    color: rgba(255, 255, 255, 0.7);
-    background: rgba(0, 0, 0, 0.35);
+    color: rgba($white, 0.7);
+    background: rgba($black, 0.35);
     padding: 0.2rem 0.55rem;
     border-radius: $radius-pill;
     letter-spacing: 0.03em;
@@ -109,7 +109,7 @@
     font-size: 1.3rem;
     font-weight: 900;
     font-family: 'Courier New', monospace;
-    color: white;
+    color: $white;
     text-shadow: 0 0 8px rgba($accent, 0.4);
     letter-spacing: 0.04em;
 }
@@ -124,7 +124,7 @@
 .hud-goal-track {
     width: 48px;
     height: 6px;
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba($white, 0.15);
     border-radius: 3px;
     overflow: hidden;
 }
@@ -144,7 +144,7 @@
 .hud-goal-count {
     font-size: 0.72rem;
     font-weight: 800;
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba($white, 0.8);
     white-space: nowrap;
 }
 
@@ -162,16 +162,16 @@
     width: 30px;
     height: 30px;
     @include flex-center;
-    background: rgba(0, 0, 0, 0.35);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: white;
+    background: rgba($black, 0.35);
+    border: 1px solid rgba($white, 0.12);
+    color: $white;
     cursor: pointer;
     transition: $transition;
     backdrop-filter: blur($blur);
 
     &:hover,
     &:active {
-        background: rgba(0, 0, 0, 0.55);
+        background: rgba($black, 0.55);
     }
 
     &--muted {
@@ -182,9 +182,9 @@
 .dashboard .btn-stop {
     padding: 0.35rem 0.6rem;
     border-radius: $radius-pill;
-    background: rgba(239, 68, 68, 0.35);
-    border: 1px solid rgba(239, 68, 68, 0.45);
-    color: white;
+    background: rgba($red, 0.35);
+    border: 1px solid rgba($red, 0.45);
+    color: $white;
     font-size: 0.85rem;
     font-weight: 700;
     font-family: inherit;
@@ -195,7 +195,7 @@
 
     &:hover,
     &:active {
-        background: rgba(239, 68, 68, 0.55);
+        background: rgba($red, 0.55);
     }
 }
 
@@ -216,7 +216,7 @@
     display: flex;
     align-items: baseline;
     gap: 0.2rem;
-    animation: grade-burst 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation: grade-burst 0.6s $ease-out-back both;
 }
 
 .grade-letter {
@@ -224,7 +224,7 @@
     font-weight: 900;
     line-height: 1;
     text-shadow:
-        0 2px 10px rgba(0, 0, 0, 0.5),
+        0 2px 10px rgba($black, 0.5),
         0 0 30px currentColor;
 }
 
@@ -232,7 +232,7 @@
     font-size: 1.1rem;
     font-weight: 800;
     opacity: 0.65;
-    color: white;
+    color: $white;
 }
 
 @keyframes grade-burst {
@@ -257,12 +257,13 @@
     display: flex;
     align-items: center;
     gap: 0.25rem;
-    background: rgba(255, 127, 0, 0.2);
-    border: 1px solid rgba(255, 127, 0, 0.45);
+    background: rgba($accent, 0.2);
+    border: 1px solid rgba($accent, 0.45);
     border-radius: $radius-pill;
     padding: 0.15rem 0.6rem;
-    animation: combo-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-    backdrop-filter: blur(6px);
+    animation: combo-pop 0.4s $ease-out-back both;
+    backdrop-filter: blur($blur-xs);
+    -webkit-backdrop-filter: blur($blur-xs);
 }
 
 .combo-count {
@@ -276,7 +277,7 @@
     font-size: 0.55rem;
     font-weight: 800;
     letter-spacing: 0.1em;
-    color: rgba(255, 255, 255, 0.75);
+    color: rgba($white, 0.75);
 }
 
 @keyframes combo-pop {
@@ -311,9 +312,10 @@
     display: flex;
     align-items: center;
     gap: 0.35rem;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba($black, 0.5);
+    backdrop-filter: blur($blur-sm);
+    -webkit-backdrop-filter: blur($blur-sm);
+    border: 1px solid rgba($white, 0.12);
     border-radius: $radius-pill;
     padding: 0.3rem 0.75rem;
     animation: slide-up 0.3s ease both;
@@ -327,7 +329,7 @@
 .coach-text {
     font-size: 0.78rem;
     font-weight: 700;
-    color: white;
+    color: $white;
     letter-spacing: 0.02em;
 }
 
@@ -337,7 +339,7 @@
     background: rgba($red, 0.2);
     border: 1px solid rgba($red, 0.3);
     border-radius: $radius-sm;
-    color: white;
+    color: $white;
     font-size: 0.72rem;
     font-weight: 600;
     text-align: center;
@@ -346,8 +348,8 @@
     animation: slide-up 0.25s ease both;
 
     &--lock {
-        background: rgba(#e040fb, 0.2);
-        border-color: rgba(#e040fb, 0.4);
+        background: rgba($magenta, 0.2);
+        border-color: rgba($magenta, 0.4);
     }
 }
 

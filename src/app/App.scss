@@ -7,7 +7,7 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: #ffffff;
+    background: $bg;
     // iOS safe area (notch / Dynamic Island / home indicator)
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
@@ -22,7 +22,7 @@
     height: 100%;
     object-fit: cover;
     transform: scaleX(-1); // mirror selfie cam by default
-    z-index: 1;
+    z-index: $z-base;
 }
 
 .video-hidden {
@@ -40,6 +40,6 @@
     width: 100%;
     height: 100%;
     transform: scaleX(-1);
-    z-index: 2;
+    z-index: $z-content;
     pointer-events: none;
 }

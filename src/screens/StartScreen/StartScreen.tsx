@@ -1,10 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuthCore, useLevel } from '@hooks/useAuth';
+import { useSessions } from '@hooks/useAuth';
 import { Avatar } from '@components/Avatar/Avatar';
 import { ExercisePicker } from '@components/ExercisePicker/ExercisePicker';
 import { AuthModal } from '@modals/AuthModal/AuthModal';
 import { ProfileModal } from '@modals/ProfileModal/ProfileModal';
 import { QuickSessionModal } from '@modals/QuickSessionModal/QuickSessionModal';
+import { StatsScreen } from '@screens/StatsScreen/StatsScreen';
 import { InstallBanner } from '@overlays/InstallBanner/InstallBanner';
 import { QuestsScreen } from '@screens/QuestsScreen/QuestsScreen';
 import type { ExerciseType } from '@exercises/types';
@@ -51,12 +53,20 @@ export function StartScreen({
 }: StartScreenProps) {
     const { user, dbUser } = useAuthCore();
     const { level, totalXp, xpIntoCurrentLevel, xpNeededForNextLevel, levelProgressPct } = useLevel();
+    const { totalSessionCount } = useSessions();
     const [showAuthModal, setShowAuthModal] = useState(false);
     const isDeepLinkFriends = window.location.hash === '#friends';
     const [showProfileModal, setShowProfileModal] = useState(isDeepLinkFriends);
-    const [profileInitialTab, setProfileInitialTab] = useState<'history' | 'friends' | 'feed'>(isDeepLinkFriends ? 'friends' : 'history');
+    const [profileInitialTab, setProfileInitialTab] = useState<'friends' | 'feed'>(isDeepLinkFriends ? 'friends' : 'feed');
     const [showQuestsScreen, setShowQuestsScreen] = useState(false);
     const [showQuickSession, setShowQuickSession] = useState(false);
+    const [showStats, setShowStats] = useState(false);
+
+    // Stats for the stats button
+    const totalLifetimeReps = useMemo(() => {
+        if (!dbUser?.lifetimeReps) return 0;
+        return Object.values(dbUser.lifetimeReps).reduce((sum, v) => sum + (v ?? 0), 0);
+    }, [dbUser?.lifetimeReps]);
 
     // XP bar: 12 segments
     const XP_SEG_IDS = ['s0','s1','s2','s3','s4','s5','s6','s7','s8','s9','s10','s11'];
@@ -78,8 +88,11 @@ export function StartScreen({
     // Quest state helpers
     const questAccepted = activeQuest && questProgress ? isQuestAccepted(activeQuest, questProgress) : false;
     const isCalibrationQuest = activeQuest?.id === 'first_steps';
-    const hasAvailableQuests = questProgress ? getAvailableQuests(questProgress, userLevel ?? 0).length > 0 : false;
+    const availableQuests = questProgress ? getAvailableQuests(questProgress, userLevel ?? 0) : [];
+    const availableCount = availableQuests.length;
+    const hasAvailableQuests = availableCount > 0;
     const allQuestsCompleted = questProgress && Object.keys(questProgress.completed).length > 0 && !hasAvailableQuests;
+    const completedCount = questProgress ? Object.keys(questProgress.completed).length : 0;
     const catMeta = activeQuest ? QUEST_CATEGORY_META[activeQuest.category] : null;
     const onboardingDone = !!questProgress?.completed['first_steps'];
 
@@ -229,17 +242,104 @@ export function StartScreen({
                     </div>
                 )}
 
-                {/* ── No active quest: show browse button ── */}
-                {!activeQuest && hasAvailableQuests && (
-                    <button type="button" className="quest-browse-btn" onClick={() => setShowQuestsScreen(true)}>
-                        📜 View available quests
+                {/* ── Quest Widget (always visible when onboarding done) ── */}
+                {user && onboardingDone && (
+                    <button type="button" className="quest-widget" onClick={() => setShowQuestsScreen(true)}>
+                        <div className="quest-widget-shine" />
+
+                        {/* Scroll icon */}
+                        <div className="quest-widget-icon-wrap">
+                            <svg className="quest-widget-icon" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                                <polyline points="14 2 14 8 20 8" />
+                                <line x1="16" y1="13" x2="8" y2="13" />
+                                <line x1="16" y1="17" x2="8" y2="17" />
+                            </svg>
+                            {availableCount > 0 && (
+                                <span className="quest-widget-notif">{availableCount}</span>
+                            )}
+                        </div>
+
+                        {/* Info */}
+                        <div className="quest-widget-info">
+                            <div className="quest-widget-top">
+                                <span className="quest-widget-title">Quests</span>
+                                {allQuestsCompleted ? (
+                                    <span className="quest-widget-badge quest-widget-badge--done">✓ All done</span>
+                                ) : availableCount > 0 ? (
+                                    <span className="quest-widget-badge">{availableCount} available</span>
+                                ) : null}
+                            </div>
+                            <div className="quest-widget-preview">
+                                {activeQuest && questAccepted ? (
+                                    <>
+                                        <span className="quest-widget-quest-emoji">{activeQuest.emoji}</span>
+                                        <span className="quest-widget-quest-name">{activeQuest.title}</span>
+                                        <span className="quest-widget-quest-status"><span className="quest-widget-quest-dot" />In progress</span>
+                                    </>
+                                ) : activeQuest && !questAccepted ? (
+                                    <>
+                                        <span className="quest-widget-quest-emoji">{activeQuest.emoji}</span>
+                                        <span className="quest-widget-quest-name">{activeQuest.title}</span>
+                                        <span className="quest-widget-quest-status quest-widget-quest-status--new">✨ New</span>
+                                    </>
+                                ) : allQuestsCompleted ? (
+                                    <span className="quest-widget-completed">🏆 {completedCount} quests conquered</span>
+                                ) : (
+                                    <span className="quest-widget-browse">Browse available quests →</span>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Chevron */}
+                        <svg className="quest-widget-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
                     </button>
                 )}
 
-                {/* ── All quests done ── */}
-                {allQuestsCompleted && (
-                    <button type="button" className="quest-browse-btn quest-browse-btn--done" onClick={() => setShowQuestsScreen(true)}>
-                        🏆 All quests completed!
+                {/* ── Stats Widget (logged-in only) ── */}
+                {user && dbUser && totalSessionCount > 0 && (
+                    <button type="button" className="stats-widget" onClick={() => setShowStats(true)}>
+                        <div className="stats-widget-shine" />
+
+                        {/* Streak ring */}
+                        <div className="stats-widget-ring-wrap">
+                            <svg className="stats-widget-ring" viewBox="0 0 48 48" width="48" height="48">
+                                <circle className="stats-widget-ring-track" cx="24" cy="24" r="20" />
+                                <circle
+                                    className="stats-widget-ring-fill"
+                                    cx="24" cy="24" r="20"
+                                    strokeDasharray={`${Math.min(streak / 7, 1) * 125.6} 125.6`}
+                                />
+                            </svg>
+                            <span className="stats-widget-ring-label">{streak}<span className="stats-widget-ring-fire">🔥</span></span>
+                        </div>
+
+                        {/* Stats columns */}
+                        <div className="stats-widget-data">
+                            <div className="stats-widget-row">
+                                <div className="stats-widget-stat">
+                                    <svg className="stats-widget-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" />
+                                    </svg>
+                                    <span className="stats-widget-val">{totalLifetimeReps.toLocaleString()}</span>
+                                    <span className="stats-widget-lbl">reps</span>
+                                </div>
+                                <div className="stats-widget-stat">
+                                    <svg className="stats-widget-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+                                    </svg>
+                                    <span className="stats-widget-val">{totalSessionCount}</span>
+                                    <span className="stats-widget-lbl">sessions</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* CTA badge */}
+                        <div className="stats-widget-cta">
+                            <span>📊</span>
+                            <span>View full stats</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+                        </div>
                     </button>
                 )}
 
@@ -288,6 +388,10 @@ export function StartScreen({
                 />
             )}
 
+            {showStats && (
+                <StatsScreen onClose={() => setShowStats(false)} />
+            )}
+
             {showAuthModal && (
                 <AuthModal onClose={() => setShowAuthModal(false)} />
             )}
@@ -295,7 +399,7 @@ export function StartScreen({
             {showProfileModal && (
                 <ProfileModal
                     initialTab={profileInitialTab}
-                    onClose={() => { setShowProfileModal(false); setProfileInitialTab('history'); }}
+                    onClose={() => { setShowProfileModal(false); setProfileInitialTab('feed'); }}
                 />
             )}
 

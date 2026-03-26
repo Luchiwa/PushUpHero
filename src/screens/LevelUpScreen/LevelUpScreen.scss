@@ -5,7 +5,7 @@
 .levelup-screen {
     position: fixed;
     inset: 0;
-    z-index: 300;
+    z-index: $z-notification;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -77,15 +77,15 @@
     gap: $spacing-lg;
     padding: $spacing-xl * 1.5 $spacing-xl;
     border-radius: $radius-lg;
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba($white, 0.04);
     border: 1.5px solid rgba($accent, 0.3);
-    box-shadow: 0 0 60px rgba($accent, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    box-shadow: 0 0 60px rgba($accent, 0.15), inset 0 1px 0 rgba($white, 0.06);
     min-width: 260px;
     cursor: default;
 
     // Entry animation
     &--enter {
-        animation: card-enter 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+        animation: card-enter 0.4s $ease-out-expo both;
     }
 
     // Pulse on land
@@ -196,7 +196,7 @@ $slot-h: 120px; // height of one number in the slot
     font-size: 7rem;
     font-weight: 900;
     letter-spacing: -0.04em;
-    color: #fff;
+    color: $white;
     line-height: 1;
     text-shadow: 0 0 40px rgba($accent, 0.7), 0 0 80px rgba($accent, 0.3);
     font-variant-numeric: tabular-nums;
@@ -216,7 +216,7 @@ $slot-h: 120px; // height of one number in the slot
 .levelup-message {
     font-size: $font-lg;
     font-weight: 700;
-    color: rgba(255, 255, 255, 0.75);
+    color: rgba($white, 0.75);
     text-align: center;
     opacity: 0;
 
@@ -250,7 +250,7 @@ $slot-h: 120px; // height of one number in the slot
 .levelup-xp-next {
     font-size: 0.8rem;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.45);
+    color: rgba($white, 0.45);
     letter-spacing: 0.02em;
 }
 

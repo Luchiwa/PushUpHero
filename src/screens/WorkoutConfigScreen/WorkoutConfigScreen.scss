@@ -51,7 +51,7 @@
     align-items: center;
     gap: $spacing-lg;
     padding: $spacing-xl 0;
-    animation: wc-step-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: wc-step-in 0.35s $ease-out-expo both;
 }
 
 @keyframes wc-step-in {
@@ -243,7 +243,7 @@
     height: 28px;
     border-radius: 50%;
     background: $accent;
-    color: white;
+    color: $white;
     font-size: $font-sm;
     font-weight: 800;
     @include flex-center;

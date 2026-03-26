@@ -11,163 +11,584 @@
 
 // ── Content overrides (extends .page-body via bodyClassName) ─────
 .profile-content {
-    padding-top: $spacing-xl;
+    padding-top: $spacing-md;
     gap: $spacing-lg;
 }
 
-// ── Header ──────────────────────────────────────────────────────
-.profile-header {
+// ═══════════════════════════════════════════════════════════════════
+// ── PLAYER CARD — RPG-style profile hero card ────────────────────
+// ═══════════════════════════════════════════════════════════════════
+.player-card {
+    position: relative;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: $spacing-md;
-    margin-top: $spacing-sm;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 1.25rem 1rem 1rem;
+    border-radius: $radius-sm;
+    border: 1px solid rgba($accent, 0.20);
+    overflow: hidden;
+    animation: player-card-in 0.5s $ease-out-expo both;
+
+    // Default (bronze) gradient background
+    background: linear-gradient(160deg,
+            rgba($tier-bronze, 0.08) 0%,
+            rgba($accent, 0.04) 40%,
+            rgba($tier-bronze, 0.06) 100%);
+
+    // ── Tier variants ──
+    &.tier-bronze {
+        border-color: rgba($tier-bronze, 0.25);
+    }
+
+    &.tier-silver {
+        border-color: rgba($tier-silver, 0.35);
+        background: linear-gradient(160deg,
+                rgba($tier-silver, 0.10) 0%,
+                rgba($accent, 0.03) 40%,
+                rgba($tier-silver, 0.07) 100%);
+    }
+
+    &.tier-gold {
+        border-color: rgba($tier-gold, 0.40);
+        background: linear-gradient(160deg,
+                rgba($tier-gold, 0.10) 0%,
+                rgba($accent, 0.04) 40%,
+                rgba($tier-gold, 0.08) 100%);
+        box-shadow: 0 2px 20px rgba($tier-gold, 0.10);
+    }
+
+    &.tier-platinum {
+        border-color: rgba($tier-platinum, 0.45);
+        background: linear-gradient(160deg,
+                rgba($tier-platinum, 0.10) 0%,
+                rgba($indigo, 0.04) 40%,
+                rgba($tier-platinum, 0.08) 100%);
+        box-shadow: 0 2px 24px rgba($tier-platinum, 0.12);
+    }
 }
 
-.profile-avatar-wrapper {
+// ── Shine sweep (same pattern as stats widget) ───────────────────
+.player-card-shine {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(105deg,
+            transparent 0%,
+            rgba($white, 0) 40%,
+            rgba($white, 0.30) 50%,
+            rgba($white, 0) 60%,
+            transparent 100%);
+    pointer-events: none;
+    animation: shine-sweep 5s ease-in-out 1s infinite;
+}
+
+@keyframes shine-sweep {
+    0% {
+        left: -100%;
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    40% {
+        left: 160%;
+        opacity: 1;
+    }
+
+    50% {
+        left: 160%;
+        opacity: 0;
+    }
+
+    100% {
+        left: 160%;
+        opacity: 0;
+    }
+}
+
+@keyframes player-card-in {
+    0% {
+        opacity: 0;
+        transform: translateY(12px) scale(0.97);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+// ── Avatar + tier ring + level badge ─────────────────────────────
+.player-card-avatar {
     position: relative;
-    flex-shrink: 0;
+    width: 88px;
+    height: 88px;
+    @include flex-center;
 
     .avatar {
-        box-shadow: 0 4px 16px rgba($accent, 0.3);
+        position: relative;
+        z-index: 1;
+        box-shadow: 0 4px 18px rgba($accent, 0.25);
     }
 
     &--uploading {
-        opacity: 0.6;
+        opacity: 0.5;
         pointer-events: none;
     }
 }
 
-.profile-avatar-edit-hint {
+.player-card-ring {
     position: absolute;
-    bottom: -2px;
-    right: -2px;
-    width: 22px;
-    height: 22px;
+    inset: 0;
+    transform: rotate(-90deg);
+    z-index: 0;
+}
+
+.player-card-ring-track {
+    fill: none;
+    stroke: rgba($text, 0.06);
+    stroke-width: 3;
+}
+
+.player-card-ring-fill {
+    fill: none;
+    stroke: $accent;
+    stroke-width: 3;
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.8s $ease-out-expo;
+    animation: pc-ring-draw 1.2s $ease-out-expo 0.3s both;
+
+    // Tier colors for the ring
+    .tier-silver & {
+        stroke: $tier-silver;
+    }
+
+    .tier-gold & {
+        stroke: $tier-gold;
+    }
+
+    .tier-platinum & {
+        stroke: $tier-platinum;
+    }
+}
+
+@keyframes pc-ring-draw {
+    from {
+        stroke-dasharray: 0 276.5;
+    }
+}
+
+.player-card-edit-hint {
+    position: absolute;
+    z-index: 2;
+    bottom: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     background: $accent;
-    color: white;
-    font-size: 0.65rem;
+    color: $white;
+    font-size: 0.6rem;
     display: flex;
     align-items: center;
     justify-content: center;
     pointer-events: none;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 4px rgba($black, 0.2);
+    border: 1.5px solid $bg;
 }
 
-.profile-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-
-    h2 {
-        margin: 0;
-        font-size: 1.5rem;
-        font-weight: 800;
-        color: $text;
-        letter-spacing: -0.02em;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-    }
-}
-
-.profile-streak-sep {
-    color: $text-muted;
-    font-weight: 400;
-    font-size: 1.2rem;
-    line-height: 1;
-}
-
-.profile-streak {
-    font-size: 1rem;
-    font-weight: 700;
-    color: $text;
-    white-space: nowrap;
-    letter-spacing: 0;
-}
-
-.profile-member-since {
-    font-size: 0.85rem;
-    color: $text-muted;
-}
-
-// ── Stats grid ───────────────────────────────────────────────────
-.profile-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: $spacing-sm;
-    background: $surface;
-    border: 1px solid $border;
-    border-radius: $radius;
-    padding: $spacing-md;
-}
-
-.profile-stat-box {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 2px;
-}
-
-.profile-stat-value {
-    font-size: 1.75rem;
+.player-card-level {
+    position: absolute;
+    z-index: 2;
+    top: -2px;
+    right: -4px;
+    background: $accent;
+    color: $white;
+    font-size: 0.58rem;
     font-weight: 800;
-    color: $text;
-    letter-spacing: -0.03em;
+    letter-spacing: 0.04em;
+    padding: 2px 6px;
+    border-radius: 6px;
+    line-height: 1.3;
+    border: 1.5px solid $bg;
+    box-shadow: 0 2px 6px rgba($accent, 0.5);
+    pointer-events: none;
+
+    &.tier-bronze {
+        background: $tier-bronze;
+        box-shadow: 0 2px 6px rgba($tier-bronze, 0.5);
+    }
+
+    &.tier-silver {
+        background: $tier-silver;
+        box-shadow: 0 2px 6px rgba($tier-silver, 0.5);
+        color: #333;
+    }
+
+    &.tier-gold {
+        background: $tier-gold;
+        box-shadow: 0 2px 8px rgba($tier-gold, 0.6);
+        color: #5a4000;
+    }
+
+    &.tier-platinum {
+        background: $tier-platinum;
+        box-shadow: 0 2px 8px rgba($tier-platinum, 0.6);
+        color: #1a6a7a;
+    }
 }
 
-.profile-stat-label {
-    @include label;
-}
-
-// ── Nav buttons row ──────────────────────────────────────────────
-.profile-nav-buttons {
-    display: flex;
-    gap: $spacing-sm;
-    width: 100%;
-}
-
-// ── Progression / Quests button ──────────────────────────────────
-.profile-progression-btn {
+// ── Name + streak ────────────────────────────────────────────────
+.player-card-identity {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: $spacing-sm;
-    flex: 1;
-    padding: $spacing-sm $spacing-md;
-    background: $surface;
-    border: 1px solid $border;
-    border-radius: $radius-sm;
-    font-size: $font-md;
-    font-weight: 600;
-    color: $text;
-    cursor: pointer;
-    transition: background $transition-fast;
+    gap: 0.5rem;
+    margin-top: 0.15rem;
+}
 
-    svg {
-        color: $text-muted;
+.player-card-name {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: $text;
+    letter-spacing: -0.02em;
+}
+
+.player-card-streak {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: $amber-dark;
+    background: rgba($amber, 0.15);
+    padding: 2px 7px;
+    border-radius: $radius-pill;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+
+    &.on-fire {
+        background: linear-gradient(135deg, rgba($amber, 0.25), rgba($red, 0.18));
+        box-shadow: 0 0 8px rgba($amber, 0.4);
+        animation: pc-streak-fire 1.2s ease-in-out infinite;
     }
+}
+
+.player-card-streak-icon {
+    font-size: 0.8rem;
+    line-height: 1;
+    display: inline-block;
+
+    .on-fire & {
+        animation: flame-dance 0.6s ease-in-out infinite alternate;
+    }
+}
+
+@keyframes flame-dance {
+    0% {
+        transform: scale(1) rotate(-4deg);
+    }
+
+    100% {
+        transform: scale(1.15) rotate(4deg);
+    }
+}
+
+@keyframes pc-streak-fire {
+
+    0%,
+    100% {
+        box-shadow: 0 0 6px rgba($amber, 0.35);
+    }
+
+    50% {
+        box-shadow: 0 0 14px rgba($amber, 0.6), 0 0 4px rgba($red, 0.3);
+    }
+}
+
+.player-card-since {
+    font-size: $font-xs;
+    color: $text-muted;
+    margin-top: -0.2rem;
+}
+
+// ── XP bar — clickable Progression zone ──────────────────────────
+.player-card-xp-btn {
+    position: relative;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-top: 0.15rem;
+    padding: 0.55rem 0.65rem 0.5rem;
+    border-radius: $radius-xs;
+    border: 1px solid rgba($accent, 0.10);
+    background: linear-gradient(135deg, rgba($accent, 0.04) 0%, rgba($indigo, 0.03) 100%);
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    transition:
+        background 0.25s ease,
+        border-color 0.25s ease,
+        box-shadow 0.25s ease,
+        transform 0.15s ease;
 
     &:hover {
-        background: $surface-hover;
+        background: linear-gradient(135deg, rgba($accent, 0.08) 0%, rgba($indigo, 0.06) 100%);
+        border-color: rgba($accent, 0.25);
+        box-shadow: 0 4px 18px rgba($accent, 0.10), inset 0 0 0 1px rgba($accent, 0.05);
+
+        .player-card-xp-cta {
+            color: $white;
+            background: linear-gradient(135deg, $accent, $accent-dark);
+            border-color: $accent;
+            box-shadow: 0 2px 10px rgba($accent, 0.35);
+
+            svg {
+                transform: translateX(2px);
+            }
+        }
+
+        .player-card-xp-seg.tip {
+            box-shadow: 0 0 10px rgba($accent, 1), 0 0 22px rgba($accent, 0.5);
+        }
     }
 
     &:active {
-        transform: scale(0.98);
+        transform: scale(0.985);
+        transition-duration: 0.06s;
     }
 }
 
-.profile-quests-btn {
-    background: linear-gradient(135deg, rgba(#6366f1, 0.08) 0%, rgba(#a855f7, 0.04) 100%);
-    border-color: rgba(#6366f1, 0.18);
+.player-card-xp-bar {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+    width: 100%;
+}
+
+.player-card-xp-seg {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba($text, 0.07);
+    transition: box-shadow 0.35s ease;
+
+    &.filled {
+        animation: pc-seg-fill 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+        // animation-delay via inline style
+    }
+
+    &.tip {
+        box-shadow: 0 0 6px rgba($accent, 0.8), 0 0 12px rgba($accent, 0.4);
+        animation:
+            pc-seg-fill 0.35s cubic-bezier(0.4, 0, 0.2, 1) both,
+            pc-tip-pulse 1.4s ease-in-out 0.8s infinite;
+    }
+
+    .tier-silver & {
+        &.filled {
+            animation-name: pc-seg-fill-silver;
+        }
+
+        &.tip {
+            box-shadow: 0 0 6px rgba($tier-silver, 0.8), 0 0 12px rgba($tier-silver, 0.4);
+        }
+    }
+
+    .tier-gold & {
+        &.filled {
+            animation-name: pc-seg-fill-gold;
+        }
+
+        &.tip {
+            box-shadow: 0 0 6px rgba($tier-gold, 0.8), 0 0 12px rgba($tier-gold, 0.4);
+        }
+    }
+
+    .tier-platinum & {
+        &.filled {
+            animation-name: pc-seg-fill-plat;
+        }
+
+        &.tip {
+            box-shadow: 0 0 6px rgba($tier-platinum, 0.8), 0 0 12px rgba($tier-platinum, 0.4);
+        }
+    }
+}
+
+@keyframes pc-seg-fill {
+    0% {
+        background: rgba($text, 0.07);
+        transform: scaleY(0.5);
+    }
+
+    60% {
+        transform: scaleY(1.3);
+    }
+
+    100% {
+        background: $accent;
+        transform: scaleY(1);
+    }
+}
+
+@keyframes pc-seg-fill-silver {
+    0% {
+        background: rgba($text, 0.07);
+        transform: scaleY(0.5);
+    }
+
+    60% {
+        transform: scaleY(1.3);
+    }
+
+    100% {
+        background: $tier-silver;
+        transform: scaleY(1);
+    }
+}
+
+@keyframes pc-seg-fill-gold {
+    0% {
+        background: rgba($text, 0.07);
+        transform: scaleY(0.5);
+    }
+
+    60% {
+        transform: scaleY(1.3);
+    }
+
+    100% {
+        background: $tier-gold;
+        transform: scaleY(1);
+    }
+}
+
+@keyframes pc-seg-fill-plat {
+    0% {
+        background: rgba($text, 0.07);
+        transform: scaleY(0.5);
+    }
+
+    60% {
+        transform: scaleY(1.3);
+    }
+
+    100% {
+        background: $tier-platinum;
+        transform: scaleY(1);
+    }
+}
+
+@keyframes pc-tip-pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 5px rgba($accent, 0.7), 0 0 10px rgba($accent, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 10px rgba($accent, 1), 0 0 22px rgba($accent, 0.6);
+    }
+}
+
+.player-card-xp-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: $text-muted;
+}
+
+.player-card-xp-next {
+    color: rgba($accent, 0.85);
+    font-weight: 700;
+}
+
+// ── Progression CTA inside XP zone ───────────────────────────────
+.player-card-xp-cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    width: 100%;
+    margin-top: 0.1rem;
+    padding: 0.3rem 0;
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: $accent-dark;
+    letter-spacing: 0.01em;
+    border-radius: $radius-pill;
+    background: linear-gradient(135deg, rgba($accent, 0.14), rgba($accent-dark, 0.08));
+    border: 1px solid rgba($accent, 0.22);
+    transition:
+        color 0.25s ease,
+        background 0.25s ease,
+        border-color 0.25s ease,
+        box-shadow 0.25s ease;
+
+    svg {
+        flex-shrink: 0;
+        transition: transform 0.2s ease;
+    }
+}
+
+// ── Stat mini-cards ──────────────────────────────────────────────
+.player-card-stats {
+    display: flex;
+    gap: $spacing-sm;
+    width: 100%;
+    margin-top: 0.1rem;
+}
+
+.player-card-stat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+    padding: 0.5rem 0.25rem;
+    background: rgba($white, 0.6);
+    border: 1px solid rgba($text, 0.06);
+    border-radius: $radius-xs;
+    transition: background $transition-fast, border-color $transition-fast;
 
     &:hover {
-        background: linear-gradient(135deg, rgba(#6366f1, 0.14) 0%, rgba(#a855f7, 0.08) 100%);
-        border-color: rgba(#6366f1, 0.30);
+        background: rgba($white, 0.85);
+        border-color: rgba($accent, 0.15);
     }
+}
+
+.player-card-stat-icon {
+    color: $accent;
+    opacity: 0.7;
+    flex-shrink: 0;
+}
+
+.player-card-stat-val {
+    font-size: 1.15rem;
+    font-weight: 900;
+    color: $text;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+}
+
+.player-card-stat-lbl {
+    font-size: 0.58rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: $text-muted;
+    line-height: 1.3;
 }
 
 // ── Profile Tabs ──────────────────────────────────────────────────
@@ -228,10 +649,10 @@
     height: 18px;
     padding: 0 5px;
     background: $accent;
-    color: white;
+    color: $white;
     font-size: 0.65rem;
     font-weight: 800;
-    border-radius: 999px;
+    border-radius: $radius-pill;
     line-height: 1;
 }
 
@@ -241,33 +662,6 @@
     flex-direction: column;
     overflow: hidden;
     min-height: 0;
-
-    // ── History tab ──────────────────────────────────────────────
-    .session-history {
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-        min-height: 0;
-        overflow: hidden;
-
-        .session-history-title {
-            flex-shrink: 0;
-            padding-bottom: $spacing-sm;
-        }
-
-        .session-history-list {
-            flex: 1;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            padding-bottom: $spacing-xl;
-        }
-
-        .session-history-view-all {
-            flex-shrink: 0;
-            margin-top: $spacing-sm;
-            margin-bottom: $spacing-md;
-        }
-    }
 
     // ── Friends tab ──────────────────────────────────────────────
     .friends-tab {

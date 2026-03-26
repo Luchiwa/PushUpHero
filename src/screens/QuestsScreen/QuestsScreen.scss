@@ -1,9 +1,5 @@
 @use '../../styles/variables' as *;
 
-// ── Quest colors ─────────────────────────────────────────────────
-$quest-purple: #6366f1;
-$quest-purple-light: #a855f7;
-
 // ── Body override ────────────────────────────────────────────────
 .quests-body {
   padding: $spacing-md $spacing-md $spacing-xl;
@@ -17,8 +13,8 @@ $quest-purple-light: #a855f7;
   align-items: center;
   gap: 1rem;
   padding: $spacing-md;
-  background: linear-gradient(135deg, rgba($quest-purple, 0.10) 0%, rgba($quest-purple-light, 0.06) 100%);
-  border: 1px solid rgba($quest-purple, 0.20);
+  background: linear-gradient(135deg, rgba($indigo, 0.10) 0%, rgba($purple, 0.06) 100%);
+  border: 1px solid rgba($indigo, 0.20);
   border-radius: $radius-sm;
   margin-bottom: $spacing-lg;
 }
@@ -44,7 +40,7 @@ $quest-purple-light: #a855f7;
   justify-content: center;
   font-size: 0.78rem;
   font-weight: 800;
-  color: $quest-purple;
+  color: $indigo;
   letter-spacing: -0.02em;
 }
 
@@ -124,9 +120,9 @@ $quest-purple-light: #a855f7;
   }
 
   &--available {
-    background: linear-gradient(135deg, rgba($quest-purple, 0.06) 0%, rgba($quest-purple-light, 0.03) 100%);
-    border-color: rgba($quest-purple, 0.25);
-    box-shadow: 0 2px 8px rgba($quest-purple, 0.06);
+    background: linear-gradient(135deg, rgba($indigo, 0.06) 0%, rgba($purple, 0.03) 100%);
+    border-color: rgba($indigo, 0.25);
+    box-shadow: 0 2px 8px rgba($indigo, 0.06);
   }
 
   &--locked {
@@ -134,8 +130,8 @@ $quest-purple-light: #a855f7;
   }
 
   &--accepted {
-    background: rgba(#6366f1, 0.08);
-    border-color: rgba(#6366f1, 0.22);
+    background: rgba($indigo, 0.08);
+    border-color: rgba($indigo, 0.22);
   }
 }
 
@@ -183,8 +179,8 @@ $quest-purple-light: #a855f7;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #fff;
-  background: #6366f1;
+  color: $white;
+  background: $indigo;
   padding: 2px 7px;
   border-radius: 20px;
   flex-shrink: 0;
@@ -228,17 +224,17 @@ $quest-purple-light: #a855f7;
   padding: 0.3rem 0.7rem;
   border: none;
   border-radius: $radius-pill;
-  background: linear-gradient(135deg, $quest-purple, $quest-purple-light);
-  color: #fff;
+  background: linear-gradient(135deg, $indigo, $purple);
+  color: $white;
   font-size: $font-xs;
   font-weight: 700;
   cursor: pointer;
   transition: box-shadow 0.2s ease, transform 0.15s ease;
-  box-shadow: 0 2px 8px rgba($quest-purple, 0.25);
+  box-shadow: 0 2px 8px rgba($indigo, 0.25);
   align-self: flex-start;
 
   &:hover {
-    box-shadow: 0 3px 14px rgba($quest-purple, 0.4);
+    box-shadow: 0 3px 14px rgba($indigo, 0.4);
   }
 
   &:active {
@@ -267,8 +263,8 @@ $quest-purple-light: #a855f7;
 
   &--available,
   &--accepted {
-    color: $quest-purple-light;
-    background: rgba($quest-purple-light, 0.12);
+    color: $purple;
+    background: rgba($purple, 0.12);
   }
 
   &--locked {

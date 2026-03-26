@@ -1,60 +1,100 @@
 // ── DESIGN TOKENS ──────────────────────────────────────────────
-// Colors — Light Theme
-$bg: #ffffff;
-$text: #1a1a1a;
-$text-muted: rgba(26, 26, 26, 0.6);
+// Single source of truth for every visual primitive.
+// Rule: if a value appears in more than one file, it belongs here.
 
-// Brand / accent — Orange primary (Vibrant)
+// ── COLORS — Core ────────────────────────────────────────────
+$white: #ffffff;
+$black: #000000;
+$bg: $white;
+$text: #1a1a1a;
+$text-muted: rgba($text, 0.6);
+
+// ── COLORS — Brand / Accent (Orange) ────────────────────────
 $accent: #ff7f00;
 $accent-light: #ff9c35;
 $accent-pale: #ffb366;
-$accent-glow: rgba(255, 127, 0, 0.3);
+$accent-glow: rgba($accent, 0.3);
 $accent-dark: #e67300;
 
-// Semantic colors
+// ── COLORS — Semantic ────────────────────────────────────────
 $green: #22c55e;
 $green-light: #4ade80;
+$green-dark: #16a34a;
 $amber: #f59e0b;
 $amber-light: #fbbf24;
 $amber-dark: #d97706;
 $red: #ef4444;
 $red-light: #fca5a5;
+$blue: #3b82f6;
+$purple: #a855f7;
+$indigo: #6366f1;
+$magenta: #e040fb;
 $cyan: #a5f3fc;
 $cyan-glow: rgba(34, 211, 238, 0.8);
 
-// Surfaces
-$surface: rgba(255, 127, 0, 0.08);
-$surface-hover: rgba(255, 127, 0, 0.12);
-$surface-dark: rgba(255, 255, 255, 0.8);
-$border: rgba(26, 26, 26, 0.1);
+// ── COLORS — Tier palette ────────────────────────────────────
+// Must stay in sync with TIER_COLORS in lib/achievements.ts
+$tier-bronze: #cd7f32;
+$tier-silver: #c0c0c0;
+$tier-gold: #ffd700;
+$tier-platinum: #00e5ff;
 
-// Modal overlay
-$modal-overlay: rgba(26, 26, 26, 0.5);
-$modal-overlay-strong: rgba(26, 26, 26, 0.65);
+// ── COLORS — Surfaces & borders ─────────────────────────────
+$surface: rgba($accent, 0.08);
+$surface-hover: rgba($accent, 0.12);
+$surface-dark: rgba($white, 0.8);
+$border: rgba($text, 0.1);
 
-// Shape & spacing
+// ── COLORS — Overlays ───────────────────────────────────────
+$modal-overlay: rgba($text, 0.5);
+$modal-overlay-strong: rgba($text, 0.65);
+
+// ── SPACING ──────────────────────────────────────────────────
 $spacing-xs: 4px;
 $spacing-sm: 8px;
 $spacing-md: 16px;
 $spacing-lg: 24px;
 $spacing-xl: 32px;
-$radius: 20px;
+
+// ── BORDER RADIUS ────────────────────────────────────────────
+$radius-xs: 6px;
 $radius-sm: 12px;
+$radius: 20px;
 $radius-lg: 32px;
 $radius-pill: 100px;
 
-// Effects
+// ── Z-INDEX SCALE ────────────────────────────────────────────
+// Ordered layering — always use a token, never a magic number.
+$z-base: 1;
+$z-content: 2;
+$z-raised: 5;
+$z-overlay: 10;
+$z-sticky: 40;
+$z-modal-backdrop: 100;
+$z-modal: 200;
+$z-notification: 300;
+$z-toast: 1000;
+$z-maximum: 9999;
+
+// ── EASING CURVES ────────────────────────────────────────────
+$ease-default: cubic-bezier(0.4, 0, 0.2, 1);   // standard material
+$ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);  // screen entrances, slides
+$ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1); // bouncy pops
+
+// ── EFFECTS ──────────────────────────────────────────────────
 $blur: 20px;
-$transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+$blur-sm: 10px;
+$blur-xs: 6px;
+$transition: 0.3s $ease-default;
 $transition-fast: 0.15s ease;
 
-// ── SHADOW TOKENS ──────────────────────────────────────────────
-$shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.08);
-$shadow-md: 0 8px 24px rgba(0, 0, 0, 0.12);
-$shadow-card: 0 12px 40px rgba(0, 0, 0, 0.08);
-$shadow-modal: 0 20px 48px rgba(0, 0, 0, 0.18);
+// ── SHADOW TOKENS ────────────────────────────────────────────
+$shadow-sm: 0 4px 12px rgba($black, 0.08);
+$shadow-md: 0 8px 24px rgba($black, 0.12);
+$shadow-card: 0 12px 40px rgba($black, 0.08);
+$shadow-modal: 0 20px 48px rgba($black, 0.18);
 
-// ── FONT SIZE SCALE ────────────────────────────────────────────
+// ── FONT SIZE SCALE ──────────────────────────────────────────
 $font-xs: 0.72rem;   // labels, captions
 $font-sm: 0.8rem;    // small text
 $font-md: 0.9rem;    // body, inputs
@@ -64,15 +104,15 @@ $font-xl: 1.5rem;    // modal titles
 $font-2xl: 2.5rem;   // hero numbers
 $font-3xl: 3rem;     // big counters
 
-// ── GRADIENT HELPERS ───────────────────────────────────────────
+// ── GRADIENT HELPERS ─────────────────────────────────────────
 $gradient-accent: linear-gradient(135deg, $accent, $accent-light);
 $gradient-accent-rich: linear-gradient(135deg, $accent-pale, $accent-light, $accent);
-$gradient-danger: linear-gradient(135deg, rgba($red, 0.85), rgba(220, 38, 38, 0.95));
-$gradient-green: linear-gradient(135deg, $green, #16a34a);
+$gradient-danger: linear-gradient(135deg, rgba($red, 0.85), rgba($red, 0.95));
+$gradient-green: linear-gradient(135deg, $green, $green-dark);
 
-// ── CSS CUSTOM PROPERTIES ──────────────────────────────────────
-// These are exported to :root so they remain usable in plain CSS contexts
-// (e.g. inline styles, SVG fills, etc.)
+// ── CSS CUSTOM PROPERTIES ────────────────────────────────────
+// Exported to :root for use in plain CSS / inline styles / SVG.
+// For future dark-mode: override these values under [data-theme="dark"].
 :root {
     --bg: #{$bg};
     --surface: #{$surface};
@@ -85,6 +125,9 @@ $gradient-green: linear-gradient(135deg, $green, #16a34a);
     --green: #{$green};
     --amber: #{$amber};
     --red: #{$red};
+    --blue: #{$blue};
+    --purple: #{$purple};
+    --indigo: #{$indigo};
     --radius: #{$radius};
     --radius-sm: #{$radius-sm};
     --blur: #{$blur};

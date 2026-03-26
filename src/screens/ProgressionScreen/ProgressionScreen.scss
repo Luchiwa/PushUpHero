@@ -44,20 +44,20 @@
 
 .level-card--global {
   background: $gradient-accent;
-  color: #fff;
+  color: $white;
 
   .level-card-label,
   .level-card-level,
   .level-progress-text {
-    color: #fff;
+    color: $white;
   }
 
   .level-progress-bar {
-    background: rgba(#fff, 0.25);
+    background: rgba($white, 0.25);
   }
 
   .level-progress-fill {
-    background: #fff;
+    background: $bg;
   }
 }
 

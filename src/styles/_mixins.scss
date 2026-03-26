@@ -58,7 +58,7 @@
 
 // ── MODAL CARD ───────────────────────────────────────────────────
 @mixin modal-card($width: 400px, $padding: 2rem 1.5rem) {
-    background: #ffffff;
+    background: $bg;
     border: 1px solid $border;
     border-radius: $radius;
     padding: $padding;
@@ -66,7 +66,7 @@
     display: flex;
     flex-direction: column;
     box-shadow: $shadow-modal;
-    animation: card-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: card-in 0.35s $ease-out-expo both;
 }
 
 // ── TEXT TRUNCATE ────────────────────────────────────────────────
@@ -89,8 +89,8 @@
 
 // ── FORM INPUT ───────────────────────────────────────────────────
 @mixin form-input {
-    background: #ffffff;
-    border: 1px solid rgba(26, 26, 26, 0.15);
+    background: $bg;
+    border: 1px solid rgba($text, 0.15);
     border-radius: $radius-sm;
     padding: 0.75rem 1rem;
     color: $text;
@@ -105,13 +105,13 @@
     }
 
     &::placeholder {
-        color: rgba(26, 26, 26, 0.3);
+        color: rgba($text, 0.3);
     }
 }
 
 // ── PROGRESS BAR ────────────────────────────────────────────────
 // Horizontal track (container)
-@mixin progress-track($height: 6px, $bg: #d0d0d0) {
+@mixin progress-track($height: 6px, $bg: rgba($text, 0.18)) {
     height: $height;
     background: $bg;
     border-radius: $radius-pill;

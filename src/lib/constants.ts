@@ -49,12 +49,13 @@ export const GRADE_THRESHOLDS: { min: number; letter: GradeLetter }[] = [
     { min: 45, letter: 'C' },
 ];
 
+// Keep in sync with semantic colors in _variables.scss
 const GRADE_COLORS: Record<GradeLetter, string> = {
-    S: '#a855f7', // purple
-    A: '#22c55e', // green
-    B: '#3b82f6', // blue
-    C: '#f59e0b', // amber
-    D: '#ef4444', // red
+    S: '#a855f7', // $purple
+    A: '#22c55e', // $green
+    B: '#3b82f6', // $blue
+    C: '#f59e0b', // $amber
+    D: '#ef4444', // $red
 };
 
 export function getGradeLetter(score: number): GradeLetter {
