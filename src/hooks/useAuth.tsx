@@ -28,6 +28,8 @@ export interface DbUser {
     totalReps?: number;
     createdAt?: number;
     photoURL?: string;
+    /** Base64 JPEG thumbnail (~96px) for instant avatar display */
+    photoThumb?: string;
     streak?: number;
     lastSessionDate?: string; // UTC date string YYYY-MM-DD
     exerciseXp?: ExerciseXpMap;

@@ -126,24 +126,24 @@ export function getPullupThresholds(profile?: PullupProfile): PullupThresholds {
 // into the profile. Adding a new exercise = adding one entry here.
 export const BODY_PROFILE_MERGE: Record<ExerciseType, (
   captured: CapturedRatios,
-  dynamicMin: number | undefined,
+  dynamicCalibration: number | undefined,
 ) => Partial<BodyProfile>> = {
-  pushup: (c, dMin) => c.pushup ? {
+  pushup: (c, cal) => c.pushup ? {
     pushup: {
       ...c.pushup,
-      naturalMinElbowAngle: dMin ?? c.pushup.naturalElbowExtension - 70,
+      naturalMinElbowAngle: cal ?? c.pushup.naturalElbowExtension - 70,
     },
   } : {},
-  squat: (c, dMin) => c.squat ? {
+  squat: (c, cal) => c.squat ? {
     squat: {
       ...c.squat,
-      naturalMinKneeAngle: dMin ?? c.squat.naturalKneeExtension - 70,
+      naturalMinKneeAngle: cal ?? c.squat.naturalKneeExtension - 70,
     },
   } : {},
-  pullup: (c, dMin) => c.pullup ? {
+  pullup: (c, cal) => c.pullup ? {
     pullup: {
       ...c.pullup,
-      naturalMaxRiseFraction: dMin ?? 0.5,
+      naturalMaxRiseFraction: cal ?? 0.5,
     },
   } : {},
 };

@@ -10,7 +10,25 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: screen-in 0.3s $ease-out-expo both;
+
+  // Default enter: slide from right (push navigation)
+  animation: page-slide-in 0.3s $ease-out-expo both;
+
+  // Exit: slide out to right
+  &--exit {
+    animation: page-slide-out 0.25s $ease-default both;
+    pointer-events: none;
+  }
+
+  // Sheet variant: slide from bottom
+  &--sheet {
+    animation: sheet-slide-in 0.35s $ease-out-expo both;
+  }
+
+  &--sheet-exit {
+    animation: sheet-slide-down 0.25s $ease-default both;
+    pointer-events: none;
+  }
 }
 
 // ── Topbar ──────────────────────────────────────────────────────
@@ -19,7 +37,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: $spacing-sm $spacing-md;
+  padding: calc(env(safe-area-inset-top, 0px) + #{$spacing-sm}) $spacing-md $spacing-sm;
   flex-shrink: 0;
 
   // Accent gradient tint background

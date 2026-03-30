@@ -1,8 +1,7 @@
-import { useState } from 'react';
-import { EmailAuthProvider, GoogleAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, updatePassword } from 'firebase/auth';
-import { auth } from '@lib/firebase';
+import { useState, useCallback } from 'react';
 import { useAuthCore } from '@hooks/useAuth';
-import { deleteCurrentAccount } from '@hooks/useDeleteAccount';
+import { PasswordChangeSection } from './PasswordChangeSection/PasswordChangeSection';
+import { DeleteAccountSection } from './DeleteAccountSection/DeleteAccountSection';
 import './SettingsModal.scss';
 
 interface SettingsModalProps {
@@ -37,24 +36,20 @@ function SettingsAccordion({ title, danger, isOpen, onToggle, children }: {
 
 export function SettingsModal({ onClose, onAccountDeleted }: SettingsModalProps) {
     const { user, logout } = useAuthCore();
+    const [closing, setClosing] = useState(false);
+
+    const handleClose = useCallback(() => {
+        setClosing(true);
+    }, []);
+
+    const handleAnimationEnd = useCallback((e: React.AnimationEvent) => {
+        if (closing && e.currentTarget === e.target) onClose();
+    }, [closing, onClose]);
 
     const handleLogout = async () => {
         await logout();
         onAccountDeleted(); // reuse the "close everything" callback
     };
-
-    // ── Password change state ────────────────────────────────────
-    const [currentPwd, setCurrentPwd] = useState('');
-    const [newPwd, setNewPwd] = useState('');
-    const [confirmPwd, setConfirmPwd] = useState('');
-    const [pwdError, setPwdError] = useState('');
-    const [pwdSuccess, setPwdSuccess] = useState(false);
-    const [pwdLoading, setPwdLoading] = useState(false);
-
-    // ── Delete account state ─────────────────────────────────────
-    const [deleteInput, setDeleteInput] = useState('');
-    const [deleteError, setDeleteError] = useState('');
-    const [deleteLoading, setDeleteLoading] = useState(false);
 
     // Detect if user signed in via Google (no password)
     const isGoogleUser = user?.providerData.some(p => p.providerId === 'google.com') ?? false;
@@ -62,81 +57,19 @@ export function SettingsModal({ onClose, onAccountDeleted }: SettingsModalProps)
     const [openSection, setOpenSection] = useState<string | null>(null);
     const toggleSection = (key: string) => setOpenSection(prev => prev === key ? null : key);
 
-    // ── Handlers ─────────────────────────────────────────────────
-    const handlePasswordChange = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setPwdError('');
-        setPwdSuccess(false);
-
-        if (newPwd.length < 6) {
-            setPwdError('New password must be at least 6 characters.');
-            return;
-        }
-        if (newPwd !== confirmPwd) {
-            setPwdError('Passwords do not match.');
-            return;
-        }
-
-        setPwdLoading(true);
-        try {
-            if (!user || !user.email) throw new Error('No authenticated user');
-            const credential = EmailAuthProvider.credential(user.email, currentPwd);
-            await reauthenticateWithCredential(user, credential);
-            const currentUser = auth.currentUser;
-            if (!currentUser) throw new Error('No authenticated user');
-            await updatePassword(currentUser, newPwd);
-            setPwdSuccess(true);
-            setCurrentPwd('');
-            setNewPwd('');
-            setConfirmPwd('');
-        } catch (err: unknown) {
-            const code = (err as { code?: string }).code;
-            if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
-                setPwdError('Current password is incorrect.');
-            } else if (code === 'auth/requires-recent-login') {
-                setPwdError('Session expired. Please sign out and sign in again.');
-            } else {
-                setPwdError((err as Error).message || 'An error occurred.');
-            }
-        } finally {
-            setPwdLoading(false);
-        }
-    };
-
-    const handleDeleteAccount = async () => {
-        setDeleteError('');
-        setDeleteLoading(true);
-        try {
-            if (!user) throw new Error('No authenticated user');
-
-            // Force re-authentication so deleteUser never fails with requires-recent-login
-            if (isGoogleUser) {
-                await reauthenticateWithPopup(user, new GoogleAuthProvider());
-            }
-            // (email/password users already re-auth'd implicitly via a recent sign-in;
-            //  if it still fails the catch below will prompt them to sign out and back in)
-
-            await deleteCurrentAccount();
-            onAccountDeleted();
-        } catch (err: unknown) {
-            const code = (err as { code?: string }).code;
-            if (code === 'auth/requires-recent-login') {
-                setDeleteError('Session expired. Please sign out and sign in again before deleting your account.');
-            } else {
-                setDeleteError((err as Error).message || 'An error occurred.');
-            }
-        } finally {
-            setDeleteLoading(false);
-        }
-    };
-
     return (
-        <div className="settings-overlay" role="presentation" onClick={onClose} onKeyDown={e => e.key === 'Escape' && onClose()}>
-            <div className="settings-card" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()} onKeyDown={e => e.stopPropagation()}>
+        <div
+            className={`settings-overlay${closing ? ' settings-overlay--exit' : ''}`}
+            role="presentation"
+            onClick={handleClose}
+            onKeyDown={e => e.key === 'Escape' && handleClose()}
+            onAnimationEnd={handleAnimationEnd}
+        >
+            <div className={`settings-card${closing ? ' settings-card--exit' : ''}`} role="dialog" aria-modal="true" onClick={e => e.stopPropagation()} onKeyDown={e => e.stopPropagation()}>
                 {/* Header */}
                 <div className="settings-header">
                     <h2 className="settings-title">Settings</h2>
-                    <button type="button" className="btn-icon settings-close-btn" onClick={onClose} aria-label="Close">
+                    <button type="button" className="btn-icon settings-close-btn" onClick={handleClose} aria-label="Close">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                             <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                         </svg>
@@ -147,77 +80,13 @@ export function SettingsModal({ onClose, onAccountDeleted }: SettingsModalProps)
                     {/* ── Change Password ───────────────────────── */}
                     {!isGoogleUser && (
                         <SettingsAccordion title="Change Password" isOpen={openSection === 'password'} onToggle={() => toggleSection('password')}>
-                            <form className="settings-form" onSubmit={handlePasswordChange}>
-                                <div className="input-group">
-                                    <label htmlFor="settings-current-pwd">Current password</label>
-                                    <input
-                                        id="settings-current-pwd"
-                                        type="password"
-                                        value={currentPwd}
-                                        onChange={e => setCurrentPwd(e.target.value)}
-                                        placeholder="••••••••"
-                                        required
-                                        autoComplete="current-password"
-                                    />
-                                </div>
-                                <div className="input-group">
-                                    <label htmlFor="settings-new-pwd">New password</label>
-                                    <input
-                                        id="settings-new-pwd"
-                                        type="password"
-                                        value={newPwd}
-                                        onChange={e => setNewPwd(e.target.value)}
-                                        placeholder="••••••••"
-                                        required
-                                        autoComplete="new-password"
-                                    />
-                                </div>
-                                <div className="input-group">
-                                    <label htmlFor="settings-confirm-pwd">Confirm new password</label>
-                                    <input
-                                        id="settings-confirm-pwd"
-                                        type="password"
-                                        value={confirmPwd}
-                                        onChange={e => setConfirmPwd(e.target.value)}
-                                        placeholder="••••••••"
-                                        required
-                                        autoComplete="new-password"
-                                    />
-                                </div>
-                                {pwdError && <p className="settings-feedback settings-feedback--error">{pwdError}</p>}
-                                {pwdSuccess && <p className="settings-feedback settings-feedback--success">Password updated successfully!</p>}
-                                <button type="submit" className="btn-primary settings-submit" disabled={pwdLoading}>
-                                    {pwdLoading ? 'Updating…' : 'Update Password'}
-                                </button>
-                            </form>
+                            <PasswordChangeSection />
                         </SettingsAccordion>
                     )}
 
                     {/* ── Danger Zone ───────────────────────────── */}
                     <SettingsAccordion title="Delete Account" danger isOpen={openSection === 'delete'} onToggle={() => toggleSection('delete')}>
-                        <p className="settings-danger-desc">
-                            Deleting your account is <strong>permanent and irreversible</strong>. All your data (sessions, friends, progress) will be permanently deleted.
-                        </p>
-                        <div className="input-group">
-                            <label htmlFor="settings-delete-confirm">Type <strong>DELETE</strong> to confirm</label>
-                            <input
-                                id="settings-delete-confirm"
-                                type="text"
-                                value={deleteInput}
-                                onChange={e => setDeleteInput(e.target.value)}
-                                placeholder="DELETE"
-                                className={deleteInput === 'DELETE' ? 'input--danger-ready' : ''}
-                            />
-                        </div>
-                        {deleteError && <p className="settings-feedback settings-feedback--error">{deleteError}</p>}
-                        <button
-                            type="button"
-                            className="btn-danger"
-                            onClick={handleDeleteAccount}
-                            disabled={deleteInput !== 'DELETE' || deleteLoading}
-                        >
-                            {deleteLoading ? 'Deleting…' : 'Delete My Account'}
-                        </button>
+                        <DeleteAccountSection onAccountDeleted={onAccountDeleted} />
                     </SettingsAccordion>
 
                     <button type="button" className="btn-logout" onClick={handleLogout}>

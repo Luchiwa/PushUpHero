@@ -351,3 +351,6 @@ export function useWorkoutStateMachine({
     handleReset, handleLevelUpContinue,
   };
 }
+
+/** Type helper — enables WorkoutContext to type-check without duplicating the interface. */
+export type WorkoutMachineReturn = ReturnType<typeof useWorkoutStateMachine>;

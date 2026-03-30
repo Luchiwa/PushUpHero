@@ -2,13 +2,23 @@
 @use 'mixins' as *;
 
 .auth-modal-overlay {
-    @include modal-overlay($z: 999);
+    @include modal-overlay($z: $z-maximum);
+    animation: overlay-fade-in 0.2s ease both;
+
+    &--exit {
+        animation: overlay-fade-out 0.2s ease both;
+    }
 }
 
 .auth-modal-card {
     @include modal-card($width: 400px, $padding: 2.5rem 2rem);
     gap: 1.25rem;
     position: relative;
+    animation: modal-scale-in 0.25s $ease-out-back both;
+
+    &--exit {
+        animation: modal-scale-out 0.2s $ease-default both;
+    }
 }
 
 .auth-close-btn {

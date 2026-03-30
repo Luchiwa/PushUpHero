@@ -1,0 +1,47 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// ── Search result action area ─────────────────────────────────────
+.friend-search-action {
+    flex-shrink: 0;
+}
+
+.btn-add-friend {
+    padding: 0.38rem 0.8rem;
+    background: $gradient-accent;
+    color: $white;
+    border: none;
+    border-radius: $radius-sm;
+    font-size: 0.78rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: $transition;
+    box-shadow: 0 2px 8px rgba($accent, 0.25);
+
+    &:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 14px rgba($accent, 0.4);
+    }
+
+    &:active:not(:disabled) {
+        transform: scale(0.96);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+.friend-badge {
+    &--already {
+        @include badge($green, $green-dark, 'tag');
+        padding: 0.28rem 0.6rem;
+    }
+
+    &--incoming {
+        @include badge($accent, $accent-dark, 'tag');
+        padding: 0.28rem 0.6rem;
+    }
+}

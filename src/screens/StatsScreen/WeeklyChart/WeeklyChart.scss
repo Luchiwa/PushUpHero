@@ -1,10 +1,12 @@
 @use 'variables' as *;
+@use 'mixins' as *;
 
 .weekly-chart {
     width: 100%;
     height: auto;
     display: block;
     overflow: visible;
+    filter: drop-shadow(0 2px 6px rgba($accent, 0.08));
 }
 
 .chart-axis-label {
@@ -21,7 +23,7 @@
 
     &--today {
         fill: $accent;
-        font-weight: 700;
+        font-weight: 800;
     }
 }
 

@@ -1,3 +1,4 @@
+@use 'sass:color';
 @use 'variables' as *;
 @use 'mixins' as *;
 
@@ -18,36 +19,62 @@
 }
 
 .feed-header-title {
-    @include label($font-sm);
-}
-
-.feed-refresh-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: $text-muted;
-    padding: 4px;
-    border-radius: 6px;
     display: flex;
     align-items: center;
-    transition: color 0.15s, background 0.15s;
+    gap: 0.35rem;
+    @include label($font-sm);
+    color: $text;
+    font-weight: 700;
+}
 
-    &:hover {
-        color: $accent;
-        background: $surface;
+// ── LIVE badge ─────────────────────────────────────────────────
+.feed-live-badge {
+    @include badge-outline($green);
+    padding: 2px 10px;
+    font-size: 0.62rem;
+    font-weight: 800;
+    color: $green-dark;
+    letter-spacing: 0.08em;
+    --pulse-rgb: #{color.channel($green, 'red', $space: rgb)},
+    #{color.channel($green, 'green', $space: rgb)},
+    #{color.channel($green, 'blue', $space: rgb)};
+    animation: badge-pulse 2s ease-in-out infinite;
+}
+
+.feed-live-dot {
+    @include notification-dot($green, 6px);
+}
+
+// ── Section divider (Today / Earlier) ──────────────────────────
+.feed-divider {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    margin: $spacing-sm 0 $spacing-xs;
+
+    &::before,
+    &::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: $border;
+    }
+
+    span {
+        @include label(0.68rem);
+        color: $text-muted;
+        white-space: nowrap;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        padding: 0 2px;
     }
 }
 
-// ── Sections (Today / Earlier) ──────────────────────────────────
+// ── Feed section ───────────────────────────────────────────────
 .feed-section {
     display: flex;
     flex-direction: column;
     gap: $spacing-xs;
-}
-
-.feed-section-label {
-    @include label;
-    margin: $spacing-sm 0 4px;
 }
 
 // ── Feed list ───────────────────────────────────────────────────
@@ -61,21 +88,42 @@
 }
 
 // ── Individual feed item ────────────────────────────────────────
+@keyframes feed-item-in {
+    from {
+        opacity: 0;
+        transform: translateX(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
 .feed-item {
     display: flex;
     align-items: center;
     gap: $spacing-sm;
     padding: 10px $spacing-sm;
-    border-radius: 12px;
-    background: $surface;
-    transition: background 0.15s;
+    border-radius: $radius-sm;
+    background: $white;
+    border: 1px solid $border;
+    transition: background 0.2s, transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    animation: feed-item-in 0.35s $ease-out-expo both;
 
     &:hover {
-        background: $surface-hover;
+        background: rgba($accent, 0.03);
+        border-color: rgba($accent, 0.15);
+        box-shadow: $shadow-md, 0 0 12px rgba($accent, 0.06);
+        transform: translateY(-2px) scale(1.005);
     }
 }
 
-// .feed-avatar → handled by <Avatar> component
+// ── Avatar wrapper ──────────────────────────────────────────────
+.feed-item-avatar-wrap {
+    flex-shrink: 0;
+    position: relative;
+}
 
 .feed-item-body {
     flex: 1;
@@ -93,44 +141,36 @@
 }
 
 .feed-item-msg {
-    font-size: 0.78rem;
+    font-size: 0.76rem;
     color: $text-muted;
     @include text-truncate;
+    line-height: 1.4;
 }
 
 .feed-item-right {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 3px;
+    gap: 4px;
     flex-shrink: 0;
 }
 
+// ── Grade badge — game style ────────────────────────────────────
 .feed-grade-badge {
-    font-size: 0.78rem;
-    font-weight: 900;
-    border: 1.5px solid;
-    border-radius: 6px;
-    padding: 0 6px;
-    line-height: 1.6;
+    @include grade-badge(28px, 0.82rem);
+
+    .feed-item:hover & {
+        transform: scale(1.08);
+        box-shadow: 0 0 12px currentColor;
+    }
 }
 
 .feed-item-time {
-    font-size: 0.68rem;
+    font-size: 0.65rem;
     color: $text-muted;
     white-space: nowrap;
 }
 
-// ── Tab dot indicator ───────────────────────────────────────────
-.profile-tab-dot {
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    background: $accent;
-    border-radius: 50%;
-    margin-left: 5px;
-    vertical-align: middle;
-}
 
 // ── Empty state ─────────────────────────────────────────────────
 .feed-empty {
@@ -143,11 +183,14 @@
     text-align: center;
 
     .feed-empty-icon {
-        font-size: 2rem;
+        font-size: 2.4rem;
     }
 
     p {
         font-size: 0.88rem;
+        margin: 0;
+        max-width: 220px;
+        line-height: 1.5;
     }
 }
 
@@ -174,15 +217,10 @@
 }
 
 // ── Skeleton loader ─────────────────────────────────────────────
-@keyframes feed-shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
-}
-
 .feed-skeleton {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: $spacing-sm;
     padding-top: $spacing-sm;
 }
 
@@ -191,27 +229,15 @@
     align-items: center;
     gap: $spacing-sm;
     padding: 10px $spacing-sm;
-    border-radius: 12px;
-    background: $surface;
-}
-
-%shimmer {
-    background: linear-gradient(
-        90deg,
-        rgba($text, 0.06) 25%,
-        rgba($text, 0.12) 50%,
-        rgba($text, 0.06) 75%
-    );
-    background-size: 200% 100%;
-    animation: feed-shimmer 1.5s infinite;
-    border-radius: 6px;
+    border-radius: $radius-sm;
+    background: $white;
+    border: 1px solid $border;
 }
 
 .feed-skeleton-avatar {
-    @extend %shimmer;
+    @include shimmer(50%);
     width: 38px;
     height: 38px;
-    border-radius: 50%;
     flex-shrink: 0;
 }
 
@@ -223,7 +249,7 @@
 }
 
 .feed-skeleton-line {
-    @extend %shimmer;
+    @include shimmer;
     height: 10px;
 
     &--name {

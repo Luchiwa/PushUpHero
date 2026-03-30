@@ -1,0 +1,45 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.combo-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: rgba($accent, 0.2);
+    border: 1px solid rgba($accent, 0.45);
+    border-radius: $radius-pill;
+    padding: 0.15rem 0.6rem;
+    animation: combo-pop 0.4s $ease-out-back both;
+    backdrop-filter: blur($blur-xs);
+    -webkit-backdrop-filter: blur($blur-xs);
+}
+
+.combo-count {
+    font-size: 1rem;
+    font-weight: 900;
+    color: $accent;
+    text-shadow: 0 0 6px rgba($accent, 0.5);
+}
+
+.combo-label {
+    font-size: 0.55rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    color: rgba($white, 0.75);
+}
+
+@keyframes combo-pop {
+    0% {
+        transform: scale(0.4);
+        opacity: 0;
+    }
+
+    60% {
+        transform: scale(1.15);
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}

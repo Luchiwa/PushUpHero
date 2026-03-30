@@ -83,10 +83,6 @@
     color: rgba($white, 0.5);
 }
 
-.score-ring {
-    display: block;
-}
-
 // ── Right cluster: goal / timer / actions ────────────────────────
 .hud-right {
     display: flex;
@@ -212,90 +208,6 @@
     pointer-events: none;
 }
 
-.grade-pop {
-    display: flex;
-    align-items: baseline;
-    gap: 0.2rem;
-    animation: grade-burst 0.6s $ease-out-back both;
-}
-
-.grade-letter {
-    font-size: 4rem;
-    font-weight: 900;
-    line-height: 1;
-    text-shadow:
-        0 2px 10px rgba($black, 0.5),
-        0 0 30px currentColor;
-}
-
-.grade-score {
-    font-size: 1.1rem;
-    font-weight: 800;
-    opacity: 0.65;
-    color: $white;
-}
-
-@keyframes grade-burst {
-    0% {
-        transform: scale(0.2);
-        opacity: 0;
-    }
-
-    50% {
-        transform: scale(1.2);
-        opacity: 1;
-    }
-
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
-
-// ── Combo badge ──────────────────────────────────────────────────
-.combo-badge {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    background: rgba($accent, 0.2);
-    border: 1px solid rgba($accent, 0.45);
-    border-radius: $radius-pill;
-    padding: 0.15rem 0.6rem;
-    animation: combo-pop 0.4s $ease-out-back both;
-    backdrop-filter: blur($blur-xs);
-    -webkit-backdrop-filter: blur($blur-xs);
-}
-
-.combo-count {
-    font-size: 1rem;
-    font-weight: 900;
-    color: $accent;
-    text-shadow: 0 0 6px rgba($accent, 0.5);
-}
-
-.combo-label {
-    font-size: 0.55rem;
-    font-weight: 800;
-    letter-spacing: 0.1em;
-    color: rgba($white, 0.75);
-}
-
-@keyframes combo-pop {
-    0% {
-        transform: scale(0.4);
-        opacity: 0;
-    }
-
-    60% {
-        transform: scale(1.15);
-    }
-
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
-
 // ══════════ BOTTOM (above PositionGuide zone) ════════════════════
 .dashboard-bottom {
     display: flex;
@@ -305,32 +217,6 @@
     // Leave enough space for PositionGuide card below
     padding: 0 0.75rem;
     margin-bottom: 13rem; // clears the PositionGuide card
-}
-
-// ── Coach hint bubble ────────────────────────────────────────────
-.coach-hint {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    background: rgba($black, 0.5);
-    backdrop-filter: blur($blur-sm);
-    -webkit-backdrop-filter: blur($blur-sm);
-    border: 1px solid rgba($white, 0.12);
-    border-radius: $radius-pill;
-    padding: 0.3rem 0.75rem;
-    animation: slide-up 0.3s ease both;
-    pointer-events: none;
-}
-
-.coach-icon {
-    font-size: 0.85rem;
-}
-
-.coach-text {
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: $white;
-    letter-spacing: 0.02em;
 }
 
 // ── Anti-cheat banner ────────────────────────────────────────────
@@ -357,10 +243,6 @@
 @media (max-width: 480px) {
     .hud-rep-count {
         font-size: 2rem;
-    }
-
-    .grade-letter {
-        font-size: 3rem;
     }
 
     .dashboard-top {

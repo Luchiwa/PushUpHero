@@ -1,77 +1,55 @@
-import { useEffect, useRef, useState } from 'react';
-import type { ExerciseState, ExerciseType, WorkoutPlan } from '@exercises/types';
-import type { SetRecord } from '@exercises/types';
+import { useEffect, useState, useCallback } from 'react';
 import { getExerciseLabel } from '@exercises/types';
 import { useAuthCore, useLevel } from '@hooks/useAuth';
 import { useSoundEffect } from '@hooks/useSoundEffect';
+import { useWorkout } from '@app/WorkoutContext';
 import { AuthModal } from '@modals/AuthModal/AuthModal';
 import { getGradeLetter, getGradeClass, formatElapsedTime } from '@lib/constants';
-import type { SessionXpResult } from '@lib/xpSystem';
 import type { AchievementDef } from '@lib/achievements';
 import { TIER_COLORS } from '@lib/achievements';
-import type { RecordUpdate } from '@lib/achievementEngine';
 import { RECORDS } from '@lib/achievements';
-import type { QuestDef } from '@lib/quests';
 import { AchievementToastQueue } from '@components/AchievementToastQueue/AchievementToastQueue';
+import { ConfettiCanvas } from './ConfettiCanvas/ConfettiCanvas';
+import { XPBreakdown } from './XPBreakdown/XPBreakdown';
+import { SetsBreakdown } from './SetsBreakdown/SetsBreakdown';
 import './SummaryScreen.scss';
 
-// ── Confetti particles ────────────────────────────────────────────
-const PARTICLE_COUNT = 60;
-
-function createParticles(canvas: HTMLCanvasElement) {
-    const W = canvas.width;
-    const H = canvas.height;
-    return Array.from({ length: PARTICLE_COUNT }, () => ({
-        x: W / 2 + (Math.random() - 0.5) * W * 0.5,
-        y: H / 2 + (Math.random() - 0.5) * H * 0.3,
-        vx: (Math.random() - 0.5) * 14,
-        vy: -Math.random() * 14 - 4,
-        size: Math.random() * 8 + 4,
-        color: ['#f59e0b', '#6366f1', '#22c55e', '#ef4444', '#a5f3fc', '#fbbf24'][Math.floor(Math.random() * 6)],
-        gravity: 0.4,
-        opacity: 1,
-        rotation: Math.random() * 360,
-        rotationSpeed: (Math.random() - 0.5) * 10,
-    }));
-}
-
 interface SummaryProps {
-    exerciseType: ExerciseType;
-    exerciseState: ExerciseState;
-    completedSets?: SetRecord[];
-    onReset: () => void;
-    sessionMode?: 'reps' | 'time';
-    elapsedTime?: number;
-    /** Provided when the session was a multi-exercise workout */
-    workoutPlan?: WorkoutPlan;
-    /** XP result from the completed session */
-    sessionXp?: SessionXpResult;
-    /** Whether sound is enabled (for victory sound) */
-    soundEnabled?: boolean;
-    /** Whether the goal was reached (triggers celebration) */
-    goalReached?: boolean;
-    /** Achievements unlocked during this session */
+    /** Achievements unlocked during this session (filtered to exclude in-game shown) */
     newAchievements?: AchievementDef[];
-    /** Records broken during this session */
-    brokenRecords?: RecordUpdate[];
-    /** Quest completed during this session */
-    questCompleted?: QuestDef | null;
 }
 
 function ScoreGrade({ score }: { score: number }) {
     return <span className={`grade ${getGradeClass(score)}`}>{getGradeLetter(score)}</span>;
 }
 
-export function SummaryScreen({ exerciseType, exerciseState, completedSets, onReset, sessionMode, elapsedTime, workoutPlan, sessionXp, soundEnabled, goalReached, newAchievements, brokenRecords, questCompleted }: SummaryProps) {
+export function SummaryScreen({ newAchievements }: SummaryProps) {
+    const {
+        exerciseType, exerciseState, completedSets,
+        handleReset, sessionMode, elapsedTime,
+        workoutPlan, isMultiExercise,
+        lastSessionXp, soundEnabled, goalReached,
+        questCompletedThisSession,
+    } = useWorkout();
+
+    const sessionXp = lastSessionXp ?? undefined;
+    const brokenRecords = lastSessionXp?.brokenRecords;
+    const questCompleted = questCompletedThisSession;
     const { user } = useAuthCore();
     const { level } = useLevel();
     const { initAudio, playVictorySound } = useSoundEffect();
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const animRef = useRef<number | null>(null);
     const [showPaywall, setShowPaywall] = useState(false);
+    const [closing, setClosing] = useState(false);
 
-    const isMultiSet = completedSets != null && completedSets.length > 1;
-    const isMultiExercise = workoutPlan != null && workoutPlan.blocks.length > 1;
+    const handleContinue = useCallback(() => {
+        setClosing(true);
+    }, []);
+
+    const handleAnimationEnd = useCallback((e: React.AnimationEvent) => {
+        if (closing && e.currentTarget === e.target) handleReset();
+    }, [closing, handleReset]);
+
+    const isMultiSet = completedSets.length > 1;
 
     // Aggregate stats across all sets (or use exerciseState for single-set)
     const totalReps = isMultiSet
@@ -89,50 +67,6 @@ export function SummaryScreen({ exerciseType, exerciseState, completedSets, onRe
     }, [goalReached, soundEnabled, initAudio, playVictorySound]);
 
     useEffect(() => {
-        if (!goalReached) return;
-        const cvs = canvasRef.current;
-        if (!cvs) return;
-        const ctx = cvs.getContext('2d');
-        if (!ctx) return;
-
-        const c = ctx;
-        const w = cvs.width = window.innerWidth;
-        const h = cvs.height = window.innerHeight;
-        const particles = createParticles(cvs);
-        let elapsed = 0;
-        let lastTime = performance.now();
-
-        function animate(now: number) {
-            const dt = Math.min((now - lastTime) / 16.67, 3);
-            lastTime = now;
-            elapsed += dt * 16.67;
-
-            c.clearRect(0, 0, w, h);
-            for (const p of particles) {
-                p.x += p.vx * dt;
-                p.vy += p.gravity * dt;
-                p.y += p.vy * dt;
-                p.rotation += p.rotationSpeed * dt;
-                p.opacity = Math.max(0, 1 - elapsed / 3000);
-
-                c.save();
-                c.globalAlpha = p.opacity;
-                c.translate(p.x, p.y);
-                c.rotate((p.rotation * Math.PI) / 180);
-                c.fillStyle = p.color;
-                c.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
-                c.restore();
-            }
-
-            if (elapsed < 3500) {
-                animRef.current = requestAnimationFrame(animate);
-            }
-        }
-        animRef.current = requestAnimationFrame(animate);
-        return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
-    }, [goalReached]);
-
-    useEffect(() => {
         if (level >= 5 && !user && totalReps > 0) {
             const timer = setTimeout(() => setShowPaywall(true), 1500);
             return () => clearTimeout(timer);
@@ -140,9 +74,12 @@ export function SummaryScreen({ exerciseType, exerciseState, completedSets, onRe
     }, [totalReps, level, user]);
 
     return (
-        <div className={`summary-screen${goalReached ? ' summary-screen--victory' : ''}`}>
+        <div
+            className={`summary-screen${goalReached ? ' summary-screen--victory' : ''}${closing ? ' summary-screen--exit' : ''}`}
+            onAnimationEnd={handleAnimationEnd}
+        >
             {/* Confetti canvas (victory only) */}
-            {goalReached && <canvas ref={canvasRef} className="summary-confetti-canvas" />}
+            <ConfettiCanvas goalReached={goalReached} />
 
             <div className="summary-card">
                 {/* Victory celebration header */}
@@ -254,48 +191,7 @@ export function SummaryScreen({ exerciseType, exerciseState, completedSets, onRe
                 </div>
 
                 {/* ── XP Breakdown ─────────────────────────────────────── */}
-                {sessionXp && (
-                    <div className="xp-breakdown">
-                        <div className="xp-breakdown-header">
-                            <span className="xp-breakdown-total">+{sessionXp.totalXp.toLocaleString()} XP</span>
-                            {sessionXp.multiplier > 1 && (
-                                <span className="xp-breakdown-multiplier">×{sessionXp.multiplier.toFixed(2)}</span>
-                            )}
-                        </div>
-
-                        {/* Per-exercise XP */}
-                        {sessionXp.perExercise.length > 0 && (
-                            <div className="xp-breakdown-exercises">
-                                {sessionXp.perExercise.map(ex => (
-                                    <span key={ex.exerciseType} className="xp-exercise-pill">
-                                        {getExerciseLabel(ex.exerciseType)} +{ex.finalXp.toLocaleString()}
-                                        {ex.difficultyCoefficient > 1.0 && (
-                                            <span className="xp-difficulty-badge">×{ex.difficultyCoefficient.toFixed(1)}</span>
-                                        )}
-                                    </span>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Bonus tags */}
-                        {sessionXp.bonuses.length > 0 && (
-                            <div className="xp-breakdown-bonuses">
-                                {sessionXp.bonuses.map(b => (
-                                    <span key={b.key} className="xp-bonus-tag">
-                                        {b.emoji} {b.label} <strong>+{b.pct}%</strong>
-                                    </span>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Raw XP line */}
-                        {sessionXp.multiplier > 1 && (
-                            <span className="xp-breakdown-raw">
-                                XP brute : {sessionXp.rawXp.toLocaleString()}
-                            </span>
-                        )}
-                    </div>
-                )}
+                {sessionXp && <XPBreakdown sessionXp={sessionXp} />}
 
                 {/* ── New Achievements ───────────────────────────────── */}
                 {newAchievements && newAchievements.length > 0 && (
@@ -342,57 +238,16 @@ export function SummaryScreen({ exerciseType, exerciseState, completedSets, onRe
                     </div>
                 )}
 
-                {/* Per-block breakdown for multi-exercise workouts */}
-                {isMultiExercise && isMultiSet && completedSets != null && (() => {
-                    const blockGroups: { block: (typeof workoutPlan.blocks)[number]; sets: SetRecord[] }[] = [];
-                    let setIdx = 0;
-                    for (const block of workoutPlan.blocks) {
-                        const blockSets = completedSets.slice(setIdx, setIdx + block.numberOfSets);
-                        blockGroups.push({ block, sets: blockSets });
-                        setIdx += block.numberOfSets;
-                    }
-                    return (
-                        <div className="sets-breakdown">
-                            <p className="sets-breakdown-title">Exercise breakdown</p>
-                            {blockGroups.map((group, bi) => {
-                                const blockReps = group.sets.reduce((s, set) => s + set.reps, 0);
-                                const blockAvg = blockReps > 0
-                                    ? Math.round(group.sets.reduce((s, set) => s + set.averageScore * set.reps, 0) / blockReps)
-                                    : 0;
-                                return (
-                                    <div key={`block-${group.block.exerciseType}-${bi}`} className="set-item">
-                                        <div className="set-item-header">
-                                            <span className="set-item-num">{getExerciseLabel(group.block.exerciseType)}</span>
-                                            <span className="set-item-stats">
-                                                {blockReps} reps · {group.sets.length} set{group.sets.length > 1 ? 's' : ''} · <ScoreGrade score={blockAvg} />
-                                            </span>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    );
-                })()}
-
-                {/* Per-set breakdown for multi-set (single-exercise) workouts */}
-                {!isMultiExercise && isMultiSet && (
-                    <div className="sets-breakdown">
-                        <p className="sets-breakdown-title">Sets breakdown</p>
-                        {completedSets.map((set, i) => (
-                            <div key={`set-${set.reps}-${i}`} className="set-item">
-                                <div className="set-item-header">
-                                    <span className="set-item-num">Set {i + 1}</span>
-                                    <span className="set-item-stats">
-                                        {set.reps} reps · <ScoreGrade score={set.averageScore} /> · {set.averageScore}%
-                                    </span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
+                {/* Per-block / per-set breakdown */}
+                <SetsBreakdown
+                    isMultiExercise={isMultiExercise}
+                    isMultiSet={isMultiSet}
+                    workoutPlan={workoutPlan}
+                    completedSets={completedSets}
+                />
 
                 <div className="summary-actions">
-                    <button type="button" className="btn-primary" onClick={onReset}>
+                    <button type="button" className="btn-primary" onClick={handleContinue} disabled={closing}>
                         🔁 Continue
                     </button>
                 </div>

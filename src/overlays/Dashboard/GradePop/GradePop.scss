@@ -1,0 +1,49 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.grade-pop {
+    display: flex;
+    align-items: baseline;
+    gap: 0.2rem;
+    animation: grade-burst 0.6s $ease-out-back both;
+}
+
+.grade-letter {
+    font-size: 4rem;
+    font-weight: 900;
+    line-height: 1;
+    text-shadow:
+        0 2px 10px rgba($black, 0.5),
+        0 0 30px currentColor;
+}
+
+.grade-score {
+    font-size: 1.1rem;
+    font-weight: 800;
+    opacity: 0.65;
+    color: $white;
+}
+
+@keyframes grade-burst {
+    0% {
+        transform: scale(0.2);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+// ── Mobile responsive ────────────────────────────────────────────
+@media (max-width: 480px) {
+    .grade-letter {
+        font-size: 3rem;
+    }
+}

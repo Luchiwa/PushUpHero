@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import type { Timestamp } from 'firebase/firestore';
 import { db } from '@lib/firebase';
@@ -12,6 +12,7 @@ export interface ActivityEvent {
     uid: string;
     displayName: string;
     photoURL?: string;
+    photoThumb?: string;
     type: 'session';
     reps: number;
     averageScore: number;
@@ -67,15 +68,45 @@ export function buildEventMessage(event: ActivityEvent): string {
         : `did ${event.reps}/${event.goalReps} ${exerciseName}${setsInfo} · Grade ${grade}`;
 }
 
+// ── Feed cache ──────────────────────────────────────────────────
+// Module-level cache survives unmount/remount (e.g. ProfileModal close → reopen).
+// Keyed on user UID + sorted friend UIDs to avoid stale cross-user data.
+const FEED_CACHE_TTL = 120_000; // 2 minutes
+
+interface FeedCache {
+    data: ActivityEvent[];
+    fetchedAt: number;
+    key: string;
+}
+let feedCache: FeedCache = { data: [], fetchedAt: 0, key: '' };
+
 export function useActivityFeed(friends: Friend[]) {
     const { user } = useAuthCore();
     const [feed, setFeed] = useState<ActivityEvent[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchFeed = useCallback(async () => {
-        if (!user || friends.length === 0) {
+    // Stable identity key: only changes when friend UIDs actually change
+    const friendKey = useMemo(
+        () => user ? `${user.uid}:${friends.map(f => f.uid).sort().join(',')}` : '',
+        [user, friends],
+    );
+
+    // Ref to current friends so fetchFeed doesn't re-create on stats-only changes
+    const friendsRef = useRef(friends);
+    friendsRef.current = friends;
+
+    const fetchFeed = useCallback(async (bypassCache = false) => {
+        const currentFriends = friendsRef.current;
+        if (!user || currentFriends.length === 0) {
             setFeed([]);
+            return;
+        }
+
+        // Serve from cache if still fresh and same friend set
+        if (!bypassCache && feedCache.key === friendKey && Date.now() - feedCache.fetchedAt < FEED_CACHE_TTL) {
+            // Restore cached data to state (covers remount scenario)
+            setFeed(feedCache.data);
             return;
         }
 
@@ -84,7 +115,7 @@ export function useActivityFeed(friends: Friend[]) {
 
         try {
             const results = await Promise.all(
-                friends.map(async (friend) => {
+                currentFriends.map(async (friend) => {
                     try {
                         const ref = collection(db, 'users', friend.uid, 'activityFeed');
                         const q = query(ref, orderBy('createdAt', 'desc'), limit(EVENTS_PER_FRIEND));
@@ -98,6 +129,7 @@ export function useActivityFeed(friends: Friend[]) {
                                 uid: friend.uid,
                                 displayName: friend.displayName,
                                 photoURL: friend.photoURL,
+                                photoThumb: friend.photoThumb,
                                 type: 'session',
                                 reps: data.reps ?? 0,
                                 averageScore: data.averageScore ?? 0,
@@ -122,6 +154,7 @@ export function useActivityFeed(friends: Friend[]) {
                 .flat()
                 .sort((a, b) => b.createdAt - a.createdAt);
 
+            feedCache = { data: merged, fetchedAt: Date.now(), key: friendKey };
             setFeed(merged);
         } catch (err) {
             console.error('[useActivityFeed] fetch error:', err);
@@ -129,12 +162,15 @@ export function useActivityFeed(friends: Friend[]) {
         } finally {
             setLoading(false);
         }
-    }, [user, friends]);
+    }, [user, friendKey]);
 
-    // Fetch on mount and whenever the friends list changes
+    // Fetch on mount and whenever the friend set changes
     useEffect(() => {
         fetchFeed();
     }, [fetchFeed]);
 
-    return { feed, loading, error, refresh: fetchFeed };
+    // refresh() always bypasses cache
+    const refresh = useCallback(() => fetchFeed(true), [fetchFeed]);
+
+    return { feed, loading, error, refresh };
 }

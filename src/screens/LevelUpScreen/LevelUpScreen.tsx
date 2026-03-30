@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import './LevelUpScreen.scss';
 
 interface LevelUpScreenProps {
@@ -22,7 +22,16 @@ const MOTIVATIONAL_MESSAGES = [
 
 export function LevelUpScreen({ previousLevel, newLevel, onContinue, xpEarned, xpToNextLevel }: LevelUpScreenProps) {
     const [phase, setPhase] = useState<'enter' | 'roll' | 'land' | 'show'>('enter');
+    const [closing, setClosing] = useState(false);
     const message = MOTIVATIONAL_MESSAGES[(newLevel - 1) % MOTIVATIONAL_MESSAGES.length];
+
+    const handleContinue = useCallback(() => {
+        setClosing(true);
+    }, []);
+
+    const handleAnimationEnd = useCallback((e: React.AnimationEvent) => {
+        if (closing && e.currentTarget === e.target) onContinue();
+    }, [closing, onContinue]);
 
     // Animation sequence
     useEffect(() => {
@@ -41,7 +50,7 @@ export function LevelUpScreen({ previousLevel, newLevel, onContinue, xpEarned, x
     const duration = rollDuration(previousLevel, newLevel);
 
     return (
-        <div className="levelup-screen">
+        <div className={`levelup-screen${closing ? ' levelup-screen--exit' : ''}`} onAnimationEnd={handleAnimationEnd}>
             {/* Burst particles — rendered when landing */}
             {phase !== 'enter' && phase !== 'roll' && (
                 <div className="levelup-particles" aria-hidden="true">
@@ -92,7 +101,8 @@ export function LevelUpScreen({ previousLevel, newLevel, onContinue, xpEarned, x
                 {/* Continue button */}
                 <button
                     className={`btn-primary levelup-btn levelup-btn--${phase}`}
-                    onClick={onContinue}
+                    onClick={handleContinue}
+                    disabled={closing}
                 >
                     Continue
                 </button>

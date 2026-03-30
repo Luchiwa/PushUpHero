@@ -11,6 +11,11 @@
     justify-content: center;
     background: linear-gradient(160deg, #1a0a00 0%, #2d1200 40%, #1a0500 100%);
     cursor: pointer;
+
+    &--exit {
+        animation: celebration-out 0.35s $ease-default both;
+        pointer-events: none;
+    }
 }
 
 // ── Burst particles ──────────────────────────────────────────────────────────

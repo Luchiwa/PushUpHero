@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useActivityFeed, buildEventMessage, formatRelativeTime } from '@hooks/useActivityFeed';
-import { getGradeLetter, getGradeColor } from '@lib/constants';
+import { getGradeLetter, getGradeColor, getGradeBackground } from '@lib/constants';
 import type { Friend } from '@hooks/useFriends';
 import { Avatar } from '@components/Avatar/Avatar';
 import './FriendsFeedPanel.scss';
@@ -70,23 +70,23 @@ export function FriendsFeedPanel({ friends }: FriendsFeedPanelProps) {
     return (
         <div className="friends-feed">
             <div className="feed-header">
-                <span className="feed-header-title">Friends Activity</span>
-                <button className="feed-refresh-btn" onClick={refresh} aria-label="Refresh feed">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="23 4 23 10 17 10" />
-                        <polyline points="1 20 1 14 7 14" />
-                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-                    </svg>
-                </button>
+                <span className="feed-header-title">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true" style={{ color: 'var(--accent)' }}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
+                    Activity Feed
+                </span>
+                <span className="feed-live-badge">
+                    <span className="feed-live-dot" />
+                    LIVE
+                </span>
             </div>
 
             <div className="feed-scroll">
             {todayFeed.length > 0 && (
                 <section className="feed-section">
-                    <p className="feed-section-label">Today</p>
+                    <div className="feed-divider"><span>Today</span></div>
                     <ul className="feed-list">
-                        {todayFeed.map(event => (
-                            <FeedItem key={`${event.uid}-${event.id}`} event={event} />
+                        {todayFeed.map((event, i) => (
+                            <FeedItem key={`${event.uid}-${event.id}`} event={event} index={i} />
                         ))}
                     </ul>
                 </section>
@@ -94,10 +94,10 @@ export function FriendsFeedPanel({ friends }: FriendsFeedPanelProps) {
 
             {earlierFeed.length > 0 && (
                 <section className="feed-section">
-                    <p className="feed-section-label">Earlier</p>
+                    <div className="feed-divider"><span>Earlier</span></div>
                     <ul className="feed-list">
-                        {earlierFeed.map(event => (
-                            <FeedItem key={`${event.uid}-${event.id}`} event={event} />
+                        {earlierFeed.map((event, i) => (
+                            <FeedItem key={`${event.uid}-${event.id}`} event={event} index={todayFeed.length + i} />
                         ))}
                     </ul>
                 </section>
@@ -107,14 +107,17 @@ export function FriendsFeedPanel({ friends }: FriendsFeedPanelProps) {
     );
 }
 
-function FeedItem({ event }: { event: import('@hooks/useActivityFeed').ActivityEvent }) {
+function FeedItem({ event, index }: { event: import('@hooks/useActivityFeed').ActivityEvent; index: number }) {
     const grade = getGradeLetter(event.averageScore);
     const gradeColor = getGradeColor(event.averageScore);
+    const gradeBg = getGradeBackground(event.averageScore);
     const message = buildEventMessage(event);
 
     return (
-        <li className="feed-item">
-            <Avatar photoURL={event.photoURL} initials={event.displayName} size={36} />
+        <li className="feed-item" style={{ animationDelay: `${index * 55}ms` }}>
+            <div className="feed-item-avatar-wrap">
+                <Avatar photoURL={event.photoURL} photoThumb={event.photoThumb} initials={event.displayName} size={38} />
+            </div>
             <div className="feed-item-body">
                 <span className="feed-item-name">{event.displayName}</span>
                 <span className="feed-item-msg">{message}</span>
@@ -122,7 +125,7 @@ function FeedItem({ event }: { event: import('@hooks/useActivityFeed').ActivityE
             <div className="feed-item-right">
                 <span
                     className="feed-grade-badge"
-                    style={{ color: gradeColor, borderColor: gradeColor }}
+                    style={{ color: gradeColor, background: gradeBg, borderColor: gradeColor }}
                 >
                     {grade}
                 </span>

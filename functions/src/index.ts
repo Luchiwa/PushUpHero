@@ -79,27 +79,31 @@ export const sendPushNotification = onDocumentCreated(
     },
 );
 
-// ─── Helpers: date strings ────────────────────────────────────────────────────
+// ─── Helpers: date strings (Europe/Paris) ─────────────────────────────────────
+// The client stores lastSessionDate in local time (browser timezone).
+// Cloud Functions must use the same timezone for streak comparisons.
+// sv-SE locale guarantees YYYY-MM-DD format.
 
-function todayUTC(): string {
-    const now = new Date();
-    return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')}`;
+const TZ = 'Europe/Paris';
+
+function todayParis(): string {
+    return new Date().toLocaleDateString('sv-SE', { timeZone: TZ });
 }
 
-function yesterdayUTC(): string {
-    const now = new Date();
-    now.setUTCDate(now.getUTCDate() - 1);
-    return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')}`;
+function yesterdayParis(): string {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return d.toLocaleDateString('sv-SE', { timeZone: TZ });
 }
 
-// ─── Scheduled: Reset expired streaks (daily at 03:00 UTC) ───────────────────
+// ─── Scheduled: Reset expired streaks (daily at 03:00 Europe/Paris) ──────────
 // Queries all users whose streak > 0 and lastSessionDate is older than yesterday.
 // Updates bestStreak if current streak exceeds it, then resets streak to 0.
 
 export const resetExpiredStreaks = onSchedule(
-    { schedule: '0 3 * * *', timeZone: 'UTC', region: 'europe-west1' },
+    { schedule: '0 3 * * *', timeZone: TZ, region: 'europe-west1' },
     async () => {
-        const yesterday = yesterdayUTC();
+        const yesterday = yesterdayParis();
 
         // Users with an active streak whose last session was NOT today and NOT yesterday
         // Since Firestore doesn't support != combined with >, we query streak > 0
@@ -114,7 +118,7 @@ export const resetExpiredStreaks = onSchedule(
             return;
         }
 
-        const today = todayUTC();
+        const today = todayParis();
         const batch = db.batch();
         let count = 0;
 
@@ -169,7 +173,7 @@ export const resetExpiredStreaks = onSchedule(
     },
 );
 
-// ─── Scheduled: Streak reminder notification (daily at 18:00 UTC) ────────────
+// ─── Scheduled: Streak reminder notification (daily at 18:00 Europe/Paris) ───
 // Sends a motivational push notification to users who have an active streak
 // but haven't done a session today yet.
 
@@ -227,9 +231,9 @@ function getStreakMessage(streak: number): string {
 }
 
 export const sendStreakReminders = onSchedule(
-    { schedule: '0 18 * * *', timeZone: 'UTC', region: 'europe-west1' },
+    { schedule: '0 18 * * *', timeZone: TZ, region: 'europe-west1' },
     async () => {
-        const today = todayUTC();
+        const today = todayParis();
 
         // Query users with an active streak AND an FCM token
         const snapshot = await db

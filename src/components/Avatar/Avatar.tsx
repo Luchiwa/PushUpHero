@@ -4,13 +4,15 @@ import './Avatar.scss';
 
 interface AvatarProps {
     photoURL?: string | null;
+    /** Base64 thumbnail for instant display (no network fetch). */
+    photoThumb?: string | null;
     initials: string;
     size?: number;
     className?: string;
     onClick?: () => void;
 }
 
-export function Avatar({ photoURL, initials, size = 40, className = '', onClick }: AvatarProps) {
+export function Avatar({ photoURL, photoThumb, initials, size = 40, className = '', onClick }: AvatarProps) {
     const style = { width: size, height: size, fontSize: size * 0.4 };
     const [cachedSrc, setCachedSrc] = useState<string | null>(null);
     const prevUrl = useRef<string | null | undefined>(undefined);
@@ -35,6 +37,10 @@ export function Avatar({ photoURL, initials, size = 40, className = '', onClick 
         };
     }, [photoURL]);
 
+    // Display priority: cached full-res > base64 thumbnail > initials
+    // photoThumb renders instantly (inline base64), cachedSrc swaps in once resolved.
+    const imgSrc = cachedSrc || photoThumb || null;
+
     return (
         <div
             className={`avatar ${onClick ? 'avatar--clickable' : ''} ${className}`}
@@ -44,16 +50,9 @@ export function Avatar({ photoURL, initials, size = 40, className = '', onClick 
             role={onClick ? 'button' : undefined}
             tabIndex={onClick ? 0 : undefined}
         >
-            {cachedSrc ? (
+            {imgSrc ? (
                 <img
-                    src={cachedSrc}
-                    alt={initials}
-                    className="avatar__img"
-                    draggable={false}
-                />
-            ) : photoURL ? (
-                <img
-                    src={photoURL}
+                    src={imgSrc}
                     alt={initials}
                     className="avatar__img"
                     draggable={false}

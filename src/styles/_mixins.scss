@@ -1,3 +1,4 @@
+@use 'sass:map';
 @use 'variables' as *;
 
 // ── GLASSMORPHISM CARD ──────────────────────────────────────────
@@ -8,6 +9,14 @@
     border: 1px solid $border;
 }
 
+// ── BLUR BACKGROUND ─────────────────────────────────────────────
+// Lightweight blur-only (no border). Use for overlays, HUD elements.
+@mixin blur-bg($amount: $blur-sm, $bg: transparent) {
+    background: $bg;
+    backdrop-filter: blur($amount);
+    -webkit-backdrop-filter: blur($amount);
+}
+
 // ── TEXT GRADIENT ───────────────────────────────────────────────
 @mixin text-gradient($gradient) {
     background: $gradient;
@@ -16,9 +25,188 @@
     background-clip: text;
 }
 
-// ── NEON GLOW ───────────────────────────────────────────────────
+// ── NEON GLOW (text-shadow) ─────────────────────────────────────
 @mixin neon-glow($color, $size: 20px) {
     text-shadow: 0 0 $size rgba($color, 0.7), 0 0 calc($size * 2) rgba($color, 0.35);
+}
+
+// ── BOX GLOW ────────────────────────────────────────────────────
+// Colored box-shadow glow — for badges, cards, tips.
+@mixin box-glow($color, $size: 6px, $spread: 12px) {
+    box-shadow: 0 0 $size rgba($color, 0.8), 0 0 $spread rgba($color, 0.4);
+}
+
+// ── HOVER LIFT ──────────────────────────────────────────────────
+// Card / button hover pattern: rise + shadow.
+@mixin hover-lift($shadow: $shadow-md, $y: -2px) {
+    &:hover {
+        transform: translateY($y);
+        box-shadow: $shadow;
+    }
+}
+
+// ── BADGE / PILL ────────────────────────────────────────────────
+// Versatile badge for inline status, counts, XP labels.
+// $shape: 'pill' (fully rounded) or 'tag' (radius-xs).
+@mixin badge($bg-color, $text-color: $bg-color, $shape: 'pill') {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 7px;
+    font-size: $font-xs;
+    font-weight: 700;
+    white-space: nowrap;
+    background: rgba($bg-color, 0.1);
+    color: $text-color;
+
+    @if $shape =='pill' {
+        border-radius: $radius-pill;
+    }
+
+    @else {
+        border-radius: $radius-xs;
+    }
+}
+
+// Badge with border (for grade squares, outlined pills).
+@mixin badge-outline($color, $shape: 'tag') {
+    @include badge($color, $color, $shape);
+    border: 1.5px solid $color;
+    background: rgba($color, 0.08);
+}
+
+// ── GRADE BADGE ─────────────────────────────────────────────────
+// Square grade indicator (S/A/B/C/D) — single configurable mixin.
+@mixin grade-badge($size: 26px, $font-size: 0.72rem) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: $size;
+    height: $size;
+    font-size: $font-size;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    border: 1.5px solid;
+    border-radius: $radius-xs;
+    box-shadow: 0 2px 6px rgba($black, 0.08);
+    transition: box-shadow 0.2s, transform 0.2s;
+    flex-shrink: 0;
+}
+
+// Generate .grade-{letter} color classes from $grades map.
+@mixin grade-colors($prefix: 'grade') {
+    @each $letter, $color in $grades {
+        &.#{$prefix}-#{$letter} {
+            color: $color;
+            background: rgba($color, 0.1);
+            border-color: $color;
+        }
+    }
+}
+
+// ── TIER BACKGROUND GRADIENT ────────────────────────────────────
+// The repeated 160° tier gradient pattern.
+@mixin tier-bg($tier-color, $accent-mix: $accent) {
+    background: linear-gradient(160deg,
+            rgba($tier-color, 0.10) 0%,
+            rgba($accent-mix, 0.04) 40%,
+            rgba($tier-color, 0.07) 100%);
+}
+
+// ── TIER CARD VARIANTS ──────────────────────────────────────────
+// Generates .tier-bronze, .tier-silver, etc. with border + bg + shadow.
+@mixin tier-card-variants {
+    $tier-border-extra: (
+        'bronze': 0,
+        'silver': 0,
+        'gold': 0.15,
+        'platinum': 0.20
+    );
+
+@each $name, $color in $tiers {
+    $extra: map.get($tier-border-extra, $name);
+
+    &.tier-#{$name} {
+        border-color: rgba($color, 0.25 + $extra);
+        @include tier-bg($color);
+
+        @if $name =='gold' or $name =='platinum' {
+            box-shadow: 0 2px 20px rgba($color, 0.12);
+        }
+    }
+}
+}
+
+// ── TIER BADGE ──────────────────────────────────────────────────
+// For level/tier pip badges — bg = tier color, text = readable color.
+@mixin tier-badge-variants {
+    @each $name, $color in $tiers {
+        &.tier-#{$name} {
+            background: $color;
+            color: map.get($tier-texts, $name);
+            box-shadow: 0 2px 6px rgba($color, 0.5);
+        }
+    }
+}
+
+// ── SHIMMER / SKELETON ──────────────────────────────────────────
+// Reusable skeleton loading placeholder.
+@mixin shimmer($radius: $radius-xs) {
+    background: linear-gradient(90deg,
+            rgba($indigo, 0.05) 25%,
+            rgba($indigo, 0.10) 50%,
+            rgba($indigo, 0.05) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: $radius;
+}
+
+// ── NOTIFICATION DOT ────────────────────────────────────────────
+// Animated dot for unread indicators (feed, requests).
+@mixin notification-dot($color: $accent, $size: 7px) {
+    display: inline-block;
+    width: $size;
+    height: $size;
+    background: $color;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba($color, 0.6);
+    animation: dot-pulse 1.4s ease-in-out infinite;
+}
+
+// ── NOTIFICATION COUNT BADGE ────────────────────────────────────
+// Solid-background count indicator (for tabs, section headers).
+@mixin count-badge($color: $accent) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: $color;
+    color: $white;
+    font-size: 0.65rem;
+    font-weight: 800;
+    border-radius: $radius-pill;
+    line-height: 1;
+}
+
+// ── SHINE SWEEP ─────────────────────────────────────────────────
+// Animated light sweep for cards.
+@mixin shine-sweep {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(105deg,
+            transparent 0%,
+            rgba($white, 0) 40%,
+            rgba($white, 0.30) 50%,
+            rgba($white, 0) 60%,
+            transparent 100%);
+    pointer-events: none;
+    animation: shine-sweep 5s ease-in-out 1s infinite;
 }
 
 // ── ABSOLUTE FILL ────────────────────────────────────────────────

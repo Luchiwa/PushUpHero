@@ -1,0 +1,154 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// ── Weekly Summary KPI Grid ──────────────────────────────────────────────────
+.stats-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: $spacing-xs;
+    margin-bottom: 4px;
+}
+
+@keyframes stats-kpi-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stats-kpi {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 8px $spacing-xs 6px;
+    background: $white;
+    border: 1px solid $border;
+    border-radius: $radius-sm;
+    animation: stats-kpi-in 0.4s $ease-out-expo both;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2.5px;
+    }
+
+    &:hover {
+        transform: translateY(-2px);
+    }
+
+    &--accent {
+        &::before {
+            background: $gradient-accent;
+        }
+
+        &:hover {
+            border-color: rgba($accent, 0.25);
+            box-shadow: 0 4px 16px rgba($accent, 0.15), 0 0 8px rgba($accent, 0.08);
+        }
+    }
+
+    &--amber {
+        &::before {
+            background: $amber;
+        }
+
+        &:hover {
+            border-color: rgba($amber, 0.3);
+            box-shadow: 0 4px 16px rgba($amber, 0.15), 0 0 8px rgba($amber, 0.08);
+        }
+    }
+
+    &--indigo {
+        &::before {
+            background: $indigo;
+        }
+
+        &:hover {
+            border-color: rgba($indigo, 0.25);
+            box-shadow: 0 4px 16px rgba($indigo, 0.15), 0 0 8px rgba($indigo, 0.08);
+        }
+    }
+
+    &--orange {
+        &::before {
+            background: $accent;
+        }
+
+        &:hover {
+            border-color: rgba($accent, 0.25);
+            box-shadow: 0 4px 16px rgba($accent, 0.15), 0 0 8px rgba($accent, 0.08);
+        }
+    }
+
+    &:nth-child(1) {
+        animation-delay: 0ms;
+    }
+
+    &:nth-child(2) {
+        animation-delay: 50ms;
+    }
+
+    &:nth-child(3) {
+        animation-delay: 100ms;
+    }
+
+    &:nth-child(4) {
+        animation-delay: 150ms;
+    }
+}
+
+.stats-kpi-icon {
+    font-size: 1rem;
+    line-height: 1;
+    margin-bottom: 1px;
+}
+
+.stats-kpi-value {
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: $text;
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+}
+
+.stats-kpi-change {
+    font-size: 0.5rem;
+    font-weight: 800;
+    border-radius: $radius-pill;
+    padding: 1px 3px;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+
+    &.up {
+        color: $green-dark;
+        background: rgba($green, 0.14);
+    }
+
+    &.down {
+        color: $red;
+        background: rgba($red, 0.1);
+    }
+}
+
+.stats-kpi-label {
+    font-size: 0.58rem;
+    font-weight: 700;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}

@@ -1,0 +1,58 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// Week navigation row
+.stats-week-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $spacing-sm;
+    margin-bottom: 2px;
+}
+
+.stats-week-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex: 1;
+    justify-content: center;
+    font-size: $font-sm;
+    font-weight: 700;
+    color: $text;
+
+    svg {
+        color: $text-muted;
+        flex-shrink: 0;
+    }
+}
+
+.stats-nav-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba($text, 0.04);
+    border: 1px solid $border;
+    border-radius: $radius-sm;
+    color: $text;
+    cursor: pointer;
+    transition: background 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+
+    &:hover:not(:disabled) {
+        background: rgba($accent, 0.1);
+        border-color: rgba($accent, 0.3);
+        color: $accent;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba($accent, 0.15), 0 0 6px rgba($accent, 0.08);
+    }
+
+    &:active:not(:disabled) {
+        transform: scale(0.93);
+    }
+
+    &:disabled {
+        opacity: 0.25;
+        cursor: default;
+    }
+}

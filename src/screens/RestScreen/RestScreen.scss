@@ -28,13 +28,9 @@
 }
 
 .rest-set-badge {
+    @include badge-outline($green);
     font-size: $font-md;
-    font-weight: 700;
-    color: $green;
-    background: rgba($green, 0.1);
-    border: 1px solid rgba($green, 0.25);
     padding: 0.4rem 1rem;
-    border-radius: $radius-pill;
 }
 
 .rest-exercise-label {
@@ -79,25 +75,11 @@
     background: $border;
 }
 
-// ── Grade colors (reuse from SummaryScreen pattern) ─────────────
-.rest-stat-value.grade-s {
-    color: $purple;
-}
-
-.rest-stat-value.grade-a {
-    color: $green;
-}
-
-.rest-stat-value.grade-b {
-    color: $blue;
-}
-
-.rest-stat-value.grade-c {
-    color: $amber;
-}
-
-.rest-stat-value.grade-d {
-    color: $red;
+// ── Grade colors ─────────────────────────────────────────────────
+@each $letter, $color in $grades {
+    .rest-stat-value.grade-#{$letter} {
+        color: $color;
+    }
 }
 
 // ── Countdown section ───────────────────────────────────────────

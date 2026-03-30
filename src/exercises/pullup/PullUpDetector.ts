@@ -55,7 +55,7 @@ export class PullUpDetector extends BaseExerciseDetector {
     private shoulderYHistory: number[] = [];
     private minAngleThisRep: number = 180;
     private maxRiseThisRep: number = 0;       // best shoulder rise (fraction)
-    private bestAlignmentThisRep: number = 0;
+    private bestAlignmentThisRep: number = -Infinity;
     private hasReachedValidDown = false;
     private lastRepTimestamp: number = 0;
 
@@ -94,7 +94,7 @@ export class PullUpDetector extends BaseExerciseDetector {
         this.shoulderYHistory = [];
         this.minAngleThisRep = 180;
         this.maxRiseThisRep = 0;
-        this.bestAlignmentThisRep = 0;
+        this.bestAlignmentThisRep = -Infinity;
         this.hasReachedValidDown = false;
         this.lastRepTimestamp = 0;
         this.prevHipY = null;
@@ -289,12 +289,12 @@ export class PullUpDetector extends BaseExerciseDetector {
                 // ── Capture dynamic max rise for body profile ──
                 this.dynamicMaxRises.push(this.maxRiseThisRep);
                 if (this.dynamicMaxRises.length <= DYNAMIC_CAPTURE_REPS) {
-                    this._capturedRatios.dynamicMin = Math.max(...this.dynamicMaxRises);
+                    this._capturedRatios.dynamicCalibration = Math.max(...this.dynamicMaxRises);
                 }
 
                 this.minAngleThisRep = 180;
                 this.maxRiseThisRep = 0;
-                this.bestAlignmentThisRep = 0;
+                this.bestAlignmentThisRep = -Infinity;
                 this.hasReachedValidDown = false;
                 this.maxHipVelocity = 0;
                 this.worstArmAsymmetry = 0;

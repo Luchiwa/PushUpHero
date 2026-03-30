@@ -1,0 +1,50 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.sets-breakdown {
+    width: 100%;
+}
+
+.sets-breakdown-title {
+    @include label(0.68rem);
+    margin-bottom: 0.4rem;
+}
+
+.set-item {
+    border: 1px solid $border;
+    border-radius: $radius-sm;
+    margin-bottom: 0.35rem;
+    overflow: hidden;
+    transition: $transition-fast;
+}
+
+.set-item-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: none;
+    border: none;
+    font-family: inherit;
+}
+
+.set-item-num {
+    font-size: $font-sm;
+    font-weight: 800;
+    color: $accent;
+    flex-shrink: 0;
+}
+
+.set-item-stats {
+    flex: 1;
+    font-size: $font-sm;
+    font-weight: 600;
+    color: $text;
+    text-align: left;
+
+    .grade {
+        font-size: inherit;
+        text-shadow: none;
+    }
+}

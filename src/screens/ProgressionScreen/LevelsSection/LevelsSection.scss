@@ -1,0 +1,81 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// ── Level cards ──────────────────────────────────────────────────
+.level-card {
+  background: $surface;
+  border-radius: $radius-sm;
+  padding: $spacing-md;
+  margin-bottom: $spacing-sm;
+}
+
+.level-card--global {
+  background: $gradient-accent;
+  color: $white;
+
+  .level-card-label,
+  .level-card-level,
+  .level-progress-text {
+    color: $white;
+  }
+
+  .level-progress-bar {
+    background: rgba($white, 0.25);
+  }
+
+  .level-progress-fill {
+    background: $bg;
+  }
+}
+
+.level-card-header {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-sm;
+}
+
+.level-card-emoji {
+  font-size: 1.2rem;
+}
+
+.level-card-label {
+  font-size: $font-md;
+  font-weight: 600;
+  color: $text;
+  flex: 1;
+}
+
+.level-card-level {
+  font-size: $font-lg;
+  font-weight: 800;
+  color: $accent;
+  min-width: 32px;
+  text-align: right;
+}
+
+.level-progress-bar {
+  height: 6px;
+  background: $border;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.level-progress-fill {
+  height: 100%;
+  background: $accent;
+  border-radius: 3px;
+  transition: width $transition;
+}
+
+.level-progress-text {
+  font-size: $font-xs;
+  color: $text-muted;
+}
+
+.level-cards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}

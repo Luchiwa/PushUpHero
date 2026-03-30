@@ -5,7 +5,7 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.35rem;
 }
 
 .session-history-title {
@@ -20,21 +20,50 @@
     gap: 0.35rem;
 }
 
+// ── Session item card ─────────────────────────────────────────────────────────
+@keyframes session-item-in {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .session-history-item {
     display: flex;
     flex-direction: column;
-    background: rgba($text, 0.04);
-    border: 1px solid rgba($text, 0.08);
+    background: $white;
+    border: 1px solid $border;
+    border-left: 3px solid $border;
     border-radius: 10px;
     font-size: 0.8rem;
-    transition: background 0.15s ease;
+    overflow: hidden;
+    animation: session-item-in 0.35s $ease-out-expo both;
+    transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
 
     &:hover {
-        background: rgba($text, 0.07);
+        box-shadow: $shadow-md, 0 0 10px rgba($black, 0.04);
+        transform: translateY(-2px);
     }
 
     &--expanded {
-        background: rgba($text, 0.07);
+        background: rgba($indigo, 0.02);
+        box-shadow: 0 2px 12px rgba($black, 0.07);
+    }
+
+    // Grade-colored left border with glow on hover
+    @each $letter, $color in $grades {
+        &--grade-#{$letter} {
+            border-left-color: $color;
+
+            &:hover {
+                box-shadow: $shadow-md, 0 0 12px rgba($color, 0.12);
+            }
+        }
     }
 }
 
@@ -63,7 +92,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    gap: 0.3rem;
     min-width: 0;
 }
 
@@ -81,14 +110,15 @@
 }
 
 .session-exercise-badge {
+    @include badge($black, $text-muted);
     font-size: 0.6rem;
-    font-weight: 700;
-    color: $text-muted;
-    background: rgba($black, 0.05);
     padding: 0.1rem 0.35rem;
-    border-radius: $radius-pill;
-    white-space: nowrap;
     line-height: 1.4;
+
+    &--workout {
+        background: rgba($accent, 0.1);
+        color: $accent;
+    }
 }
 
 .session-details {
@@ -117,33 +147,32 @@
 }
 
 .session-sets-badge {
-    font-size: 0.65rem;
-    font-weight: 700;
-    color: $accent;
-    background: rgba($accent, 0.1);
+    @include badge($accent, $accent);
+    font-size: 0.6rem;
     padding: 0.15rem 0.45rem;
-    border-radius: $radius-pill;
-    white-space: nowrap;
 }
 
-.session-score {
-    font-weight: 700;
-    font-size: 0.85rem;
-    font-variant-numeric: tabular-nums;
-    min-width: 3rem;
-    text-align: right;
-    flex-shrink: 0;
+// ── Square grade badge (matches feed-grade-badge style) ──────────────────────
+.session-grade-badge {
+    @include grade-badge(26px, 0.7rem);
+
+    .session-history-item:hover & {
+        transform: scale(1.06);
+        box-shadow: 0 0 10px currentColor;
+    }
 }
 
 .session-xp-badge {
-    font-size: 0.65rem;
-    font-weight: 700;
-    color: $accent;
-    background: rgba($accent, 0.1);
+    @include badge($accent, $accent);
+    font-size: 0.62rem;
     padding: 0.1rem 0.4rem;
-    border-radius: $radius-pill;
-    white-space: nowrap;
     flex-shrink: 0;
+    box-shadow: 0 0 6px rgba($accent, 0.1);
+    transition: box-shadow 0.2s;
+
+    .session-history-item:hover & {
+        box-shadow: 0 0 10px rgba($accent, 0.2);
+    }
 }
 
 .session-chevron {
@@ -156,27 +185,24 @@
     }
 }
 
-.session-exercise-badge--workout {
-    background: rgba($accent, 0.1);
-    color: $accent;
-}
-
-// ── Multi-exercise expanded detail ──
+// ── Multi-exercise expanded detail ───────────────────────────────────────────
 .session-multi-detail {
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
     padding: 0.3rem 0.85rem 0.6rem;
-    border-top: 1px solid rgba($black, 0.06);
+    border-top: 1px solid $border;
+    background: rgba($indigo, 0.02);
 }
 
 .session-block-row {
     display: flex;
     flex-direction: column;
     gap: 0.15rem;
-    padding: 0.3rem 0.5rem;
-    background: rgba($black, 0.03);
-    border-radius: 6px;
+    padding: 0.35rem 0.55rem;
+    background: $white;
+    border: 1px solid $border;
+    border-radius: 7px;
 }
 
 .session-block-header {
@@ -193,30 +219,9 @@
 }
 
 .session-block-grade {
-    font-weight: 700;
-    font-size: 0.7rem;
-    min-width: 1.2rem;
-    text-align: center;
-
-    &.grade-s {
-        color: $purple;
-    }
-
-    &.grade-a {
-        color: $green;
-    }
-
-    &.grade-b {
-        color: $blue;
-    }
-
-    &.grade-c {
-        color: $amber;
-    }
-
-    &.grade-d {
-        color: $red;
-    }
+    @include grade-badge(20px, 0.65rem);
+    border-radius: 4px;
+    @include grade-colors;
 }
 
 .session-block-meta {
@@ -232,6 +237,7 @@
     opacity: 0.4;
 }
 
+// ── View all button ────────────────────────────────────────────────────────
 .session-history-view-all {
     align-self: center;
     margin-top: 0.25rem;
@@ -243,22 +249,20 @@
     font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background $transition-fast, color $transition-fast;
+    transition: background 0.2s, color 0.2s, transform 0.2s, box-shadow 0.2s;
 
     &:hover {
         background: $accent;
         color: $white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba($accent, 0.3), 0 0 8px rgba($accent, 0.15);
     }
 }
 
+// ── Mobile ───────────────────────────────────────────────────────────────────
 @media (max-width: 480px) {
     .session-history {
-        gap: 0.4rem;
-    }
-
-    .session-history-title {
-        font-size: 0.6rem;
-        margin-bottom: 0.25rem;
+        gap: 0.3rem;
     }
 
     .session-history-list {
@@ -271,12 +275,12 @@
     }
 
     .session-history-row {
-        padding: 0.35rem 0.5rem;
+        padding: 0.4rem 0.6rem;
         gap: 0.5rem;
     }
 
     .session-multi-detail {
-        padding: 0.2rem 0.5rem 0.4rem;
+        padding: 0.2rem 0.6rem 0.4rem;
     }
 
     .session-history-left {
@@ -292,7 +296,7 @@
     }
 
     .session-reps {
-        font-size: 0.7rem;
+        font-size: 0.75rem;
     }
 
     .session-goal {
@@ -304,9 +308,10 @@
         font-size: 0.65rem;
     }
 
-    .session-score {
-        font-size: 0.75rem;
-        min-width: 2.5rem;
+    .session-grade-badge {
+        width: 22px;
+        height: 22px;
+        font-size: 0.62rem;
     }
 
     .session-xp-badge {

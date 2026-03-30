@@ -13,6 +13,8 @@ import { SquatDetector } from '@exercises/squat/SquatDetector';
 import { PullUpDetector } from '@exercises/pullup/PullUpDetector';
 import type { ExerciseType } from '@exercises/types';
 import { useWorkoutStateMachine, durationToSeconds } from './useWorkoutStateMachine';
+import { WorkoutContext } from './WorkoutContext';
+import type { WorkoutContextType } from './WorkoutContext';
 import { totalXpForLevel } from '@lib/xpSystem';
 import { StartScreen } from '@screens/StartScreen/StartScreen';
 import { WorkoutConfigScreen } from '@screens/WorkoutConfigScreen/WorkoutConfigScreen';
@@ -77,6 +79,22 @@ function App() {
     getCapturedRatios,
   });
 
+  // ── Combined exercise type setter (for WorkoutContext) ──────────
+  const changeExerciseType = useCallback((type: ExerciseType) => {
+    setExerciseType(type);
+    wm.setWorkoutPlan(prev => ({
+      blocks: prev.blocks.map((b, i) => i === 0 ? { ...b, exerciseType: type } : b),
+    }));
+  }, [wm.setWorkoutPlan]);
+
+  // ── WorkoutContext value ───────────────────────────────────────────
+  const workoutCtx: WorkoutContextType = {
+    ...wm,
+    exerciseType,
+    exerciseState,
+    changeExerciseType,
+  };
+
   // Sync isActive from state machine screen
   useEffect(() => { setIsActive(wm.screen === 'active'); }, [wm.screen]);
 
@@ -110,6 +128,7 @@ function App() {
 
   // ── Render ───────────────────────────────────────────────────────
   return (
+    <WorkoutContext.Provider value={workoutCtx}>
     <div className="app-container">
       <video
         ref={videoRef}
@@ -127,28 +146,12 @@ function App() {
             calibratingPercentage={exerciseState.calibratingPercentage}
           />
           <Dashboard
-            exerciseType={exerciseType}
-            exerciseState={exerciseState}
-            goalReps={wm.goalReps}
-            sessionMode={wm.sessionMode}
-            timeGoal={wm.timeGoal}
-            onStop={wm.handleStop}
-            onTimerEnd={wm.handleTimerEnd}
-            elapsedTimeRef={wm.elapsedTimeRef}
+            facingMode={facingMode}
             onFlipCamera={() => {
               const newMode = facingMode === 'user' ? 'environment' : 'user';
               setFacingMode(newMode);
               startCamera(newMode);
             }}
-            facingMode={facingMode}
-            soundEnabled={wm.soundEnabled}
-            onSoundToggle={() => wm.setSoundEnabled(s => !s)}
-            level={wm.liveLevel}
-            levelProgressPct={wm.liveProgressPct}
-            currentSet={wm.flatSetIndex + 1}
-            totalSets={wm.totalSetsAllBlocks}
-            currentBlock={wm.isMultiExercise ? wm.currentBlockIndex + 1 : undefined}
-            totalBlocks={wm.isMultiExercise ? wm.totalBlocks : undefined}
           />
           {/* In-game achievement toast */}
           {achievementQueue.length > 0 && (
@@ -165,21 +168,6 @@ function App() {
         <StartScreen
           isModelReady={isModelReady}
           cameraError={modelError ?? cameraError}
-          exerciseType={exerciseType}
-          onExerciseTypeChange={(t) => {
-            setExerciseType(t);
-            wm.setWorkoutPlan(prev => ({
-              blocks: prev.blocks.map((b, i) => i === 0 ? { ...b, exerciseType: t } : b),
-            }));
-          }}
-          goalReps={wm.goalReps}
-          onGoalChange={wm.setGoalReps}
-          sessionMode={wm.sessionMode}
-          onSessionModeChange={wm.setSessionMode}
-          timeGoal={wm.timeGoal}
-          onTimeGoalChange={wm.setTimeGoal}
-          onStart={wm.handleStart}
-          onOpenWorkoutConfig={wm.handleOpenConfig}
           activeQuest={activeQuest}
           questProgress={questProgress}
           userLevel={userLevel}
@@ -227,23 +215,11 @@ function App() {
 
       {wm.screen === 'stopped' && (
         <SummaryScreen
-          exerciseType={exerciseType}
-          exerciseState={exerciseState}
-          completedSets={wm.completedSets}
-          workoutPlan={wm.isMultiExercise ? wm.workoutPlan : undefined}
-          onReset={wm.handleReset}
-          sessionMode={wm.sessionMode}
-          elapsedTime={wm.elapsedTime}
-          sessionXp={wm.lastSessionXp ?? undefined}
-          soundEnabled={wm.soundEnabled}
-          goalReached={wm.goalReached}
           newAchievements={
             wm.lastSessionXp?.newAchievements?.filter(
               a => !inGameShownRef.current.has(a.id),
             )
           }
-          brokenRecords={wm.lastSessionXp?.brokenRecords}
-          questCompleted={wm.questCompletedThisSession}
         />
       )}
 
@@ -262,6 +238,7 @@ function App() {
 
       <ReloadPrompt />
     </div>
+    </WorkoutContext.Provider>
   );
 }
 

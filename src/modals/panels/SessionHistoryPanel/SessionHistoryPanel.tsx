@@ -8,7 +8,7 @@ import { useSessionHistory } from '@hooks/useSessionHistory';
 import type { SessionRecord } from '@hooks/useSessionHistory';
 import type { TimeDuration } from '@exercises/types';
 import { getExerciseLabel, EXERCISE_META } from '@exercises/types';
-import { getGradeLetter, getGradeClass, formatElapsedTime } from '@lib/constants';
+import { getGradeLetter, getGradeClass, getGradeColor, getGradeBackground, formatElapsedTime } from '@lib/constants';
 import './SessionHistoryPanel.scss';
 
 const EXERCISE_EMOJI: Record<string, string> = Object.fromEntries(
@@ -34,12 +34,6 @@ function formatDate(ts: number): string {
 
     const date = d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
     return `${date} at ${time}`;
-}
-
-function scoreColor(score: number): string {
-    if (score >= 80) return '#22c55e';
-    if (score >= 60) return '#f59e0b';
-    return '#ef4444';
 }
 
 /** Format a TimeDuration object to a compact string, e.g. "1min30s" */
@@ -84,9 +78,17 @@ export function SessionHistoryPanel({ sessions: sessionsProp, title, onViewAll }
                     const isMulti = s.isMultiExercise === true;
                     const isExpanded = expandedId === s.id;
                     const duration = isMulti ? getSessionDuration(s) : '';
+                    const gradeLetter = getGradeLetter(s.averageScore);
+                    const gradeColor = getGradeColor(s.averageScore);
+                    const gradeBg = getGradeBackground(s.averageScore);
+                    const gradeClass = getGradeClass(s.averageScore);
 
                     return (
-                        <li key={s.id} className={`session-history-item${isExpanded ? ' session-history-item--expanded' : ''}`}>
+                        <li
+                            key={s.id}
+                            className={`session-history-item session-history-item--grade-${gradeLetter.toLowerCase()}${isExpanded ? ' session-history-item--expanded' : ''}`}
+                            style={{ animationDelay: `${sessions.indexOf(s) * 45}ms` }}
+                        >
                             <button
                                 type="button"
                                 className="session-history-row"
@@ -154,10 +156,10 @@ export function SessionHistoryPanel({ sessions: sessionsProp, title, onViewAll }
                                         <span className="session-xp-badge">+{s.xpEarned.toLocaleString()} XP</span>
                                     )}
                                     <span
-                                        className="session-score"
-                                        style={{ color: scoreColor(s.averageScore) }}
+                                        className={`session-grade-badge ${gradeClass}`}
+                                        style={{ color: gradeColor, background: gradeBg, borderColor: gradeColor }}
                                     >
-                                        {s.averageScore}%
+                                        {gradeLetter}
                                     </span>
                                     {isMulti && (
                                         <span className={`session-chevron${isExpanded ? ' session-chevron--open' : ''}`}>▾</span>

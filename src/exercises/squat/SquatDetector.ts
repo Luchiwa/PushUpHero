@@ -38,7 +38,7 @@ const TORSO_LEAN_TOLERANCE = 0.03;
 export class SquatDetector extends BaseExerciseDetector {
     private angleHistory: number[] = [];
     private minAngleThisRep: number = 180;
-    private bestAlignmentThisRep: number = 0; // FIX: was 100
+    private bestAlignmentThisRep: number = -Infinity;
     private hasReachedValidDown = false;
     private lastRepTimestamp: number = 0;
 
@@ -67,7 +67,7 @@ export class SquatDetector extends BaseExerciseDetector {
         super.reset();
         this.angleHistory = [];
         this.minAngleThisRep = 180;
-        this.bestAlignmentThisRep = 0;
+        this.bestAlignmentThisRep = -Infinity;
         this.hasReachedValidDown = false;
         this.lastRepTimestamp = 0;
         this.worstKneeDeviation = 0;
@@ -261,12 +261,12 @@ export class SquatDetector extends BaseExerciseDetector {
                 // ── Capture dynamic min angle for body profile ──
                 this.dynamicMinAngles.push(this.minAngleThisRep);
                 if (this.dynamicMinAngles.length <= DYNAMIC_CAPTURE_REPS) {
-                    this._capturedRatios.dynamicMin = Math.min(...this.dynamicMinAngles);
+                    this._capturedRatios.dynamicCalibration = Math.min(...this.dynamicMinAngles);
                 }
 
                 // Reset for next rep
                 this.minAngleThisRep = 180;
-                this.bestAlignmentThisRep = 0;
+                this.bestAlignmentThisRep = -Infinity;
                 this.hasReachedValidDown = false;
                 this.worstKneeDeviation = 0;
                 this.worstTorsoLean = 0;

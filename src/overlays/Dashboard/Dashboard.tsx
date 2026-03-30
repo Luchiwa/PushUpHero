@@ -1,111 +1,34 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import './Dashboard.scss';
-import type { ExerciseState, ExerciseType } from '@exercises/types';
 import { getExerciseLabel, getInvalidPositionMessage } from '@exercises/types';
-import { getGradeLetter, getGradeColor } from '@lib/constants';
+import { useWorkout } from '@app/WorkoutContext';
 import { useDashboardLogic } from './useDashboardLogic';
 
 import { FloatyNumbers } from '@components/FloatyNumbers/FloatyNumbers';
+import { GradePop } from './GradePop/GradePop';
+import { ComboMeter } from './ComboMeter/ComboMeter';
+import { ScoreRing } from './ScoreRing/ScoreRing';
+import { CoachHint } from './CoachHint/CoachHint';
 
 interface DashboardProps {
-    exerciseType: ExerciseType;
-    exerciseState: ExerciseState;
-    goalReps: number;
-    sessionMode: 'reps' | 'time';
-    timeGoal: { minutes: number; seconds: number };
-    onStop: () => void;
-    onTimerEnd: () => void;
-    elapsedTimeRef?: React.MutableRefObject<number>;
-    onFlipCamera: () => void;
     facingMode: 'user' | 'environment';
-    soundEnabled: boolean;
-    onSoundToggle: () => void;
-    level: number;
-    levelProgressPct: number;
-    currentSet?: number;
-    totalSets?: number;
-    currentBlock?: number;
-    totalBlocks?: number;
+    onFlipCamera: () => void;
 }
 
-// ── Grade Pop — big letter that appears after each rep ───────────
-const GradePop = memo(function GradePop({ score, repKey }: { score: number; repKey: number }) {
-    const letter = getGradeLetter(score);
-    const color = getGradeColor(score);
-    return (
-        <div className="grade-pop" key={repKey} style={{ color }}>
-            <span className="grade-letter">{letter}</span>
-            <span className="grade-score">{score}</span>
-        </div>
-    );
-});
+export const Dashboard = memo(function Dashboard({ facingMode, onFlipCamera }: DashboardProps) {
+    const {
+        exerciseType, exerciseState, goalReps, sessionMode, timeGoal,
+        handleStop, handleTimerEnd, elapsedTimeRef, soundEnabled, setSoundEnabled,
+        flatSetIndex, totalSetsAllBlocks, isMultiExercise, currentBlockIndex, totalBlocks,
+    } = useWorkout();
 
-// ── Combo counter ────────────────────────────────────────────────
-const ComboCounter = memo(function ComboCounter({ combo }: { combo: number }) {
-    if (combo < 2) return null;
-    return (
-        <div className="combo-badge" key={combo}>
-            <span className="combo-count">{combo}×</span>
-            <span className="combo-label">COMBO</span>
-        </div>
-    );
-});
-
-// ── Small inline score ring ──────────────────────────────────────
-const ScoreRing = memo(function ScoreRing({ score }: { score: number }) {
-    const radius = 18;
-    const circumference = 2 * Math.PI * radius;
-    const offset = circumference - (score / 100) * circumference;
-    const color = getGradeColor(score);
-
-    return (
-        <svg className="score-ring" viewBox="0 0 44 44" width="44" height="44" aria-hidden="true">
-            <circle cx="22" cy="22" r={radius} fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="4" />
-            <circle
-                cx="22" cy="22" r={radius}
-                fill="none"
-                stroke={color}
-                strokeWidth="4"
-                strokeDasharray={circumference}
-                strokeDashoffset={offset}
-                strokeLinecap="round"
-                transform="rotate(-90 22 22)"
-                style={{ transition: 'stroke-dashoffset 0.4s ease, stroke 0.4s ease' }}
-            />
-            <text x="22" y="27" textAnchor="middle" fontSize="14" fontWeight="900" fill="white">
-                {score}
-            </text>
-        </svg>
-    );
-});
-
-// ── Coach hint display ───────────────────────────────────────────
-function CoachHint({ text }: { text: string | null }) {
-    const [visible, setVisible] = useState(false);
-    const [displayText, setDisplayText] = useState('');
-    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-    useEffect(() => {
-        if (text) {
-            setDisplayText(text);
-            setVisible(true);
-            if (timerRef.current) clearTimeout(timerRef.current);
-            timerRef.current = setTimeout(() => setVisible(false), 3000);
-        }
-        return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-    }, [text]);
-
-    if (!visible || !displayText) return null;
-    return (
-        <div className="coach-hint">
-            <span className="coach-icon">🎙️</span>
-            <span className="coach-text">{displayText}</span>
-        </div>
-    );
-}
-
-export const Dashboard = memo(function Dashboard({ exerciseType, exerciseState, goalReps, sessionMode, timeGoal, onStop, onTimerEnd, elapsedTimeRef, onFlipCamera, facingMode, soundEnabled, onSoundToggle, currentSet, totalSets, currentBlock, totalBlocks }: DashboardProps) {
     const { repCount, averageScore, lastRepResult, isValidPosition, isCalibrated, incompleteRepFeedback, poseRejectedByLock } = exerciseState;
+
+    // Derived display values
+    const currentSet = flatSetIndex + 1;
+    const totalSets = totalSetsAllBlocks;
+    const currentBlock = isMultiExercise ? currentBlockIndex + 1 : undefined;
+    const displayTotalBlocks = isMultiExercise ? totalBlocks : undefined;
 
     const { showInvalidBanner, timeRemaining, coachPhrase } = useDashboardLogic({
         exerciseType,
@@ -116,7 +39,7 @@ export const Dashboard = memo(function Dashboard({ exerciseType, exerciseState, 
         sessionMode,
         timeGoal,
         elapsedTimeRef,
-        onTimerEnd,
+        onTimerEnd: handleTimerEnd,
         lastRepResult,
         incompleteRepFeedback,
     });
@@ -165,8 +88,8 @@ export const Dashboard = memo(function Dashboard({ exerciseType, exerciseState, 
                     {/* Set indicator */}
                     {totalSets != null && totalSets > 1 && currentSet != null && (
                         <span className="set-indicator">
-                            {currentBlock != null && totalBlocks != null && totalBlocks > 1
-                                ? `${currentBlock}/${totalBlocks} · ${currentSet}/${totalSets}`
+                            {currentBlock != null && displayTotalBlocks != null && displayTotalBlocks > 1
+                                ? `${currentBlock}/${displayTotalBlocks} · ${currentSet}/${totalSets}`
                                 : `Set ${currentSet}/${totalSets}`}
                         </span>
                     )}
@@ -207,7 +130,7 @@ export const Dashboard = memo(function Dashboard({ exerciseType, exerciseState, 
                         <button
                             type="button"
                             className={`btn-icon ${soundEnabled ? '' : 'btn-icon--muted'}`}
-                            onClick={onSoundToggle}
+                            onClick={() => setSoundEnabled(s => !s)}
                             title={soundEnabled ? 'Mute' : 'Unmute'}
                         >
                             {soundEnabled ? (
@@ -223,7 +146,7 @@ export const Dashboard = memo(function Dashboard({ exerciseType, exerciseState, 
                                 </svg>
                             )}
                         </button>
-                        <button className="btn-stop" onClick={onStop} type="button">■</button>
+                        <button className="btn-stop" onClick={handleStop} type="button">■</button>
                     </div>
                 </div>
             </div>
@@ -232,7 +155,7 @@ export const Dashboard = memo(function Dashboard({ exerciseType, exerciseState, 
             {lastRepResult && (
                 <div className="dashboard-center">
                     <GradePop score={lastRepResult.score} repKey={repCount} />
-                    <ComboCounter combo={combo} />
+                    <ComboMeter combo={combo} />
                 </div>
             )}
 

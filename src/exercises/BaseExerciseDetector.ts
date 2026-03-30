@@ -19,8 +19,8 @@ export interface CapturedRatios {
         armToTorsoRatio: number;
         naturalArmExtension: number;
     };
-    /** Minimum angle/rise captured during reps — set after N reps */
-    dynamicMin?: number;
+    /** Dynamic calibration value captured during first N reps (min angle for pushup/squat, max rise for pullup) */
+    dynamicCalibration?: number;
 }
 
 // ── Bounding Box Lock ────────────────────────────────────────────

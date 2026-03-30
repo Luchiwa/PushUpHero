@@ -2,7 +2,12 @@
 @use 'mixins' as *;
 
 .qs-overlay {
-  @include modal-overlay($z: 100);
+  @include modal-overlay($z: $z-modal-backdrop);
+  animation: overlay-fade-in 0.2s ease both;
+
+  &--exit {
+    animation: overlay-fade-out 0.2s ease both;
+  }
 }
 
 .qs-card {
@@ -10,6 +15,11 @@
   gap: 1.1rem;
   align-items: center;
   position: relative;
+  animation: modal-scale-in 0.25s $ease-out-back both;
+
+  &--exit {
+    animation: modal-scale-out 0.2s $ease-default both;
+  }
 }
 
 .qs-close-btn {

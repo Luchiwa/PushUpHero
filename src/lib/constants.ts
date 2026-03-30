@@ -69,6 +69,12 @@ export function getGradeColor(score: number): string {
     return GRADE_COLORS[getGradeLetter(score)];
 }
 
+/** Translucent background color for a grade badge */
+export function getGradeBackground(score: number): string {
+    const color = GRADE_COLORS[getGradeLetter(score)];
+    return `${color}1a`; // ~10% opacity hex
+}
+
 /** CSS class suffix for a grade letter (e.g. 'grade-s') */
 export function getGradeClass(score: number): string {
     return `grade-${getGradeLetter(score).toLowerCase()}`;

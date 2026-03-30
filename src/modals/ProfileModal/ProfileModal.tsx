@@ -98,6 +98,7 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
                         </svg>
                         <Avatar
                             photoURL={dbUser?.photoURL}
+                            photoThumb={dbUser?.photoThumb}
                             initials={dbUser?.displayName || 'U'}
                             size={68}
                             onClick={handleAvatarClick}
@@ -179,7 +180,11 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
                         className={`profile-tab ${activeTab === 'friends' ? 'profile-tab--active' : ''}`}
                         onClick={() => setActiveTab('friends')}
                     >
-                        Friends
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                        <span>Friends</span>
                         {incomingRequests.length > 0 && (
                             <span className="profile-tab-badge">{incomingRequests.length}</span>
                         )}
@@ -189,9 +194,13 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
                         className={`profile-tab ${activeTab === 'feed' ? 'profile-tab--active' : ''}`}
                         onClick={() => setActiveTab('feed')}
                     >
-                        Feed
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                        </svg>
+                        <span>Feed</span>
                         {hasFeedUnread && <span className="profile-tab-dot" />}
                     </button>
+                    <div className="profile-tabs-indicator" style={{ left: activeTab === 'friends' ? '4px' : 'calc(50% + 2px)' }} />
                 </div>
 
                 {/* Tab content */}

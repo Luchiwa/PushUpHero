@@ -116,3 +116,237 @@
         transform: translateY(-12px);
     }
 }
+
+// ── Unified pulse glow ─────────────────────────────────────────
+// Replaces profile-badge-pulse, profile-dot-pulse, friends-dot-pulse,
+// feed-live-pulse, pc-tip-pulse — all share the same box-shadow oscillation.
+// Use with `currentColor` on the element, or override via CSS custom props.
+@keyframes dot-pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+        box-shadow: 0 0 4px rgba(var(--pulse-rgb, 255, 127, 0), 0.5);
+    }
+
+    50% {
+        opacity: 0.7;
+        transform: scale(1.3);
+        box-shadow: 0 0 10px rgba(var(--pulse-rgb, 255, 127, 0), 0.8);
+    }
+}
+
+@keyframes badge-pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 6px rgba(var(--pulse-rgb, 255, 127, 0), 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 14px rgba(var(--pulse-rgb, 255, 127, 0), 0.55);
+    }
+}
+
+// ── Fire / streak glow ──────────────────────────────────────────
+@keyframes fire-glow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 6px rgba(var(--fire-rgb, 245, 158, 11), 0.35);
+    }
+
+    50% {
+        box-shadow: 0 0 14px rgba(var(--fire-rgb, 245, 158, 11), 0.6), 0 0 4px rgba(239, 68, 68, 0.3);
+    }
+}
+
+@keyframes flame-dance {
+    0% {
+        transform: scale(1) rotate(-4deg);
+    }
+
+    100% {
+        transform: scale(1.15) rotate(4deg);
+    }
+}
+
+// ── Shimmer (skeleton loading) ──────────────────────────────────
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+// ── Shine sweep (card shine) ────────────────────────────────────
+@keyframes shine-sweep {
+    0% {
+        left: -100%;
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    40% {
+        left: 160%;
+        opacity: 1;
+    }
+
+    50%,
+    100% {
+        left: 160%;
+        opacity: 0;
+    }
+}
+
+// ── Seg fill (XP bar segments) — uses CSS var --seg-color ───────
+@keyframes seg-fill {
+    0% {
+        background: rgba(26, 26, 26, 0.07);
+        transform: scaleY(0.5);
+    }
+
+    60% {
+        transform: scaleY(1.3);
+    }
+
+    100% {
+        background: var(--seg-color, #{$accent});
+        transform: scaleY(1);
+    }
+}
+
+@keyframes seg-tip-pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 5px rgba(var(--seg-rgb, 255, 127, 0), 0.7), 0 0 10px rgba(var(--seg-rgb, 255, 127, 0), 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 10px rgba(var(--seg-rgb, 255, 127, 0), 1), 0 0 22px rgba(var(--seg-rgb, 255, 127, 0), 0.6);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// PAGE TRANSITIONS — Enter & Exit
+// ═══════════════════════════════════════════════════════════════════
+
+// ── Page slide (push navigation: Stats, Quests, Profile) ────────
+@keyframes page-slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes page-slide-out {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+
+// ── Modal scale (QuickSession, Auth — centred popups) ───────────
+@keyframes modal-scale-in {
+    from {
+        opacity: 0;
+        transform: scale(0.85);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes modal-scale-out {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: scale(0.85);
+    }
+}
+
+// ── Overlay fade (backdrop behind modals) ───────────────────────
+@keyframes overlay-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes overlay-fade-out {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+}
+
+// ── Sheet slide (Config screen — slides up from bottom) ─────────
+@keyframes sheet-slide-in {
+    from {
+        opacity: 0;
+        transform: translateY(100%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes sheet-slide-down {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(100%);
+    }
+}
+
+// ── Screen fade out (Summary → Idle) ────────────────────────────
+@keyframes screen-fade-out {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+}
+
+// ── Celebration exit (LevelUp → Idle) ───────────────────────────
+@keyframes celebration-out {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: scale(1.15);
+    }
+}

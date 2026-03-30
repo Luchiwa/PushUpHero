@@ -198,7 +198,7 @@ export function useWorkoutSession({
         const captured = getCapturedRatios();
         const mergeForExercise = BODY_PROFILE_MERGE[primaryExercise];
         if (mergeForExercise) {
-          const patch = mergeForExercise(captured, captured.dynamicMin);
+          const patch = mergeForExercise(captured, captured.dynamicCalibration);
           if (Object.keys(patch).length > 0) {
             onSaveBodyProfile({
               ...bodyProfile,

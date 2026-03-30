@@ -1,0 +1,157 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// ── Quest Card (hero card) ───────────────────────────────────────
+
+.quest-card {
+    width: 100%;
+    padding: 1rem 1.1rem;
+    background: linear-gradient(135deg, rgba($indigo, 0.12) 0%, rgba($purple, 0.06) 100%);
+    border: 1px solid rgba($indigo, 0.28);
+    border-radius: $radius-sm;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    animation: quest-slide-in 0.5s $ease-out-expo both;
+    transition: border-color $transition-fast, box-shadow $transition-fast;
+
+    &--active {
+        border-color: rgba($indigo, 0.45);
+        box-shadow: 0 2px 16px rgba($indigo, 0.12);
+    }
+}
+
+.quest-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.quest-card-badge {
+    font-size: 0.6rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: $white;
+    padding: 2px 8px;
+    border-radius: $radius-pill;
+    line-height: 1.5;
+}
+
+.quest-card-status {
+    font-size: $font-xs;
+    font-weight: 700;
+    color: $indigo;
+    background: rgba($indigo, 0.12);
+    padding: 2px 8px;
+    border-radius: $radius-pill;
+}
+
+.quest-card-xp {
+    margin-left: auto;
+    font-size: $font-xs;
+    font-weight: 700;
+    color: $purple;
+    background: rgba($purple, 0.10);
+    padding: 2px 8px;
+    border-radius: $radius-pill;
+}
+
+.quest-card-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.quest-card-emoji {
+    font-size: 2rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.quest-card-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.quest-card-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: $text;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.quest-card-desc {
+    font-size: $font-sm;
+    color: $text-muted;
+    margin: 0.2rem 0 0;
+    line-height: 1.45;
+}
+
+.quest-card-hint {
+    font-size: $font-xs;
+    color: rgba($indigo, 0.7);
+    text-align: center;
+    margin: 0;
+    padding: 0.3rem 0;
+    font-style: italic;
+}
+
+.quest-card-config {
+    margin-top: 0.25rem;
+}
+
+.quest-card-accept,
+.quest-card-start {
+    width: 100%;
+    padding: 0.65rem 1rem;
+    border: none;
+    border-radius: $radius-sm;
+    font-size: 0.9rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background $transition-fast, box-shadow $transition-fast, transform 0.15s ease;
+    text-align: center;
+
+    &:active:not(:disabled) {
+        transform: scale(0.97);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: default;
+    }
+}
+
+.quest-card-accept {
+    background: linear-gradient(135deg, $indigo, $purple);
+    color: $white;
+    box-shadow: 0 3px 16px rgba($indigo, 0.35);
+
+    &:hover:not(:disabled) {
+        box-shadow: 0 4px 22px rgba($indigo, 0.5);
+    }
+}
+
+.quest-card-start {
+    background: linear-gradient(135deg, $accent, $accent-dark);
+    color: $white;
+    box-shadow: 0 3px 16px rgba($accent, 0.35);
+
+    &:hover:not(:disabled) {
+        box-shadow: 0 4px 22px rgba($accent, 0.5);
+    }
+}
+
+@keyframes quest-slide-in {
+    0% {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.97);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}

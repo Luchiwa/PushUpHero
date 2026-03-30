@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
-    collection, doc, getDoc, setDoc, deleteDoc,
-    onSnapshot, addDoc, serverTimestamp, updateDoc, increment
+    collection, doc, getDoc, setDoc, deleteDoc, getDocs,
+    onSnapshot, addDoc, serverTimestamp, updateDoc, increment,
+    query, where, documentId,
 } from 'firebase/firestore';
 import { db } from '@lib/firebase';
 import { useAuthCore } from './useAuth';
@@ -26,6 +27,7 @@ export interface Friend {
     totalReps: number;
     totalSessions: number;
     photoURL?: string;
+    photoThumb?: string;
     streak?: number;
 }
 
@@ -39,6 +41,36 @@ export type SearchResult = {
     relation: 'none' | 'friend' | 'request_sent' | 'request_received' | 'self';
 };
 
+// ── Batched stats fetch ─────────────────────────────────────────
+// Replaces per-friend onSnapshot listeners with batched 'in' queries.
+// Firestore 'in' query limit = 30, so we batch in groups of 30.
+
+const STATS_BATCH_SIZE = 30;
+const STATS_DEBOUNCE_MS = 300;
+
+type FriendStats = Pick<Friend, 'level' | 'totalReps' | 'totalSessions' | 'photoURL' | 'photoThumb' | 'streak'>;
+
+async function batchFetchProfileStats(uids: string[]): Promise<Map<string, FriendStats>> {
+    const stats = new Map<string, FriendStats>();
+    for (let i = 0; i < uids.length; i += STATS_BATCH_SIZE) {
+        const batch = uids.slice(i, i + STATS_BATCH_SIZE);
+        const q = query(collection(db, 'users'), where(documentId(), 'in', batch));
+        const snap = await getDocs(q);
+        for (const d of snap.docs) {
+            const data = d.data();
+            stats.set(d.id, {
+                level: data.level ?? 0,
+                totalReps: data.totalReps ?? 0,
+                totalSessions: data.totalSessions ?? 0,
+                photoURL: data.photoURL ?? undefined,
+                photoThumb: data.photoThumb ?? undefined,
+                streak: data.streak ?? 0,
+            });
+        }
+    }
+    return stats;
+}
+
 export function useFriends() {
     const { user, dbUser } = useAuthCore();
 
@@ -46,14 +78,11 @@ export function useFriends() {
     const [incomingRequests, setIncomingRequests] = useState<FriendRequest[]>([]);
     const [outgoingRequests, setOutgoingRequests] = useState<OutgoingRequest[]>([]);
 
-    // Holds unsub functions for per-friend profile listeners
-    const profileUnsubsRef = useRef<Map<string, () => void>>(new Map());
+    const statsDebounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
     // ── Realtime listeners ──────────────────────────────────────────
     useEffect(() => {
-        // Capture ref for cleanup — profileUnsubsRef holds unsubscribe functions
-        // (not a React DOM node), so it's safe to read .current in cleanup.
-        const profileUnsubs = profileUnsubsRef.current;
+        const debounceRef = statsDebounceRef;
 
         if (!user) {
             setTimeout(() => {
@@ -61,81 +90,53 @@ export function useFriends() {
                 setIncomingRequests([]);
                 setOutgoingRequests([]);
             }, 0);
-            // Clean up any profile listeners
-            profileUnsubs.forEach(unsub => { unsub(); });
-            profileUnsubs.clear();
             return;
         }
 
-        // Listen to confirmed friends list, then attach per-profile listeners
+        // Listen to confirmed friends list, then batch-fetch profile stats
         const friendsRef = collection(db, 'users', user.uid, 'friends');
         const unsubFriends = onSnapshot(friendsRef, snap => {
-            const currentUids = new Set(snap.docs.map(d => d.id));
-
-            // Remove listeners for friends that were removed
-            profileUnsubs.forEach((unsub, uid) => {
-                if (!currentUids.has(uid)) {
-                    unsub();
-                    profileUnsubs.delete(uid);
-                }
+            const entries = snap.docs.map(d => {
+                const data = d.data();
+                return {
+                    uid: (data.uid ?? d.id) as string,
+                    displayName: (data.displayName ?? '') as string,
+                    photoURL: data.photoURL as string | undefined,
+                };
             });
 
-            // Build new friends list, preserving data already fetched by profile listeners
+            // Update friend list immediately with basic info (stats filled by batch fetch)
             setFriends(prev => {
                 const prevMap = new Map(prev.map(f => [f.uid, f]));
-                return snap.docs.map(d => {
-                    const data = d.data();
-                    const existing = prevMap.get(data.uid);
+                return entries.map(e => {
+                    const existing = prevMap.get(e.uid);
                     if (existing) {
-                        // Keep live stats, but update displayName/photoURL from friends doc if changed
                         return {
                             ...existing,
-                            displayName: data.displayName ?? existing.displayName,
-                            photoURL: data.photoURL ?? existing.photoURL,
+                            displayName: e.displayName || existing.displayName,
+                            photoURL: e.photoURL ?? existing.photoURL,
                         };
                     }
-                    // Brand new friend — starts at 0, profile listener will fill in shortly
-                    return {
-                        uid: data.uid,
-                        displayName: data.displayName,
-                        photoURL: data.photoURL ?? undefined,
-                        level: 0,
-                        totalReps: 0,
-                        totalSessions: 0,
-                        streak: 0,
-                    } as Friend;
+                    return { ...e, level: 0, totalReps: 0, totalSessions: 0, streak: 0 };
                 });
             });
 
-            // Attach per-profile live listeners for stats (level, totalReps, totalSessions, streak)
-            snap.docs.forEach(friendDoc => {
-                const uid = friendDoc.id;
-                if (!profileUnsubs.has(uid)) {
-                    const unsub = onSnapshot(doc(db, 'users', uid), profileSnap => {
-                        if (!profileSnap.exists()) {
-                            // Friend's account was deleted — remove from local state
-                            setFriends(prev => prev.filter(f => f.uid !== uid));
-                            profileUnsubs.get(uid)?.();
-                            profileUnsubs.delete(uid);
-                            return;
-                        }
-                        const p = profileSnap.data();
-                        setFriends(prev => prev.map(f =>
-                            f.uid === uid
-                                ? {
-                                    ...f,
-                                    level: p.level ?? 0,
-                                    totalReps: p.totalReps ?? 0,
-                                    totalSessions: p.totalSessions ?? 0,
-                                    photoURL: p.photoURL ?? f.photoURL,
-                                    streak: p.streak ?? 0,
-                                }
-                                : f
-                        ));
-                    });
-                    profileUnsubs.set(uid, unsub);
-                }
-            });
+            // Debounced batch fetch for profile stats (level, totalReps, etc.)
+            clearTimeout(debounceRef.current);
+            const uids = entries.map(e => e.uid);
+            if (uids.length > 0) {
+                debounceRef.current = setTimeout(async () => {
+                    try {
+                        const stats = await batchFetchProfileStats(uids);
+                        setFriends(prev => prev.map(f => {
+                            const s = stats.get(f.uid);
+                            return s ? { ...f, ...s } : f;
+                        }));
+                    } catch (err) {
+                        console.error('[useFriends] batch stats fetch error:', err);
+                    }
+                }, STATS_DEBOUNCE_MS);
+            }
         });
 
         // Listen to incoming friend requests
@@ -168,8 +169,7 @@ export function useFriends() {
             unsubFriends();
             unsubRequests();
             unsubOutgoing();
-            profileUnsubs.forEach(unsub => { unsub(); });
-            profileUnsubs.clear();
+            clearTimeout(debounceRef.current);
         };
     }, [user]);
 
@@ -307,6 +307,21 @@ export function useFriends() {
         await deleteDoc(doc(db, 'users', friendUid, 'friends', user.uid));
     }, [user]);
 
+    // ── Refresh stats on demand ─────────────────────────────────────
+    const refreshFriendStats = useCallback(async () => {
+        const uids = friends.map(f => f.uid);
+        if (uids.length === 0) return;
+        try {
+            const stats = await batchFetchProfileStats(uids);
+            setFriends(prev => prev.map(f => {
+                const s = stats.get(f.uid);
+                return s ? { ...f, ...s } : f;
+            }));
+        } catch (err) {
+            console.error('[useFriends] refresh stats error:', err);
+        }
+    }, [friends]);
+
     return {
         friends,
         incomingRequests,
@@ -318,5 +333,6 @@ export function useFriends() {
         cancelFriendRequest,
         sendEncouragement,
         removeFriend,
+        refreshFriendStats,
     };
 }

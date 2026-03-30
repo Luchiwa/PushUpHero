@@ -1,57 +1,59 @@
+import { useState, useCallback } from 'react';
 import { DragNumberPicker } from '@components/DragNumberPicker/DragNumberPicker';
 import { TimePicker } from '@components/TimePicker/TimePicker';
 import { ExercisePicker } from '@components/ExercisePicker/ExercisePicker';
-import type { ExerciseType } from '@exercises/types';
+import { useWorkout } from '@app/WorkoutContext';
 import './QuickSessionModal.scss';
 
 interface QuickSessionModalProps {
-    exerciseType: ExerciseType;
-    onExerciseTypeChange: (type: ExerciseType) => void;
-    sessionMode: 'reps' | 'time';
-    onSessionModeChange: (mode: 'reps' | 'time') => void;
-    goalReps: number;
-    onGoalChange: (value: number) => void;
-    timeGoal: { minutes: number; seconds: number };
-    onTimeGoalChange: (time: { minutes: number; seconds: number }) => void;
-    onStart: () => void;
     onClose: () => void;
     isReady: boolean;
 }
 
-export function QuickSessionModal({
-    exerciseType,
-    onExerciseTypeChange,
-    sessionMode,
-    onSessionModeChange,
-    goalReps,
-    onGoalChange,
-    timeGoal,
-    onTimeGoalChange,
-    onStart,
-    onClose,
-    isReady,
-}: QuickSessionModalProps) {
+export function QuickSessionModal({ onClose, isReady }: QuickSessionModalProps) {
+    const {
+        exerciseType, changeExerciseType,
+        sessionMode, setSessionMode,
+        goalReps, setGoalReps,
+        timeGoal, setTimeGoal,
+        handleStart,
+    } = useWorkout();
+
+    const [closing, setClosing] = useState(false);
+
+    const handleClose = useCallback(() => {
+        setClosing(true);
+    }, []);
+
+    const handleAnimationEnd = useCallback((e: React.AnimationEvent) => {
+        if (closing && e.currentTarget === e.target) onClose();
+    }, [closing, onClose]);
+
     return (
-        <div className="qs-overlay" onClick={onClose}>
-            <div className="qs-card" onClick={e => e.stopPropagation()}>
-                <button type="button" className="qs-close-btn" onClick={onClose}>×</button>
+        <div
+            className={`qs-overlay${closing ? ' qs-overlay--exit' : ''}`}
+            onClick={handleClose}
+            onAnimationEnd={handleAnimationEnd}
+        >
+            <div className={`qs-card${closing ? ' qs-card--exit' : ''}`} onClick={e => e.stopPropagation()}>
+                <button type="button" className="qs-close-btn" onClick={handleClose}>×</button>
 
                 <h2 className="qs-title">⚡ Quick Session</h2>
 
-                <ExercisePicker value={exerciseType} onChange={onExerciseTypeChange} />
+                <ExercisePicker value={exerciseType} onChange={changeExerciseType} />
 
                 <div className="session-mode-toggle">
                     <button
                         type="button"
                         className={`btn-toggle ${sessionMode === 'reps' ? 'active' : ''}`}
-                        onClick={() => onSessionModeChange('reps')}
+                        onClick={() => setSessionMode('reps')}
                     >
                         🎯 Reps
                     </button>
                     <button
                         type="button"
                         className={`btn-toggle ${sessionMode === 'time' ? 'active' : ''}`}
-                        onClick={() => onSessionModeChange('time')}
+                        onClick={() => setSessionMode('time')}
                     >
                         ⏱ Time
                     </button>
@@ -64,17 +66,17 @@ export function QuickSessionModal({
                             value={goalReps}
                             min={1}
                             max={100}
-                            onChange={onGoalChange}
+                            onChange={setGoalReps}
                         />
                     ) : (
                         <TimePicker
                             value={timeGoal}
-                            onChange={onTimeGoalChange}
+                            onChange={setTimeGoal}
                         />
                     )}
                 </div>
 
-                <button type="button" className="btn-primary" onClick={() => { onClose(); onStart(); }} disabled={!isReady}>
+                <button type="button" className="btn-primary" onClick={() => { onClose(); handleStart(); }} disabled={!isReady || closing}>
                     {isReady ? (
                         sessionMode === 'reps'
                             ? `Start — ${goalReps} rep${goalReps > 1 ? 's' : ''}`

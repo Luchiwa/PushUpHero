@@ -1,0 +1,91 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// ── Request card action buttons ───────────────────────────────────
+.friend-request-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+}
+
+.friend-request-label {
+    font-size: 0.78rem;
+    color: $green-dark;
+    font-weight: 700;
+    text-shadow: 0 0 8px rgba($green, 0.15);
+}
+
+.friend-pending-label {
+    font-size: 0.75rem;
+    color: $text-muted;
+    font-weight: 500;
+    font-style: italic;
+}
+
+.btn-accept,
+.btn-decline {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s, background 0.15s;
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    &:active:not(:disabled) {
+        transform: scale(0.92);
+    }
+}
+
+.btn-accept {
+    background: rgba($green, 0.12);
+    color: $green;
+
+    &:hover:not(:disabled) {
+        background: rgba($green, 0.22);
+        transform: scale(1.1);
+        box-shadow: 0 0 12px rgba($green, 0.3);
+    }
+}
+
+.btn-decline {
+    background: rgba($red, 0.1);
+    color: $red;
+
+    &:hover:not(:disabled) {
+        background: rgba($red, 0.2);
+        transform: scale(1.1);
+        box-shadow: 0 0 12px rgba($red, 0.25);
+    }
+}
+
+.btn-cancel-request {
+    padding: 0.38rem 0.8rem;
+    background: none;
+    color: $text-muted;
+    border: 1px solid $border;
+    border-radius: $radius-sm;
+    font-size: 0.78rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: $transition;
+
+    &:hover:not(:disabled) {
+        border-color: $text-muted;
+        color: $text;
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}

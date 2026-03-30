@@ -139,13 +139,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const blob = await new Promise<Blob>((resolve, reject) =>
             canvas.toBlob((b) => { if (b) resolve(b); else reject(new Error('toBlob failed')); }, 'image/jpeg', 0.85)
         );
+
+        // Generate base64 thumbnail (~96px) for instant display in Firestore
+        const thumbSize = 96;
+        const thumbCanvas = document.createElement('canvas');
+        thumbCanvas.width = thumbSize;
+        thumbCanvas.height = thumbSize;
+        const thumbCtx = thumbCanvas.getContext('2d')!;
+        thumbCtx.drawImage(bitmap, sx, sy, srcSize, srcSize, 0, 0, thumbSize, thumbSize);
+        const photoThumb = thumbCanvas.toDataURL('image/jpeg', 0.7);
+
         const storageRef = ref(storage, `avatars/${user.uid}.jpg`);
         await user.getIdToken(true);
         await uploadBytes(storageRef, blob, { contentType: 'image/jpeg' });
         const url = await getDownloadURL(storageRef);
         if (dbUser?.photoURL) await invalidateAvatarCache(dbUser.photoURL);
-        await updateDoc(doc(db, 'users', user.uid), { photoURL: url });
-        setDbUser(prev => prev ? { ...prev, photoURL: url } : prev);
+        await updateDoc(doc(db, 'users', user.uid), { photoURL: url, photoThumb });
+        setDbUser(prev => prev ? { ...prev, photoURL: url, photoThumb } : prev);
     };
 
     const logout = async () => {

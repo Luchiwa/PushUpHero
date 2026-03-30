@@ -2,12 +2,12 @@ import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useWeekSessions, getWeekStart, formatWeekRange } from '@hooks/useWeekSessions';
 import type { ExerciseType } from '@exercises/types';
 import { EXERCISE_META } from '@exercises/types';
-import type { SessionRecord } from '@hooks/useSessionHistory';
-import { WeeklyChart } from './WeeklyChart';
+import { WeeklyChart } from './WeeklyChart/WeeklyChart';
 import { SessionHistoryPanel } from '@modals/panels/SessionHistoryPanel/SessionHistoryPanel';
 import { PageLayout } from '@components/PageLayout/PageLayout';
+import { KPIGrid, computeWeeklySummary } from './KPIGrid/KPIGrid';
+import { WeekNavigator } from './WeekNavigator/WeekNavigator';
 import './StatsScreen.scss';
-import './WeeklyChart.scss';
 
 type ExerciseFilter = 'all' | ExerciseType;
 export type MetricMode = 'xp' | 'reps';
@@ -17,82 +17,8 @@ const FILTERS: { value: ExerciseFilter; emoji: string; label: string }[] = [
     ...EXERCISE_META.map(m => ({ value: m.type as ExerciseFilter, emoji: m.emoji, label: m.label })),
 ];
 
-// ── Weekly Summary helpers ──────────────────────────────────────
-interface WeeklySummary {
-    totalXp: number;
-    totalReps: number;
-    sessionCount: number;
-    activeDays: number;
-    bestSession: number; // best reps or best XP depending on metric
-}
-
-function computeWeeklySummary(
-    sessions: SessionRecord[],
-    exerciseFilter: ExerciseFilter,
-): WeeklySummary {
-    let totalXp = 0;
-    let totalReps = 0;
-    let bestXp = 0;
-    let bestReps = 0;
-    const activeDaysSet = new Set<number>();
-
-    for (const s of sessions) {
-        const day = new Date(s.date).getDay();
-        activeDaysSet.add(day);
-
-        // XP
-        if (exerciseFilter !== 'all' && s.xpPerExercise) {
-            const match = s.xpPerExercise.find(e => e.exerciseType === exerciseFilter);
-            if (match) totalXp += match.finalXp;
-            if (match && match.finalXp > bestXp) bestXp = match.finalXp;
-        } else {
-            totalXp += s.xpEarned ?? 0;
-            if ((s.xpEarned ?? 0) > bestXp) bestXp = s.xpEarned ?? 0;
-        }
-
-        // Reps
-        if (exerciseFilter !== 'all' && s.isMultiExercise && s.blocks && s.sets) {
-            let setIdx = 0;
-            let sessionReps = 0;
-            for (const block of s.blocks) {
-                const blockSets = s.sets.slice(setIdx, setIdx + block.numberOfSets);
-                setIdx += block.numberOfSets;
-                if (block.exerciseType === exerciseFilter) {
-                    sessionReps += blockSets.reduce((sum, st) => sum + st.reps, 0);
-                }
-            }
-            totalReps += sessionReps;
-            if (sessionReps > bestReps) bestReps = sessionReps;
-        } else {
-            totalReps += s.reps;
-            if (s.reps > bestReps) bestReps = s.reps;
-        }
-    }
-
-    return {
-        totalXp,
-        totalReps,
-        sessionCount: sessions.length,
-        activeDays: activeDaysSet.size,
-        bestSession: bestReps, // best reps for the "best" KPI; we'll pick metric-based in render
-    };
-}
-
-/** Format a number compactly: 1234 → "1.2k" */
-function compactNum(n: number): string {
-    if (n >= 10_000) return `${(n / 1000).toFixed(1)}k`;
-    return n.toLocaleString();
-}
-
-/** Compute percentage change, capped at ±999 */
-function pctChange(current: number, previous: number): number | null {
-    if (previous === 0 && current === 0) return null;
-    if (previous === 0) return 100; // went from 0 → something = +100%
-    return Math.round(((current - previous) / previous) * 100);
-}
-
 // ── Swipe hook ──────────────────────────────────────────────────
-const SWIPE_THRESHOLD = 50; // px minimum distance to trigger
+const SWIPE_THRESHOLD = 50;
 
 function useSwipe(onSwipeLeft: () => void, onSwipeRight: () => void) {
     const touchStart = useRef<{ x: number; y: number } | null>(null);
@@ -111,10 +37,9 @@ function useSwipe(onSwipeLeft: () => void, onSwipeRight: () => void) {
         if (!touchStart.current || !touchEnd.current) return;
         const dx = touchEnd.current.x - touchStart.current.x;
         const dy = touchEnd.current.y - touchStart.current.y;
-        // Only trigger if horizontal movement > vertical (avoid scroll conflict)
         if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > SWIPE_THRESHOLD) {
-            if (dx < 0) onSwipeLeft();   // swipe left → next week
-            else onSwipeRight();          // swipe right → prev week
+            if (dx < 0) onSwipeLeft();
+            else onSwipeRight();
         }
         touchStart.current = null;
         touchEnd.current = null;
@@ -141,7 +66,6 @@ export function StatsScreen({ onClose }: StatsScreenProps) {
         () => exerciseFilter === 'all'
             ? sessions
             : sessions.filter(s => {
-                // Multi-exercise sessions: include if any block matches the filter
                 if (s.isMultiExercise && s.blocks) {
                     return s.blocks.some(b => b.exerciseType === exerciseFilter);
                 }
@@ -162,7 +86,6 @@ export function StatsScreen({ onClose }: StatsScreenProps) {
         [prevSessions, exerciseFilter],
     );
 
-    // Weekly summary KPIs + comparison with previous week
     const summary = useMemo(() => computeWeeklySummary(filteredSessions, exerciseFilter), [filteredSessions, exerciseFilter]);
     const prevSummary = useMemo(() => computeWeeklySummary(filteredPrevSessions, exerciseFilter), [filteredPrevSessions, exerciseFilter]);
 
@@ -173,14 +96,13 @@ export function StatsScreen({ onClose }: StatsScreenProps) {
 
     const hasActivity = filteredSessions.some(s => s.reps > 0);
 
-    // Swipe to navigate weeks
     const goPrev = useCallback(() => {
         if (!isPrevDisabled) setWeekOffset(w => w - 1);
     }, [isPrevDisabled]);
     const goNext = useCallback(() => {
         if (!isNextDisabled) setWeekOffset(w => w + 1);
     }, [isNextDisabled]);
-    const swipeHandlers = useSwipe(goNext, goPrev); // swipe left = next, swipe right = prev
+    const swipeHandlers = useSwipe(goNext, goPrev);
 
     return (
         <PageLayout title="Statistics" onClose={onClose} zIndex={200} bodyClassName="stats-body">
@@ -208,83 +130,39 @@ export function StatsScreen({ onClose }: StatsScreenProps) {
                         className={`stats-metric-btn${metric === 'xp' ? ' active' : ''}`}
                         onClick={() => setMetric('xp')}
                     >
-                        ⚡ XP
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
+                        XP
                     </button>
                     <button
                         type="button"
                         className={`stats-metric-btn${metric === 'reps' ? ' active' : ''}`}
                         onClick={() => setMetric('reps')}
                     >
-                        🔄 Reps
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10" /><polyline points="23 20 23 14 17 14" /><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" /></svg>
+                        Reps
                     </button>
+                    <div className="stats-metric-indicator" style={{ left: metric === 'xp' ? '4px' : 'calc(50% + 2px)' }} />
                 </div>
 
                 {/* Week chart section */}
                 <div className="stats-chart-section" {...swipeHandlers}>
-                    {/* Week navigation header */}
-                    <div className="stats-week-nav">
-                        <button
-                            type="button"
-                            className="btn-icon stats-nav-btn"
-                            onClick={() => setWeekOffset(w => w - 1)}
-                            disabled={isPrevDisabled}
-                            aria-label="Previous week"
-                        >
-                            ‹
-                        </button>
-                        <span className="stats-week-label">{formatWeekRange(weekOffset)}</span>
-                        <button
-                            type="button"
-                            className="btn-icon stats-nav-btn"
-                            onClick={() => setWeekOffset(w => w + 1)}
-                            disabled={isNextDisabled}
-                            aria-label="Next week"
-                        >
-                            ›
-                        </button>
-                    </div>
+                    <WeekNavigator
+                        currentWeekOffset={weekOffset}
+                        onPrev={() => setWeekOffset(w => w - 1)}
+                        onNext={() => setWeekOffset(w => w + 1)}
+                        weekLabel={formatWeekRange(weekOffset)}
+                        isPrevDisabled={isPrevDisabled}
+                        isNextDisabled={isNextDisabled}
+                    />
 
-                    {/* Weekly summary KPIs */}
                     {!loading && hasActivity && (
-                        <div className="stats-summary-grid">
-                            {(() => {
-                                const kpis: { emoji: string; label: string; value: string; change: number | null }[] = metric === 'xp'
-                                    ? [
-                                        { emoji: '⚡', label: 'XP', value: compactNum(summary.totalXp), change: pctChange(summary.totalXp, prevSummary.totalXp) },
-                                        { emoji: '🏆', label: 'Best', value: compactNum(Math.max(...filteredSessions.map(s => {
-                                            if (exerciseFilter !== 'all' && s.xpPerExercise) {
-                                                const m = s.xpPerExercise.find(e => e.exerciseType === exerciseFilter);
-                                                return m ? m.finalXp : 0;
-                                            }
-                                            return s.xpEarned ?? 0;
-                                        }))), change: null },
-                                    ]
-                                    : [
-                                        { emoji: '💪', label: 'Reps', value: compactNum(summary.totalReps), change: pctChange(summary.totalReps, prevSummary.totalReps) },
-                                        { emoji: '🏆', label: 'Best', value: compactNum(summary.bestSession), change: null },
-                                    ];
-
-                                kpis.push(
-                                    { emoji: '📋', label: 'Sessions', value: String(summary.sessionCount), change: pctChange(summary.sessionCount, prevSummary.sessionCount) },
-                                    { emoji: '🔥', label: 'Active', value: `${summary.activeDays}/7`, change: null },
-                                );
-
-                                return kpis.map(k => (
-                                    <div key={k.label} className="stats-kpi">
-                                        <span className="stats-kpi-emoji">{k.emoji}</span>
-                                        <span className="stats-kpi-value">
-                                            {k.value}
-                                            {k.change !== null && k.change !== 0 && (
-                                                <span className={`stats-kpi-change ${k.change > 0 ? 'up' : 'down'}`}>
-                                                    {k.change > 0 ? '↑' : '↓'}{Math.abs(k.change)}%
-                                                </span>
-                                            )}
-                                        </span>
-                                        <span className="stats-kpi-label">{k.label}</span>
-                                    </div>
-                                ));
-                            })()}
-                        </div>
+                        <KPIGrid
+                            summary={summary}
+                            prevSummary={prevSummary}
+                            filteredSessions={filteredSessions}
+                            exerciseFilter={exerciseFilter}
+                            metric={metric}
+                        />
                     )}
 
                     {/* Chart or empty state */}
@@ -298,20 +176,21 @@ export function StatsScreen({ onClose }: StatsScreenProps) {
                         </div>
                     ) : (
                         <div className="stats-empty-week">
-                            <span className="stats-empty-icon">🏖️</span>
-                            <p>{exerciseFilter === 'all' ? 'No activity this week' : 'No matching sessions'}</p>
+                            <span className="stats-empty-icon">{exerciseFilter === 'all' ? '🏖️' : '🔍'}</span>
+                            <p className="stats-empty-title">{weekOffset === 0 ? 'No activity yet this week' : 'Rest week'}</p>
+                            <p className="stats-empty-sub">{exerciseFilter === 'all' ? 'Complete a session to see your chart' : 'No matching sessions this week'}</p>
                         </div>
                     )}
                 </div>
 
                 </div>{/* end stats-fixed-top */}
 
-                {/* Titre fixe hors scroll */}
                 {(filteredSessions.length > 0 || !loading) && (
-                    <p className="stats-sessions-title">This week's sessions</p>
+                    <div className="stats-sessions-divider">
+                        <span>Sessions</span>
+                    </div>
                 )}
 
-                {/* Session list — seule zone scrollable */}
                 <div className="stats-sessions-scroll">
                     {filteredSessions.length > 0 ? (
                         <SessionHistoryPanel sessions={filteredSessions} />

@@ -39,7 +39,7 @@ const HIP_DEVIATION_TOLERANCE = 0.04;
 export class PushUpDetector extends BaseExerciseDetector {
     private angleHistory: number[] = [];
     private minAngleThisRep: number = 180;
-    private bestAlignmentThisRep: number = 0; // FIX: was 100, never updated
+    private bestAlignmentThisRep: number = -Infinity;
     private hasReachedValidDown = false;
     private lastRepTimestamp: number = 0;
 
@@ -71,7 +71,7 @@ export class PushUpDetector extends BaseExerciseDetector {
         super.reset();
         this.angleHistory = [];
         this.minAngleThisRep = 180;
-        this.bestAlignmentThisRep = 0;
+        this.bestAlignmentThisRep = -Infinity;
         this.hasReachedValidDown = false;
         this.lastRepTimestamp = 0;
         this.worstHipDeviation = 0;
@@ -251,12 +251,12 @@ export class PushUpDetector extends BaseExerciseDetector {
                 this.dynamicMinAngles.push(this.minAngleThisRep);
                 if (this.dynamicMinAngles.length <= DYNAMIC_CAPTURE_REPS) {
                     // Update captured dynamic min (best min across tracked reps)
-                    this._capturedRatios.dynamicMin = Math.min(...this.dynamicMinAngles);
+                    this._capturedRatios.dynamicCalibration = Math.min(...this.dynamicMinAngles);
                 }
 
                 // Reset for next rep
                 this.minAngleThisRep = 180;
-                this.bestAlignmentThisRep = 0;
+                this.bestAlignmentThisRep = -Infinity;
                 this.hasReachedValidDown = false;
                 this.worstHipDeviation = 0;
                 this.worstArmAsymmetry = 0;

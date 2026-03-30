@@ -1,4 +1,4 @@
-import { deleteUser } from 'firebase/auth';
+import { deleteUser, signOut } from 'firebase/auth';
 import {
     collection,
     deleteDoc,
@@ -96,7 +96,14 @@ export async function deleteCurrentAccount(): Promise<void> {
     // ── 7. Delete Firebase Auth account LAST ─────────────────────
     //       This revokes the token and triggers onAuthStateChanged(null),
     //       which clears localStorage and tears down Firestore listeners.
-    await deleteUser(user);
+    //       If deleteUser() fails (e.g. stale token despite re-auth),
+    //       we force sign-out so the user isn't stuck in a ghost session.
+    try {
+        await deleteUser(user);
+    } catch (authErr) {
+        console.warn('[deleteAccount] deleteUser failed, forcing sign-out:', authErr);
+        await signOut(auth);
+    }
 
     // ── 8. Belt-and-suspenders: clear localStorage ───────────────
     //       onAuthStateChanged handler also does this, but ensure it

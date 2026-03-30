@@ -39,6 +39,37 @@ $tier-silver: #c0c0c0;
 $tier-gold: #ffd700;
 $tier-platinum: #00e5ff;
 
+// Tier text colors (for readable text on tier backgrounds)
+$tier-bronze-text: $white;
+$tier-silver-text: #333;
+$tier-gold-text: #5a4000;
+$tier-platinum-text: #1a6a7a;
+
+// ── TIER MAP (for @each loops) ──────────────────────────────
+// Usage: @each $name, $color in $tiers { .tier-#{$name} { ... } }
+$tiers: (
+    'bronze': $tier-bronze,
+    'silver': $tier-silver,
+    'gold': $tier-gold,
+    'platinum': $tier-platinum,
+);
+
+$tier-texts: (
+    'bronze': $tier-bronze-text,
+    'silver': $tier-silver-text,
+    'gold': $tier-gold-text,
+    'platinum': $tier-platinum-text,
+);
+
+// ── GRADE COLORS MAP ────────────────────────────────────────
+$grades: (
+    's': $purple,
+    'a': $green,
+    'b': $blue,
+    'c': $amber,
+    'd': $red,
+);
+
 // ── COLORS — Surfaces & borders ─────────────────────────────
 $surface: rgba($accent, 0.08);
 $surface-hover: rgba($accent, 0.12);
@@ -93,6 +124,8 @@ $shadow-sm: 0 4px 12px rgba($black, 0.08);
 $shadow-md: 0 8px 24px rgba($black, 0.12);
 $shadow-card: 0 12px 40px rgba($black, 0.08);
 $shadow-modal: 0 20px 48px rgba($black, 0.18);
+$shadow-accent-sm: 0 2px 8px rgba($accent, 0.35);
+$shadow-accent-glow: 0 0 6px rgba($accent, 0.8), 0 0 12px rgba($accent, 0.4);
 
 // ── FONT SIZE SCALE ──────────────────────────────────────────
 $font-xs: 0.72rem;   // labels, captions

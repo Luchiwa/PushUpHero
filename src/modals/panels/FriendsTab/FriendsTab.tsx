@@ -1,227 +1,10 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef } from 'react';
 import './FriendsTab.scss';
 import { useFriends } from '@hooks/useFriends';
-import type { SearchResult, FriendRequest, Friend, OutgoingRequest } from '@hooks/useFriends';
-import { Avatar } from '@components/Avatar/Avatar';
-import { ENCOURAGE_COOLDOWN_MS } from '@lib/constants';
-
-// ── Sub-components ──────────────────────────────────────────────
-const ENCOURAGE_KEY = (uid: string) => `pushup_encourage_${uid}`;
-
-function useEncourageCooldown(friendUid: string) {
-    const getRemaining = useCallback(() => {
-        const last = parseInt(localStorage.getItem(ENCOURAGE_KEY(friendUid)) || '0', 10);
-        return Math.max(0, ENCOURAGE_COOLDOWN_MS - (Date.now() - last));
-    }, [friendUid]);
-    const [remaining, setRemaining] = useState(getRemaining);
-    const isActive = remaining > 0;
-
-    useEffect(() => {
-        if (!isActive) return;
-        const id = setInterval(() => {
-            const r = getRemaining();
-            setRemaining(r);
-            if (r <= 0) clearInterval(id);
-        }, 30_000);
-        return () => clearInterval(id);
-    }, [isActive, getRemaining]);
-
-    const markSent = () => {
-        localStorage.setItem(ENCOURAGE_KEY(friendUid), Date.now().toString());
-        setRemaining(ENCOURAGE_COOLDOWN_MS);
-    };
-
-    const minutesLeft = Math.ceil(remaining / 60_000);
-    return { onCooldown: remaining > 0, minutesLeft, markSent };
-}
-
-function FriendCard({ friend, onRemove, onEncourage }: {
-    friend: Friend;
-    onRemove: () => void;
-    onEncourage: () => Promise<void>;
-}) {
-    const { onCooldown, minutesLeft, markSent } = useEncourageCooldown(friend.uid);
-    const [sending, setSending] = useState(false);
-
-    const handleEncourage = async () => {
-        if (onCooldown || sending) return;
-        setSending(true);
-        await onEncourage();
-        markSent();
-        setSending(false);
-    };
-
-    return (
-        <div className="friend-card">
-            <Avatar photoURL={friend.photoURL} initials={friend.displayName} size={40} />
-            <div className="friend-info">
-                <span className="friend-name">
-                    {friend.displayName}
-                    {(friend.streak ?? 0) > 0 && (
-                        <span className="friend-streak">🔥 {friend.streak}</span>
-                    )}
-                </span>
-                <div className="friend-stats">
-                    <span>Lvl {friend.level}</span>
-                    <span className="friend-stats-dot">·</span>
-                    <span>{friend.totalReps} reps</span>
-                    <span className="friend-stats-dot">·</span>
-                    <span>{friend.totalSessions} sessions</span>
-                </div>
-            </div>
-            <div className="friend-card-actions">
-                <button
-                    type="button"
-                    className={`btn-encourage${onCooldown ? ' btn-encourage--cooldown' : ''}`}
-                    onClick={handleEncourage}
-                    disabled={onCooldown || sending}
-                    title={onCooldown ? `Send again in ${minutesLeft} min` : 'Send encouragement'}
-                    aria-label="Encourage"
-                >
-                    {sending ? <span className="btn-encourage-spinner">...</span> : '💪'}
-                </button>
-                <button type="button" className="btn-remove-friend" onClick={onRemove} title="Remove friend" aria-label="Remove friend">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                        <circle cx="9" cy="7" r="4"/>
-                        <line x1="23" y1="11" x2="17" y2="11"/>
-                    </svg>
-                </button>
-            </div>
-        </div>
-    );
-}
-
-function RequestCard({ request, onAccept, onDecline }: {
-    request: FriendRequest;
-    onAccept: () => void;
-    onDecline: () => void;
-}) {
-    const [loading, setLoading] = useState(false);
-
-    const handle = async (fn: () => void) => {
-        setLoading(true);
-        await fn();
-        setLoading(false);
-    };
-
-    return (
-        <div className="friend-card friend-card--request">
-            <Avatar photoURL={undefined} initials={request.fromUsername} size={40} />
-            <div className="friend-info">
-                <span className="friend-name">{request.fromUsername}</span>
-                <span className="friend-request-label">Wants to be your friend</span>
-            </div>
-            <div className="friend-request-actions">
-                <button
-                    type="button"
-                    className="btn-accept"
-                    disabled={loading}
-                    onClick={() => handle(onAccept)}
-                    title="Accept"
-                >✓</button>
-                <button
-                    type="button"
-                    className="btn-decline"
-                    disabled={loading}
-                    onClick={() => handle(onDecline)}
-                    title="Decline"
-                >✕</button>
-            </div>
-        </div>
-    );
-}
-
-function OutgoingRequestCard({ request, onCancel }: {
-    request: OutgoingRequest;
-    onCancel: () => void;
-}) {
-    const [loading, setLoading] = useState(false);
-
-    const handle = async (fn: () => void) => {
-        setLoading(true);
-        await fn();
-        setLoading(false);
-    };
-
-    return (
-        <div className="friend-card friend-card--outgoing">
-            <Avatar photoURL={undefined} initials={request.toUsername} size={40} />
-            <div className="friend-info">
-                <span className="friend-name">{request.toUsername}</span>
-                <span className="friend-pending-label">Request sent — awaiting reply</span>
-            </div>
-            <div className="friend-search-action">
-                <button
-                    type="button"
-                    className="btn-cancel-request"
-                    disabled={loading}
-                    onClick={() => handle(onCancel)}
-                >
-                    {loading ? '…' : 'Cancel'}
-                </button>
-            </div>
-        </div>
-    );
-}
-
-function SearchResultCard({ result, onSend, onCancel }: {
-    result: SearchResult;
-    onSend: () => void;
-    onCancel: () => void;
-}) {
-    const [loading, setLoading] = useState(false);
-
-    const handle = async (fn: () => void) => {
-        setLoading(true);
-        await fn();
-        setLoading(false);
-    };
-
-    return (
-        <div className="friend-card friend-card--search">
-            <Avatar photoURL={undefined} initials={result.displayName} size={40} />
-            <div className="friend-info">
-                <span className="friend-name">{result.displayName}</span>
-                <div className="friend-stats">
-                    <span>Lvl {result.level}</span>
-                    <span className="friend-stats-dot">·</span>
-                    <span>{result.totalReps} reps</span>
-                    <span className="friend-stats-dot">·</span>
-                    <span>{result.totalSessions} sessions</span>
-                </div>
-            </div>
-            <div className="friend-search-action">
-                {result.relation === 'friend' && (
-                    <span className="friend-badge friend-badge--already">Friends</span>
-                )}
-                {result.relation === 'request_sent' && (
-                    <button
-                        type="button"
-                        className="btn-cancel-request"
-                        disabled={loading}
-                        onClick={() => handle(onCancel)}
-                    >
-                        {loading ? '…' : 'Cancel'}
-                    </button>
-                )}
-                {result.relation === 'request_received' && (
-                    <span className="friend-badge friend-badge--incoming">Pending</span>
-                )}
-                {result.relation === 'none' && (
-                    <button
-                        type="button"
-                        className="btn-add-friend"
-                        disabled={loading}
-                        onClick={() => handle(onSend)}
-                    >
-                        {loading ? '…' : '+ Add'}
-                    </button>
-                )}
-            </div>
-        </div>
-    );
-}
+import type { SearchResult, Friend } from '@hooks/useFriends';
+import { FriendCard } from './FriendCard/FriendCard';
+import { RequestCard, OutgoingRequestCard } from './RequestCard/RequestCard';
+import { SearchResultCard } from './SearchResultCard/SearchResultCard';
 
 // ── Main FriendsTab ──────────────────────────────────────────────
 
@@ -321,7 +104,8 @@ export function FriendsTab() {
             {/* Incoming requests */}
             {incomingRequests.length > 0 && (
                 <div className="friends-section">
-                    <h3 className="friends-section-title">
+                    <h3 className="friends-section-title friends-section-title--accent">
+                        <span className="friends-section-title-dot" />
                         Friend requests
                         <span className="friends-badge">{incomingRequests.length}</span>
                     </h3>
@@ -356,12 +140,20 @@ export function FriendsTab() {
             {/* Friends list */}
             <div className="friends-section">
                 {friends.length === 0 && incomingRequests.length === 0 && outgoingRequests.length === 0 && !searchResult ? (
-                    <p className="friends-empty-msg">
-                        Search for a username above to add your first friend!
-                    </p>
+                    <div className="friends-empty-state">
+                        <span className="friends-empty-icon">👥</span>
+                        <p className="friends-empty-title">No allies yet</p>
+                        <p className="friends-empty-msg">Search for a username above to add your first training partner!</p>
+                    </div>
                 ) : friends.length > 0 ? (
                     <>
-                        <h3 className="friends-section-title">Friends — {friends.length}</h3>
+                        <h3 className="friends-section-title">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                            </svg>
+                            Allies — {friends.length}
+                        </h3>
                         {friends.map(f => (
                             <FriendCard
                                 key={f.uid}

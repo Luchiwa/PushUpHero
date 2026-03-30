@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import './AuthModal.scss';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, runTransaction } from 'firebase/firestore';
@@ -18,8 +18,17 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
     const [username, setUsername] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [closing, setClosing] = useState(false);
     const emailInputRef = useRef<HTMLInputElement>(null);
     const usernameInputRef = useRef<HTMLInputElement>(null);
+
+    const handleClose = useCallback(() => {
+        setClosing(true);
+    }, []);
+
+    const handleAnimationEnd = useCallback((e: React.AnimationEvent) => {
+        if (closing && e.currentTarget === e.target) onClose();
+    }, [closing, onClose]);
 
     // Focus on the appropriate first field when mode changes or modal opens
     useEffect(() => {
@@ -107,9 +116,12 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
     };
 
     return (
-        <div className="auth-modal-overlay">
-            <div className="auth-modal-card">
-                <button className="auth-close-btn" onClick={onClose}>×</button>
+        <div
+            className={`auth-modal-overlay${closing ? ' auth-modal-overlay--exit' : ''}`}
+            onAnimationEnd={handleAnimationEnd}
+        >
+            <div className={`auth-modal-card${closing ? ' auth-modal-card--exit' : ''}`}>
+                <button className="auth-close-btn" onClick={handleClose}>×</button>
 
                 <h2 className="auth-title">
                     {mode === 'register' ? 'Create an account' : 'Sign in'}

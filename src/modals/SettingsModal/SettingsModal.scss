@@ -3,14 +3,24 @@
 @use 'mixins' as *;
 
 .settings-overlay {
-    @include modal-overlay($z: 60);
+    @include modal-overlay($z: $z-sticky);
     padding: $spacing-md;
+    animation: overlay-fade-in 0.2s ease both;
+
+    &--exit {
+        animation: overlay-fade-out 0.2s ease both;
+    }
 }
 
 .settings-card {
     @include modal-card($width: 440px, $padding: 0);
     max-height: 90vh;
     overflow: hidden;
+    animation: modal-scale-in 0.25s $ease-out-back both;
+
+    &--exit {
+        animation: modal-scale-out 0.2s $ease-default both;
+    }
 }
 
 // ── Header ──────────────────────────────────────────────────────
@@ -110,16 +120,7 @@
     to   { opacity: 1; transform: translateY(0); }
 }
 
-// ── Form inputs ──────────────────────────────────────────────────
-.settings-form {
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-md;
-}
-
-// .input-group → defined in _forms.scss design system
-
-// ── Feedback messages ────────────────────────────────────────────
+// ── Feedback messages (shared by PasswordChangeSection & DeleteAccountSection) ─
 .settings-feedback {
     @include alert;
 
@@ -130,22 +131,6 @@
     &--success {
         @include alert($green);
         color: color.adjust($green, $lightness: -10%);
-    }
-}
-
-// ── Buttons ──────────────────────────────────────────────────────
-.settings-submit {
-    align-self: flex-start;
-}
-
-.settings-danger-desc {
-    font-size: 0.85rem;
-    color: $text-muted;
-    line-height: 1.5;
-    margin: 0;
-
-    strong {
-        color: $text;
     }
 }
 
