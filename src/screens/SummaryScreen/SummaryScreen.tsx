@@ -1,9 +1,8 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect } from 'react';
 import { getExerciseLabel } from '@exercises/types';
-import { useAuthCore, useLevel } from '@hooks/useAuth';
 import { useSoundEffect } from '@hooks/useSoundEffect';
+import { useModalClose } from '@hooks/shared/useModalClose';
 import { useWorkout } from '@app/WorkoutContext';
-import { AuthModal } from '@modals/AuthModal/AuthModal';
 import { getGradeLetter, getGradeClass, formatElapsedTime } from '@lib/constants';
 import type { AchievementDef } from '@lib/achievements';
 import { TIER_COLORS } from '@lib/achievements';
@@ -35,19 +34,8 @@ export function SummaryScreen({ newAchievements }: SummaryProps) {
     const sessionXp = lastSessionXp ?? undefined;
     const brokenRecords = lastSessionXp?.brokenRecords;
     const questCompleted = questCompletedThisSession;
-    const { user } = useAuthCore();
-    const { level } = useLevel();
     const { initAudio, playVictorySound } = useSoundEffect();
-    const [showPaywall, setShowPaywall] = useState(false);
-    const [closing, setClosing] = useState(false);
-
-    const handleContinue = useCallback(() => {
-        setClosing(true);
-    }, []);
-
-    const handleAnimationEnd = useCallback((e: React.AnimationEvent) => {
-        if (closing && e.currentTarget === e.target) handleReset();
-    }, [closing, handleReset]);
+    const { closing, handleClose: handleContinue, handleAnimationEnd } = useModalClose(handleReset);
 
     const isMultiSet = completedSets.length > 1;
 
@@ -65,13 +53,6 @@ export function SummaryScreen({ newAchievements }: SummaryProps) {
         initAudio();
         if (soundEnabled) playVictorySound();
     }, [goalReached, soundEnabled, initAudio, playVictorySound]);
-
-    useEffect(() => {
-        if (level >= 5 && !user && totalReps > 0) {
-            const timer = setTimeout(() => setShowPaywall(true), 1500);
-            return () => clearTimeout(timer);
-        }
-    }, [totalReps, level, user]);
 
     return (
         <div
@@ -247,15 +228,16 @@ export function SummaryScreen({ newAchievements }: SummaryProps) {
                 />
 
                 <div className="summary-actions">
-                    <button type="button" className="btn-primary" onClick={handleContinue} disabled={closing}>
+                    <button
+                        type="button"
+                        className="btn-primary"
+                        onClick={handleContinue}
+                        disabled={closing}
+                    >
                         🔁 Continue
                     </button>
                 </div>
             </div>
-
-            {showPaywall && (
-                <AuthModal onClose={() => setShowPaywall(false)} />
-            )}
 
             {/* Achievement toast queue (staggered pop-ins) */}
             {newAchievements && newAchievements.length > 0 && (

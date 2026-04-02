@@ -5,9 +5,8 @@ import {
 } from '@mediapipe/tasks-vision';
 import type { PoseLandmarkerResult } from '@mediapipe/tasks-vision';
 import type { Landmark } from '@exercises/types';
+import { isMobile } from '@lib/device';
 
-// Mobile browsers (Android/iOS) struggle with GPU delegate — use CPU there
-const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 // Cap detection at ~30fps on all platforms (saves CPU/GPU), 20fps on mobile
 const DETECTION_INTERVAL_MS = isMobile ? 50 : 33;
 

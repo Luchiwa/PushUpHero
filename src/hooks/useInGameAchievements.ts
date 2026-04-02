@@ -10,19 +10,14 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import type { ExerciseType, ExerciseState } from '@exercises/types';
 import type { AchievementDef } from '@lib/achievements';
 import { ACHIEVEMENTS } from '@lib/achievements';
-import type { AchievementMap } from '@lib/achievementEngine';
+import type { AchievementMap, UserStats } from '@lib/achievementEngine';
+import { getStatValue, isLiveStatKey } from '@lib/achievementEngine';
 import { useAuthCore } from './useAuth';
 import { playAchievementSound } from '@lib/soundEngine';
 import { getGuestAchievements, getGuestLifetimeReps } from '@lib/guestStatsStore';
 
-/** statKeys that change with every rep */
-const LIVE_STAT_KEYS = new Set([
-    'pushup_lifetime_reps', 'squat_lifetime_reps', 'pullup_lifetime_reps',
-    'pushup_session_reps', 'squat_session_reps', 'pullup_session_reps',
-]);
-
-/** Achievements that CAN be unlocked mid-session */
-const LIVE_ACHIEVEMENTS = ACHIEVEMENTS.filter(a => LIVE_STAT_KEYS.has(a.statKey));
+/** Achievements that CAN be unlocked mid-session (rep-based stat keys). */
+const LIVE_ACHIEVEMENTS = ACHIEVEMENTS.filter(a => isLiveStatKey(a.statKey));
 
 interface UseInGameAchievementsProps {
     exerciseType: ExerciseType;
@@ -74,8 +69,13 @@ export function useInGameAchievements({
         // Add current session reps to the lifetime count
         lifetimeReps[exerciseType] = (lifetimeReps[exerciseType] ?? 0) + totalSessionReps;
 
-        const sessionRepsByExercise: Partial<Record<ExerciseType, number>> = {
-            [exerciseType]: totalSessionReps,
+        // Build a lightweight UserStats with only the rep fields that change mid-session
+        const stats: UserStats = {
+            lifetimeRepsByExercise: lifetimeReps,
+            sessionRepsByExercise: { [exerciseType]: totalSessionReps },
+            totalSessions: 0, bestStreak: 0, friendsCount: 0,
+            totalEncouragementsSent: 0, sGradeCount: 0, sessionXp: 0,
+            globalLevel: 0, lifetimeTrainingTime: 0,
         };
 
         // Build already-unlocked map from either dbUser or localStorage
@@ -92,18 +92,7 @@ export function useInGameAchievements({
 
         for (const ach of LIVE_ACHIEVEMENTS) {
             if (alreadyUnlocked[ach.id]) continue;
-
-            let value = 0;
-            switch (ach.statKey) {
-                case 'pushup_lifetime_reps':  value = lifetimeReps.pushup ?? 0; break;
-                case 'squat_lifetime_reps':   value = lifetimeReps.squat ?? 0; break;
-                case 'pullup_lifetime_reps':  value = lifetimeReps.pullup ?? 0; break;
-                case 'pushup_session_reps':   value = sessionRepsByExercise.pushup ?? 0; break;
-                case 'squat_session_reps':    value = sessionRepsByExercise.squat ?? 0; break;
-                case 'pullup_session_reps':   value = sessionRepsByExercise.pullup ?? 0; break;
-            }
-
-            if (value >= ach.threshold) {
+            if (getStatValue(stats, ach) >= ach.threshold) {
                 newlyUnlocked.push(ach);
                 shownThisSessionRef.current.add(ach.id);
             }

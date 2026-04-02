@@ -1,12 +1,11 @@
-import type { User } from 'firebase/auth';
-import type { DbUser } from '@hooks/useAuth';
+import type { AppUser, DbUser } from '@hooks/useAuth';
 import { Avatar } from '@components/Avatar/Avatar';
 import './PlayerHUD.scss';
 
 const XP_SEG_IDS = ['s0','s1','s2','s3','s4','s5','s6','s7','s8','s9','s10','s11'];
 
 interface PlayerHUDProps {
-    user: User | null;
+    user: AppUser | null;
     dbUser: DbUser | null;
     tier: string;
     streak: number;

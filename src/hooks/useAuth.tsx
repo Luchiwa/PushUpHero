@@ -2,61 +2,21 @@
  * useAuth.tsx — Auth, Level, and Session contexts.
  *
  * Three separate contexts prevent unrelated re-renders:
- *   - AuthContext:    user, dbUser, loading, auth methods
- *   - LevelContext:   XP, level, per-exercise XP, guest XP
- *   - SessionContext: sessions list, session count
- *
- * useAuth() is a backward-compatible facade that merges all three.
- * Prefer the granular hooks (useAuthCore, useLevel, useSessions) in new code
- * to subscribe only to the data you need.
+ *   - AuthCoreContext: user, dbUser, loading, auth methods  → useAuthCore()
+ *   - LevelContext:    XP, level, per-exercise XP, guest XP → useLevel()
+ *   - SessionContext:  sessions list, session count          → useSessions()
  */
 import { createContext, useContext } from 'react';
-import type { User } from 'firebase/auth';
-import type { SessionRecord } from './useSessionHistory';
-import type { ExerciseType } from '@exercises/types';
-import type { BodyProfile } from '@lib/bodyProfile';
-import type { QuestProgress } from '@lib/quests';
-
-export type ExerciseXpMap = Partial<Record<ExerciseType, number>>;
-
-export interface DbUser {
-    uid: string;
-    displayName: string;
-    level: number;
-    totalXp: number;
-    /** @deprecated Legacy field — use totalXp */
-    totalReps?: number;
-    createdAt?: number;
-    photoURL?: string;
-    /** Base64 JPEG thumbnail (~96px) for instant avatar display */
-    photoThumb?: string;
-    streak?: number;
-    lastSessionDate?: string; // UTC date string YYYY-MM-DD
-    exerciseXp?: ExerciseXpMap;
-    exerciseLevels?: Partial<Record<ExerciseType, number>>;
-
-    // ── Achievements & Records ───────────────────────────────────────────
-    bestStreak?: number;
-    totalEncouragementsSent?: number;
-    sGradeCount?: number;
-    /** Lifetime reps per exercise (for achievement tracking) */
-    lifetimeReps?: Partial<Record<ExerciseType, number>>;
-    /** Cumulative training time in seconds (for achievements) */
-    lifetimeTrainingTime?: number;
-    /** Map of achievementId → unlock timestamp (millis) */
-    achievements?: Record<string, number>;
-    /** Personal records */
-    records?: import('@lib/achievementEngine').RecordsMap;
-    /** Body profile morphological ratios (captured during quests) */
-    bodyProfile?: BodyProfile;
-    /** Quest progress state */
-    questProgress?: QuestProgress;
-}
+import type { SessionRecord } from '@exercises/types';
+import type { ExerciseType, ExerciseXpMap } from '@exercises/types';
+export type { AppUser, DbUser } from '@lib/authTypes';
+export type { ExerciseXpMap } from '@exercises/types';
+import type { AppUser, DbUser } from '@lib/authTypes';
 
 // ── AuthContext (core auth only) ─────────────────────────────────
 
 export interface AuthCoreContextType {
-    user: User | null;
+    user: AppUser | null;
     dbUser: DbUser | null;
     loading: boolean;
     loginWithGoogle: () => Promise<void>;
@@ -100,14 +60,7 @@ export interface LevelContextType {
         progressPct: number;
     };
     addGuestXp: (globalXp: number, perExercise: { exerciseType: ExerciseType; xp: number }[]) => void;
-    // Backward-compat aliases
-    /** @deprecated Use totalXp */
-    totalLifetimeReps: number;
-    setTotalLifetimeReps: (xp: number) => void;
     setTotalXp: (xp: number) => void;
-    addGuestReps: (reps: number) => void;
-    repsIntoCurrentLevel: number;
-    repsNeededForNextLevel: number;
 }
 
 const LEVEL_DEFAULT: LevelContextType = {
@@ -122,12 +75,7 @@ const LEVEL_DEFAULT: LevelContextType = {
     getExerciseXp: () => 0,
     getExerciseLevelProgress: () => ({ level: 0, xp: 0, xpIntoLevel: 0, xpNeeded: 1, progressPct: 0 }),
     addGuestXp: () => {},
-    totalLifetimeReps: 0,
-    setTotalLifetimeReps: () => {},
     setTotalXp: () => {},
-    addGuestReps: () => {},
-    repsIntoCurrentLevel: 0,
-    repsNeededForNextLevel: 1,
 };
 
 export const LevelContext = createContext<LevelContextType>(LEVEL_DEFAULT);
@@ -160,17 +108,3 @@ export function useSessions() {
     return useContext(SessionContext);
 }
 
-// ── Backward-compatible merged type & hook ───────────────────────
-
-export type AuthContextType = AuthCoreContextType & LevelContextType & SessionContextType;
-
-/**
- * @deprecated Prefer useAuthCore(), useLevel(), or useSessions() for granular subscriptions.
- * useAuth() merges all three contexts — any change in any context triggers a re-render.
- */
-export function useAuth(): AuthContextType {
-    const authCore = useContext(AuthCoreContext);
-    const level = useContext(LevelContext);
-    const session = useContext(SessionContext);
-    return { ...authCore, ...level, ...session };
-}

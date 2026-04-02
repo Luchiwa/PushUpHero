@@ -1,9 +1,38 @@
 import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
 
+/** Compact inline fallback for granular error boundaries around sections/modals. */
+export function SectionErrorFallback({ onRetry }: { onRetry?: () => void }) {
+    return (
+        <div style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            justifyContent: 'center', padding: '2rem', textAlign: 'center',
+            color: '#1a1a1a', minHeight: '120px',
+        }}>
+            <p style={{ fontSize: '0.9rem', color: 'rgba(26,26,26,0.6)', marginBottom: '0.75rem' }}>
+                Something went wrong in this section.
+            </p>
+            {onRetry && (
+                <button
+                    type="button"
+                    onClick={onRetry}
+                    style={{
+                        padding: '0.5rem 1rem', background: '#ff7f00', color: '#fff',
+                        border: 'none', borderRadius: '8px', fontSize: '0.85rem',
+                        fontWeight: 600, cursor: 'pointer',
+                    }}
+                >
+                    Retry
+                </button>
+            )}
+        </div>
+    );
+}
+
 interface Props {
     children: ReactNode;
-    fallback?: ReactNode;
+    /** Custom fallback UI. Pass `"section"` for the compact inline fallback. */
+    fallback?: ReactNode | 'section';
 }
 
 interface State {
@@ -28,6 +57,9 @@ export class ErrorBoundary extends Component<Props, State> {
 
     render() {
         if (this.state.hasError) {
+            if (this.props.fallback === 'section') {
+                return <SectionErrorFallback onRetry={this.handleRetry} />;
+            }
             if (this.props.fallback) return this.props.fallback;
 
             return (

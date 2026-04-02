@@ -49,15 +49,6 @@ export const GRADE_THRESHOLDS: { min: number; letter: GradeLetter }[] = [
     { min: 45, letter: 'C' },
 ];
 
-// Keep in sync with semantic colors in _variables.scss
-const GRADE_COLORS: Record<GradeLetter, string> = {
-    S: '#a855f7', // $purple
-    A: '#22c55e', // $green
-    B: '#3b82f6', // $blue
-    C: '#f59e0b', // $amber
-    D: '#ef4444', // $red
-};
-
 export function getGradeLetter(score: number): GradeLetter {
     for (const { min, letter } of GRADE_THRESHOLDS) {
         if (score >= min) return letter;
@@ -65,14 +56,14 @@ export function getGradeLetter(score: number): GradeLetter {
     return 'D';
 }
 
+/** Grade color via CSS custom property (defined in _variables.scss). */
 export function getGradeColor(score: number): string {
-    return GRADE_COLORS[getGradeLetter(score)];
+    return `var(--grade-${getGradeLetter(score).toLowerCase()})`;
 }
 
 /** Translucent background color for a grade badge */
 export function getGradeBackground(score: number): string {
-    const color = GRADE_COLORS[getGradeLetter(score)];
-    return `${color}1a`; // ~10% opacity hex
+    return `color-mix(in srgb, var(--grade-${getGradeLetter(score).toLowerCase()}) 10%, transparent)`;
 }
 
 /** CSS class suffix for a grade letter (e.g. 'grade-s') */

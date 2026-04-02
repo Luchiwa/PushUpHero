@@ -9,6 +9,7 @@
  */
 
 import type { RepFeedback, ExerciseType } from '@exercises/types';
+import { EXERCISE_REGISTRY } from '@exercises/registry';
 import { speak } from './speechEngine';
 
 // ── Configuration ────────────────────────────────────────────────
@@ -44,31 +45,10 @@ const ENCOURAGEMENTS = [
     'Beast mode!',
 ];
 
-// ── Calibration guide phrases ────────────────────────────────────
-const CALIBRATION_PHRASES: Record<ExerciseType, string[]> = {
-    pushup: [
-        'Get in plank position',
-        'Place your phone to see your full body',
-        'Arms straight, body horizontal',
-    ],
-    squat: [
-        'Stand facing the camera',
-        'Step back so your full body is visible',
-        'Stand tall, feet shoulder width',
-    ],
-    pullup: [
-        'Hang from the bar',
-        'Let the camera see your full body',
-        'Arms fully extended',
-    ],
-};
-
-// ── Incomplete rep phrases ───────────────────────────────────────
-const INCOMPLETE_REP_PHRASES: Record<ExerciseType, string[]> = {
-    pushup: ['Go lower!', 'Deeper!', 'Full range of motion'],
-    squat:  ['Go deeper!', 'Lower!', 'Break parallel'],
-    pullup: ['Pull higher!', 'Chin over bar!', 'All the way up!'],
-};
+// Calibration & incomplete-rep phrases are defined in the exercise registry.
+// Local aliases for readability:
+const calibrationPhrasesFor = (type: ExerciseType) => EXERCISE_REGISTRY[type].calibrationPhrases;
+const incompleteRepPhrasesFor = (type: ExerciseType) => EXERCISE_REGISTRY[type].incompleteRepPhrases;
 
 // ── Internal state ───────────────────────────────────────────────
 let lastVocalTimestamp = 0;
@@ -145,7 +125,7 @@ export function speakCalibrationGuide(exerciseType: ExerciseType): string | null
     const now = Date.now();
     if (now - lastCalibrationVocalTimestamp < CALIBRATION_COOLDOWN_MS) return null;
 
-    const phrases = CALIBRATION_PHRASES[exerciseType];
+    const phrases = calibrationPhrasesFor(exerciseType);
     const phrase = phrases[calibrationPhraseIndex % phrases.length];
     calibrationPhraseIndex++;
     speak(phrase, { rate: 1.0, pitch: 1.05 }); // calm, instructional tone
@@ -163,7 +143,7 @@ export function processIncompleteRep(exerciseType: ExerciseType): string | null 
     const now = Date.now();
     if (now - lastVocalTimestamp < VOCAL_COOLDOWN_MS) return null;
 
-    const phrases = INCOMPLETE_REP_PHRASES[exerciseType];
+    const phrases = incompleteRepPhrasesFor(exerciseType);
     const idx = incompleteRepPhraseIndex[exerciseType] ?? 0;
     const phrase = phrases[idx % phrases.length];
     incompleteRepPhraseIndex[exerciseType] = idx + 1;

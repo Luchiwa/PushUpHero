@@ -10,23 +10,15 @@
 import { useState, useCallback } from 'react';
 import { useAuthCore } from './useAuth';
 import { levelFromTotalXp, totalXpForLevel } from '@lib/xpSystem';
-import type { ExerciseType } from '@exercises/types';
+import type { ExerciseType, ExerciseXpMap } from '@exercises/types';
 
-// ─── Re-export pure functions so existing imports keep working ────────────────
+// ─── Re-export pure functions & types so existing imports keep working ───────
 export { levelFromTotalXp, totalXpForLevel } from '@lib/xpSystem';
-
-// ─── Backward-compat aliases (used by userService, state machine, etc.) ──────
-/** @deprecated Use levelFromTotalXp — kept for call-site compat during migration */
-export const calculateLevelFromTotalReps = levelFromTotalXp;
-/** @deprecated Use totalXpForLevel — kept for call-site compat during migration */
-export const calculateTotalRepsForLevel = totalXpForLevel;
+export type { ExerciseXpMap } from '@exercises/types';
 
 // ─── LocalStorage keys (XP-based) ───────────────────────────────────────────
 const STORAGE_TOTAL_XP = 'pushup_hero_total_xp';
 const STORAGE_EXERCISE_XP = 'pushup_hero_exercise_xp';
-
-// ─── Types ───────────────────────────────────────────────────────────────────
-export type ExerciseXpMap = Partial<Record<ExerciseType, number>>;
 
 export function useLevelSystem() {
     const { user } = useAuthCore();
@@ -53,12 +45,6 @@ export function useLevelSystem() {
     const setExerciseXp = useCallback((map: ExerciseXpMap) => {
         setExerciseXpState(map);
     }, []);
-
-    // ── Backward-compat aliases ─────────────────────────────────────────────
-    /** @deprecated Alias for totalXp — used by old call sites */
-    const totalLifetimeReps = totalXp;
-    /** @deprecated Alias for setTotalXp — used by useSyncCloud wiring */
-    const setTotalLifetimeReps = setTotalXp;
 
     // ── Guest mode: add XP locally ──────────────────────────────────────────
     const addGuestXp = useCallback((globalXp: number, perExercise: { exerciseType: ExerciseType; xp: number }[]) => {
@@ -135,18 +121,5 @@ export function useLevelSystem() {
 
         // Guest mode
         addGuestXp,
-
-        // ── Backward-compat (used by existing call sites) ────────────────
-        totalLifetimeReps,
-        setTotalLifetimeReps,
-        /** @deprecated Use addGuestXp instead */
-        addGuestReps: (_reps: number) => {
-            // No-op: old rep-based guest add is replaced by XP-based flow.
-            // This stub exists so TypeScript doesn't break during migration.
-            console.warn('[useLevelSystem] addGuestReps is deprecated — use addGuestXp');
-        },
-        // Old field aliases for progress display
-        repsIntoCurrentLevel: xpIntoCurrentLevel,
-        repsNeededForNextLevel: xpNeededForNextLevel,
     };
 }

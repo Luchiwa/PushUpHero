@@ -381,11 +381,6 @@ export function isQuestGoalMet(
     return true;
 }
 
-/** Generate quest completion message */
-export function getQuestCompletionMessage(quest: QuestDef): string {
-    return `🎯 Quest Complete: ${quest.title} — +${quest.xpReward} XP!`;
-}
-
 /** Group quests by category for display */
 export function getQuestsByCategory(): Map<QuestCategory, QuestDef[]> {
     const map = new Map<QuestCategory, QuestDef[]>();

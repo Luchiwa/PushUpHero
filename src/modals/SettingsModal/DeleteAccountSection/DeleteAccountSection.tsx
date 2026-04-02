@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { GoogleAuthProvider, EmailAuthProvider, reauthenticateWithPopup, reauthenticateWithCredential } from 'firebase/auth';
 import { useAuthCore } from '@hooks/useAuth';
-import { deleteCurrentAccount } from '@hooks/useDeleteAccount';
+import { reauthenticateWithGoogle, reauthenticateWithEmail, translateAuthError } from '@lib/authService';
+import { deleteCurrentAccount } from '@lib/deleteAccount';
 import './DeleteAccountSection.scss';
 
 interface DeleteAccountSectionProps {
@@ -16,8 +16,8 @@ export function DeleteAccountSection({ onAccountDeleted }: DeleteAccountSectionP
     const [deleteError, setDeleteError] = useState('');
     const [deleteLoading, setDeleteLoading] = useState(false);
 
-    const isGoogleUser = user?.providerData.some(p => p.providerId === 'google.com') ?? false;
-    const isEmailUser = user?.providerData.some(p => p.providerId === 'password') ?? false;
+    const isGoogleUser = user?.providerIds.includes('google.com') ?? false;
+    const isEmailUser = user?.providerIds.includes('password') ?? false;
 
     const handleDeleteAccount = async () => {
         setDeleteError('');
@@ -27,33 +27,20 @@ export function DeleteAccountSection({ onAccountDeleted }: DeleteAccountSectionP
 
             // Force re-authentication so deleteUser never fails with requires-recent-login
             if (isGoogleUser) {
-                await reauthenticateWithPopup(user, new GoogleAuthProvider());
+                await reauthenticateWithGoogle();
             } else if (isEmailUser) {
                 if (!password) {
                     setDeleteError('Please enter your password to confirm deletion.');
                     setDeleteLoading(false);
                     return;
                 }
-                if (!user.email) {
-                    setDeleteError('No email found on this account.');
-                    setDeleteLoading(false);
-                    return;
-                }
-                const credential = EmailAuthProvider.credential(user.email, password);
-                await reauthenticateWithCredential(user, credential);
+                await reauthenticateWithEmail(password);
             }
 
             await deleteCurrentAccount();
             onAccountDeleted();
         } catch (err: unknown) {
-            const code = (err as { code?: string }).code;
-            if (code === 'auth/requires-recent-login') {
-                setDeleteError('Session expired. Please sign out and sign in again before deleting your account.');
-            } else if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
-                setDeleteError('Incorrect password. Please try again.');
-            } else {
-                setDeleteError((err as Error).message || 'An error occurred.');
-            }
+            setDeleteError(translateAuthError(err));
         } finally {
             setDeleteLoading(false);
         }

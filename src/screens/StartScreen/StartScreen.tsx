@@ -1,13 +1,16 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
 import { useAuthCore, useLevel } from '@hooks/useAuth';
 import { useSessions } from '@hooks/useAuth';
-import { AuthModal } from '@modals/AuthModal/AuthModal';
-import { ProfileModal } from '@modals/ProfileModal/ProfileModal';
-import { QuickSessionModal } from '@modals/QuickSessionModal/QuickSessionModal';
-import { StatsScreen } from '@screens/StatsScreen/StatsScreen';
 import { InstallBanner } from '@overlays/InstallBanner/InstallBanner';
-import { QuestsScreen } from '@screens/QuestsScreen/QuestsScreen';
+
+// Lazy-loaded modals/screens (only parsed when opened)
+const AuthModal = lazy(() => import('@modals/AuthModal/AuthModal').then(m => ({ default: m.AuthModal })));
+const ProfileModal = lazy(() => import('@modals/ProfileModal/ProfileModal').then(m => ({ default: m.ProfileModal })));
+const QuickSessionModal = lazy(() => import('@modals/QuickSessionModal/QuickSessionModal').then(m => ({ default: m.QuickSessionModal })));
+const StatsScreen = lazy(() => import('@screens/StatsScreen/StatsScreen').then(m => ({ default: m.StatsScreen })));
+const QuestsScreen = lazy(() => import('@screens/QuestsScreen/QuestsScreen').then(m => ({ default: m.QuestsScreen })));
 import { useWorkout } from '@app/WorkoutContext';
+import { getTier } from '@lib/xpSystem';
 import type { QuestDef, QuestProgress } from '@lib/quests';
 import { isQuestAccepted, QUEST_CATEGORY_META, getAvailableQuests } from '@lib/quests';
 import { PlayerHUD } from './PlayerHUD/PlayerHUD';
@@ -23,6 +26,9 @@ interface StartScreenProps {
     questProgress?: QuestProgress;
     userLevel?: number;
     onAcceptQuest?: (questId: string) => void;
+    /** When true, auto-open the AuthModal with quest-complete promo banner */
+    pendingSignupPrompt?: boolean;
+    onSignupPromptHandled?: () => void;
 }
 
 export function StartScreen({
@@ -32,6 +38,8 @@ export function StartScreen({
     questProgress,
     userLevel,
     onAcceptQuest,
+    pendingSignupPrompt,
+    onSignupPromptHandled,
 }: StartScreenProps) {
     const {
         exerciseType, changeExerciseType,
@@ -41,22 +49,30 @@ export function StartScreen({
     const { user, dbUser } = useAuthCore();
     const { level, totalXp, xpIntoCurrentLevel, xpNeededForNextLevel, levelProgressPct } = useLevel();
     const { totalSessionCount } = useSessions();
-    const [showAuthModal, setShowAuthModal] = useState(false);
+
+    // ── Single modal state (only one modal open at a time) ──────────
+    type ActiveModal =
+        | null
+        | { type: 'auth'; signupPromo?: boolean }
+        | { type: 'profile'; initialTab: 'friends' | 'feed' }
+        | { type: 'quests' }
+        | { type: 'quickSession' }
+        | { type: 'stats' };
+
     const isDeepLinkFriends = window.location.hash === '#friends';
-    const [showProfileModal, setShowProfileModal] = useState(isDeepLinkFriends);
-    const [profileInitialTab, setProfileInitialTab] = useState<'friends' | 'feed'>(isDeepLinkFriends ? 'friends' : 'feed');
-    const [showQuestsScreen, setShowQuestsScreen] = useState(false);
-    const [showQuickSession, setShowQuickSession] = useState(false);
-    const [showStats, setShowStats] = useState(false);
+    const [activeModal, setActiveModal] = useState<ActiveModal>(
+        isDeepLinkFriends ? { type: 'profile', initialTab: 'friends' } : null,
+    );
+    const closeModal = useCallback(() => setActiveModal(null), []);
 
     // Stats for the stats button
     const totalLifetimeReps = useMemo(() => {
         if (!dbUser?.lifetimeReps) return 0;
-        return Object.values(dbUser.lifetimeReps).reduce((sum, v) => sum + (v ?? 0), 0);
+        return Object.values(dbUser.lifetimeReps).reduce<number>((sum, v) => sum + (v ?? 0), 0);
     }, [dbUser?.lifetimeReps]);
 
-    // Tier based on level: bronze / silver / gold / diamond
-    const tier = level >= 35 ? 'diamond' : level >= 20 ? 'gold' : level >= 10 ? 'silver' : 'bronze';
+    // Tier based on level: bronze / silver / gold / platinum
+    const tier = getTier(level);
     const streak = dbUser?.streak ?? 0;
 
     // Clean up deep link hash after reading it
@@ -65,6 +81,14 @@ export function StartScreen({
             history.replaceState(null, '', window.location.pathname);
         }
     }, [isDeepLinkFriends]);
+
+    // Auto-open AuthModal with promo banner when guest just completed a quest
+    useEffect(() => {
+        if (pendingSignupPrompt) {
+            setActiveModal({ type: 'auth', signupPromo: true });
+            onSignupPromptHandled?.();
+        }
+    }, [pendingSignupPrompt, onSignupPromptHandled]);
 
     const isReady = isModelReady;
 
@@ -116,8 +140,8 @@ export function StartScreen({
                     xpIntoCurrentLevel={xpIntoCurrentLevel}
                     xpNeededForNextLevel={xpNeededForNextLevel}
                     levelProgressPct={levelProgressPct}
-                    onOpenProfile={() => setShowProfileModal(true)}
-                    onOpenAuth={() => setShowAuthModal(true)}
+                    onOpenProfile={() => setActiveModal({ type: 'profile', initialTab: 'feed' })}
+                    onOpenAuth={() => setActiveModal({ type: 'auth' })}
                 />
 
                 {/* ── Quest Hero Card ── */}
@@ -143,7 +167,7 @@ export function StartScreen({
                         allQuestsCompleted={!!allQuestsCompleted}
                         availableCount={availableCount}
                         completedCount={completedCount}
-                        onOpen={() => setShowQuestsScreen(true)}
+                        onOpen={() => setActiveModal({ type: 'quests' })}
                     />
                 )}
 
@@ -153,7 +177,7 @@ export function StartScreen({
                         streak={streak}
                         totalLifetimeReps={totalLifetimeReps}
                         totalSessionCount={totalSessionCount}
-                        onOpen={() => setShowStats(true)}
+                        onOpen={() => setActiveModal({ type: 'stats' })}
                     />
                 )}
 
@@ -173,7 +197,7 @@ export function StartScreen({
 
                 {/* ── Quick Session button ── */}
                 {onboardingDone && (
-                    <button type="button" className="btn-quick-session" onClick={() => setShowQuickSession(true)} disabled={!isReady}>
+                    <button type="button" className="btn-quick-session" onClick={() => setActiveModal({ type: 'quickSession' })} disabled={!isReady}>
                         ⚡ Quick Session
                     </button>
                 )}
@@ -186,36 +210,60 @@ export function StartScreen({
                 )}
             </div>
 
-            {showQuickSession && (
-                <QuickSessionModal
-                    onClose={() => setShowQuickSession(false)}
-                    isReady={isReady}
-                />
-            )}
+            <Suspense fallback={null}>
+                {activeModal?.type === 'quickSession' && (
+                    <QuickSessionModal onClose={closeModal} isReady={isReady} />
+                )}
 
-            {showStats && (
-                <StatsScreen onClose={() => setShowStats(false)} />
-            )}
+                {activeModal?.type === 'stats' && (
+                    <StatsScreen onClose={closeModal} />
+                )}
 
-            {showAuthModal && (
-                <AuthModal onClose={() => setShowAuthModal(false)} />
-            )}
+                {activeModal?.type === 'auth' && (
+                    <AuthModal
+                        onClose={closeModal}
+                        initialMode={activeModal.signupPromo ? 'register' : undefined}
+                        promoBanner={
+                            activeModal.signupPromo
+                                ? (
+                                    <>
+                                        <p className="auth-promo-title">
+                                            <span>🎉</span> Quest complete — don't lose your progress!
+                                        </p>
+                                        <ul className="auth-promo-perks">
+                                            <li className="auth-promo-perk">
+                                                <span className="perk-icon">💾</span>
+                                                Save your XP, level & stats forever
+                                            </li>
+                                            <li className="auth-promo-perk">
+                                                <span className="perk-icon">🏆</span>
+                                                Unlock achievements & leaderboards
+                                            </li>
+                                            <li className="auth-promo-perk">
+                                                <span className="perk-icon">📈</span>
+                                                Track your progress across devices
+                                            </li>
+                                        </ul>
+                                    </>
+                                )
+                                : undefined
+                        }
+                    />
+                )}
 
-            {showProfileModal && (
-                <ProfileModal
-                    initialTab={profileInitialTab}
-                    onClose={() => { setShowProfileModal(false); setProfileInitialTab('feed'); }}
-                />
-            )}
+                {activeModal?.type === 'profile' && (
+                    <ProfileModal initialTab={activeModal.initialTab} onClose={closeModal} />
+                )}
 
-            {showQuestsScreen && questProgress != null && (
-                <QuestsScreen
-                    onClose={() => setShowQuestsScreen(false)}
-                    questProgress={questProgress}
-                    userLevel={userLevel ?? 0}
-                    onAcceptQuest={onAcceptQuest}
-                />
-            )}
+                {activeModal?.type === 'quests' && questProgress != null && (
+                    <QuestsScreen
+                        onClose={closeModal}
+                        questProgress={questProgress}
+                        userLevel={userLevel ?? 0}
+                        onAcceptQuest={onAcceptQuest}
+                    />
+                )}
+            </Suspense>
         </div>
     );
 }

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { SearchResult } from '@hooks/useFriends';
 import { Avatar } from '@components/Avatar/Avatar';
-import { TierBadge, TIER_FROM_LEVEL } from '../TierBadge/TierBadge';
+import { getTier } from '@lib/xpSystem';
+import { TierBadge } from '../TierBadge/TierBadge';
 import './SearchResultCard.scss';
 
 export interface SearchResultCardProps {
@@ -19,7 +20,7 @@ export function SearchResultCard({ result, onSend, onCancel }: SearchResultCardP
         setLoading(false);
     };
 
-    const tier = TIER_FROM_LEVEL(result.level);
+    const tier = getTier(result.level);
 
     return (
         <div className={`friend-card friend-card--search tier-${tier}`}>

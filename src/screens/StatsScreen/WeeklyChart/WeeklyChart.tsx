@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import type { SessionRecord } from '@hooks/useSessionHistory';
+import type { SessionRecord } from '@exercises/types';
 import type { ExerciseType } from '@exercises/types';
 import './WeeklyChart.scss';
 

@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import type { Friend } from '@hooks/useFriends';
 import { Avatar } from '@components/Avatar/Avatar';
 import { ENCOURAGE_COOLDOWN_MS } from '@lib/constants';
-import { TierBadge, TIER_FROM_LEVEL } from '../TierBadge/TierBadge';
+import { getTier } from '@lib/xpSystem';
+import { TierBadge } from '../TierBadge/TierBadge';
 import './FriendCard.scss';
 
 const ENCOURAGE_KEY = (uid: string) => `pushup_encourage_${uid}`;
@@ -52,7 +53,7 @@ export function FriendCard({ friend, onRemove, onEncourage }: FriendCardProps) {
         setSending(false);
     };
 
-    const tier = TIER_FROM_LEVEL(friend.level);
+    const tier = getTier(friend.level);
 
     return (
         <div className={`friend-card tier-${tier}`}>

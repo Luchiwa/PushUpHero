@@ -14,13 +14,6 @@ import { getExerciseLabel, getExerciseEmoji, EXERCISE_TYPES } from '@exercises/t
 
 export type AchievementTier = 'bronze' | 'silver' | 'gold' | 'platinum';
 
-export const TIER_LABELS: Record<AchievementTier, string> = {
-    bronze: 'Bronze',
-    silver: 'Silver',
-    gold: 'Gold',
-    platinum: 'Platinum',
-};
-
 // Keep in sync with $tier-* in _variables.scss
 export const TIER_COLORS: Record<AchievementTier, string> = {
     bronze: '#cd7f32',
@@ -234,11 +227,6 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     ...encouragementsAchievements(),
     ...performanceAchievements(),
 ];
-
-/** Fast lookup by ID */
-export const ACHIEVEMENTS_BY_ID: Record<string, AchievementDef> = Object.fromEntries(
-    ACHIEVEMENTS.map(a => [a.id, a]),
-);
 
 /** Grouped by category (preserves insertion order) */
 export const ACHIEVEMENTS_BY_CATEGORY: Record<AchievementCategory, AchievementDef[]> = {

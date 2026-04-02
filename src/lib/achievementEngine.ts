@@ -9,8 +9,7 @@
  * @see ACHIEVEMENTS.md  for the full design document
  */
 
-import type { ExerciseType } from '@exercises/types';
-import type { SessionRecord } from '@hooks/useSessionHistory';
+import type { ExerciseType, SessionRecord } from '@exercises/types';
 import type { AchievementDef } from './achievements';
 import { ACHIEVEMENTS } from './achievements';
 import { getGradeLetter } from './constants';
@@ -99,19 +98,22 @@ export function evaluateAchievements(
 }
 
 /** Resolve the current value for an achievement's statKey */
-function getStatValue(stats: UserStats, ach: AchievementDef): number {
-    switch (ach.statKey) {
-        // Per-exercise lifetime reps
-        case 'pushup_lifetime_reps':  return stats.lifetimeRepsByExercise.pushup  ?? 0;
-        case 'squat_lifetime_reps':   return stats.lifetimeRepsByExercise.squat   ?? 0;
-        case 'pullup_lifetime_reps':  return stats.lifetimeRepsByExercise.pullup  ?? 0;
+export function getStatValue(stats: UserStats, ach: AchievementDef): number {
+    const key = ach.statKey;
 
-        // Per-exercise session reps (max ever seen, from records)
-        case 'pushup_session_reps':   return stats.sessionRepsByExercise.pushup  ?? 0;
-        case 'squat_session_reps':    return stats.sessionRepsByExercise.squat   ?? 0;
-        case 'pullup_session_reps':   return stats.sessionRepsByExercise.pullup  ?? 0;
+    // Per-exercise stats: `${exerciseType}_lifetime_reps` / `${exerciseType}_session_reps`
+    // Adding a new exercise requires zero changes here.
+    if (key.endsWith('_lifetime_reps')) {
+        const ex = key.replace('_lifetime_reps', '') as ExerciseType;
+        return stats.lifetimeRepsByExercise[ex] ?? 0;
+    }
+    if (key.endsWith('_session_reps')) {
+        const ex = key.replace('_session_reps', '') as ExerciseType;
+        return stats.sessionRepsByExercise[ex] ?? 0;
+    }
 
-        // Global stats
+    // Global stats
+    switch (key) {
         case 'totalSessions':              return stats.totalSessions;
         case 'bestStreak':                 return stats.bestStreak;
         case 'friendsCount':              return stats.friendsCount;
@@ -120,9 +122,13 @@ function getStatValue(stats: UserStats, ach: AchievementDef): number {
         case 'sessionXp':                return stats.sessionXp;
         case 'globalLevel':              return stats.globalLevel;
         case 'lifetimeTrainingTime':     return stats.lifetimeTrainingTime;
-
         default: return 0;
     }
+}
+
+/** Returns true if the statKey represents a value that changes mid-session (rep-based). */
+export function isLiveStatKey(statKey: string): boolean {
+    return statKey.endsWith('_lifetime_reps') || statKey.endsWith('_session_reps');
 }
 
 // ─── Compute progress for a single achievement ──────────────────────────────

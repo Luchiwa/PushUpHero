@@ -1,18 +1,15 @@
 import { deleteUser, signOut } from 'firebase/auth';
-import {
-    collection,
-    deleteDoc,
-    doc,
-    getDoc,
-    getDocs,
-    writeBatch,
-} from 'firebase/firestore';
+import { deleteDoc, getDoc, getDocs, writeBatch } from 'firebase/firestore';
 import { ref, deleteObject } from 'firebase/storage';
 import { auth, db, storage } from '@lib/firebase';
+import {
+    userRef, usernameRef,
+    friendsCol, friendRef, friendRequestRef, sentRequestRef,
+    sessionsCol, friendRequestsCol, sentRequestsCol, notificationsCol, activityFeedCol,
+} from '@lib/refs';
 
 /**
  * Deletes the current user's account and all associated Firestore data.
- * Mirrors the logic of scripts/cleanFirestore.js, using the client SDK.
  *
  * Strategy: clean Firestore & Storage FIRST (while we still have auth),
  * then delete the Firebase Auth account last (which revokes the token).
@@ -22,23 +19,22 @@ export async function deleteCurrentAccount(): Promise<void> {
     if (!user) throw new Error('No authenticated user');
 
     const uid = user.uid;
-    const userRef = doc(db, 'users', uid);
 
     // ── 1. Release username claim ────────────────────────────────
-    const userSnap = await getDoc(userRef);
+    const userSnap = await getDoc(userRef(uid));
     if (userSnap.exists()) {
         const displayName = userSnap.data().displayName;
         if (displayName) {
             const usernameKey = displayName.trim().toLowerCase();
-            await deleteDoc(doc(db, 'usernames', usernameKey));
+            await deleteDoc(usernameRef(usernameKey));
         }
     }
 
     // ── 2. Read cross-user references BEFORE deleting own data ───
     const [friendsSnap, sentSnap, receivedSnap] = await Promise.all([
-        getDocs(collection(userRef, 'friends')),
-        getDocs(collection(userRef, 'friendRequestsSent')),
-        getDocs(collection(userRef, 'friendRequests')),
+        getDocs(friendsCol(uid)),
+        getDocs(sentRequestsCol(uid)),
+        getDocs(friendRequestsCol(uid)),
     ]);
 
     // ── 3. Clean cross-user data ─────────────────────────────────
@@ -46,36 +42,35 @@ export async function deleteCurrentAccount(): Promise<void> {
 
     for (const friendDoc of friendsSnap.docs) {
         const friendUid = friendDoc.id;
-        const base = doc(db, 'users', friendUid);
-        crossBatch.delete(doc(collection(base, 'friends'), uid));
-        crossBatch.delete(doc(collection(base, 'friendRequests'), uid));
-        crossBatch.delete(doc(collection(base, 'friendRequestsSent'), uid));
+        crossBatch.delete(friendRef(friendUid, uid));
+        crossBatch.delete(friendRequestRef(friendUid, uid));
+        crossBatch.delete(sentRequestRef(friendUid, uid));
     }
 
     for (const sentDoc of sentSnap.docs) {
         const toUid = sentDoc.id;
-        crossBatch.delete(doc(collection(doc(db, 'users', toUid), 'friendRequests'), uid));
+        crossBatch.delete(friendRequestRef(toUid, uid));
     }
 
     for (const receivedDoc of receivedSnap.docs) {
         const fromUid = receivedDoc.id;
-        crossBatch.delete(doc(collection(doc(db, 'users', fromUid), 'friendRequestsSent'), uid));
+        crossBatch.delete(sentRequestRef(fromUid, uid));
     }
 
     await crossBatch.commit();
 
     // ── 4. Delete own subcollections ─────────────────────────────
-    const subcollections = [
-        'sessions',
-        'friends',
-        'friendRequests',
-        'friendRequestsSent',
-        'notifications',
-        'activityFeed',
-    ] as const;
+    const subcollectionRefs = [
+        sessionsCol(uid),
+        friendsCol(uid),
+        friendRequestsCol(uid),
+        sentRequestsCol(uid),
+        notificationsCol(uid),
+        activityFeedCol(uid),
+    ];
 
-    for (const sub of subcollections) {
-        const snap = await getDocs(collection(userRef, sub));
+    for (const colRef of subcollectionRefs) {
+        const snap = await getDocs(colRef);
         if (!snap.empty) {
             const batch = writeBatch(db);
             snap.docs.forEach(d => { batch.delete(d.ref); });
@@ -84,7 +79,7 @@ export async function deleteCurrentAccount(): Promise<void> {
     }
 
     // ── 5. Delete user profile document ─────────────────────────
-    await deleteDoc(userRef);
+    await deleteDoc(userRef(uid));
 
     // ── 6. Delete avatar from Storage (ignore if not found) ──────
     try {
@@ -94,10 +89,6 @@ export async function deleteCurrentAccount(): Promise<void> {
     }
 
     // ── 7. Delete Firebase Auth account LAST ─────────────────────
-    //       This revokes the token and triggers onAuthStateChanged(null),
-    //       which clears localStorage and tears down Firestore listeners.
-    //       If deleteUser() fails (e.g. stale token despite re-auth),
-    //       we force sign-out so the user isn't stuck in a ghost session.
     try {
         await deleteUser(user);
     } catch (authErr) {
@@ -106,7 +97,5 @@ export async function deleteCurrentAccount(): Promise<void> {
     }
 
     // ── 8. Belt-and-suspenders: clear localStorage ───────────────
-    //       onAuthStateChanged handler also does this, but ensure it
-    //       happens even if the handler fires asynchronously.
     localStorage.clear();
 }

@@ -1,8 +1,7 @@
 import { useState, useRef } from 'react';
-import { collection, query, where, orderBy, getDocs, limit } from 'firebase/firestore';
-import { db } from '@lib/firebase';
 import { useAuthCore } from './useAuth';
-import type { SessionRecord } from './useSessionHistory';
+import { getSessionsByDateRange, getOldestSessionDate } from '@data/sessionRepository';
+import type { SessionRecord } from '@exercises/types';
 
 /** Returns the Sunday 00:00:00.000 local time for a given weekOffset (0 = current week). */
 export function getWeekStart(weekOffset: number): Date {
@@ -69,36 +68,19 @@ export function useWeekSessions(): UseWeekSessionsReturn {
 
         setLoading(true);
 
-        const sessionsRef = collection(db, 'users', user.uid, 'sessions');
-
         // Fetch oldest session once to know how far back we can navigate
         if (!firstFetched.current) {
             firstFetched.current = true;
-            try {
-                const oldestSnap = await getDocs(
-                    query(sessionsRef, orderBy('date', 'asc'), limit(1))
-                );
-                if (!oldestSnap.empty) {
-                    setFirstSessionDate((oldestSnap.docs[0].data() as SessionRecord).date);
-                }
-            } catch {
-                // non-critical
-            }
+            getOldestSessionDate(user.uid)
+                .then(date => { if (date !== null) setFirstSessionDate(date); })
+                .catch(() => { /* non-critical */ });
         }
 
         const start = getWeekStart(weekOffset).getTime();
         const end = getWeekEnd(weekOffset).getTime();
 
         try {
-            const snap = await getDocs(
-                query(
-                    sessionsRef,
-                    where('date', '>=', start),
-                    where('date', '<=', end),
-                    orderBy('date', 'desc')
-                )
-            );
-            const result = snap.docs.map(d => d.data() as SessionRecord);
+            const result = await getSessionsByDateRange(user.uid, start, end);
             cache.current.set(weekOffset, result);
             setSessions(result);
         } catch (err) {
@@ -116,15 +98,7 @@ export function useWeekSessions(): UseWeekSessionsReturn {
             try {
                 const prevStart = getWeekStart(prevOffset).getTime();
                 const prevEnd = getWeekEnd(prevOffset).getTime();
-                const prevSnap = await getDocs(
-                    query(
-                        sessionsRef,
-                        where('date', '>=', prevStart),
-                        where('date', '<=', prevEnd),
-                        orderBy('date', 'desc')
-                    )
-                );
-                const prevResult = prevSnap.docs.map(d => d.data() as SessionRecord);
+                const prevResult = await getSessionsByDateRange(user.uid, prevStart, prevEnd);
                 cache.current.set(prevOffset, prevResult);
                 setPrevSessions(prevResult);
             } catch {

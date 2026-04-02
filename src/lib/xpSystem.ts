@@ -8,6 +8,7 @@
  */
 
 import type { ExerciseType, SetRecord } from '@exercises/types';
+import { EXERCISE_REGISTRY } from '@exercises/registry';
 import { getGradeLetter } from './constants';
 import type { GradeLetter } from './constants';
 
@@ -36,18 +37,17 @@ export function xpForRep(score: number): number {
 //   pushup  ×1.3  – full upper body, requires strict form, more demanding
 //   pullup  ×2.5  – bodyweight compound, very few people can do 20+
 
-export const EXERCISE_DIFFICULTY: Record<ExerciseType, number> = {
-    squat:  1.0,
-    pushup: 1.3,
-    pullup: 2.5,
-};
+/** Difficulty coefficients derived from the exercise registry. */
+export const EXERCISE_DIFFICULTY: Record<ExerciseType, number> = Object.fromEntries(
+    (Object.keys(EXERCISE_REGISTRY) as ExerciseType[]).map(t => [t, EXERCISE_REGISTRY[t].difficulty]),
+) as Record<ExerciseType, number>;
 
 /**
  * Returns the difficulty coefficient for a given exercise type.
  * Falls back to 1.0 for unknown types so new exercises are safe by default.
  */
 export function difficultyFor(type: ExerciseType): number {
-    return EXERCISE_DIFFICULTY[type] ?? 1.0;
+    return EXERCISE_REGISTRY[type]?.difficulty ?? 1.0;
 }
 
 // ─── Level curve ─────────────────────────────────────────────────────────────
@@ -78,6 +78,18 @@ export function levelFromTotalXp(totalXp: number): number {
         lvl++;
     }
     return lvl;
+}
+
+// ─── Tier (cosmetic rank) ───────────────────────────────────────────────────
+
+export type Tier = 'bronze' | 'silver' | 'gold' | 'platinum';
+
+/** Cosmetic rank tier derived from the player's level. */
+export function getTier(level: number): Tier {
+    if (level >= 35) return 'platinum';
+    if (level >= 20) return 'gold';
+    if (level >= 10) return 'silver';
+    return 'bronze';
 }
 
 // ─── Bonus multipliers ──────────────────────────────────────────────────────

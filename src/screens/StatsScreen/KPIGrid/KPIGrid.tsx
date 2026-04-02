@@ -1,4 +1,4 @@
-import type { SessionRecord } from '@hooks/useSessionHistory';
+import type { SessionRecord } from '@exercises/types';
 import type { MetricMode } from '../StatsScreen';
 import './KPIGrid.scss';
 

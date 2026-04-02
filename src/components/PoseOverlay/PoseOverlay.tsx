@@ -8,6 +8,7 @@
 import { useRef, useImperativeHandle, forwardRef, useEffect, memo } from 'react';
 import type { PoseLandmarkerResult } from '@mediapipe/tasks-vision';
 import type { ExerciseType } from '@exercises/types';
+import { EXERCISE_REGISTRY } from '@exercises/registry';
 
 // ── Fallback constants (used when OffscreenCanvas is unavailable) ──
 const POSE_CONNECTIONS: [number, number][] = [
@@ -16,11 +17,7 @@ const POSE_CONNECTIONS: [number, number][] = [
     [23, 25], [25, 27], [24, 26], [26, 28],
 ];
 
-const KEY_JOINTS_MAP: Record<ExerciseType, Set<number>> = {
-    pushup: new Set([11, 12, 13, 14, 15, 16, 23, 24]),
-    squat: new Set([11, 12, 23, 24, 25, 26, 27, 28]),
-    pullup: new Set([11, 12, 13, 14, 15, 16, 23, 24]),
-};
+// Key joints are defined in the exercise registry; worker keeps its own copy (Web Worker limitation).
 
 export interface PoseOverlayHandle {
     drawResult: (result: PoseLandmarkerResult, phase: string, isValidPosition: boolean) => void;
@@ -127,7 +124,7 @@ export const PoseOverlay = memo(forwardRef<PoseOverlayHandle, PoseOverlayProps>(
                     }
                 }
 
-                const keyJoints = KEY_JOINTS_MAP[exerciseTypeRef.current];
+                const keyJoints = EXERCISE_REGISTRY[exerciseTypeRef.current].keyJoints;
                 for (let i = 0; i < lms.length; i++) {
                     const lm = lms[i];
                     if (!lm) continue;

@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
-import type { Timestamp } from 'firebase/firestore';
-import { db } from '@lib/firebase';
 import { useAuthCore } from './useAuth';
+import { getRecentActivity } from '@data/activityRepository';
 import type { Friend } from './useFriends';
 import type { ExerciseType } from '@exercises/types';
 import { getExerciseLabel } from '@exercises/types';
@@ -117,32 +115,25 @@ export function useActivityFeed(friends: Friend[]) {
             const results = await Promise.all(
                 currentFriends.map(async (friend) => {
                     try {
-                        const ref = collection(db, 'users', friend.uid, 'activityFeed');
-                        const q = query(ref, orderBy('createdAt', 'desc'), limit(EVENTS_PER_FRIEND));
-                        const snap = await getDocs(q);
-
-                        return snap.docs.map((d): ActivityEvent => {
-                            const data = d.data();
-                            const ts = data.createdAt as Timestamp | null;
-                            return {
-                                id: d.id,
-                                uid: friend.uid,
-                                displayName: friend.displayName,
-                                photoURL: friend.photoURL,
-                                photoThumb: friend.photoThumb,
-                                type: 'session',
-                                reps: data.reps ?? 0,
-                                averageScore: data.averageScore ?? 0,
-                                sessionMode: data.sessionMode ?? 'reps',
-                                goalReps: data.goalReps ?? 0,
-                                elapsedTime: data.elapsedTime,
-                                numberOfSets: data.numberOfSets,
-                                exerciseType: data.exerciseType,
-                                isMultiExercise: data.isMultiExercise,
-                                blockSummaries: data.blockSummaries,
-                                createdAt: ts ? ts.toMillis() : Date.now(),
-                            };
-                        });
+                        const docs = await getRecentActivity(friend.uid, EVENTS_PER_FRIEND);
+                        return docs.map((d): ActivityEvent => ({
+                            id: d.id,
+                            uid: friend.uid,
+                            displayName: friend.displayName,
+                            photoURL: friend.photoURL,
+                            photoThumb: friend.photoThumb,
+                            type: 'session',
+                            reps: d.data.reps ?? 0,
+                            averageScore: d.data.averageScore ?? 0,
+                            sessionMode: d.data.sessionMode ?? 'reps',
+                            goalReps: d.data.goalReps ?? 0,
+                            elapsedTime: d.data.elapsedTime,
+                            numberOfSets: d.data.numberOfSets,
+                            exerciseType: d.data.exerciseType,
+                            isMultiExercise: d.data.isMultiExercise,
+                            blockSummaries: d.data.blockSummaries,
+                            createdAt: d.createdAtMs,
+                        }));
                     } catch {
                         // Skip friends whose data is inaccessible (Firestore rules)
                         return [];

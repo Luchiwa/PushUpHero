@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { isIos } from '@lib/device';
 
 export type InstallContext = 'android' | 'ios' | 'installed' | 'unsupported';
 
@@ -10,7 +11,7 @@ interface BeforeInstallPromptEvent extends Event {
 function getInitialContext(): InstallContext {
     if (typeof window === 'undefined') return 'unsupported';
     if (window.matchMedia('(display-mode: standalone)').matches) return 'installed';
-    if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) return 'ios';
+    if (isIos) return 'ios';
     return 'unsupported';
 }
 

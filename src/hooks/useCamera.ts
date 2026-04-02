@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { isMobile } from '@lib/device';
 
 export type FacingMode = 'user' | 'environment';
-
-const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
 interface UseCameraOptions {
     facingMode?: FacingMode;

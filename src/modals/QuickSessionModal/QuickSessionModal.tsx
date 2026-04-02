@@ -1,8 +1,8 @@
-import { useState, useCallback } from 'react';
 import { DragNumberPicker } from '@components/DragNumberPicker/DragNumberPicker';
 import { TimePicker } from '@components/TimePicker/TimePicker';
 import { ExercisePicker } from '@components/ExercisePicker/ExercisePicker';
 import { useWorkout } from '@app/WorkoutContext';
+import { useModalClose } from '@hooks/shared/useModalClose';
 import './QuickSessionModal.scss';
 
 interface QuickSessionModalProps {
@@ -19,21 +19,16 @@ export function QuickSessionModal({ onClose, isReady }: QuickSessionModalProps) 
         handleStart,
     } = useWorkout();
 
-    const [closing, setClosing] = useState(false);
-
-    const handleClose = useCallback(() => {
-        setClosing(true);
-    }, []);
-
-    const handleAnimationEnd = useCallback((e: React.AnimationEvent) => {
-        if (closing && e.currentTarget === e.target) onClose();
-    }, [closing, onClose]);
+    const { closing, handleClose, handleAnimationEnd } = useModalClose(onClose);
 
     return (
         <div
             className={`qs-overlay${closing ? ' qs-overlay--exit' : ''}`}
             onClick={handleClose}
             onAnimationEnd={handleAnimationEnd}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Quick Session"
         >
             <div className={`qs-card${closing ? ' qs-card--exit' : ''}`} onClick={e => e.stopPropagation()}>
                 <button type="button" className="qs-close-btn" onClick={handleClose}>×</button>

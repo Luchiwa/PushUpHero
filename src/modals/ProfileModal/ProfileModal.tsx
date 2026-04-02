@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useAuthCore, useLevel } from '@hooks/useAuth';
+import { getTier } from '@lib/xpSystem';
 import { Avatar } from '@components/Avatar/Avatar';
 import { useSessionHistory } from '@hooks/useSessionHistory';
 import { useFriends } from '@hooks/useFriends';
@@ -24,8 +25,7 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
     const { totalSessionCount } = useSessionHistory();
     const { friends, incomingRequests } = useFriends();
 
-    // Tier based on level (same logic as StartScreen HUD)
-    const tier = level >= 35 ? 'platinum' : level >= 20 ? 'gold' : level >= 10 ? 'silver' : 'bronze';
+    const tier = getTier(level);
     const streak = dbUser?.streak ?? 0;
 
     // XP bar: 12 segments (same as StartScreen HUD)
@@ -68,7 +68,7 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
 
     const memberSince = dbUser?.createdAt
         ? new Date(dbUser.createdAt).toLocaleDateString()
-        : new Date(user.metadata.creationTime ?? '').toLocaleDateString();
+        : '';
 
     return (
         <>

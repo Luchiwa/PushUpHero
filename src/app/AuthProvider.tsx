@@ -9,17 +9,16 @@
  */
 import { useState, useEffect, useMemo } from 'react';
 import { onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { auth, db, storage } from '@lib/firebase';
+import { auth } from '@lib/firebase';
+import { uploadAvatar as uploadAvatarService } from '@lib/avatarService';
+import { onUserProfile } from '@data/userRepository';
 import { AuthCoreContext, LevelContext, SessionContext } from '@hooks/useAuth';
-import type { DbUser, AuthCoreContextType, LevelContextType, SessionContextType } from '@hooks/useAuth';
+import type { AppUser, DbUser, AuthCoreContextType, LevelContextType, SessionContextType } from '@hooks/useAuth';
 import { useLevelSystem } from '@hooks/useLevelSystem';
 import { useNotifications } from '@hooks/useNotifications';
 import { useSyncCloud } from '@hooks/useSyncCloud';
 import { clearAllLocalStorage } from '@lib/clearLocalStorage';
-import { invalidateAvatarCache } from '@hooks/useAvatarCache';
-import type { SessionRecord } from '@hooks/useSessionHistory';
+import type { SessionRecord } from '@exercises/types';
 
 // ── Inner provider: Level + Sessions (mounts expensive hooks once) ──
 
@@ -90,15 +89,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             setUser(firebaseUser);
             if (firebaseUser) {
-                const userRef = doc(db, 'users', firebaseUser.uid);
-                unsubUserDoc = onSnapshot(userRef, (docSnap) => {
-                    if (docSnap.exists()) {
-                        setDbUser(docSnap.data() as DbUser);
-                    } else {
-                        setDbUser(null);
-                    }
-                    setLoading(false);
-                });
+                unsubUserDoc = onUserProfile(
+                    firebaseUser.uid,
+                    (data) => { setDbUser(data); setLoading(false); },
+                    () => { setDbUser(null); setLoading(false); },
+                );
             } else {
                 setDbUser(null);
                 setLoading(false);
@@ -125,37 +120,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const uploadAvatar = async (file: File) => {
         if (!user) throw new Error('Not authenticated');
-        const bitmap = await createImageBitmap(file);
-        const size = Math.min(512, bitmap.width, bitmap.height);
-        const canvas = document.createElement('canvas');
-        canvas.width = size;
-        canvas.height = size;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) throw new Error('Canvas 2D context unavailable');
-        const srcSize = Math.min(bitmap.width, bitmap.height);
-        const sx = (bitmap.width - srcSize) / 2;
-        const sy = (bitmap.height - srcSize) / 2;
-        ctx.drawImage(bitmap, sx, sy, srcSize, srcSize, 0, 0, size, size);
-        const blob = await new Promise<Blob>((resolve, reject) =>
-            canvas.toBlob((b) => { if (b) resolve(b); else reject(new Error('toBlob failed')); }, 'image/jpeg', 0.85)
-        );
-
-        // Generate base64 thumbnail (~96px) for instant display in Firestore
-        const thumbSize = 96;
-        const thumbCanvas = document.createElement('canvas');
-        thumbCanvas.width = thumbSize;
-        thumbCanvas.height = thumbSize;
-        const thumbCtx = thumbCanvas.getContext('2d')!;
-        thumbCtx.drawImage(bitmap, sx, sy, srcSize, srcSize, 0, 0, thumbSize, thumbSize);
-        const photoThumb = thumbCanvas.toDataURL('image/jpeg', 0.7);
-
-        const storageRef = ref(storage, `avatars/${user.uid}.jpg`);
-        await user.getIdToken(true);
-        await uploadBytes(storageRef, blob, { contentType: 'image/jpeg' });
-        const url = await getDownloadURL(storageRef);
-        if (dbUser?.photoURL) await invalidateAvatarCache(dbUser.photoURL);
-        await updateDoc(doc(db, 'users', user.uid), { photoURL: url, photoThumb });
-        setDbUser(prev => prev ? { ...prev, photoURL: url, photoThumb } : prev);
+        const { photoURL, photoThumb } = await uploadAvatarService(user.uid, file, dbUser?.photoURL);
+        setDbUser(prev => prev ? { ...prev, photoURL, photoThumb } : prev);
     };
 
     const logout = async () => {
@@ -163,9 +129,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // localStorage is cleared in the onAuthStateChanged handler above
     };
 
+    const appUser = useMemo<AppUser | null>(() =>
+        user ? { uid: user.uid, providerIds: user.providerData.map(p => p.providerId) } : null,
+    [user]);
+
     const authCoreValue = useMemo<AuthCoreContextType>(() => ({
-        user, dbUser, loading, loginWithGoogle, logout, uploadAvatar,
-    }), [user, dbUser, loading]);
+        user: appUser, dbUser, loading, loginWithGoogle, logout, uploadAvatar,
+    }), [appUser, dbUser, loading]);
 
     return (
         <AuthCoreContext.Provider value={authCoreValue}>

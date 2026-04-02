@@ -1,29 +1,7 @@
 import { useEffect, useCallback, useRef } from 'react';
-import {
-    collection, query, where, onSnapshot,
-    deleteDoc, doc, updateDoc,
-} from 'firebase/firestore';
-import { db, getFcmToken } from '@lib/firebase';
+import { onUnreadNotifications } from '@data/notificationRepository';
+import { registerFcmToken, dismissNotification } from '@lib/notificationService';
 import { useAuthCore } from './useAuth';
-
-export interface AppNotification {
-    id: string;
-    type: 'encouragement' | 'friend_request';
-    fromUid: string;
-    fromUsername: string;
-    sentAt: number;
-    read: boolean;
-}
-
-// ─── Register FCM token in Firestore ─────────────────────────────────────────
-
-async function registerFcmToken(uid: string): Promise<void> {
-    const token = await getFcmToken();
-    if (!token) return;
-    await updateDoc(doc(db, 'users', uid), { fcmToken: token });
-}
-
-// ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useNotifications() {
     const { user } = useAuthCore();
@@ -50,31 +28,17 @@ export function useNotifications() {
     }, [user]);
 
     // 2. While app is open: listen for unread notifications and delete them.
-    //    Push display is handled exclusively by FCM → Service Worker.
-    //    This listener only cleans up the Firestore document so it doesn't
-    //    pile up. We skip docs older than 30s to avoid mass-deleting on
-    //    initial snapshot load (those will be purged by the daily Cloud Function).
     useEffect(() => {
         if (!user) return;
 
-        const notifRef = collection(db, 'users', user.uid, 'notifications');
-        const unreadQuery = query(notifRef, where('read', '==', false));
+        const unsub = onUnreadNotifications(user.uid, async (change) => {
+            const data = change.doc.data();
+            const sentAt = data.sentAt?.toMillis?.() ?? data.sentAt ?? 0;
+            const age = Date.now() - sentAt;
 
-        const unsub = onSnapshot(unreadQuery, async snap => {
-            for (const change of snap.docChanges()) {
-                if (change.type !== 'added') continue;
-
-                const data = change.doc.data();
-                const sentAt = data.sentAt?.toMillis?.() ?? data.sentAt ?? 0;
-                const age = Date.now() - sentAt;
-
-                // Only auto-delete fresh notifications (< 30s)
-                // Older ones are left for the daily server-side purge
-                if (age < 30_000) {
-                    await deleteDoc(
-                        doc(db, 'users', user.uid, 'notifications', change.doc.id),
-                    );
-                }
+            // Only auto-delete fresh notifications (< 30s)
+            if (age < 30_000) {
+                await dismissNotification(user.uid, change.doc.id);
             }
         });
 

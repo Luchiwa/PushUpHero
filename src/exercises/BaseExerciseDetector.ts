@@ -1,5 +1,6 @@
 import type { ExerciseState, Landmark, RepFeedback } from './types';
 import type { BodyProfile } from '@lib/bodyProfile';
+import { CALIBRATION_FRAMES_REQUIRED } from '@lib/constants';
 
 // ── Captured Ratios ──────────────────────────────────────────────
 // Detectors populate these during calibration + first reps.
@@ -24,9 +25,6 @@ export interface CapturedRatios {
 }
 
 // ── Bounding Box Lock ────────────────────────────────────────────
-// After calibration, the detector locks onto the user's body region.
-// Subsequent frames whose bounding box deviates too far are rejected,
-// preventing passers-by (e.g. in a gym) from hijacking the session.
 
 /** Tolerance for center drift (fraction of frame). */
 const BBOX_CENTER_TOLERANCE = 0.25;
@@ -37,6 +35,11 @@ const BBOX_ADAPT_AFTER_FRAMES = 90;
 /** How much the lock drifts toward the current bbox per adaptation step. */
 const BBOX_ADAPT_RATE = 0.05;
 
+/** Number of frames to smooth the angle signal */
+const SMOOTHING_WINDOW = 5;
+/** Number of reps to capture for dynamic calibration */
+const DYNAMIC_CAPTURE_REPS = 5;
+
 interface BoundingBox {
     centerX: number;
     centerY: number;
@@ -46,14 +49,29 @@ interface BoundingBox {
 
 /**
  * Abstract base class for all exercise detectors.
- * Extend this class to implement push-ups, squats, pull-ups, etc.
+ * Provides shared state management, angle smoothing, calibration orchestration,
+ * bounding box lock, and rep tracking.
  */
 export abstract class BaseExerciseDetector {
     protected state: ExerciseState;
     protected _bodyProfile: BodyProfile | null = null;
     protected _capturedRatios: CapturedRatios = {};
 
-    // ── Bounding Box Lock state ──────────────────────────────────
+    // ── Angle smoothing ─────────────────────────────────────────
+    private _angleHistory: number[] = [];
+
+    // ── Calibration ─────────────────────────────────────────────
+    protected calibrationFrameCount = 0;
+
+    // ── Rep tracking (common across all detectors) ──────────────
+    protected minAngleThisRep = 180;
+    protected bestAlignmentThisRep = -Infinity;
+    protected hasReachedValidDown = false;
+    protected lastRepTimestamp = 0;
+    protected wasDescending = false;
+    private _dynamicValues: number[] = [];
+
+    // ── Bounding Box Lock state ─────────────────────────────────
     private lockedBbox: BoundingBox | null = null;
     private bboxRejectStreak = 0;
 
@@ -76,16 +94,20 @@ export abstract class BaseExerciseDetector {
         };
     }
 
-    /**
-     * Process a new pose frame. Returns updated exercise state.
-     */
+    /** Process a new pose frame. Returns updated exercise state. */
     abstract processPose(landmarks: Landmark[]): ExerciseState;
 
-    /**
-     * Reset all state (called on "Try Again").
-     */
+    /** Reset all state (called on "Try Again"). */
     reset(): void {
         this.state = this.initialState();
+        this._angleHistory = [];
+        this.calibrationFrameCount = 0;
+        this.minAngleThisRep = 180;
+        this.bestAlignmentThisRep = -Infinity;
+        this.hasReachedValidDown = false;
+        this.lastRepTimestamp = 0;
+        this.wasDescending = false;
+        this._dynamicValues = [];
         this.lockedBbox = null;
         this.bboxRejectStreak = 0;
     }
@@ -104,21 +126,114 @@ export abstract class BaseExerciseDetector {
         return { ...this._capturedRatios };
     }
 
-    // ── Bounding Box Lock API ────────────────────────────────────
+    // ── Angle Smoothing ─────────────────────────────────────────
 
     /**
-     * Compute a bounding box from the visible landmarks.
-     * Uses shoulder + hip landmarks as the core body region.
-     * Falls back to all landmarks if core ones aren't available.
+     * Compute a smoothed joint angle from left/right measurements.
+     * Selects the more visible side (or averages if equal), then applies
+     * a sliding-window smooth.
      */
+    protected smoothAngle(
+        leftAngle: number, rightAngle: number,
+        leftVis: number, rightVis: number,
+    ): number {
+        let angle: number;
+        if (leftVis > rightVis) angle = leftAngle;
+        else if (rightVis > leftVis) angle = rightAngle;
+        else angle = (leftAngle + rightAngle) / 2;
+
+        this._angleHistory.push(angle);
+        if (this._angleHistory.length > SMOOTHING_WINDOW) this._angleHistory.shift();
+        return this._angleHistory.reduce((s, v) => s + v, 0) / this._angleHistory.length;
+    }
+
+    // ── Calibration Orchestration ───────────────────────────────
+
+    /**
+     * Track calibration progress. Call each frame with whether the current
+     * position is valid for calibration.
+     *
+     * @param isPositionValid  Exercise-specific positional check
+     * @param hasExistingProfile  If true, calibration completes 2× faster
+     * @returns `'collecting'` while gathering frames, `'completed'` on the
+     *          frame that hits the threshold, `'invalid'` if position lost.
+     */
+    protected updateCalibrationProgress(
+        isPositionValid: boolean,
+        hasExistingProfile: boolean,
+    ): 'collecting' | 'completed' | 'invalid' {
+        if (!isPositionValid) {
+            this.calibrationFrameCount = 0;
+            this.state.calibratingPercentage = 0;
+            this.state.isValidPosition = false;
+            return 'invalid';
+        }
+
+        this.calibrationFrameCount++;
+        const framesNeeded = hasExistingProfile
+            ? Math.round(CALIBRATION_FRAMES_REQUIRED / 2)
+            : CALIBRATION_FRAMES_REQUIRED;
+        this.state.calibratingPercentage = Math.min(
+            100,
+            Math.round((this.calibrationFrameCount / framesNeeded) * 100),
+        );
+
+        if (this.calibrationFrameCount >= framesNeeded) {
+            this.state.isCalibrated = true;
+            this.state.isValidPosition = true;
+            return 'completed';
+        }
+        return 'collecting';
+    }
+
+    // ── Post-Calibration Guards ─────────────────────────────────
+
+    /**
+     * Run standard post-calibration checks: bounding box lock + landmark visibility.
+     * Sets `isValidPosition = false` and returns `false` if the frame should be skipped.
+     */
+    protected checkPostCalibrationGuards(landmarks: Landmark[], keyIndices: number[]): boolean {
+        if (!this.isWithinLockedRegion(landmarks)) {
+            this.state.isValidPosition = false;
+            return false;
+        }
+        if (!this.areLandmarksVisible(landmarks, keyIndices, 0.4)) {
+            this.state.isValidPosition = false;
+            return false;
+        }
+        return true;
+    }
+
+    // ── Rep Tracking ────────────────────────────────────────────
+
+    /** Reset per-rep tracking state after a rep is recorded. */
+    protected resetRepTracking(): void {
+        this.minAngleThisRep = 180;
+        this.bestAlignmentThisRep = -Infinity;
+        this.hasReachedValidDown = false;
+    }
+
+    /**
+     * Capture a dynamic calibration value (first N reps).
+     * @param value  The metric to capture (min angle for pushup/squat, max rise for pullup)
+     * @param mode   `'min'` to keep the smallest, `'max'` to keep the largest
+     */
+    protected captureDynamicCalibration(value: number, mode: 'min' | 'max'): void {
+        this._dynamicValues.push(value);
+        if (this._dynamicValues.length <= DYNAMIC_CAPTURE_REPS) {
+            this._capturedRatios.dynamicCalibration =
+                mode === 'min' ? Math.min(...this._dynamicValues) : Math.max(...this._dynamicValues);
+        }
+    }
+
+    // ── Bounding Box Lock ───────────────────────────────────────
+
     protected computeBoundingBox(landmarks: Landmark[]): BoundingBox {
-        // Core body landmarks: shoulders + hips (always visible for any exercise)
-        const coreIndices = [11, 12, 23, 24]; // L/R shoulder, L/R hip
+        const coreIndices = [11, 12, 23, 24];
         const coreLandmarks = coreIndices
             .map(i => landmarks[i])
             .filter(lm => lm && (lm.visibility ?? 0) > 0.3);
 
-        // If we have core landmarks, use them; otherwise fall back to all visible
         const pts = coreLandmarks.length >= 3
             ? coreLandmarks
             : landmarks.filter(lm => lm && (lm.visibility ?? 0) > 0.3);
@@ -143,24 +258,11 @@ export abstract class BaseExerciseDetector {
         };
     }
 
-    /**
-     * Lock the bounding box at the end of calibration.
-     * Call this from subclasses when `isCalibrated` flips to true.
-     */
     protected lockBoundingBox(landmarks: Landmark[]): void {
         this.lockedBbox = this.computeBoundingBox(landmarks);
         this.bboxRejectStreak = 0;
     }
 
-    /**
-     * Check whether the current landmarks fall within the locked region.
-     * If they don't match, sets `poseRejectedByLock = true` and returns false.
-     * If no lock is active (pre-calibration), always returns true.
-     *
-     * Also implements slow drift adaptation: if the lock has been rejecting
-     * for many consecutive frames, it nudges slightly toward the new bbox
-     * to handle gradual repositioning (e.g. user shifting on their mat).
-     */
     protected isWithinLockedRegion(landmarks: Landmark[]): boolean {
         this.state.poseRejectedByLock = false;
 
@@ -169,12 +271,10 @@ export abstract class BaseExerciseDetector {
         const current = this.computeBoundingBox(landmarks);
         const locked = this.lockedBbox;
 
-        // Check center drift
         const dCenterX = Math.abs(current.centerX - locked.centerX);
         const dCenterY = Math.abs(current.centerY - locked.centerY);
         const centerOk = dCenterX < BBOX_CENTER_TOLERANCE && dCenterY < BBOX_CENTER_TOLERANCE;
 
-        // Check size change (relative to locked size)
         const widthRatio = locked.width > 0 ? current.width / locked.width : 1;
         const heightRatio = locked.height > 0 ? current.height / locked.height : 1;
         const sizeOk =
@@ -182,7 +282,6 @@ export abstract class BaseExerciseDetector {
             heightRatio > (1 - BBOX_SIZE_TOLERANCE) && heightRatio < (1 + BBOX_SIZE_TOLERANCE);
 
         if (centerOk && sizeOk) {
-            // Match — slowly adapt the lock to track minor drift
             this.bboxRejectStreak = 0;
             const a = BBOX_ADAPT_RATE;
             this.lockedBbox = {
@@ -194,14 +293,11 @@ export abstract class BaseExerciseDetector {
             return true;
         }
 
-        // Mismatch — reject this frame
         this.bboxRejectStreak++;
         this.state.poseRejectedByLock = true;
 
-        // If rejected for a long time, the user may have legitimately moved.
-        // Nudge the lock slowly to avoid permanent lock-out.
         if (this.bboxRejectStreak > BBOX_ADAPT_AFTER_FRAMES) {
-            const a = BBOX_ADAPT_RATE * 0.5; // slower adaptation during rejection
+            const a = BBOX_ADAPT_RATE * 0.5;
             this.lockedBbox = {
                 centerX: locked.centerX * (1 - a) + current.centerX * a,
                 centerY: locked.centerY * (1 - a) + current.centerY * a,
@@ -213,9 +309,8 @@ export abstract class BaseExerciseDetector {
         return false;
     }
 
-    /**
-     * Utility: compute angle (degrees) at joint B given points A-B-C.
-     */
+    // ── Utilities ────────────────────────────────────────────────
+
     protected computeAngle(a: Landmark, b: Landmark, c: Landmark): number {
         const radians =
             Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
@@ -224,11 +319,6 @@ export abstract class BaseExerciseDetector {
         return angle;
     }
 
-    /**
-     * Utility: check that key landmarks have sufficient visibility.
-     * MediaPipe hallucinates positions for off-screen body parts with
-     * low visibility scores — we must reject those frames.
-     */
     protected areLandmarksVisible(landmarks: Landmark[], indices: number[], minVisibility = 0.5): boolean {
         for (const idx of indices) {
             const lm = landmarks[idx];
@@ -237,9 +327,6 @@ export abstract class BaseExerciseDetector {
         return true;
     }
 
-    /**
-     * Utility: record a rep result and update running average.
-     */
     protected recordRep(score: number, amplitudeScore: number, alignmentScore: number, minAngle: number, feedback: RepFeedback = 'good'): void {
         const repResult = { score, amplitudeScore, alignmentScore, minAngle, feedback };
         this.state.repHistory.push(repResult);

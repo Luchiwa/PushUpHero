@@ -18,20 +18,15 @@ $accent-dark: #e67300;
 
 // ── COLORS — Semantic ────────────────────────────────────────
 $green: #22c55e;
-$green-light: #4ade80;
 $green-dark: #16a34a;
 $amber: #f59e0b;
 $amber-light: #fbbf24;
 $amber-dark: #d97706;
 $red: #ef4444;
-$red-light: #fca5a5;
 $blue: #3b82f6;
 $purple: #a855f7;
 $indigo: #6366f1;
 $magenta: #e040fb;
-$cyan: #a5f3fc;
-$cyan-glow: rgba(34, 211, 238, 0.8);
-
 // ── COLORS — Tier palette ────────────────────────────────────
 // Must stay in sync with TIER_COLORS in lib/achievements.ts
 $tier-bronze: #cd7f32;
@@ -120,7 +115,6 @@ $transition: 0.3s $ease-default;
 $transition-fast: 0.15s ease;
 
 // ── SHADOW TOKENS ────────────────────────────────────────────
-$shadow-sm: 0 4px 12px rgba($black, 0.08);
 $shadow-md: 0 8px 24px rgba($black, 0.12);
 $shadow-card: 0 12px 40px rgba($black, 0.08);
 $shadow-modal: 0 20px 48px rgba($black, 0.18);
@@ -161,6 +155,12 @@ $gradient-green: linear-gradient(135deg, $green, $green-dark);
     --blue: #{$blue};
     --purple: #{$purple};
     --indigo: #{$indigo};
+
+    // Grade colors (single source of truth — also consumed by JS via var())
+    @each $letter, $color in $grades {
+        --grade-#{$letter}: #{$color};
+    }
+
     --radius: #{$radius};
     --radius-sm: #{$radius-sm};
     --blur: #{$blur};

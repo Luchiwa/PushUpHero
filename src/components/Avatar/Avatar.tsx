@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { getCachedAvatarUrl } from '@hooks/useAvatarCache';
+import { getCachedAvatarUrl } from '@lib/avatarCache';
 import './Avatar.scss';
 
 interface AvatarProps {

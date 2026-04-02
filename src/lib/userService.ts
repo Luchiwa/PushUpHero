@@ -8,7 +8,6 @@
 
 import {
     doc,
-    collection,
     writeBatch,
     increment,
     serverTimestamp,
@@ -17,12 +16,14 @@ import {
     where,
     Timestamp,
     deleteDoc,
+    updateDoc,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { userRef, sessionRef, activityFeedCol } from './refs';
 import { FEED_PRUNE_AGE_MS, getGradeLetter } from './constants';
 import { levelFromTotalXp } from '@lib/xpSystem';
-import type { SessionRecord } from '@hooks/useSessionHistory';
-import type { DbUser } from '@hooks/useAuth';
+import type { SessionRecord } from '@exercises/types';
+import type { DbUser } from './authTypes';
 import type { ExerciseType } from '@exercises/types';
 import { getExerciseLabel } from '@exercises/types';
 import { evaluateAchievements, evaluateRecords, emptyRecords, computeLifetimeReps, countSGrades, bulkEvaluateRecords } from './achievementEngine';
@@ -172,12 +173,10 @@ export async function saveSession({
     const batch = writeBatch(db);
 
     // 1. Session document
-    const sessionRef = doc(collection(db, 'users', uid, 'sessions'), session.id);
-    batch.set(sessionRef, session);
+    batch.set(sessionRef(uid, session.id), session);
 
     // 2. User profile
-    const userRef = doc(db, 'users', uid);
-    batch.update(userRef, {
+    batch.update(userRef(uid), {
         totalXp: newTotalXp,
         totalReps: increment(session.reps),
         totalSessions: increment(1),
@@ -223,15 +222,14 @@ export async function saveSession({
             feedEvent.blockSummaries = summaries;
         }
     }
-    const feedRef = doc(collection(db, 'users', uid, 'activityFeed'));
-    batch.set(feedRef, feedEvent);
+    batch.set(doc(activityFeedCol(uid)), feedEvent);
 
     await batch.commit();
 
     // Prune feed events older than 30 days — fire-and-forget, never blocks the save
     const cutoff = Timestamp.fromMillis(Date.now() - FEED_PRUNE_AGE_MS);
     getDocs(query(
-        collection(db, 'users', uid, 'activityFeed'),
+        activityFeedCol(uid),
         where('createdAt', '<', cutoff),
     )).then(snap => snap.forEach(d => { deleteDoc(d.ref); })).catch(() => { /* non-critical */ });
 
@@ -263,7 +261,6 @@ export async function mergeLocalDataToCloud({
     guestStats,
 }: MergeLocalDataParams): Promise<void> {
     const batch = writeBatch(db);
-    const userRef = doc(db, 'users', uid);
 
     const newTotalXp = cloudXp + localXp;
     const newLevel = levelFromTotalXp(newTotalXp);
@@ -382,11 +379,10 @@ export async function mergeLocalDataToCloud({
     profileUpdate.achievements = achievementMap;
     profileUpdate.records = records;
 
-    batch.set(userRef, profileUpdate, { merge: true });
+    batch.set(userRef(uid), profileUpdate, { merge: true });
 
     localSessions.forEach(session => {
-        const sessionRef = doc(collection(db, 'users', uid, 'sessions'), session.id);
-        batch.set(sessionRef, session);
+        batch.set(sessionRef(uid, session.id), session);
     });
 
     await batch.commit();
@@ -397,20 +393,35 @@ export async function mergeLocalDataToCloud({
 // changes outside of sessions. This function evaluates them and persists any
 // newly unlocked achievements to Firestore without requiring a session save.
 
-import { updateDoc } from 'firebase/firestore';
-
 export async function checkLiveAchievements(
     uid: string,
     stats: UserStats,
     currentAchievements: AchievementMap,
 ): Promise<AchievementDef[]> {
-    // Note: stats.lifetimeTrainingTime should be provided by callers
     const newlyUnlocked = evaluateAchievements(stats, currentAchievements);
     if (newlyUnlocked.length === 0) return [];
 
     // currentAchievements was mutated in-place by evaluateAchievements (timestamps added)
-    const userRef = doc(db, 'users', uid);
-    await updateDoc(userRef, { achievements: currentAchievements });
+    await updateDoc(userRef(uid), { achievements: currentAchievements });
 
     return newlyUnlocked;
+}
+
+// ─── Field-level user updates ───────────────────────────────────────────────
+// Thin wrappers so hooks never import firebase/firestore directly.
+
+import type { BodyProfile } from '@lib/bodyProfile';
+import type { QuestProgress } from '@lib/quests';
+
+export function updateBodyProfile(uid: string, profile: BodyProfile): Promise<void> {
+    return updateDoc(userRef(uid), { bodyProfile: profile });
+}
+
+export function updateQuestProgress(uid: string, progress: QuestProgress): Promise<void> {
+    return updateDoc(userRef(uid), { questProgress: progress });
+}
+
+/** Legacy migration: seed totalXp from the old level-based system. */
+export function migrateLegacyXp(uid: string, totalXp: number): Promise<void> {
+    return updateDoc(userRef(uid), { totalXp });
 }

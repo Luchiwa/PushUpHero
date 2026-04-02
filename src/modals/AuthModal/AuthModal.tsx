@@ -1,34 +1,29 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import './AuthModal.scss';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, runTransaction } from 'firebase/firestore';
-import { auth, db } from '@lib/firebase';
+import { loginWithEmail, registerWithEmail, translateAuthError } from '@lib/authService';
 import { useAuthCore } from '@hooks/useAuth';
+import { useModalClose } from '@hooks/shared/useModalClose';
 
 interface AuthModalProps {
     onClose: () => void;
     onSuccess?: () => void;
+    /** Force the modal to open in 'login' or 'register' mode (default: 'login') */
+    initialMode?: 'login' | 'register';
+    /** Optional promotional banner shown above the form */
+    promoBanner?: React.ReactNode;
 }
 
-export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
+export function AuthModal({ onClose, onSuccess, initialMode = 'login', promoBanner }: AuthModalProps) {
     const { loginWithGoogle } = useAuthCore();
-    const [mode, setMode] = useState<'login' | 'register'>('login');
+    const [mode, setMode] = useState<'login' | 'register'>(initialMode);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [username, setUsername] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const [closing, setClosing] = useState(false);
+    const { closing, handleClose, handleAnimationEnd } = useModalClose(onClose);
     const emailInputRef = useRef<HTMLInputElement>(null);
     const usernameInputRef = useRef<HTMLInputElement>(null);
-
-    const handleClose = useCallback(() => {
-        setClosing(true);
-    }, []);
-
-    const handleAnimationEnd = useCallback((e: React.AnimationEvent) => {
-        if (closing && e.currentTarget === e.target) onClose();
-    }, [closing, onClose]);
 
     // Focus on the appropriate first field when mode changes or modal opens
     useEffect(() => {
@@ -44,12 +39,10 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
             setError('');
             setLoading(true);
             await loginWithGoogle();
-            // In a real app we'd also let them pick a username if they are new,
-            // but for simplicity we rely on Google displayName or generate one.
             onSuccess?.();
             onClose();
         } catch (err: unknown) {
-            setError((err as Error).message || 'Google Sign-In error');
+            setError(translateAuthError(err));
         } finally {
             setLoading(false);
         }
@@ -65,51 +58,15 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
                 if (username.trim().length < 3) {
                     throw new Error("Username must be at least 3 characters");
                 }
-                const cleanUsername = username.trim().toLowerCase();
-
-                // 1. Transaction to claim the username
-                await runTransaction(db, async (transaction) => {
-                    const usernameRef = doc(db, 'usernames', cleanUsername);
-                    const usernameDoc = await transaction.get(usernameRef);
-
-                    if (usernameDoc.exists()) {
-                        throw new Error("This username is already taken!");
-                    }
-
-                    // Create the user in Auth
-                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                    const user = userCredential.user;
-
-                    // Claim username 
-                    transaction.set(usernameRef, { uid: user.uid });
-
-                    // Create base DB profile
-                    const userRef = doc(db, 'users', user.uid);
-                    transaction.set(userRef, {
-                        uid: user.uid,
-                        displayName: username.trim(),
-                        level: 0,
-                        totalXp: 0,
-                        totalReps: 0,
-                        totalSessions: 0,
-                        exerciseXp: {},
-                        exerciseLevels: {},
-                        createdAt: Date.now()
-                    });
-                });
+                await registerWithEmail(email, password, username);
             } else {
-                // Login
-                await signInWithEmailAndPassword(auth, email, password);
+                await loginWithEmail(email, password);
             }
             onSuccess?.();
             onClose();
         } catch (err: unknown) {
             console.error(err);
-            // Translate common firebase errors
-            let msg = (err as Error).message ?? '';
-            if (msg.includes('auth/email-already-in-use')) msg = "This email is already in use.";
-            if (msg.includes('auth/invalid-credential')) msg = "Incorrect email or password.";
-            setError(msg);
+            setError(translateAuthError(err));
         } finally {
             setLoading(false);
         }
@@ -119,6 +76,9 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
         <div
             className={`auth-modal-overlay${closing ? ' auth-modal-overlay--exit' : ''}`}
             onAnimationEnd={handleAnimationEnd}
+            role="dialog"
+            aria-modal="true"
+            aria-label={mode === 'register' ? 'Create an account' : 'Sign in'}
         >
             <div className={`auth-modal-card${closing ? ' auth-modal-card--exit' : ''}`}>
                 <button className="auth-close-btn" onClick={handleClose}>×</button>
@@ -132,7 +92,11 @@ export function AuthModal({ onClose, onSuccess }: AuthModalProps) {
                         : 'Pick up where you left off.'}
                 </p>
 
-                {error && <div className="auth-error">{error}</div>}
+                {promoBanner && mode === 'register' && (
+                    <div className="auth-promo-banner">{promoBanner}</div>
+                )}
+
+                {error && <div className="auth-error" role="alert">{error}</div>}
 
                 <form onSubmit={handleEmailAuth} className="auth-form">
                     {mode === 'register' && (

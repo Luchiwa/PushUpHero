@@ -108,3 +108,46 @@
         &:hover { text-decoration: underline; }
     }
 }
+
+// ── Promo banner (post-quest signup nudge) ───────────────────
+.auth-promo-banner {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.85rem 1rem;
+    border-radius: $radius-sm;
+    background: linear-gradient(135deg, rgba($accent, 0.08), rgba($accent, 0.04));
+    border: 1px solid rgba($accent, 0.15);
+}
+
+.auth-promo-title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: $text;
+}
+
+.auth-promo-perks {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.auth-promo-perk {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    color: $text-muted;
+    line-height: 1.3;
+
+    .perk-icon {
+        flex-shrink: 0;
+        font-size: 0.85rem;
+    }
+}

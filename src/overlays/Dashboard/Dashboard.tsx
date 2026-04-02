@@ -69,7 +69,7 @@ export const Dashboard = memo(function Dashboard({ facingMode, onFlipCamera }: D
             <div className="dashboard-top">
                 {/* ── Left: rep counter + avg score ── */}
                 <div className="hud-left">
-                    <div className="hud-rep-block">
+                    <div className="hud-rep-block" aria-live="polite" aria-atomic="true">
                         <FloatyNumbers repCount={repCount} />
                         <span className="hud-rep-count">{repCount}</span>
                         <span className="hud-rep-label">{getExerciseLabel(exerciseType)}</span>

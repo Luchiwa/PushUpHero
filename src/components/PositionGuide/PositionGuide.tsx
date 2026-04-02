@@ -6,6 +6,7 @@
  */
 import { memo } from 'react';
 import type { ExerciseType } from '@exercises/types';
+import { EXERCISE_REGISTRY } from '@exercises/registry';
 import './PositionGuide.scss';
 
 interface PositionGuideProps {
@@ -14,30 +15,9 @@ interface PositionGuideProps {
   calibratingPercentage: number;
 }
 
-const GUIDE_CONFIG: Record<ExerciseType, { emoji: string; title: string; description: string; calibrationText: string }> = {
-  pushup: {
-    emoji: '🧑‍💻',
-    title: 'Get in plank position',
-    description: 'Place your phone so the camera can see your full body in push-up stance.',
-    calibrationText: 'Hold plank…',
-  },
-  squat: {
-    emoji: '🦵',
-    title: 'Stand facing the camera',
-    description: 'Step back so your full body is visible from head to feet.',
-    calibrationText: 'Stand still…',
-  },
-  pullup: {
-    emoji: '💪',
-    title: 'Hang from the bar',
-    description: 'Position the camera so your full body hangs visible, arms extended.',
-    calibrationText: 'Hold hang…',
-  },
-};
-
 export const PositionGuide = memo(function PositionGuide({ exerciseType, isCalibrated, calibratingPercentage }: PositionGuideProps) {
   const isHidden = isCalibrated;
-  const guide = GUIDE_CONFIG[exerciseType];
+  const guide = EXERCISE_REGISTRY[exerciseType].positionGuide;
 
   return (
     <div className={`position-guide${isHidden ? ' position-guide-hidden' : ''}`}>

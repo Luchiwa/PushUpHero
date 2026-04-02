@@ -41,7 +41,7 @@ export function AchievementToast({ achievement, onDone }: AchievementToastProps)
     }, [onDone]);
 
     return (
-        <div className={`achievement-toast ${visible ? 'achievement-toast--visible' : ''}`}>
+        <div className={`achievement-toast ${visible ? 'achievement-toast--visible' : ''}`} aria-live="assertive" role="alert">
             <div
                 className="achievement-toast-ring"
                 style={{ borderColor: TIER_COLORS[achievement.tier] }}

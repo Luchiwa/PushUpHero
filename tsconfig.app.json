@@ -37,6 +37,7 @@
       "@components/*": ["src/components/*"],
       "@hooks/*": ["src/hooks/*"],
       "@exercises/*": ["src/exercises/*"],
+      "@data/*": ["src/data/*"],
       "@lib/*": ["src/lib/*"],
       "@assets/*": ["src/assets/*"]
     }

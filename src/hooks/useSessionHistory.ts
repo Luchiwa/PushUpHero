@@ -1,11 +1,11 @@
 import { useCallback } from 'react';
-import { useAuth } from './useAuth';
+import { useAuthCore, useLevel, useSessions } from './useAuth';
 import { saveSession, localDateString, yesterdayDateString } from '@lib/userService';
 import type { SaveSessionResult } from '@lib/userService';
 import { calculateSessionXp } from '@lib/xpSystem';
 import type { BonusContext, SessionXpResult } from '@lib/xpSystem';
 import { MAX_LOCAL_SESSIONS, getGradeLetter } from '@lib/constants';
-import type { SetRecord, WorkoutBlock, ExerciseType } from '@exercises/types';
+import type { SetRecord, ExerciseType, SessionRecord } from '@exercises/types';
 import { evaluateAchievements, evaluateRecords } from '@lib/achievementEngine';
 import type { AchievementMap, UserStats } from '@lib/achievementEngine';
 import {
@@ -23,36 +23,6 @@ import {
 const STORAGE_KEY = 'pushup-sessions';
 const STORAGE_TOTAL_KEY = 'pushup_game_total_sessions';
 
-export interface SessionRecord {
-    id: string;
-    date: number;        // Unix timestamp (ms)
-    reps: number;        // total reps across all sets (aggregate)
-    averageScore: number;
-    goalReps: number;
-    sessionMode?: 'reps' | 'time';
-    elapsedTime?: number;          // seconds — total duration
-    exerciseType?: ExerciseType; // defaults to 'pushup' for legacy sessions
-
-    // ── Multi-set fields ──
-    numberOfSets?: number;         // configured sets count (1 = legacy single-set)
-    restDuration?: number;         // configured rest between sets (seconds)
-    sets?: SetRecord[];            // per-set breakdown
-    totalDuration?: number;        // total workout duration including rest (seconds)
-
-    // ── Multi-exercise fields ──
-    /** Workout plan blocks (present when workout has multiple exercises) */
-    blocks?: WorkoutBlock[];
-    /** True when the workout contains more than one exercise type */
-    isMultiExercise?: boolean;
-
-    // ── XP fields ──
-    xpEarned?: number;             // Total XP earned (after bonuses)
-    xpRaw?: number;                // XP before bonuses
-    xpMultiplier?: number;         // Multiplier applied
-    xpBonuses?: { key: string; label: string; emoji: string; pct: number }[];
-    xpPerExercise?: { exerciseType: string; rawXp: number; finalXp: number }[];
-}
-
 function saveLocalSessions(sessions: SessionRecord[]): void {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
@@ -60,10 +30,9 @@ function saveLocalSessions(sessions: SessionRecord[]): void {
 }
 
 export function useSessionHistory() {
-    const {
-        user, dbUser, totalXp, exerciseXp,
-        addGuestXp, sessions, setSessions, totalSessionCount, setTotalSessionCount,
-    } = useAuth();
+    const { user, dbUser } = useAuthCore();
+    const { totalXp, exerciseXp, addGuestXp } = useLevel();
+    const { sessions, setSessions, totalSessionCount, setTotalSessionCount } = useSessions();
 
     /**
      * Save a completed session.

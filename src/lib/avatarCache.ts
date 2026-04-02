@@ -1,8 +1,8 @@
 /**
- * useAvatarCache — Caches avatar images locally using the Cache API
+ * avatarCache — Caches avatar images locally using the Cache API
  * so they don't re-download on every page load.
  *
- * Returns a stable `getCachedUrl` that resolves a Firebase Storage URL
+ * Returns a `getCachedAvatarUrl` that resolves a Firebase Storage URL
  * to a local blob: URL served from cache.
  */
 

@@ -1,12 +1,8 @@
 import { useState } from 'react';
-import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
-import { auth } from '@lib/firebase';
-import { useAuthCore } from '@hooks/useAuth';
+import { changePassword, translateAuthError } from '@lib/authService';
 import './PasswordChangeSection.scss';
 
 export function PasswordChangeSection() {
-    const { user } = useAuthCore();
-
     const [currentPwd, setCurrentPwd] = useState('');
     const [newPwd, setNewPwd] = useState('');
     const [confirmPwd, setConfirmPwd] = useState('');
@@ -30,25 +26,13 @@ export function PasswordChangeSection() {
 
         setPwdLoading(true);
         try {
-            if (!user || !user.email) throw new Error('No authenticated user');
-            const credential = EmailAuthProvider.credential(user.email, currentPwd);
-            await reauthenticateWithCredential(user, credential);
-            const currentUser = auth.currentUser;
-            if (!currentUser) throw new Error('No authenticated user');
-            await updatePassword(currentUser, newPwd);
+            await changePassword(currentPwd, newPwd);
             setPwdSuccess(true);
             setCurrentPwd('');
             setNewPwd('');
             setConfirmPwd('');
         } catch (err: unknown) {
-            const code = (err as { code?: string }).code;
-            if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
-                setPwdError('Current password is incorrect.');
-            } else if (code === 'auth/requires-recent-login') {
-                setPwdError('Session expired. Please sign out and sign in again.');
-            } else {
-                setPwdError((err as Error).message || 'An error occurred.');
-            }
+            setPwdError(translateAuthError(err));
         } finally {
             setPwdLoading(false);
         }

@@ -22,8 +22,8 @@ export function CoachHint({ text }: CoachHintProps) {
 
     if (!visible || !displayText) return null;
     return (
-        <div className="coach-hint">
-            <span className="coach-icon">🎙️</span>
+        <div className="coach-hint" aria-live="polite" role="status">
+            <span className="coach-icon" aria-hidden="true">🎙️</span>
             <span className="coach-text">{displayText}</span>
         </div>
     );

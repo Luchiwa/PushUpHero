@@ -1,5 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useAuthCore } from '@hooks/useAuth';
+import { useModalClose } from '@hooks/shared/useModalClose';
 import { PasswordChangeSection } from './PasswordChangeSection/PasswordChangeSection';
 import { DeleteAccountSection } from './DeleteAccountSection/DeleteAccountSection';
 import './SettingsModal.scss';
@@ -36,15 +37,7 @@ function SettingsAccordion({ title, danger, isOpen, onToggle, children }: {
 
 export function SettingsModal({ onClose, onAccountDeleted }: SettingsModalProps) {
     const { user, logout } = useAuthCore();
-    const [closing, setClosing] = useState(false);
-
-    const handleClose = useCallback(() => {
-        setClosing(true);
-    }, []);
-
-    const handleAnimationEnd = useCallback((e: React.AnimationEvent) => {
-        if (closing && e.currentTarget === e.target) onClose();
-    }, [closing, onClose]);
+    const { closing, handleClose, handleAnimationEnd } = useModalClose(onClose);
 
     const handleLogout = async () => {
         await logout();
@@ -52,7 +45,7 @@ export function SettingsModal({ onClose, onAccountDeleted }: SettingsModalProps)
     };
 
     // Detect if user signed in via Google (no password)
-    const isGoogleUser = user?.providerData.some(p => p.providerId === 'google.com') ?? false;
+    const isGoogleUser = user?.providerIds.includes('google.com') ?? false;
 
     const [openSection, setOpenSection] = useState<string | null>(null);
     const toggleSection = (key: string) => setOpenSection(prev => prev === key ? null : key);

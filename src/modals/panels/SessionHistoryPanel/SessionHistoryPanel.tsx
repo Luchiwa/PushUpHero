@@ -5,7 +5,7 @@
  */
 import { useState } from 'react';
 import { useSessionHistory } from '@hooks/useSessionHistory';
-import type { SessionRecord } from '@hooks/useSessionHistory';
+import type { SessionRecord } from '@exercises/types';
 import type { TimeDuration } from '@exercises/types';
 import { getExerciseLabel, EXERCISE_META } from '@exercises/types';
 import { getGradeLetter, getGradeClass, getGradeColor, getGradeBackground, formatElapsedTime } from '@lib/constants';

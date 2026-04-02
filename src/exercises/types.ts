@@ -7,6 +7,9 @@ export interface Landmark {
 
 export type ExerciseType = 'pushup' | 'squat' | 'pullup';
 
+/** Per-exercise XP map — single source of truth for all modules. */
+export type ExerciseXpMap = Partial<Record<ExerciseType, number>>;
+
 /** All exercise types in display order. Single source of truth. */
 export const EXERCISE_TYPES: ExerciseType[] = ['pushup', 'squat', 'pullup'];
 
@@ -128,6 +131,40 @@ export function createDefaultBlock(exerciseType: ExerciseType = 'pushup'): Worko
         restAfterBlock: { minutes: 2, seconds: 0 },
     };
 }
+
+// ── Session record ──────────────────────────────────────────────
+
+export interface SessionRecord {
+    id: string;
+    date: number;        // Unix timestamp (ms)
+    reps: number;        // total reps across all sets (aggregate)
+    averageScore: number;
+    goalReps: number;
+    sessionMode?: 'reps' | 'time';
+    elapsedTime?: number;          // seconds — total duration
+    exerciseType?: ExerciseType; // defaults to 'pushup' for legacy sessions
+
+    // ── Multi-set fields ──
+    numberOfSets?: number;         // configured sets count (1 = legacy single-set)
+    restDuration?: number;         // configured rest between sets (seconds)
+    sets?: SetRecord[];            // per-set breakdown
+    totalDuration?: number;        // total workout duration including rest (seconds)
+
+    // ── Multi-exercise fields ──
+    /** Workout plan blocks (present when workout has multiple exercises) */
+    blocks?: WorkoutBlock[];
+    /** True when the workout contains more than one exercise type */
+    isMultiExercise?: boolean;
+
+    // ── XP fields ──
+    xpEarned?: number;             // Total XP earned (after bonuses)
+    xpRaw?: number;                // XP before bonuses
+    xpMultiplier?: number;         // Multiplier applied
+    xpBonuses?: { key: string; label: string; emoji: string; pct: number }[];
+    xpPerExercise?: { exerciseType: string; rawXp: number; finalXp: number }[];
+}
+
+// ── Exercise state ──────────────────────────────────────────────
 
 export interface ExerciseState {
     repCount: number;
