@@ -1,6 +1,5 @@
 @use 'variables' as *;
 @use 'mixins' as *;
-@use 'sass:color';
 
 // ── Install banner ──────────────────────────────────────────────
 .install-banner {
@@ -16,24 +15,32 @@
     padding: 10px 14px;
     width: min(calc(100% - 32px), 420px);
 
-    background: rgba($white, 0.96);
+    background: linear-gradient(135deg, rgba($indigo, 0.12) 0%, rgba($purple, 0.06) 100%);
     backdrop-filter: blur($blur-sm);
     -webkit-backdrop-filter: blur($blur-sm);
-    border: 1.5px solid $border;
+    border: 1.5px solid rgba($indigo, 0.28);
     border-radius: $radius;
-    box-shadow: 0 4px 20px rgba($black, 0.12);
+    box-shadow: 0 4px 24px rgba($indigo, 0.12);
 
-    animation: banner-slide-in 0.35s $ease-out-back;
+    animation: banner-slide-in 0.4s $ease-out-back;
 }
 
 @keyframes banner-slide-in {
-    from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+    from { opacity: 0; transform: translateX(-50%) translateY(-16px); }
     to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
 .install-banner-icon {
-    font-size: 1.5rem;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: $gradient-accent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
+    color: $white;
+    box-shadow: $shadow-accent-sm;
 }
 
 .install-banner-text {
@@ -46,7 +53,7 @@
 
 .install-banner-title {
     font-size: 0.85rem;
-    font-weight: 700;
+    font-weight: 800;
     color: $text;
 }
 
@@ -64,32 +71,43 @@
 }
 
 .install-banner-btn {
-    padding: 6px 14px;
-    border-radius: 20px;
+    padding: 6px 16px;
+    border-radius: $radius-pill;
     border: none;
-    background: $accent;
     color: $white;
-    font-size: 0.8rem;
-    font-weight: 700;
+    font-size: $font-sm;
+    font-weight: 800;
     font-family: inherit;
     cursor: pointer;
-    transition: background 0.15s;
+    transition: box-shadow $transition-fast, transform 0.15s ease;
 
-    &:hover {
-        background: color.adjust($accent, $lightness: -8%);
+    &:active { transform: scale(0.95); }
+
+    &--install {
+        background: linear-gradient(135deg, $accent, $accent-dark);
+        box-shadow: 0 2px 12px rgba($accent, 0.35);
+    }
+
+    &--how {
+        background: linear-gradient(135deg, $indigo, $purple);
+        box-shadow: 0 2px 12px rgba($indigo, 0.35);
     }
 }
 
 .install-banner-dismiss {
-    background: none;
+    background: rgba($black, 0.05);
     border: none;
+    border-radius: 50%;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: $text-muted;
-    font-size: 0.8rem;
     cursor: pointer;
-    padding: 4px;
-    line-height: 1;
+    transition: background $transition-fast;
 
-    &:hover { color: $text; }
+    &:hover { background: rgba($black, 0.1); }
 }
 
 // ── iOS guide overlay ───────────────────────────────────────────
@@ -97,14 +115,14 @@
     position: fixed;
     inset: 0;
     z-index: $z-notification;
-    background: $modal-overlay;
+    background: $modal-overlay-strong;
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    animation: fade-in 0.2s ease;
+    animation: ios-fade-in 0.2s ease;
 }
 
-@keyframes fade-in {
+@keyframes ios-fade-in {
     from { opacity: 0; }
     to   { opacity: 1; }
 }
@@ -116,10 +134,23 @@
     background: $bg;
     border-radius: 24px 24px 0 0;
     padding: 28px 24px max(24px, env(safe-area-inset-bottom, 24px));
-    animation: sheet-slide-up 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+    animation: ios-sheet-slide-up 0.35s $ease-out-back;
+
+    // Subtle gradient header
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 80px;
+        border-radius: 24px 24px 0 0;
+        background: linear-gradient(180deg, rgba($indigo, 0.06) 0%, transparent 100%);
+        pointer-events: none;
+    }
 }
 
-@keyframes sheet-slide-up {
+@keyframes ios-sheet-slide-up {
     from { transform: translateY(100%); }
     to   { transform: translateY(0); }
 }
@@ -128,64 +159,116 @@
     position: absolute;
     top: 16px;
     right: 18px;
-    background: rgba(0,0,0,0.07);
+    background: rgba($black, 0.06);
     border: none;
     border-radius: 50%;
-    width: 28px;
-    height: 28px;
-    font-size: 0.75rem;
+    width: 30px;
+    height: 30px;
     cursor: pointer;
     color: $text-muted;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: background $transition-fast;
+    z-index: 1;
+
+    &:hover { background: rgba($black, 0.1); }
+}
+
+.ios-guide-header {
+    margin-bottom: 20px;
+    position: relative;
 }
 
 .ios-guide-title {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     font-weight: 800;
     color: $text;
-    margin-bottom: 20px;
+    margin: 0;
 }
 
+.ios-guide-subtitle {
+    font-size: $font-sm;
+    color: $text-muted;
+    margin: 4px 0 0;
+}
+
+// ── Steps ──────────────────────────────────────────────────────
 .ios-guide-steps {
-    list-style: none;
-    padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 10px;
     margin-bottom: 24px;
+}
 
-    li {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        font-size: 0.9rem;
-        color: $text;
+.ios-guide-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: $surface;
+    border-radius: $radius-sm;
+    border: 1px solid rgba($accent, 0.08);
+}
+
+.ios-guide-step-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: $gradient-accent;
+    color: $white;
+    font-size: $font-sm;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: $shadow-accent-sm;
+}
+
+.ios-guide-step-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.88rem;
+    color: $text;
+    line-height: 1.4;
+
+    strong {
+        color: $accent-dark;
     }
 }
 
 .ios-guide-step-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    background: $surface;
+    width: 34px;
+    height: 34px;
+    border-radius: $radius-xs;
+    background: rgba($indigo, 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1rem;
     flex-shrink: 0;
-    color: $accent;
+    color: $indigo;
 }
 
-.ios-guide-arrow {
+// ── Pointer arrow ──────────────────────────────────────────────
+.ios-guide-pointer {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     color: $accent;
-    font-size: 0.78rem;
+    font-size: $font-xs;
     font-weight: 700;
     text-align: center;
-    opacity: 0.8;
+    animation: ios-pointer-pulse 1.5s ease-in-out infinite;
+
+    strong {
+        color: $accent-dark;
+    }
+}
+
+@keyframes ios-pointer-pulse {
+    0%, 100% { opacity: 0.7; transform: translateY(0); }
+    50% { opacity: 1; transform: translateY(4px); }
 }

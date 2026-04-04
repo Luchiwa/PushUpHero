@@ -14,7 +14,7 @@ import {
     usersCol, userRef, usernameRef,
     friendRef, friendRequestRef, sentRequestRef,
     notificationsCol,
-} from './refs';
+} from '@infra/refs';
 
 // ── Types (re-exported for consumers that only need types) ──────────────────
 

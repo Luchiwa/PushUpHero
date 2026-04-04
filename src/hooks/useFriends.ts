@@ -9,11 +9,11 @@ import {
     cancelFriendRequest as cancelRequest,
     sendEncouragement as sendEnc,
     removeFriend as removeFr,
-} from '@lib/friendService';
-import type { Friend, FriendRequest, OutgoingRequest, SearchResult } from '@lib/friendService';
+} from '@services/friendService';
+import type { Friend, FriendRequest, OutgoingRequest, SearchResult } from '@services/friendService';
 
 // Re-export types for consumers that import from here
-export type { Friend, FriendRequest, OutgoingRequest, SearchResult } from '@lib/friendService';
+export type { Friend, FriendRequest, OutgoingRequest, SearchResult } from '@services/friendService';
 
 const STATS_DEBOUNCE_MS = 300;
 

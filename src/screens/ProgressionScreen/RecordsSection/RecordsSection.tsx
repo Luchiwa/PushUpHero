@@ -1,7 +1,7 @@
-import { RECORDS } from '@lib/achievements';
-import type { RecordsMap } from '@lib/achievementEngine';
+import { RECORDS } from '@domain/achievements';
+import type { RecordsMap } from '@domain/achievementEngine';
 import type { ExerciseType } from '@exercises/types';
-import { formatElapsedTime, getGradeLetter } from '@lib/constants';
+import { formatElapsedTime, getGradeLetter } from '@domain/constants';
 import './RecordsSection.scss';
 
 interface RecordsSectionProps {

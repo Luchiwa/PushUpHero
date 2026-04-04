@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { getGradeLetter, getGradeColor } from '@lib/constants';
+import { getGradeLetter, getGradeColor } from '@domain/constants';
 import './GradePop.scss';
 
 export interface GradePopProps {

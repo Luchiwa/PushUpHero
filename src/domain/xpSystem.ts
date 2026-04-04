@@ -8,7 +8,7 @@
  */
 
 import type { ExerciseType, SetRecord } from '@exercises/types';
-import { EXERCISE_REGISTRY } from '@exercises/registry';
+import { EXERCISE_DIFFICULTY, difficultyFor } from '@exercises/exerciseDifficulty';
 import { getGradeLetter } from './constants';
 import type { GradeLetter } from './constants';
 
@@ -29,26 +29,9 @@ export function xpForRep(score: number): number {
 }
 
 // ─── Exercise difficulty coefficients ────────────────────────────────────────
-// Applied as a multiplier on raw XP *before* session bonuses.
-// Squat is the baseline (×1.0). Add a new entry here when adding an exercise.
-//
-// Rationale:
-//   squat   ×1.0  – most accessible, large muscle group, easy to do many reps
-//   pushup  ×1.3  – full upper body, requires strict form, more demanding
-//   pullup  ×2.5  – bodyweight compound, very few people can do 20+
-
-/** Difficulty coefficients derived from the exercise registry. */
-export const EXERCISE_DIFFICULTY: Record<ExerciseType, number> = Object.fromEntries(
-    (Object.keys(EXERCISE_REGISTRY) as ExerciseType[]).map(t => [t, EXERCISE_REGISTRY[t].difficulty]),
-) as Record<ExerciseType, number>;
-
-/**
- * Returns the difficulty coefficient for a given exercise type.
- * Falls back to 1.0 for unknown types so new exercises are safe by default.
- */
-export function difficultyFor(type: ExerciseType): number {
-    return EXERCISE_REGISTRY[type]?.difficulty ?? 1.0;
-}
+// Re-exported from exercises/exerciseDifficulty.ts (canonical source).
+// Kept here for backward compatibility with existing imports.
+export { EXERCISE_DIFFICULTY, difficultyFor };
 
 // ─── Level curve ─────────────────────────────────────────────────────────────
 // Soft-exponential: XP_required(L) = 100 × L^1.5  (per level, cumulative)
@@ -251,4 +234,46 @@ export function calculateSessionXp(sets: SetRecord[], bonusCtx: BonusContext): S
     });
 
     return { rawXp: totalRawXp, totalXp, bonuses, multiplier, perExercise };
+}
+
+// ─── Live XP Projection ────────────────────────────────────────────────────
+
+/** Estimate XP earned from completed sets (exact per-rep scoring when available) */
+export function estimateCompletedXp(completedSets: Pick<SetRecord, 'reps' | 'averageScore' | 'repHistory' | 'exerciseType'>[]): number {
+    return completedSets.reduce((sum, set) => {
+        const diff = EXERCISE_DIFFICULTY[(set.exerciseType ?? 'pushup') as ExerciseType] ?? 1.0;
+        if (set.repHistory.length > 0) {
+            return sum + set.repHistory.reduce((s, r) => s + xpForRep(r.score), 0) * diff;
+        }
+        return sum + set.reps * xpForRep(set.averageScore) * diff;
+    }, 0);
+}
+
+export interface LiveXpProjection {
+    liveXpEstimate: number;
+    liveLevel: number;
+    liveProgressPct: number;
+}
+
+/**
+ * Project the user's live XP/level during an active workout.
+ * Uses actual per-rep scores for completed sets and a C-grade estimate for the current set.
+ */
+export function projectLiveXp(
+    totalXp: number,
+    completedSets: Pick<SetRecord, 'reps' | 'averageScore' | 'repHistory' | 'exerciseType'>[],
+    currentSetReps: number,
+    activeExerciseType: ExerciseType,
+): LiveXpProjection {
+    const completedXp = estimateCompletedXp(completedSets);
+    const currentExDifficulty = EXERCISE_DIFFICULTY[activeExerciseType] ?? 1.0;
+    const currentSetEstimate = currentSetReps * 10 * currentExDifficulty;
+    const liveXpEstimate = totalXp + Math.round(completedXp + currentSetEstimate);
+    const liveLevel = levelFromTotalXp(liveXpEstimate);
+    const liveLevelBase = totalXpForLevel(liveLevel);
+    const liveLevelNext = totalXpForLevel(liveLevel + 1);
+    const liveProgressPct = liveLevelNext > liveLevelBase
+        ? ((liveXpEstimate - liveLevelBase) / (liveLevelNext - liveLevelBase)) * 100
+        : 0;
+    return { liveXpEstimate, liveLevel, liveProgressPct };
 }

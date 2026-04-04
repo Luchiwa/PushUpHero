@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuthCore } from '@hooks/useAuth';
-import { reauthenticateWithGoogle, reauthenticateWithEmail, translateAuthError } from '@lib/authService';
-import { deleteCurrentAccount } from '@lib/deleteAccount';
+import { reauthenticateWithGoogle, reauthenticateWithEmail, translateAuthError } from '@services/authService';
+import { deleteCurrentAccount } from '@services/deleteAccount';
 import './DeleteAccountSection.scss';
 
 interface DeleteAccountSectionProps {

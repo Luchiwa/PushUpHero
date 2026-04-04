@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { getCachedAvatarUrl } from '@lib/avatarCache';
+import { getCachedAvatarUrl } from '@infra/avatarCache';
 import './Avatar.scss';
 
 interface AvatarProps {
@@ -17,9 +17,15 @@ export function Avatar({ photoURL, photoThumb, initials, size = 40, className = 
     const [cachedSrc, setCachedSrc] = useState<string | null>(null);
     const prevUrl = useRef<string | null | undefined>(undefined);
 
+    // Reset cached source synchronously during render when photoURL clears
+    const [prevPhotoURL, setPrevPhotoURL] = useState(photoURL);
+    if (photoURL !== prevPhotoURL) {
+        setPrevPhotoURL(photoURL);
+        if (!photoURL) setCachedSrc(null);
+    }
+
     useEffect(() => {
         if (!photoURL) {
-            setCachedSrc(null);
             prevUrl.current = photoURL;
             return;
         }

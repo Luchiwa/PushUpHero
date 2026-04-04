@@ -7,17 +7,17 @@
  *         ├─ LevelContext.Provider  (XP, level, per-exercise)
  *         └─ SessionContext.Provider  (sessions, count)
  */
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { auth } from '@lib/firebase';
-import { uploadAvatar as uploadAvatarService } from '@lib/avatarService';
+import { auth } from '@infra/firebase';
+import { uploadAvatar as uploadAvatarService } from '@services/avatarService';
 import { onUserProfile } from '@data/userRepository';
 import { AuthCoreContext, LevelContext, SessionContext } from '@hooks/useAuth';
 import type { AppUser, DbUser, AuthCoreContextType, LevelContextType, SessionContextType } from '@hooks/useAuth';
 import { useLevelSystem } from '@hooks/useLevelSystem';
 import { useNotifications } from '@hooks/useNotifications';
 import { useSyncCloud } from '@hooks/useSyncCloud';
-import { clearAllLocalStorage } from '@lib/clearLocalStorage';
+import { clearAllLocalStorage } from '@services/clearLocalStorage';
 import type { SessionRecord } from '@exercises/types';
 
 // ── Inner provider: Level + Sessions (mounts expensive hooks once) ──
@@ -31,7 +31,20 @@ function LevelAndSessionProvider({ children }: { children: React.ReactNode }) {
 
     useSyncCloud(levelSystem.setTotalXp, levelSystem.setExerciseXp, setSessions, setTotalSessionCount);
 
-    const levelValue = useMemo<LevelContextType>(() => levelSystem, [
+    const levelValue = useMemo<LevelContextType>(() => ({
+        totalXp: levelSystem.totalXp,
+        exerciseXp: levelSystem.exerciseXp,
+        level: levelSystem.level,
+        xpIntoCurrentLevel: levelSystem.xpIntoCurrentLevel,
+        xpNeededForNextLevel: levelSystem.xpNeededForNextLevel,
+        levelProgressPct: levelSystem.levelProgressPct,
+        addGuestXp: levelSystem.addGuestXp,
+        getExerciseLevel: levelSystem.getExerciseLevel,
+        getExerciseXp: levelSystem.getExerciseXp,
+        getExerciseLevelProgress: levelSystem.getExerciseLevelProgress,
+        setTotalXp: levelSystem.setTotalXp,
+        setExerciseXp: levelSystem.setExerciseXp,
+    }), [
         levelSystem.totalXp,
         levelSystem.exerciseXp,
         levelSystem.level,
@@ -108,7 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
     }, []);
 
-    const loginWithGoogle = async () => {
+    const loginWithGoogle = useCallback(async () => {
         const provider = new GoogleAuthProvider();
         try {
             await signInWithPopup(auth, provider);
@@ -116,18 +129,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.error('Google sign in failed', error);
             throw error;
         }
-    };
+    }, []);
 
-    const uploadAvatar = async (file: File) => {
+    const uploadAvatar = useCallback(async (file: File) => {
         if (!user) throw new Error('Not authenticated');
         const { photoURL, photoThumb } = await uploadAvatarService(user.uid, file, dbUser?.photoURL);
         setDbUser(prev => prev ? { ...prev, photoURL, photoThumb } : prev);
-    };
+    }, [user, dbUser?.photoURL]);
 
-    const logout = async () => {
+    const logout = useCallback(async () => {
         await signOut(auth);
         // localStorage is cleared in the onAuthStateChanged handler above
-    };
+    }, []);
 
     const appUser = useMemo<AppUser | null>(() =>
         user ? { uid: user.uid, providerIds: user.providerData.map(p => p.providerId) } : null,
@@ -135,7 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const authCoreValue = useMemo<AuthCoreContextType>(() => ({
         user: appUser, dbUser, loading, loginWithGoogle, logout, uploadAvatar,
-    }), [appUser, dbUser, loading]);
+    }), [appUser, dbUser, loading, loginWithGoogle, logout, uploadAvatar]);
 
     return (
         <AuthCoreContext.Provider value={authCoreValue}>

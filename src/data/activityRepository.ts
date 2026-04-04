@@ -6,7 +6,7 @@
 
 import { query, orderBy, limit, getDocs } from 'firebase/firestore';
 import type { Timestamp, DocumentData } from 'firebase/firestore';
-import { activityFeedCol } from '@lib/refs';
+import { activityFeedCol } from '@infra/refs';
 
 export interface RawActivityDoc {
     id: string;

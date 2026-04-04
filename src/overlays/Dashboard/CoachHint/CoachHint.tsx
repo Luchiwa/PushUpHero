@@ -8,17 +8,25 @@ export interface CoachHintProps {
 export function CoachHint({ text }: CoachHintProps) {
     const [visible, setVisible] = useState(false);
     const [displayText, setDisplayText] = useState('');
+    const [prevText, setPrevText] = useState<string | null>(null);
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    useEffect(() => {
+    // Derive state from prop changes during render (getDerivedStateFromProps pattern)
+    if (text !== prevText) {
+        setPrevText(text);
         if (text) {
             setDisplayText(text);
             setVisible(true);
-            if (timerRef.current) clearTimeout(timerRef.current);
-            timerRef.current = setTimeout(() => setVisible(false), 3000);
         }
+    }
+
+    // Auto-hide after 3 seconds (setTimeout callback — not synchronous setState)
+    useEffect(() => {
+        if (!visible) return;
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => setVisible(false), 3000);
         return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-    }, [text]);
+    }, [visible, text]);
 
     if (!visible || !displayText) return null;
     return (

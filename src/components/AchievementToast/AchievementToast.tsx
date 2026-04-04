@@ -3,8 +3,8 @@
  * Used on the camera overlay during active workout.
  */
 import { useEffect, useState } from 'react';
-import { TIER_COLORS } from '@lib/achievements';
-import type { AchievementDef } from '@lib/achievements';
+import { TIER_COLORS } from '@domain/achievements';
+import type { AchievementDef } from '@domain/achievements';
 import './AchievementToast.scss';
 
 interface AchievementToastProps {

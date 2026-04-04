@@ -8,7 +8,7 @@ import { useSessionHistory } from '@hooks/useSessionHistory';
 import type { SessionRecord } from '@exercises/types';
 import type { TimeDuration } from '@exercises/types';
 import { getExerciseLabel, EXERCISE_META } from '@exercises/types';
-import { getGradeLetter, getGradeClass, getGradeColor, getGradeBackground, formatElapsedTime } from '@lib/constants';
+import { getGradeLetter, getGradeClass, getGradeColor, getGradeBackground, formatElapsedTime } from '@domain/constants';
 import './SessionHistoryPanel.scss';
 
 const EXERCISE_EMOJI: Record<string, string> = Object.fromEntries(
@@ -74,7 +74,7 @@ export function SessionHistoryPanel({ sessions: sessionsProp, title, onViewAll }
         <div className="session-history">
             <p className="session-history-title">{resolvedTitle}</p>
             <ul className="session-history-list">
-                {sessions.map((s) => {
+                {sessions.map((s, idx) => {
                     const isMulti = s.isMultiExercise === true;
                     const isExpanded = expandedId === s.id;
                     const duration = isMulti ? getSessionDuration(s) : '';
@@ -87,7 +87,7 @@ export function SessionHistoryPanel({ sessions: sessionsProp, title, onViewAll }
                         <li
                             key={s.id}
                             className={`session-history-item session-history-item--grade-${gradeLetter.toLowerCase()}${isExpanded ? ' session-history-item--expanded' : ''}`}
-                            style={{ animationDelay: `${sessions.indexOf(s) * 45}ms` }}
+                            style={{ animationDelay: `${idx * 45}ms` }}
                         >
                             <button
                                 type="button"

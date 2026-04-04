@@ -1,12 +1,12 @@
 import { deleteUser, signOut } from 'firebase/auth';
 import { deleteDoc, getDoc, getDocs, writeBatch } from 'firebase/firestore';
 import { ref, deleteObject } from 'firebase/storage';
-import { auth, db, storage } from '@lib/firebase';
+import { auth, db, storage } from '@infra/firebase';
 import {
     userRef, usernameRef,
     friendsCol, friendRef, friendRequestRef, sentRequestRef,
     sessionsCol, friendRequestsCol, sentRequestsCol, notificationsCol, activityFeedCol,
-} from '@lib/refs';
+} from '@infra/refs';
 
 /**
  * Deletes the current user's account and all associated Firestore data.

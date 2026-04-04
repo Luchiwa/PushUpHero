@@ -3,6 +3,7 @@ import './Dashboard.scss';
 import { getExerciseLabel, getInvalidPositionMessage } from '@exercises/types';
 import { useWorkout } from '@app/WorkoutContext';
 import { useDashboardLogic } from './useDashboardLogic';
+import { nextCombo, computeGoalProgress } from '@domain/scoring';
 
 import { FloatyNumbers } from '@components/FloatyNumbers/FloatyNumbers';
 import { GradePop } from './GradePop/GradePop';
@@ -44,24 +45,21 @@ export const Dashboard = memo(function Dashboard({ facingMode, onFlipCamera }: D
         incompleteRepFeedback,
     });
 
-    // Combo: count consecutive reps with score >= 60 (B or above)
+    // Combo: count consecutive reps with score >= COMBO_THRESHOLD (B or above)
     const comboRef = useRef(0);
     const [combo, setCombo] = useState(0);
 
     useEffect(() => {
         if (lastRepResult) {
-            if (lastRepResult.score >= 60) {
-                comboRef.current++;
-            } else {
-                comboRef.current = 0;
-            }
+            comboRef.current = nextCombo(comboRef.current, lastRepResult.score);
             setCombo(comboRef.current);
         }
     }, [lastRepResult]);
 
     // Goal progress for reps mode
-    const goalPct = sessionMode === 'reps' ? Math.min(100, (repCount / goalReps) * 100) : 0;
-    const goalDone = repCount >= goalReps;
+    const goal = computeGoalProgress(repCount, goalReps);
+    const goalPct = sessionMode === 'reps' ? goal.pct : 0;
+    const goalDone = goal.done;
 
     return (
         <div className="dashboard">
@@ -146,7 +144,7 @@ export const Dashboard = memo(function Dashboard({ facingMode, onFlipCamera }: D
                                 </svg>
                             )}
                         </button>
-                        <button className="btn-stop" onClick={handleStop} type="button">■</button>
+                        <button className="btn-stop" onClick={handleStop} type="button" aria-label="Stop workout">■</button>
                     </div>
                 </div>
             </div>
@@ -164,7 +162,7 @@ export const Dashboard = memo(function Dashboard({ facingMode, onFlipCamera }: D
                 <CoachHint text={coachPhrase} />
 
                 {showInvalidBanner && (
-                    <div className={`invalid-position-banner${poseRejectedByLock ? ' invalid-position-banner--lock' : ''}`}>
+                    <div className={`invalid-position-banner${poseRejectedByLock ? ' invalid-position-banner--lock' : ''}`} role="alert">
                         {poseRejectedByLock
                             ? '👤 Wrong person detected — get back in frame'
                             : getInvalidPositionMessage(exerciseType)}

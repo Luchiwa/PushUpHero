@@ -7,8 +7,8 @@
 
 import { onSnapshot } from 'firebase/firestore';
 import type { DocumentData } from 'firebase/firestore';
-import { userRef } from '@lib/refs';
-import type { DbUser } from '@lib/authTypes';
+import { userRef } from '@infra/refs';
+import type { DbUser } from '@domain/authTypes';
 
 /**
  * Real-time listener on a user profile document.

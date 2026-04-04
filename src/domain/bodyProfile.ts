@@ -9,7 +9,6 @@
  */
 
 import type { ExerciseType } from '@exercises/types';
-import type { CapturedRatios } from '@exercises/BaseExerciseDetector';
 
 // ── Per-exercise morphological profiles ──────────────────────────
 
@@ -72,7 +71,11 @@ export interface PushupThresholds {
 }
 
 export function getPushupThresholds(profile?: PushupProfile): PushupThresholds {
-    if (!profile) {
+    // Reject profiles with physiologically impossible values
+    if (!profile
+        || profile.naturalElbowExtension < 150
+        || profile.naturalMinElbowAngle < 30
+        || profile.naturalMinElbowAngle >= profile.naturalElbowExtension) {
         return { angleUpThreshold: 155, angleDownThreshold: 140, perfectAmplitudeAngle: 80 };
     }
     // UP = ~5° below their natural extension (accounts for not-perfectly-straight arms)
@@ -120,33 +123,6 @@ export function getPullupThresholds(profile?: PullupProfile): PullupThresholds {
         perfectRiseFraction: Math.round(perfect * 100) / 100,
     };
 }
-
-// ── Body profile merge map ──────────────────────────────────────
-// Data-driven mapping: each exercise type declares how to merge captured ratios
-// into the profile. Adding a new exercise = adding one entry here.
-export const BODY_PROFILE_MERGE: Record<ExerciseType, (
-  captured: CapturedRatios,
-  dynamicCalibration: number | undefined,
-) => Partial<BodyProfile>> = {
-  pushup: (c, cal) => c.pushup ? {
-    pushup: {
-      ...c.pushup,
-      naturalMinElbowAngle: cal ?? c.pushup.naturalElbowExtension - 70,
-    },
-  } : {},
-  squat: (c, cal) => c.squat ? {
-    squat: {
-      ...c.squat,
-      naturalMinKneeAngle: cal ?? c.squat.naturalKneeExtension - 70,
-    },
-  } : {},
-  pullup: (c, cal) => c.pullup ? {
-    pullup: {
-      ...c.pullup,
-      naturalMaxRiseFraction: cal ?? 0.5,
-    },
-  } : {},
-};
 
 // ── Calibration speed boost ──────────────────────────────────────
 

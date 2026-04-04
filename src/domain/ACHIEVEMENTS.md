@@ -145,6 +145,19 @@ For **each** exercise type:
 
 **Total: 7 achievements**
 
+### 📅 Discipline – Session endurance (single session duration)
+
+| ID | Threshold | Tier | Title | Description |
+|---|---|---|---|---|
+| `session_duration_300` | 5 min (300s) | Bronze | Quick Burn | Complete a 5-minute session |
+| `session_duration_600` | 10 min (600s) | Bronze | Steady Pace | Complete a 10-minute session |
+| `session_duration_1200` | 20 min (1 200s) | Silver | Endurance Test | Complete a 20-minute session |
+| `session_duration_1800` | 30 min (1 800s) | Silver | Half Hour Hero | Complete a 30-minute session |
+| `session_duration_3600` | 60 min (3 600s) | Gold | Iron Hour | Complete a 60-minute session |
+| `session_duration_5400` | 90 min (5 400s) | Platinum | Unstoppable | Complete a 90-minute session |
+
+**Total: 6 achievements**
+
 ### 👥 Social – Friends
 
 | ID | Threshold | Tier | Title |
@@ -186,7 +199,7 @@ For **each** exercise type:
 
 ---
 
-## Grand total: **77 achievements**
+## Grand total: **83 achievements**
 
 ---
 

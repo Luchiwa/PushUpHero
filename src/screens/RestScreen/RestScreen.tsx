@@ -4,7 +4,7 @@
  * User can skip rest early.
  */
 import { useEffect, useState, useRef } from 'react';
-import { getGradeLetter, getGradeClass } from '@lib/constants';
+import { getGradeLetter, getGradeClass } from '@domain/constants';
 import type { SetRecord } from '@exercises/types';
 import './RestScreen.scss';
 

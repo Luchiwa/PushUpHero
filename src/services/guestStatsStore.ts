@@ -9,8 +9,8 @@
  */
 
 import type { ExerciseType } from '@exercises/types';
-import type { AchievementMap, RecordsMap } from './achievementEngine';
-import { emptyRecords } from './achievementEngine';
+import type { AchievementMap, RecordsMap } from '@domain/achievementEngine';
+import { emptyRecords } from '@domain/achievementEngine';
 
 // ── localStorage keys ────────────────────────────────────────────────────────
 

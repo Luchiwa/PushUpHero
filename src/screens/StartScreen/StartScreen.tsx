@@ -10,9 +10,9 @@ const QuickSessionModal = lazy(() => import('@modals/QuickSessionModal/QuickSess
 const StatsScreen = lazy(() => import('@screens/StatsScreen/StatsScreen').then(m => ({ default: m.StatsScreen })));
 const QuestsScreen = lazy(() => import('@screens/QuestsScreen/QuestsScreen').then(m => ({ default: m.QuestsScreen })));
 import { useWorkout } from '@app/WorkoutContext';
-import { getTier } from '@lib/xpSystem';
-import type { QuestDef, QuestProgress } from '@lib/quests';
-import { isQuestAccepted, QUEST_CATEGORY_META, getAvailableQuests } from '@lib/quests';
+import { getTier } from '@domain/xpSystem';
+import type { QuestDef, QuestProgress } from '@domain/quests';
+import { isQuestAccepted, QUEST_CATEGORY_META, getAvailableQuests, getAcceptedQuests } from '@domain/quests';
 import { PlayerHUD } from './PlayerHUD/PlayerHUD';
 import { QuestCard } from './QuestCard/QuestCard';
 import { QuestWidget } from './QuestWidget/QuestWidget';
@@ -22,10 +22,14 @@ import './StartScreen.scss';
 interface StartScreenProps {
     isModelReady: boolean;
     cameraError: string | null;
+    /** Quest to feature as hero card (null = no hero card) */
+    featuredQuest?: QuestDef | null;
+    /** First active quest for widget preview (may differ from featured) */
     activeQuest?: QuestDef | null;
     questProgress?: QuestProgress;
     userLevel?: number;
     onAcceptQuest?: (questId: string) => void;
+    onAbandonQuest?: (questId: string) => void;
     /** When true, auto-open the AuthModal with quest-complete promo banner */
     pendingSignupPrompt?: boolean;
     onSignupPromptHandled?: () => void;
@@ -34,10 +38,12 @@ interface StartScreenProps {
 export function StartScreen({
     isModelReady,
     cameraError,
+    featuredQuest,
     activeQuest,
     questProgress,
     userLevel,
     onAcceptQuest,
+    onAbandonQuest,
     pendingSignupPrompt,
     onSignupPromptHandled,
 }: StartScreenProps) {
@@ -69,7 +75,7 @@ export function StartScreen({
     const totalLifetimeReps = useMemo(() => {
         if (!dbUser?.lifetimeReps) return 0;
         return Object.values(dbUser.lifetimeReps).reduce<number>((sum, v) => sum + (v ?? 0), 0);
-    }, [dbUser?.lifetimeReps]);
+    }, [dbUser]);
 
     // Tier based on level: bronze / silver / gold / platinum
     const tier = getTier(level);
@@ -83,45 +89,58 @@ export function StartScreen({
     }, [isDeepLinkFriends]);
 
     // Auto-open AuthModal with promo banner when guest just completed a quest
-    useEffect(() => {
-        if (pendingSignupPrompt) {
-            setActiveModal({ type: 'auth', signupPromo: true });
-            onSignupPromptHandled?.();
-        }
-    }, [pendingSignupPrompt, onSignupPromptHandled]);
+    const [prevSignupPrompt, setPrevSignupPrompt] = useState(false);
+    if (pendingSignupPrompt && !prevSignupPrompt) {
+        setPrevSignupPrompt(true);
+        setActiveModal({ type: 'auth', signupPromo: true });
+        onSignupPromptHandled?.();
+    }
+    if (!pendingSignupPrompt && prevSignupPrompt) {
+        setPrevSignupPrompt(false);
+    }
 
     const isReady = isModelReady;
 
     // Quest state helpers
-    const questAccepted = activeQuest && questProgress ? isQuestAccepted(activeQuest, questProgress) : false;
-    const isCalibrationQuest = activeQuest?.id === 'first_steps';
+    const featuredAccepted = featuredQuest && questProgress ? isQuestAccepted(featuredQuest, questProgress) : false;
     const availableQuests = questProgress ? getAvailableQuests(questProgress, userLevel ?? 0) : [];
+    const acceptedQuests = questProgress ? getAcceptedQuests(questProgress, userLevel ?? 0) : [];
     const availableCount = availableQuests.length;
+    const acceptedCount = acceptedQuests.length;
     const hasAvailableQuests = availableCount > 0;
     const allQuestsCompleted = questProgress && Object.keys(questProgress.completed).length > 0 && !hasAvailableQuests;
     const completedCount = questProgress ? Object.keys(questProgress.completed).length : 0;
-    const catMeta = activeQuest ? QUEST_CATEGORY_META[activeQuest.category] : null;
+    const catMeta = featuredQuest ? QUEST_CATEGORY_META[featuredQuest.category] : null;
     const onboardingDone = !!questProgress?.completed['first_steps'];
 
-    // Accept quest handler
+    // Accept featured quest handler
     const handleAcceptQuest = useCallback(() => {
-        if (activeQuest && onAcceptQuest) {
-            onAcceptQuest(activeQuest.id);
+        if (featuredQuest && onAcceptQuest) {
+            onAcceptQuest(featuredQuest.id);
         }
-    }, [activeQuest, onAcceptQuest]);
+    }, [featuredQuest, onAcceptQuest]);
 
-    // Start from quest (calibration: exercise picker shown, then start)
-    const handleQuestStart = useCallback(() => {
-        if (!activeQuest) return;
-        // Set goal to quest goal reps
-        setGoalReps(activeQuest.goal.reps);
+    // Start a quest (works for any quick-startable quest)
+    const startQuestWorkout = useCallback((quest: QuestDef) => {
+        setGoalReps(quest.goal.reps);
         setSessionMode('reps');
-        // If quest requires specific exercise, set it
-        if (activeQuest.goal.exerciseType) {
-            changeExerciseType(activeQuest.goal.exerciseType);
+        const exercise = quest.goal.exerciseType;
+        if (exercise) {
+            changeExerciseType(exercise);
         }
-        handleStart();
-    }, [activeQuest, setGoalReps, setSessionMode, changeExerciseType, handleStart]);
+        handleStart(exercise);
+    }, [setGoalReps, setSessionMode, changeExerciseType, handleStart]);
+
+    const handleFeaturedQuestStart = useCallback(() => {
+        if (!featuredQuest) return;
+        startQuestWorkout(featuredQuest);
+    }, [featuredQuest, startQuestWorkout]);
+
+    // Quest start from QuestsScreen (close modal first)
+    const handleQuestStartFromJournal = useCallback((quest: QuestDef) => {
+        setActiveModal(null);
+        startQuestWorkout(quest);
+    }, [startQuestWorkout]);
 
     return (
         <div className="start-screen">
@@ -144,18 +163,17 @@ export function StartScreen({
                     onOpenAuth={() => setActiveModal({ type: 'auth' })}
                 />
 
-                {/* ── Quest Hero Card ── */}
-                {activeQuest && (
+                {/* ── Quest Hero Card (only for featured quest) ── */}
+                {featuredQuest && (
                     <QuestCard
-                        activeQuest={activeQuest}
-                        questAccepted={!!questAccepted}
-                        isCalibrationQuest={!!isCalibrationQuest}
+                        activeQuest={featuredQuest}
+                        questAccepted={!!featuredAccepted}
                         catMeta={catMeta}
                         isReady={isReady}
                         exerciseType={exerciseType}
                         changeExerciseType={changeExerciseType}
                         onAcceptQuest={handleAcceptQuest}
-                        onQuestStart={handleQuestStart}
+                        onQuestStart={handleFeaturedQuestStart}
                     />
                 )}
 
@@ -163,7 +181,7 @@ export function StartScreen({
                 {user && onboardingDone && (
                     <QuestWidget
                         activeQuest={activeQuest}
-                        questAccepted={!!questAccepted}
+                        acceptedCount={acceptedCount}
                         allQuestsCompleted={!!allQuestsCompleted}
                         availableCount={availableCount}
                         completedCount={completedCount}
@@ -261,6 +279,9 @@ export function StartScreen({
                         questProgress={questProgress}
                         userLevel={userLevel ?? 0}
                         onAcceptQuest={onAcceptQuest}
+                        onAbandonQuest={onAbandonQuest}
+                        onQuestStart={handleQuestStartFromJournal}
+                        isReady={isReady}
                     />
                 )}
             </Suspense>

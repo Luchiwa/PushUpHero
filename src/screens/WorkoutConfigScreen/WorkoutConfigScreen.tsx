@@ -5,7 +5,7 @@
  * 1. Block list — shows all added exercise blocks, can add/remove/reorder
  * 2. Block editor — step-by-step wizard for one block (exercise → sets → goal → rest)
  */
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import type { WorkoutPlan, WorkoutBlock } from '@exercises/types';
 import { createDefaultBlock } from '@exercises/types';
 import { PageLayout } from '@components/PageLayout/PageLayout';
@@ -98,7 +98,10 @@ export function WorkoutConfigScreen({
         onPlanChange({ blocks: newBlocks });
     }, [editingBlockIndex, blocks, onPlanChange]);
 
-    const blockSteps = editingBlock ? getBlockSteps(editingBlock) : [];
+    const blockSteps = useMemo(
+        () => editingBlock ? getBlockSteps(editingBlock) : [],
+        [editingBlock],
+    );
 
     const handleBlockNext = useCallback(() => {
         const idx = blockSteps.indexOf(blockStep);

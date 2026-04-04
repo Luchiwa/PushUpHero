@@ -5,7 +5,7 @@
  */
 
 import { onSnapshot, query, orderBy, limit, where, getDocs } from 'firebase/firestore';
-import { sessionsCol } from '@lib/refs';
+import { sessionsCol } from '@infra/refs';
 import type { SessionRecord } from '@exercises/types';
 
 /** Real-time listener on the last N sessions (default 5). Returns unsubscribe. */

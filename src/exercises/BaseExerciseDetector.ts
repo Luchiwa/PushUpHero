@@ -1,6 +1,6 @@
 import type { ExerciseState, Landmark, RepFeedback } from './types';
-import type { BodyProfile } from '@lib/bodyProfile';
-import { CALIBRATION_FRAMES_REQUIRED } from '@lib/constants';
+import type { BodyProfile } from '@domain/bodyProfile';
+import { CALIBRATION_FRAMES_REQUIRED } from '@domain/constants';
 
 // ── Captured Ratios ──────────────────────────────────────────────
 // Detectors populate these during calibration + first reps.
@@ -36,7 +36,7 @@ const BBOX_ADAPT_AFTER_FRAMES = 90;
 const BBOX_ADAPT_RATE = 0.05;
 
 /** Number of frames to smooth the angle signal */
-const SMOOTHING_WINDOW = 5;
+const SMOOTHING_WINDOW = 3;
 /** Number of reps to capture for dynamic calibration */
 const DYNAMIC_CAPTURE_REPS = 5;
 
@@ -69,6 +69,7 @@ export abstract class BaseExerciseDetector {
     protected hasReachedValidDown = false;
     protected lastRepTimestamp = 0;
     protected wasDescending = false;
+    protected _downConfirmCount = 0;
     private _dynamicValues: number[] = [];
 
     // ── Bounding Box Lock state ─────────────────────────────────
@@ -107,6 +108,7 @@ export abstract class BaseExerciseDetector {
         this.hasReachedValidDown = false;
         this.lastRepTimestamp = 0;
         this.wasDescending = false;
+        this._downConfirmCount = 0;
         this._dynamicValues = [];
         this.lockedBbox = null;
         this.bboxRejectStreak = 0;
@@ -137,10 +139,24 @@ export abstract class BaseExerciseDetector {
         leftAngle: number, rightAngle: number,
         leftVis: number, rightVis: number,
     ): number {
+        // Weighted average by visibility — avoids discontinuities when switching sides
+        const MIN_SIDE_VIS = 0.8; // elbow+wrist visibility sum threshold
         let angle: number;
-        if (leftVis > rightVis) angle = leftAngle;
-        else if (rightVis > leftVis) angle = rightAngle;
-        else angle = (leftAngle + rightAngle) / 2;
+        if (leftVis >= MIN_SIDE_VIS && rightVis >= MIN_SIDE_VIS) {
+            // Both sides visible: weighted average (smooth, no flipping)
+            const total = leftVis + rightVis;
+            angle = (leftAngle * leftVis + rightAngle * rightVis) / total;
+        } else if (leftVis >= MIN_SIDE_VIS) {
+            angle = leftAngle;
+        } else if (rightVis >= MIN_SIDE_VIS) {
+            angle = rightAngle;
+        } else {
+            // Both low: weighted average of what we have
+            const total = leftVis + rightVis;
+            angle = total > 0
+                ? (leftAngle * leftVis + rightAngle * rightVis) / total
+                : (leftAngle + rightAngle) / 2;
+        }
 
         this._angleHistory.push(angle);
         if (this._angleHistory.length > SMOOTHING_WINDOW) this._angleHistory.shift();
@@ -197,7 +213,7 @@ export abstract class BaseExerciseDetector {
             this.state.isValidPosition = false;
             return false;
         }
-        if (!this.areLandmarksVisible(landmarks, keyIndices, 0.4)) {
+        if (!this.areLandmarksVisible(landmarks, keyIndices, 0.6)) {
             this.state.isValidPosition = false;
             return false;
         }
@@ -223,6 +239,92 @@ export abstract class BaseExerciseDetector {
         if (this._dynamicValues.length <= DYNAMIC_CAPTURE_REPS) {
             this._capturedRatios.dynamicCalibration =
                 mode === 'min' ? Math.min(...this._dynamicValues) : Math.max(...this._dynamicValues);
+        }
+    }
+
+    // ── Scoring Helpers ─────────────────────────────────────────
+
+    /**
+     * Linear interpolation score between two thresholds.
+     * When `best < worst` (lower is better, e.g. min angle), returns 100 at `best` and 0 at `worst`.
+     * When `best > worst` (higher is better, e.g. rise fraction), returns 100 at `best` and 0 at `worst`.
+     */
+    protected linearScore(value: number, worst: number, best: number): number {
+        if (best < worst) {
+            if (value <= best) return 100;
+            if (value >= worst) return 0;
+            return Math.round(((worst - value) / (worst - best)) * 100);
+        }
+        if (value >= best) return 100;
+        if (value <= worst) return 0;
+        return Math.round(((value - worst) / (best - worst)) * 100);
+    }
+
+    /** Composite rep score: 60% amplitude + 40% alignment */
+    protected computeRepScore(amplitudeScore: number, alignmentScore: number): number {
+        return Math.round(amplitudeScore * 0.6 + alignmentScore * 0.4);
+    }
+
+    // ── Angle-Based Phase Machine ───────────────────────────────
+    // Template method for exercises that use simple angle thresholds
+    // to detect up/down phases (pushup, squat). Pull-up uses a custom
+    // dual-condition approach and does not use this method.
+
+    /**
+     * Common up/down/transition state machine for angle-threshold exercises.
+     *
+     * @param smoothedAngle  Current smoothed joint angle
+     * @param angleUp        Threshold above which the phase is "up"
+     * @param angleDown      Threshold below which the phase is "down"
+     * @param isPositionValid Whether the body is in valid exercise position
+     * @param minRepIntervalMs Minimum ms between reps (debounce)
+     * @param onCountRep     Callback invoked when a rep should be counted.
+     *                       Must return `{ amplitudeScore, alignmentScore, feedback }`.
+     * @param onRepReset     Optional callback for detector-specific cleanup after rep tracking reset.
+     */
+    protected processAngleBasedPhase(
+        smoothedAngle: number,
+        angleUp: number,
+        angleDown: number,
+        isPositionValid: boolean,
+        minRepIntervalMs: number,
+        onCountRep: (repDuration: number) => { amplitudeScore: number; alignmentScore: number; feedback: RepFeedback },
+        onRepReset?: () => void,
+    ): void {
+        const prevPhase = this.state.currentPhase;
+        this.state.incompleteRepFeedback = null;
+
+        if (smoothedAngle >= angleUp) {
+            this._downConfirmCount = 0;
+            if (this.wasDescending && !this.hasReachedValidDown && this.minAngleThisRep < 170) {
+                this.state.incompleteRepFeedback = 'go_lower';
+            }
+            this.wasDescending = false;
+
+            if (this.hasReachedValidDown && isPositionValid) {
+                const now = Date.now();
+                const repDuration = this.lastRepTimestamp > 0 ? now - this.lastRepTimestamp : 2000;
+                if (repDuration >= minRepIntervalMs) {
+                    const { amplitudeScore, alignmentScore, feedback } = onCountRep(repDuration);
+                    const repScore = this.computeRepScore(amplitudeScore, alignmentScore);
+                    this.lastRepTimestamp = now;
+                    this.recordRep(repScore, amplitudeScore, alignmentScore, this.minAngleThisRep, feedback);
+                    this.captureDynamicCalibration(this.minAngleThisRep, 'min');
+                }
+                this.resetRepTracking();
+                onRepReset?.();
+            }
+            this.state.currentPhase = 'up';
+        } else if (smoothedAngle <= angleDown) {
+            this._downConfirmCount++;
+            if (this._downConfirmCount >= 2) {
+                this.hasReachedValidDown = isPositionValid;
+            }
+            this.wasDescending = true;
+            this.state.currentPhase = 'down';
+        } else {
+            if (prevPhase === 'up' || prevPhase === 'idle') this.wasDescending = true;
+            this.state.currentPhase = 'transition';
         }
     }
 
@@ -325,6 +427,31 @@ export abstract class BaseExerciseDetector {
             if (!lm || (lm.visibility ?? 0) < minVisibility) return false;
         }
         return true;
+    }
+
+    /**
+     * Check if core landmarks form a plausible human body.
+     * Rejects "exploded" hallucinated skeletons where core landmarks are incoherently spread.
+     * Same check as the PoseOverlay — but applied BEFORE exercise detection.
+     */
+    protected areLandmarksPlausible(landmarks: Landmark[]): boolean {
+        const MIN_VIS = 0.5;
+        const core = [11, 12, 23, 24]
+            .map(i => landmarks[i])
+            .filter(l => l && (l.visibility ?? 0) > MIN_VIS);
+        if (core.length < 3) return false;
+        const xs = core.map(l => l.x), ys = core.map(l => l.y);
+        const spanX = Math.max(...xs) - Math.min(...xs);
+        const spanY = Math.max(...ys) - Math.min(...ys);
+        return !(spanX > 0.6 || spanY > 0.6 || (spanX < 0.01 && spanY < 0.01));
+    }
+
+    /** Median of values — robust against outlier frames during calibration. */
+    protected medianOf(values: number[]): number {
+        if (values.length === 0) return 0;
+        const sorted = [...values].sort((a, b) => a - b);
+        const mid = Math.floor(sorted.length / 2);
+        return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
     }
 
     protected recordRep(score: number, amplitudeScore: number, alignmentScore: number, minAngle: number, feedback: RepFeedback = 'good'): void {

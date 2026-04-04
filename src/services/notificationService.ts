@@ -5,8 +5,8 @@
  */
 
 import { updateDoc, deleteDoc } from 'firebase/firestore';
-import { getFcmToken } from './firebase';
-import { userRef, notificationRef } from './refs';
+import { getFcmToken } from '@infra/firebase';
+import { userRef, notificationRef } from '@infra/refs';
 
 /** Request an FCM token and store it on the user document. */
 export async function registerFcmToken(uid: string): Promise<void> {

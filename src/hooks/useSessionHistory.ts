@@ -1,13 +1,13 @@
 import { useCallback } from 'react';
 import { useAuthCore, useLevel, useSessions } from './useAuth';
-import { saveSession, localDateString, yesterdayDateString } from '@lib/userService';
-import type { SaveSessionResult } from '@lib/userService';
-import { calculateSessionXp } from '@lib/xpSystem';
-import type { BonusContext, SessionXpResult } from '@lib/xpSystem';
-import { MAX_LOCAL_SESSIONS, getGradeLetter } from '@lib/constants';
+import { saveSession, localDateString, yesterdayDateString } from '@services/sessionService';
+import type { SaveSessionResult } from '@services/sessionService';
+import { calculateSessionXp } from '@domain/xpSystem';
+import type { BonusContext, SessionXpResult } from '@domain/xpSystem';
+import { MAX_LOCAL_SESSIONS, getGradeLetter } from '@domain/constants';
 import type { SetRecord, ExerciseType, SessionRecord } from '@exercises/types';
-import { evaluateAchievements, evaluateRecords } from '@lib/achievementEngine';
-import type { AchievementMap, UserStats } from '@lib/achievementEngine';
+import { evaluateAchievements, evaluateRecords, buildSessionRepsMap } from '@domain/achievementEngine';
+import type { AchievementMap, UserStats } from '@domain/achievementEngine';
 import {
     getGuestStatsSnapshot,
     setGuestAchievements,
@@ -18,7 +18,7 @@ import {
     setGuestLastSessionDate,
     setGuestSGradeCount,
     setGuestLifetimeTrainingTime,
-} from '@lib/guestStatsStore';
+} from '@services/guestStatsStore';
 
 const STORAGE_KEY = 'pushup-sessions';
 const STORAGE_TOTAL_KEY = 'pushup_game_total_sessions';
@@ -115,18 +115,9 @@ export function useSessionHistory() {
 
             // ── Guest achievement & record evaluation ────────────────────
             const guest = getGuestStatsSnapshot();
-            const exerciseType = (newSession.exerciseType ?? 'pushup') as ExerciseType;
 
             // Build session reps map
-            const sessionRepsMap: Partial<Record<ExerciseType, number>> = {};
-            if (newSession.sets && newSession.sets.length > 0) {
-                for (const set of newSession.sets) {
-                    const ex = (set.exerciseType ?? exerciseType) as ExerciseType;
-                    sessionRepsMap[ex] = (sessionRepsMap[ex] ?? 0) + set.reps;
-                }
-            } else {
-                sessionRepsMap[exerciseType] = newSession.reps;
-            }
+            const sessionRepsMap = buildSessionRepsMap(newSession);
 
             // Update lifetime reps
             const newLifetimeReps = { ...guest.lifetimeReps };
@@ -167,6 +158,7 @@ export function useSessionHistory() {
                 sessionXp: newSession.xpEarned ?? 0,
                 globalLevel: 0,
                 lifetimeTrainingTime: newTrainingTime,
+                sessionDuration,
             };
             const newAchievements = evaluateAchievements(stats, currentAchievements);
 

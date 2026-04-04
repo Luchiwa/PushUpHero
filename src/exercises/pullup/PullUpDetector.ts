@@ -1,7 +1,7 @@
 import { BaseExerciseDetector } from '../BaseExerciseDetector';
 import type { ExerciseState, Landmark, RepFeedback } from '../types';
-import { getPullupThresholds } from '@lib/bodyProfile';
-import type { PullupThresholds } from '@lib/bodyProfile';
+import { getPullupThresholds } from '@domain/bodyProfile';
+import type { BodyProfile, PullupThresholds } from '@domain/bodyProfile';
 
 const LM = {
     LEFT_SHOULDER: 11, RIGHT_SHOULDER: 12,
@@ -14,7 +14,7 @@ const LM = {
 const RISE_DOWN_FRACTION = 0.12;
 
 // ── Elbow confirmation ──────────────────────────────────────────
-const ELBOW_CONFIRM_UP = 90;
+const ELBOW_CONFIRM_UP = 100;
 const ELBOW_CONFIRM_DOWN = 120;
 
 // ── Positional constraints ──────────────────────────────────────
@@ -25,10 +25,11 @@ const WRIST_ABOVE_SHOULDER_MARGIN = 0.15;
 const ARM_SYMMETRY_TOLERANCE = 20;
 const BODY_SWAY_TOLERANCE = 0.04;
 const KIPPING_VELOCITY_THRESHOLD = 0.025;
-const SMOOTHING_WINDOW = 5;
+const SMOOTHING_WINDOW = 3;
 
 // ── Key landmarks for post-calibration visibility check ─────────
-const KEY_LANDMARKS = [LM.LEFT_SHOULDER, LM.RIGHT_SHOULDER, LM.LEFT_ELBOW, LM.RIGHT_ELBOW, LM.LEFT_HIP, LM.RIGHT_HIP];
+// Elbows removed: they go above/behind the bar during pull-ups, reducing visibility
+const KEY_LANDMARKS = [LM.LEFT_SHOULDER, LM.RIGHT_SHOULDER, LM.LEFT_HIP, LM.RIGHT_HIP];
 
 export class PullUpDetector extends BaseExerciseDetector {
     // Pull-up specific: shoulder Y tracking
@@ -57,6 +58,11 @@ export class PullUpDetector extends BaseExerciseDetector {
         this.thresholds = getPullupThresholds(this._bodyProfile?.pullup ?? undefined);
     }
 
+    override setBodyProfile(profile: BodyProfile | null): void {
+        super.setBodyProfile(profile);
+        this.thresholds = getPullupThresholds(profile?.pullup ?? undefined);
+    }
+
     reset(): void {
         super.reset();
         this.shoulderYHistory = [];
@@ -75,6 +81,7 @@ export class PullUpDetector extends BaseExerciseDetector {
 
     processPose(landmarks: Landmark[]): ExerciseState {
         if (!landmarks || landmarks.length < 25) return this.getState();
+        if (!this.areLandmarksPlausible(landmarks)) return this.getState();
 
         const lShoulder = landmarks[LM.LEFT_SHOULDER], rShoulder = landmarks[LM.RIGHT_SHOULDER];
         const lElbow = landmarks[LM.LEFT_ELBOW], rElbow = landmarks[LM.RIGHT_ELBOW];
@@ -156,10 +163,11 @@ export class PullUpDetector extends BaseExerciseDetector {
         const isDown = riseFraction <= RISE_DOWN_FRACTION && smoothedAngle >= ELBOW_CONFIRM_DOWN;
 
         if (isUp) {
+            this._downConfirmCount = 0;
             if (this.hasReachedValidDown) {
                 const repAmplitude = this.computeAmplitudeScore(this.maxRiseThisRep);
                 const repAlignment = this.bestAlignmentThisRep;
-                const repScore = Math.round(repAmplitude * 0.6 + repAlignment * 0.4);
+                const repScore = this.computeRepScore(repAmplitude, repAlignment);
                 const now = Date.now();
                 const repDuration = this.lastRepTimestamp > 0 ? now - this.lastRepTimestamp : 3000;
                 const feedback = this.determineFeedback(repAmplitude, repAlignment, this.worstArmAsymmetry, this.worstBodySway, this.maxHipVelocity, repDuration);
@@ -174,11 +182,15 @@ export class PullUpDetector extends BaseExerciseDetector {
             }
             this.state.currentPhase = 'up';
         } else if (isDown) {
+            // Hysteresis: require 2 consecutive frames in down zone before confirming
+            this._downConfirmCount++;
             if (this.wasDescending && this.maxRiseThisRep > 0.1 && this.maxRiseThisRep < RISE_UP) {
                 this.state.incompleteRepFeedback = 'go_lower';
             }
             this.wasDescending = false;
-            this.hasReachedValidDown = isValid;
+            if (this._downConfirmCount >= 2) {
+                this.hasReachedValidDown = isValid;
+            }
             this.state.currentPhase = 'down';
         } else {
             if (prevPhase === 'down') this.wasDescending = true;
@@ -201,21 +213,21 @@ export class PullUpDetector extends BaseExerciseDetector {
     // ── Calibration finalization ─────────────────────────────────
 
     private finalizeCalibration(landmarks: Landmark[]): void {
-        const n = this.calibrationFrames.length;
-        const avg = (fn: (f: typeof this.calibrationFrames[0]) => number) =>
-            this.calibrationFrames.reduce((s, f) => s + fn(f), 0) / n;
+        // Use median for robustness against outlier frames
+        const med = (fn: (f: typeof this.calibrationFrames[0]) => number) =>
+            this.medianOf(this.calibrationFrames.map(fn));
 
-        const avgSpread = avg(f => f.spread);
-        this.calibratedMinShoulderHipSpread = avgSpread * 0.3;
-        this.calibratedWristAboveShoulderMargin = avg(f => f.wristOffset) + 0.25;
-        this.calibratedBaselineShoulderY = avg(f => f.shoulderY);
-        this.calibratedTorsoLength = avgSpread;
+        const medSpread = med(f => f.spread);
+        this.calibratedMinShoulderHipSpread = medSpread * 0.3;
+        this.calibratedWristAboveShoulderMargin = med(f => f.wristOffset) + 0.25;
+        this.calibratedBaselineShoulderY = med(f => f.shoulderY);
+        this.calibratedTorsoLength = medSpread;
 
-        const avgTorso = avg(f => f.torsoLen);
-        if (avgTorso > 0.01) {
+        const medTorso = med(f => f.torsoLen);
+        if (medTorso > 0.01) {
             this._capturedRatios.pullup = {
-                armToTorsoRatio: avg(f => f.armLen) / avgTorso,
-                naturalArmExtension: Math.round(avg(f => f.elbowAngle)),
+                armToTorsoRatio: med(f => f.armLen) / medTorso,
+                naturalArmExtension: Math.round(med(f => f.elbowAngle)),
             };
         }
 
@@ -228,8 +240,8 @@ export class PullUpDetector extends BaseExerciseDetector {
         const { riseUpFraction, perfectRiseFraction } = this.thresholds;
         if (maxRise >= perfectRiseFraction) return 100;
         if (maxRise <= riseUpFraction) return 50;
-        return Math.round(Math.max(0, Math.min(100,
-            50 + ((maxRise - riseUpFraction) / (perfectRiseFraction - riseUpFraction)) * 50)));
+        // Linear interpolation in 50–100 range (pull-ups always get at least 50 for reaching the bar)
+        return Math.round(50 + this.linearScore(maxRise, riseUpFraction, perfectRiseFraction) * 0.5);
     }
 
     private computeAlignmentScore(armAsymmetry: number, bodySway: number, hipVelocity: number): number {

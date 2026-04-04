@@ -6,7 +6,7 @@
  */
 
 import { getDoc } from 'firebase/firestore';
-import { userRef } from './refs';
+import { userRef } from '@infra/refs';
 import { mergeLocalDataToCloud } from './userService';
 import type { SessionRecord } from '@exercises/types';
 import { getGuestStatsSnapshot, clearGuestStats } from './guestStatsStore';

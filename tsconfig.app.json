@@ -38,7 +38,9 @@
       "@hooks/*": ["src/hooks/*"],
       "@exercises/*": ["src/exercises/*"],
       "@data/*": ["src/data/*"],
-      "@lib/*": ["src/lib/*"],
+      "@domain/*": ["src/domain/*"],
+      "@services/*": ["src/services/*"],
+      "@infra/*": ["src/infra/*"],
       "@assets/*": ["src/assets/*"]
     }
   },

@@ -6,8 +6,8 @@
  */
 
 import { getDoc, onSnapshot } from 'firebase/firestore';
-import { userRef, friendsCol, friendRequestsCol, sentRequestsCol } from '@lib/refs';
-import type { FriendRequest, OutgoingRequest } from '@lib/friendService';
+import { userRef, friendsCol, friendRequestsCol, sentRequestsCol } from '@infra/refs';
+import type { FriendRequest, OutgoingRequest } from '@services/friendService';
 
 export interface FriendEntry {
     uid: string;

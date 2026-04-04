@@ -3,10 +3,11 @@ import { getExerciseLabel } from '@exercises/types';
 import { useSoundEffect } from '@hooks/useSoundEffect';
 import { useModalClose } from '@hooks/shared/useModalClose';
 import { useWorkout } from '@app/WorkoutContext';
-import { getGradeLetter, getGradeClass, formatElapsedTime } from '@lib/constants';
-import type { AchievementDef } from '@lib/achievements';
-import { TIER_COLORS } from '@lib/achievements';
-import { RECORDS } from '@lib/achievements';
+import { getGradeLetter, getGradeClass, formatElapsedTime } from '@domain/constants';
+import { weightedAverageScore } from '@domain/scoring';
+import type { AchievementDef } from '@domain/achievements';
+import { TIER_COLORS } from '@domain/achievements';
+import { RECORDS } from '@domain/achievements';
 import { AchievementToastQueue } from '@components/AchievementToastQueue/AchievementToastQueue';
 import { ConfettiCanvas } from './ConfettiCanvas/ConfettiCanvas';
 import { XPBreakdown } from './XPBreakdown/XPBreakdown';
@@ -33,7 +34,7 @@ export function SummaryScreen({ newAchievements }: SummaryProps) {
 
     const sessionXp = lastSessionXp ?? undefined;
     const brokenRecords = lastSessionXp?.brokenRecords;
-    const questCompleted = questCompletedThisSession;
+    const questsCompleted = questCompletedThisSession;
     const { initAudio, playVictorySound } = useSoundEffect();
     const { closing, handleClose: handleContinue, handleAnimationEnd } = useModalClose(handleReset);
 
@@ -44,7 +45,7 @@ export function SummaryScreen({ newAchievements }: SummaryProps) {
         ? completedSets.reduce((sum, s) => sum + s.reps, 0)
         : exerciseState.repCount;
     const averageScore = isMultiSet
-        ? (totalReps > 0 ? Math.round(completedSets.reduce((sum, s) => sum + s.averageScore * s.reps, 0) / totalReps) : 0)
+        ? weightedAverageScore(completedSets)
         : exerciseState.averageScore;
 
     // ── Victory celebration: sound + confetti ────────────────────────
@@ -66,7 +67,7 @@ export function SummaryScreen({ newAchievements }: SummaryProps) {
                 {/* Victory celebration header */}
                 {goalReached && (
                     <div className="summary-victory-header">
-                        <span className="summary-victory-emoji">🏆</span>
+                        <span className="summary-victory-emoji" aria-hidden="true">🏆</span>
                         <h2 className="summary-victory-title">
                             {isMultiExercise || isMultiSet ? 'WORKOUT COMPLETE!' : 'GOAL REACHED!'}
                         </h2>
@@ -80,15 +81,19 @@ export function SummaryScreen({ newAchievements }: SummaryProps) {
                     </h2>
                 )}
 
-                {/* Quest completion banner */}
-                {questCompleted && (
-                    <div className="summary-quest-banner">
-                        <span className="summary-quest-emoji">{questCompleted.emoji}</span>
-                        <div className="summary-quest-info">
-                            <span className="summary-quest-label">Quest Complete!</span>
-                            <span className="summary-quest-title">{questCompleted.title}</span>
-                        </div>
-                        <span className="summary-quest-xp">+{questCompleted.xpReward} XP</span>
+                {/* Quest completion banner(s) */}
+                {questsCompleted.length > 0 && (
+                    <div className="summary-quest-list">
+                        {questsCompleted.map(quest => (
+                            <div key={quest.id} className="summary-quest-banner">
+                                <span className="summary-quest-emoji" aria-hidden="true">{quest.emoji}</span>
+                                <div className="summary-quest-info">
+                                    <span className="summary-quest-label">Quest Complete!</span>
+                                    <span className="summary-quest-title">{quest.title}</span>
+                                </div>
+                                <span className="summary-quest-xp">+{quest.xpReward} XP</span>
+                            </div>
+                        ))}
                     </div>
                 )}
 

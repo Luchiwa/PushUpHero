@@ -1,7 +1,7 @@
 import { BaseExerciseDetector } from '../BaseExerciseDetector';
 import type { ExerciseState, Landmark, RepFeedback } from '../types';
-import { getSquatThresholds } from '@lib/bodyProfile';
-import type { SquatThresholds } from '@lib/bodyProfile';
+import { getSquatThresholds } from '@domain/bodyProfile';
+import type { BodyProfile, SquatThresholds } from '@domain/bodyProfile';
 
 const LM = {
     LEFT_SHOULDER: 11, RIGHT_SHOULDER: 12,
@@ -38,6 +38,11 @@ export class SquatDetector extends BaseExerciseDetector {
         this.thresholds = getSquatThresholds(this._bodyProfile?.squat ?? undefined);
     }
 
+    override setBodyProfile(profile: BodyProfile | null): void {
+        super.setBodyProfile(profile);
+        this.thresholds = getSquatThresholds(profile?.squat ?? undefined);
+    }
+
     reset(): void {
         super.reset();
         this.worstKneeDeviation = 0;
@@ -50,6 +55,7 @@ export class SquatDetector extends BaseExerciseDetector {
 
     processPose(landmarks: Landmark[]): ExerciseState {
         if (!landmarks || landmarks.length < 29) return this.getState();
+        if (!this.areLandmarksPlausible(landmarks)) return this.getState();
 
         const lShoulder = landmarks[LM.LEFT_SHOULDER], rShoulder = landmarks[LM.RIGHT_SHOULDER];
         const lHip = landmarks[LM.LEFT_HIP], rHip = landmarks[LM.RIGHT_HIP];
@@ -120,40 +126,20 @@ export class SquatDetector extends BaseExerciseDetector {
         const torsoLean = Math.abs(shoulderMidX - hipMidX);
         const alignmentScore = this.computeAlignmentScore(kneeDeviation, torsoLean);
 
-        // ── 6. State machine ────────────────────────────────────────
+        // ── 6. State machine (template method) ───────────────────────
         const { angleUpThreshold: ANGLE_UP, angleDownThreshold: ANGLE_DOWN } = this.thresholds;
         const prevPhase = this.state.currentPhase;
-        this.state.incompleteRepFeedback = null;
 
-        if (smoothedAngle >= ANGLE_UP) {
-            if (this.wasDescending && !this.hasReachedValidDown && this.minAngleThisRep < 170) {
-                this.state.incompleteRepFeedback = 'go_lower';
-            }
-            this.wasDescending = false;
-
-            if (this.hasReachedValidDown) {
-                const repAmplitude = this.computeAmplitudeScore(this.minAngleThisRep);
-                const repAlignment = this.bestAlignmentThisRep;
-                const repScore = Math.round(repAmplitude * 0.6 + repAlignment * 0.4);
-                const now = Date.now();
-                const repDuration = this.lastRepTimestamp > 0 ? now - this.lastRepTimestamp : 2000;
-                const feedback = this.determineFeedback(repAmplitude, repAlignment, this.worstKneeDeviation, this.worstTorsoLean, repDuration);
-                this.lastRepTimestamp = now;
-                this.recordRep(repScore, repAmplitude, repAlignment, this.minAngleThisRep, feedback);
-                this.captureDynamicCalibration(this.minAngleThisRep, 'min');
-                this.resetRepTracking();
-                this.worstKneeDeviation = 0;
-                this.worstTorsoLean = 0;
-            }
-            this.state.currentPhase = 'up';
-        } else if (smoothedAngle <= ANGLE_DOWN) {
-            this.hasReachedValidDown = isUpright;
-            this.wasDescending = true;
-            this.state.currentPhase = 'down';
-        } else {
-            if (prevPhase === 'up' || prevPhase === 'idle') this.wasDescending = true;
-            this.state.currentPhase = 'transition';
-        }
+        this.processAngleBasedPhase(
+            smoothedAngle, ANGLE_UP, ANGLE_DOWN,
+            isUpright, 600, // debounce: min 600ms between reps
+            (repDuration) => ({
+                amplitudeScore: this.computeAmplitudeScore(this.minAngleThisRep),
+                alignmentScore: this.bestAlignmentThisRep,
+                feedback: this.determineFeedback(this.computeAmplitudeScore(this.minAngleThisRep), this.bestAlignmentThisRep, this.worstKneeDeviation, this.worstTorsoLean, repDuration),
+            }),
+            () => { this.worstKneeDeviation = 0; this.worstTorsoLean = 0; },
+        );
 
         // ── 7. Track stats ──────────────────────────────────────────
         if (prevPhase !== 'idle') {
@@ -169,19 +155,19 @@ export class SquatDetector extends BaseExerciseDetector {
     // ── Calibration finalization ─────────────────────────────────
 
     private finalizeCalibration(landmarks: Landmark[]): void {
-        const n = this.calibrationFrames.length;
-        const avg = (fn: (f: typeof this.calibrationFrames[0]) => number) =>
-            this.calibrationFrames.reduce((s, f) => s + fn(f), 0) / n;
+        // Use median for robustness against outlier frames
+        const med = (fn: (f: typeof this.calibrationFrames[0]) => number) =>
+            this.medianOf(this.calibrationFrames.map(fn));
 
-        this.calibratedMinBodyVerticalSpread = avg(f => f.spread) * 0.4;
-        this.calibratedShoulderAboveHipMargin = avg(f => f.shoulderHipDiff) * 0.3;
+        this.calibratedMinBodyVerticalSpread = med(f => f.spread) * 0.4;
+        this.calibratedShoulderAboveHipMargin = med(f => f.shoulderHipDiff) * 0.3;
 
-        const avgTorso = avg(f => f.torsoLen);
-        if (avgTorso > 0.01) {
+        const medTorso = med(f => f.torsoLen);
+        if (medTorso > 0.01) {
             this._capturedRatios.squat = {
-                legToTorsoRatio: avg(f => f.legLen) / avgTorso,
-                naturalKneeExtension: Math.round(avg(f => f.kneeAngle)),
-                stanceWidthRatio: avg(f => f.stanceWidth),
+                legToTorsoRatio: med(f => f.legLen) / medTorso,
+                naturalKneeExtension: Math.round(med(f => f.kneeAngle)),
+                stanceWidthRatio: med(f => f.stanceWidth),
             };
         }
 
@@ -191,11 +177,7 @@ export class SquatDetector extends BaseExerciseDetector {
     // ── Scoring ─────────────────────────────────────────────────
 
     private computeAmplitudeScore(minAngle: number): number {
-        const { angleDownThreshold, perfectAmplitudeAngle } = this.thresholds;
-        if (minAngle <= perfectAmplitudeAngle) return 100;
-        if (minAngle >= angleDownThreshold) return 0;
-        return Math.round(Math.max(0, Math.min(100,
-            ((angleDownThreshold - minAngle) / (angleDownThreshold - perfectAmplitudeAngle)) * 100)));
+        return this.linearScore(minAngle, this.thresholds.angleDownThreshold, this.thresholds.perfectAmplitudeAngle);
     }
 
     private computeAlignmentScore(kneeDeviation: number, torsoLean: number): number {

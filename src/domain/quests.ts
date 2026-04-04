@@ -392,6 +392,54 @@ export function getQuestsByCategory(): Map<QuestCategory, QuestDef[]> {
     return map;
 }
 
+// ── Quick-start & featured quest logic ──────────────────────────
+
+/** Maximum number of quests a user can have accepted at the same time */
+export const MAX_ACCEPTED_QUESTS = 3;
+
+/** A quest is quick-startable if it can be launched as a simple Quick Session (no multi-set/multi-exercise) */
+export function isQuestQuickStartable(quest: QuestDef): boolean {
+    return !quest.goal.multiSet && !quest.goal.multiExercise;
+}
+
+/**
+ * Get the quest to feature as a hero card on the StartScreen.
+ * Returns null when no quest deserves the prominent placement.
+ *
+ * Rules:
+ * - Onboarding quests (first_steps, warm_up) are always featured if not completed
+ * - Post-onboarding: only an accepted + quick-startable quest is featured
+ */
+export function getFeaturedQuest(progress: QuestProgress, userLevel: number = 0): QuestDef | null {
+    // Onboarding: always feature the active onboarding quest
+    for (const quest of QUESTS) {
+        if (quest.category !== 'onboarding') continue;
+        const status = getQuestStatus(quest, progress, userLevel);
+        if (status === 'available' || status === 'accepted') return quest;
+    }
+
+    // Post-onboarding: feature the first accepted quest that is quick-startable
+    for (const quest of QUESTS) {
+        const status = getQuestStatus(quest, progress, userLevel);
+        if (status === 'accepted' && isQuestQuickStartable(quest)) return quest;
+    }
+
+    return null;
+}
+
+/** Get all currently accepted (not yet completed) quests */
+export function getAcceptedQuests(progress: QuestProgress, userLevel: number = 0): QuestDef[] {
+    return QUESTS.filter(q => getQuestStatus(q, progress, userLevel) === 'accepted');
+}
+
+/** Return a contextual hint for complex (non-quick-startable) quests */
+export function getComplexQuestHint(quest: QuestDef): string | null {
+    if (isQuestQuickStartable(quest)) return null;
+    if (quest.goal.multiExercise) return 'Use Multi-Set Workout with 2+ exercises';
+    if (quest.goal.multiSet) return 'Use Multi-Set Workout with 2+ sets';
+    return null;
+}
+
 /** Stats summary for the quests screen header */
 export function getQuestStats(progress: QuestProgress): {
     total: number;

@@ -1,3 +1,4 @@
+@use 'sass:color';
 @use '../../styles/variables' as *;
 
 // ── Body override ────────────────────────────────────────────────
@@ -240,6 +241,83 @@
   &:active {
     transform: scale(0.95);
   }
+}
+
+// ── Actions row (accepted quests) ────────────────────────────────
+.quest-item-actions {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-top: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.quest-item-start {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.3rem 0.7rem;
+  border: none;
+  border-radius: $radius-pill;
+  background: linear-gradient(135deg, $green, color.adjust($green, $lightness: -8%));
+  color: $white;
+  font-size: $font-xs;
+  font-weight: 700;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+  box-shadow: 0 2px 8px rgba($green, 0.25);
+
+  &:hover:not(:disabled) {
+    box-shadow: 0 3px 14px rgba($green, 0.4);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.95);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.quest-item-hint {
+  font-size: $font-xs;
+  font-weight: 600;
+  color: $text-muted;
+  font-style: italic;
+}
+
+.quest-item-abandon {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid rgba($red, 0.2);
+  border-radius: $radius-pill;
+  background: transparent;
+  color: rgba($red, 0.6);
+  font-size: $font-xs;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+
+  &:hover {
+    color: $red;
+    border-color: rgba($red, 0.4);
+    background: rgba($red, 0.05);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.quest-item-slots-full {
+  font-size: $font-xs;
+  font-weight: 600;
+  color: $text-muted;
+  font-style: italic;
+  margin-top: 0.25rem;
 }
 
 .quest-item-right {

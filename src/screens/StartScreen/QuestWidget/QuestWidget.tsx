@@ -1,9 +1,9 @@
-import type { QuestDef } from '@lib/quests';
+import type { QuestDef } from '@domain/quests';
 import './QuestWidget.scss';
 
 interface QuestWidgetProps {
     activeQuest?: QuestDef | null;
-    questAccepted: boolean;
+    acceptedCount: number;
     allQuestsCompleted: boolean;
     availableCount: number;
     completedCount: number;
@@ -12,7 +12,7 @@ interface QuestWidgetProps {
 
 export function QuestWidget({
     activeQuest,
-    questAccepted,
+    acceptedCount,
     allQuestsCompleted,
     availableCount,
     completedCount,
@@ -41,22 +41,25 @@ export function QuestWidget({
                     <span className="quest-widget-title">Quests</span>
                     {allQuestsCompleted ? (
                         <span className="quest-widget-badge quest-widget-badge--done">✓ All done</span>
+                    ) : acceptedCount > 0 && availableCount > 0 ? (
+                        <span className="quest-widget-badge">{acceptedCount} active · {availableCount} available</span>
+                    ) : acceptedCount > 0 ? (
+                        <span className="quest-widget-badge">{acceptedCount} active</span>
                     ) : availableCount > 0 ? (
                         <span className="quest-widget-badge">{availableCount} available</span>
                     ) : null}
                 </div>
                 <div className="quest-widget-preview">
-                    {activeQuest && questAccepted ? (
+                    {activeQuest && acceptedCount > 0 ? (
                         <>
                             <span className="quest-widget-quest-emoji">{activeQuest.emoji}</span>
                             <span className="quest-widget-quest-name">{activeQuest.title}</span>
-                            <span className="quest-widget-quest-status"><span className="quest-widget-quest-dot" />In progress</span>
-                        </>
-                    ) : activeQuest && !questAccepted ? (
-                        <>
-                            <span className="quest-widget-quest-emoji">{activeQuest.emoji}</span>
-                            <span className="quest-widget-quest-name">{activeQuest.title}</span>
-                            <span className="quest-widget-quest-status quest-widget-quest-status--new">✨ New</span>
+                            {acceptedCount > 1 && (
+                                <span className="quest-widget-quest-more">+{acceptedCount - 1} more</span>
+                            )}
+                            {acceptedCount === 1 && (
+                                <span className="quest-widget-quest-status"><span className="quest-widget-quest-dot" />In progress</span>
+                            )}
                         </>
                     ) : allQuestsCompleted ? (
                         <span className="quest-widget-completed">🏆 {completedCount} quests conquered</span>

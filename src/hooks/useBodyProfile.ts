@@ -2,11 +2,11 @@
  * useBodyProfile — Persists BodyProfile in localStorage
  * and syncs to Firestore when logged in.
  */
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAuthCore } from './useAuth';
-import { updateBodyProfile } from '@lib/userService';
-import type { BodyProfile } from '@lib/bodyProfile';
-import { emptyBodyProfile, BODY_PROFILE_VERSION } from '@lib/bodyProfile';
+import { updateBodyProfile } from '@services/profileService';
+import type { BodyProfile } from '@domain/bodyProfile';
+import { emptyBodyProfile, BODY_PROFILE_VERSION } from '@domain/bodyProfile';
 
 const LS_PROFILE_KEY = 'pushup-hero-body-profile';
 
@@ -24,40 +24,47 @@ function loadProfile(): BodyProfile {
 export function useBodyProfile() {
     const { user, dbUser } = useAuthCore();
     const [bodyProfile, setBodyProfileState] = useState<BodyProfile>(loadProfile);
-    const initialLoadDone = useRef(false);
+    const [hydratedForUid, setHydratedForUid] = useState<string | null>(null);
+    const [prevUser, setPrevUser] = useState(user);
 
-    // Hydrate from Firestore on login (cloud takes priority)
-    useEffect(() => {
-        if (!dbUser || !user || initialLoadDone.current) return;
-        initialLoadDone.current = true;
-
-        const localProfile = loadProfile();
-
+    // Hydrate from Firestore on login (pure state transition during render)
+    const uid = user?.uid ?? null;
+    if (dbUser && uid && hydratedForUid !== uid) {
+        setHydratedForUid(uid);
         if (dbUser.bodyProfile && dbUser.bodyProfile.version === BODY_PROFILE_VERSION) {
             setBodyProfileState(dbUser.bodyProfile);
-            localStorage.setItem(LS_PROFILE_KEY, JSON.stringify(dbUser.bodyProfile));
-        } else if (localProfile.capturedAt > 0) {
-            updateBodyProfile(user.uid, localProfile).catch(console.error);
         }
-    }, [dbUser, user]);
+    }
 
-    // Reset on logout
-    const prevUserRef = useRef(user);
-    useEffect(() => {
-        if (!user && prevUserRef.current) {
-            initialLoadDone.current = false;
+    // Reset on logout (pure state transition during render)
+    if (user !== prevUser) {
+        setPrevUser(user);
+        if (!user && prevUser) {
+            setHydratedForUid(null);
             setBodyProfileState(emptyBodyProfile());
         }
-        prevUserRef.current = user;
-    }, [user]);
+    }
+
+    // Side effects: sync localStorage ↔ Firestore (runs after render)
+    useEffect(() => {
+        if (!dbUser || !uid) return;
+        if (dbUser.bodyProfile && dbUser.bodyProfile.version === BODY_PROFILE_VERSION) {
+            localStorage.setItem(LS_PROFILE_KEY, JSON.stringify(dbUser.bodyProfile));
+        } else {
+            const localProfile = loadProfile();
+            if (localProfile.capturedAt > 0) {
+                updateBodyProfile(uid, localProfile).catch(console.error);
+            }
+        }
+    }, [dbUser, uid]);
 
     const saveBodyProfile = useCallback((profile: BodyProfile) => {
         setBodyProfileState(profile);
         localStorage.setItem(LS_PROFILE_KEY, JSON.stringify(profile));
-        if (user) {
-            updateBodyProfile(user.uid, profile).catch(console.error);
+        if (uid) {
+            updateBodyProfile(uid, profile).catch(console.error);
         }
-    }, [user]);
+    }, [uid]);
 
     return { bodyProfile, saveBodyProfile };
 }

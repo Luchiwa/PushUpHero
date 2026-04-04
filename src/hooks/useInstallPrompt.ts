@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { isIos } from '@lib/device';
+import { isIos } from '@infra/device';
 
 export type InstallContext = 'android' | 'ios' | 'installed' | 'unsupported';
 

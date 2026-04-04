@@ -181,6 +181,14 @@
     min-width: 0;
 }
 
+.quest-widget-quest-more {
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: $text-muted;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
 .quest-widget-quest-status {
     display: inline-flex;
     align-items: center;

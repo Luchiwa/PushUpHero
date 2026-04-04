@@ -101,15 +101,53 @@ export function DragNumberPicker({
     };
     const handleTouchEnd = () => onDragEnd();
 
+    // Keyboard support for the drag area
+    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+        let newVal: number | null = null;
+        switch (e.key) {
+            case 'ArrowUp':
+            case 'ArrowRight':
+                newVal = Math.min(max, value + 1);
+                break;
+            case 'ArrowDown':
+            case 'ArrowLeft':
+                newVal = Math.max(min, value - 1);
+                break;
+            case 'PageUp':
+                newVal = Math.min(max, value + 10);
+                break;
+            case 'PageDown':
+                newVal = Math.max(min, value - 10);
+                break;
+            case 'Home':
+                newVal = min;
+                break;
+            case 'End':
+                newVal = max;
+                break;
+            default:
+                return; // don't prevent default for unhandled keys
+        }
+        e.preventDefault();
+        if (newVal !== null) onChange(newVal);
+    }, [value, min, max, onChange]);
+
     const percentage = ((value - min) / (max - min)) * 100;
 
     return (
         <div
             className={`drag-picker ${isDragging ? 'drag-picker-active' : ''}`}
+            role="slider"
+            tabIndex={0}
+            aria-valuenow={value}
+            aria-valuemin={min}
+            aria-valuemax={max}
+            aria-label={`${unit} picker`}
             onMouseDown={handleMouseDown}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
+            onKeyDown={handleKeyDown}
         >
             {showTrack && (
                 <div className="drag-picker-track">

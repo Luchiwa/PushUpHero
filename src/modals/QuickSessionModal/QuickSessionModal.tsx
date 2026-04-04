@@ -1,8 +1,10 @@
+import { useRef } from 'react';
 import { DragNumberPicker } from '@components/DragNumberPicker/DragNumberPicker';
 import { TimePicker } from '@components/TimePicker/TimePicker';
 import { ExercisePicker } from '@components/ExercisePicker/ExercisePicker';
 import { useWorkout } from '@app/WorkoutContext';
 import { useModalClose } from '@hooks/shared/useModalClose';
+import { useFocusTrap } from '@hooks/shared/useFocusTrap';
 import './QuickSessionModal.scss';
 
 interface QuickSessionModalProps {
@@ -20,9 +22,12 @@ export function QuickSessionModal({ onClose, isReady }: QuickSessionModalProps) 
     } = useWorkout();
 
     const { closing, handleClose, handleAnimationEnd } = useModalClose(onClose);
+    const modalRef = useRef<HTMLDivElement>(null);
+    useFocusTrap(modalRef);
 
     return (
         <div
+            ref={modalRef}
             className={`qs-overlay${closing ? ' qs-overlay--exit' : ''}`}
             onClick={handleClose}
             onAnimationEnd={handleAnimationEnd}

@@ -12,13 +12,14 @@ import type { CapturedRatios } from '@exercises/BaseExerciseDetector';
 import { useSessionHistory } from '@hooks/useSessionHistory';
 import { useAuthCore, useLevel } from '@hooks/useAuth';
 import { useFriends } from '@hooks/useFriends';
-import { levelFromTotalXp, totalXpForLevel, calculateSessionXp, xpForRep, EXERCISE_DIFFICULTY } from '@lib/xpSystem';
-import type { BonusContext, SessionXpResult } from '@lib/xpSystem';
-import type { SaveSessionResult } from '@lib/userService';
-import type { QuestDef } from '@lib/quests';
-import { isBodyProfileQuest, isQuestGoalMet } from '@lib/quests';
-import type { BodyProfile } from '@lib/bodyProfile';
-import { BODY_PROFILE_VERSION, BODY_PROFILE_MERGE } from '@lib/bodyProfile';
+import { levelFromTotalXp, calculateSessionXp, projectLiveXp } from '@domain/xpSystem';
+import type { BonusContext, SessionXpResult } from '@domain/xpSystem';
+import type { SaveSessionResult } from '@services/sessionService';
+import type { QuestDef } from '@domain/quests';
+import { isBodyProfileQuest, isQuestGoalMet } from '@domain/quests';
+import type { BodyProfile } from '@domain/bodyProfile';
+import { BODY_PROFILE_VERSION } from '@domain/bodyProfile';
+import { BODY_PROFILE_MERGE } from '@exercises/registry';
 import type { WorkoutAction } from './workoutReducer';
 import { durationToSeconds } from './workoutTypes';
 
@@ -44,7 +45,7 @@ interface UseWorkoutSessionProps {
 
 export interface UseWorkoutSessionReturn {
   lastSessionXp: (SessionXpResult & Partial<SaveSessionResult>) | null;
-  questCompletedThisSession: QuestDef | null;
+  questCompletedThisSession: QuestDef[];
   savedLevel: number | null;
   levelBefore: number;
   saveWorkoutSession: (allSets: SetRecord[]) => void;
@@ -79,33 +80,16 @@ export function useWorkoutSession({
 
   // ── Result state ─────────────────────────────────────────────
   const [lastSessionXp, setLastSessionXp] = useState<(SessionXpResult & Partial<SaveSessionResult>) | null>(null);
-  const [questCompletedThisSession, setQuestCompletedThisSession] = useState<QuestDef | null>(null);
-  const savedLevelRef = useRef<number | null>(null);
+  const [questCompletedThisSession, setQuestCompletedThisSession] = useState<QuestDef[]>([]);
+  const [savedLevel, setSavedLevel] = useState<number | null>(null);
   const sessionSavedRef = useRef(false);
   const levelBeforeRef = useRef(0);
   const [levelBefore, setLevelBefore] = useState(0);
 
-  // ── Live XP projection (fix: use real XP data for completed sets) ──
-  const completedXp = completedSets.reduce((sum, set) => {
-    const exType = set.exerciseType ?? 'pushup';
-    const diff = EXERCISE_DIFFICULTY[exType] ?? 1.0;
-    if (set.repHistory.length > 0) {
-      return sum + set.repHistory.reduce((s, r) => s + xpForRep(r.score), 0) * diff;
-    }
-    return sum + set.reps * xpForRep(set.averageScore) * diff;
-  }, 0);
-
-  // Current in-progress set: estimate with C-grade (10 XP) * exercise difficulty
-  const currentExDifficulty = EXERCISE_DIFFICULTY[activeExerciseType] ?? 1.0;
-  const currentSetEstimate = currentSetReps * 10 * currentExDifficulty;
-
-  const liveXpEstimate = totalXp + Math.round(completedXp + currentSetEstimate);
-  const liveLevel = levelFromTotalXp(liveXpEstimate);
-  const liveLevelBase = totalXpForLevel(liveLevel);
-  const liveLevelNext = totalXpForLevel(liveLevel + 1);
-  const liveProgressPct = liveLevelNext > liveLevelBase
-    ? ((liveXpEstimate - liveLevelBase) / (liveLevelNext - liveLevelBase)) * 100
-    : 0;
+  // ── Live XP projection (pure domain function) ──
+  const { liveLevel, liveProgressPct } = projectLiveXp(
+    totalXp, completedSets, currentSetReps, activeExerciseType,
+  );
 
   // ── Save ─────────────────────────────────────────────────────
   const saveWorkoutSession = useCallback((allSets: SetRecord[]) => {
@@ -138,7 +122,8 @@ export function useWorkoutSession({
     // Pre-calculate XP for level-up check
     const xpResult = calculateSessionXp(allSets, bonusCtx);
     const newTotalXp = totalXp + xpResult.totalXp;
-    savedLevelRef.current = levelFromTotalXp(newTotalXp);
+    const computedLevel = levelFromTotalXp(newTotalXp);
+    setSavedLevel(computedLevel);
 
     // Determine the primary exercise type
     const repsByType: Record<string, number> = {};
@@ -189,7 +174,7 @@ export function useWorkoutSession({
 
       if (completedQuests.length > 0) {
         onCompleteQuests(completedQuests.map(q => q.id));
-        setQuestCompletedThisSession(completedQuests[0]);
+        setQuestCompletedThisSession(completedQuests);
       }
 
       // ── Body profile capture (data-driven via BODY_PROFILE_MERGE) ──
@@ -219,16 +204,16 @@ export function useWorkoutSession({
   // ── Reset ────────────────────────────────────────────────────
   const resetSessionState = useCallback(() => {
     sessionSavedRef.current = false;
-    savedLevelRef.current = null;
+    setSavedLevel(null);
     levelBeforeRef.current = liveLevel;
     setLevelBefore(liveLevel);
-    setQuestCompletedThisSession(null);
+    setQuestCompletedThisSession([]);
   }, [liveLevel]);
 
   return {
     lastSessionXp,
     questCompletedThisSession,
-    savedLevel: savedLevelRef.current,
+    savedLevel,
     levelBefore,
     saveWorkoutSession,
     resetSessionState,

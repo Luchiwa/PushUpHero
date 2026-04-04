@@ -22,17 +22,17 @@ export const PositionGuide = memo(function PositionGuide({ exerciseType, isCalib
   return (
     <div className={`position-guide${isHidden ? ' position-guide-hidden' : ''}`}>
       <div className="position-guide-card">
-        <span className="position-guide-emoji">{guide.emoji}</span>
+        <span className="position-guide-emoji" aria-hidden="true">{guide.emoji}</span>
         <p className="position-guide-title">{guide.title}</p>
         <p className="position-guide-desc">{guide.description}</p>
 
         {!isCalibrated && (
-          <div className="calibration-ui">
+          <div className="calibration-ui" role="progressbar" aria-valuenow={calibratingPercentage} aria-valuemin={0} aria-valuemax={100} aria-label="Calibration progress">
             <p className="calibration-title">{guide.calibrationText}</p>
             <div className="calibration-bar-track">
               <div className="calibration-bar-fill" style={{ width: `${calibratingPercentage}%` }} />
             </div>
-            <p className="calibration-pct">{calibratingPercentage}%</p>
+            <p className="calibration-pct" aria-live="polite">{calibratingPercentage}%</p>
           </div>
         )}
       </div>

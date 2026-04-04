@@ -5,7 +5,8 @@ import { EXERCISE_META } from '@exercises/types';
 import { WeeklyChart } from './WeeklyChart/WeeklyChart';
 import { SessionHistoryPanel } from '@modals/panels/SessionHistoryPanel/SessionHistoryPanel';
 import { PageLayout } from '@components/PageLayout/PageLayout';
-import { KPIGrid, computeWeeklySummary } from './KPIGrid/KPIGrid';
+import { KPIGrid } from './KPIGrid/KPIGrid';
+import { computeWeeklySummary } from './KPIGrid/computeWeeklySummary';
 import { WeekNavigator } from './WeekNavigator/WeekNavigator';
 import './StatsScreen.scss';
 

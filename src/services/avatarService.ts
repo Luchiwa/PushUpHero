@@ -7,9 +7,9 @@
 
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { updateDoc } from 'firebase/firestore';
-import { auth, storage } from './firebase';
-import { userRef } from './refs';
-import { invalidateAvatarCache } from './avatarCache';
+import { auth, storage } from '@infra/firebase';
+import { userRef } from '@infra/refs';
+import { invalidateAvatarCache } from '@infra/avatarCache';
 
 const AVATAR_SIZE = 512;
 const THUMB_SIZE = 96;

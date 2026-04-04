@@ -67,6 +67,8 @@ export interface UserStats {
     globalLevel: number;
     /** Cumulative training time in seconds */
     lifetimeTrainingTime: number;
+    /** Duration of the current session in seconds (for single-session endurance achievements) */
+    sessionDuration: number;
 }
 
 // ─── Evaluate achievements ───────────────────────────────────────────────────
@@ -122,6 +124,7 @@ export function getStatValue(stats: UserStats, ach: AchievementDef): number {
         case 'sessionXp':                return stats.sessionXp;
         case 'globalLevel':              return stats.globalLevel;
         case 'lifetimeTrainingTime':     return stats.lifetimeTrainingTime;
+        case 'sessionDuration':          return stats.sessionDuration;
         default: return 0;
     }
 }
@@ -263,6 +266,26 @@ function computeWeeklyCounts(sessions: SessionRecord[]): Record<string, number> 
         counts[week] = (counts[week] ?? 0) + 1;
     }
     return counts;
+}
+
+// ─── Session reps helpers ───────────────────────────────────────────────────
+
+/**
+ * Build a per-exercise reps map from a single session.
+ * Handles both multi-set sessions (per-set exerciseType) and single-set sessions.
+ */
+export function buildSessionRepsMap(session: Pick<SessionRecord, 'sets' | 'exerciseType' | 'reps'>): Partial<Record<ExerciseType, number>> {
+    const exerciseType = (session.exerciseType ?? 'pushup') as ExerciseType;
+    const map: Partial<Record<ExerciseType, number>> = {};
+    if (session.sets && session.sets.length > 0) {
+        for (const set of session.sets) {
+            const ex = (set.exerciseType ?? exerciseType) as ExerciseType;
+            map[ex] = (map[ex] ?? 0) + set.reps;
+        }
+    } else {
+        map[exerciseType] = session.reps;
+    }
+    return map;
 }
 
 /**

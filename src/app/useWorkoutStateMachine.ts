@@ -8,12 +8,13 @@
  * The public API (return object) is unchanged from the original monolith.
  */
 import { useReducer, useRef, useEffect, useCallback } from 'react';
+import { useRefSync } from '@hooks/shared/useRefSync';
 import { useSoundEffect } from '@hooks/useSoundEffect';
 import type { ExerciseState, ExerciseType, WorkoutBlock, SetRecord, TimeDuration } from '@exercises/types';
 import { createDefaultBlock } from '@exercises/types';
-import { warmUpSpeech } from '@lib/speechEngine';
-import type { QuestDef } from '@lib/quests';
-import type { BodyProfile } from '@lib/bodyProfile';
+import { warmUpSpeech } from '@infra/speechEngine';
+import type { QuestDef } from '@domain/quests';
+import type { BodyProfile } from '@domain/bodyProfile';
 import type { CapturedRatios } from '@exercises/BaseExerciseDetector';
 import { workoutReducer, INITIAL_WORKOUT_STATE } from './workoutReducer';
 import { useWorkoutPlan } from './useWorkoutPlan';
@@ -87,69 +88,66 @@ export function useWorkoutStateMachine({
   const prevLevelRef = useRef(0);
 
   // ── Elapsed time ref (for timer callbacks) ─────────────────
-  const elapsedTimeRef = useRef(0);
-
-  // Keep elapsedTimeRef in sync with reducer state
-  useEffect(() => { elapsedTimeRef.current = state.elapsedTime; }, [state.elapsedTime]);
+  const elapsedTimeRef = useRefSync(state.elapsedTime);
 
   // ── Refs for latest config values (avoids stale closures in handleStart) ──
   // We use wrapper setters that update the ref synchronously so handleStart
   // always reads the freshest value — even when called in the same event handler.
-  const goalRepsRef = useRef(plan.goalReps);
-  const sessionModeRef = useRef(plan.sessionMode);
-  const timeGoalRef = useRef(plan.timeGoal);
-  useEffect(() => { goalRepsRef.current = plan.goalReps; }, [plan.goalReps]);
-  useEffect(() => { sessionModeRef.current = plan.sessionMode; }, [plan.sessionMode]);
-  useEffect(() => { timeGoalRef.current = plan.timeGoal; }, [plan.timeGoal]);
+  const goalRepsRef = useRefSync(plan.goalReps);
+  const sessionModeRef = useRefSync(plan.sessionMode);
+  const timeGoalRef = useRefSync(plan.timeGoal);
+
+  const { setGoalReps: planSetGoalReps, setSessionMode: planSetSessionMode, setTimeGoal: planSetTimeGoal } = plan;
 
   const setGoalReps = useCallback((v: number | ((prev: number) => number)) => {
     if (typeof v === 'function') {
-      plan.setGoalReps((prev) => {
+      planSetGoalReps((prev) => {
         const next = v(prev);
         goalRepsRef.current = next;
         return next;
       });
     } else {
       goalRepsRef.current = v;
-      plan.setGoalReps(v);
+      planSetGoalReps(v);
     }
-  }, [plan.setGoalReps]);
+  }, [planSetGoalReps, goalRepsRef]);
 
   const setSessionMode = useCallback((v: SessionMode | ((prev: SessionMode) => SessionMode)) => {
     if (typeof v === 'function') {
-      plan.setSessionMode((prev) => {
+      planSetSessionMode((prev) => {
         const next = v(prev);
         sessionModeRef.current = next;
         return next;
       });
     } else {
       sessionModeRef.current = v;
-      plan.setSessionMode(v);
+      planSetSessionMode(v);
     }
-  }, [plan.setSessionMode]);
+  }, [planSetSessionMode, sessionModeRef]);
 
   const setTimeGoal = useCallback((v: TimeDuration | ((prev: TimeDuration) => TimeDuration)) => {
     if (typeof v === 'function') {
-      plan.setTimeGoal((prev) => {
+      planSetTimeGoal((prev) => {
         const next = v(prev);
         timeGoalRef.current = next;
         return next;
       });
     } else {
       timeGoalRef.current = v;
-      plan.setTimeGoal(v);
+      planSetTimeGoal(v);
     }
-  }, [plan.setTimeGoal]);
+  }, [planSetTimeGoal, timeGoalRef]);
 
   // ── Handlers ───────────────────────────────────────────────
 
-  const handleStart = useCallback(() => {
+  const handleStart = useCallback((exerciseTypeOverride?: ExerciseType) => {
     if (state.isSaving) return;
     session.resetSessionState();
     plan.resetTimingRefs();
     warmUpSpeech();
+    const resolvedExercise = exerciseTypeOverride ?? plan.workoutPlan.blocks[0]?.exerciseType ?? 'pushup';
     const block: WorkoutBlock = {
-      ...createDefaultBlock(plan.workoutPlan.blocks[0]?.exerciseType ?? 'pushup'),
+      ...createDefaultBlock(resolvedExercise),
       numberOfSets: 1,
       sessionMode: sessionModeRef.current,
       goalReps: goalRepsRef.current,
@@ -159,7 +157,7 @@ export function useWorkoutStateMachine({
     onExerciseTypeChange(block.exerciseType);
     startCamera();
     dispatch({ type: 'START_WORKOUT' });
-  }, [state.isSaving, session, plan, onExerciseTypeChange, startCamera]);
+  }, [state.isSaving, session, plan, onExerciseTypeChange, startCamera, sessionModeRef, goalRepsRef, timeGoalRef]);
 
   const handleOpenConfig = useCallback(() => {
     dispatch({ type: 'OPEN_CONFIG' });
@@ -211,8 +209,7 @@ export function useWorkoutStateMachine({
     });
   }, [plan, state.completedSets, state.currentSetIndex, state.currentBlockIndex, exerciseState.repCount, session, resetDetector]);
 
-  const handleSetCompleteRef = useRef(handleSetComplete);
-  useEffect(() => { handleSetCompleteRef.current = handleSetComplete; }, [handleSetComplete]);
+  const handleSetCompleteRef = useRefSync(handleSetComplete);
 
   const handleStop = useCallback(() => {
     const setRecord = plan.buildCurrentSetRecord();
@@ -227,29 +224,31 @@ export function useWorkoutStateMachine({
     dispatch({ type: 'MANUAL_STOP', setRecord, elapsedTime, totalReps });
   }, [plan, state.completedSets, session]);
 
+  const { workoutStartTimeRef, stampSetStartTime, syncConfigFromBlock } = plan;
+
   const handleTimerEnd = useCallback(() => {
-    const elapsedTime = Math.round((Date.now() - plan.workoutStartTimeRef.current) / 1000);
+    const elapsedTime = Math.round((Date.now() - workoutStartTimeRef.current) / 1000);
     dispatch({ type: 'TIMER_END', elapsedTime });
     handleSetCompleteRef.current();
-  }, [plan.workoutStartTimeRef]);
+  }, [workoutStartTimeRef, handleSetCompleteRef]);
 
   const handleRestComplete = useCallback(() => {
     resetDetector();
-    plan.setStartTimeRef.current = Date.now();
+    stampSetStartTime();
     startCamera();
     dispatch({ type: 'REST_COMPLETE' });
-  }, [resetDetector, startCamera, plan.setStartTimeRef]);
+  }, [resetDetector, startCamera, stampSetStartTime]);
 
   const handleExerciseRestComplete = useCallback(() => {
     resetDetector();
     const nextBlockIndex = state.currentBlockIndex + 1;
     const nextBlock = plan.workoutPlan.blocks[nextBlockIndex];
-    plan.setStartTimeRef.current = Date.now();
-    plan.syncConfigFromBlock(nextBlock);
+    stampSetStartTime();
+    syncConfigFromBlock(nextBlock);
     onExerciseTypeChange(nextBlock.exerciseType);
     startCamera();
     dispatch({ type: 'EXERCISE_REST_COMPLETE', nextBlockIndex });
-  }, [resetDetector, state.currentBlockIndex, plan, onExerciseTypeChange, startCamera]);
+  }, [resetDetector, state.currentBlockIndex, plan.workoutPlan.blocks, stampSetStartTime, syncConfigFromBlock, onExerciseTypeChange, startCamera]);
 
   const handleSkipBlock = useCallback(() => {
     const remainingSets = plan.totalSetsInBlock - state.currentSetIndex;
@@ -263,7 +262,7 @@ export function useWorkoutStateMachine({
     }));
     const allSets = [...state.completedSets, ...skippedSets];
     const isLastBlock = state.currentBlockIndex >= plan.totalBlocks - 1;
-    const elapsedTime = Math.round((Date.now() - plan.workoutStartTimeRef.current) / 1000);
+    const elapsedTime = Math.round((Date.now() - workoutStartTimeRef.current) / 1000);
     const totalReps = allSets.reduce((sum, s) => sum + s.reps, 0);
 
     if (isLastBlock && totalReps > 0) {
@@ -275,7 +274,7 @@ export function useWorkoutStateMachine({
     }
 
     dispatch({ type: 'SKIP_BLOCK', skippedSets, isLastBlock, elapsedTime, totalReps });
-  }, [plan, state.completedSets, state.currentSetIndex, state.currentBlockIndex, session, resetDetector]);
+  }, [plan.totalSetsInBlock, plan.currentBlock, plan.totalBlocks, workoutStartTimeRef, state.completedSets, state.currentSetIndex, state.currentBlockIndex, session, resetDetector]);
 
   const handleReset = useCallback(() => {
     const effectiveLevel = session.savedLevel ?? session.liveLevel;
@@ -312,7 +311,7 @@ export function useWorkoutStateMachine({
     ) {
       handleSetCompleteRef.current();
     }
-  }, [exerciseState.repCount, state.screen, plan.currentBlock.sessionMode, plan.currentBlock.goalReps]);
+  }, [exerciseState.repCount, state.screen, plan.currentBlock.sessionMode, plan.currentBlock.goalReps, handleSetCompleteRef]);
 
   // ── Return (same API as original) ─────────────────────────
   return {

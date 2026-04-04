@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { useAuthCore } from './useAuth';
-import { totalXpForLevel } from '@lib/xpSystem';
-import { migrateLegacyXp } from '@lib/userService';
-import { mergeGuestDataToCloud, LS_XP_KEY, LS_EXERCISE_XP_KEY, LS_SESSIONS_KEY, LS_TOTAL_SESSIONS_KEY } from '@lib/guestMerge';
+import { totalXpForLevel } from '@domain/xpSystem';
+import { migrateLegacyXp } from '@services/profileService';
+import { mergeGuestDataToCloud, LS_XP_KEY, LS_EXERCISE_XP_KEY, LS_SESSIONS_KEY, LS_TOTAL_SESSIONS_KEY } from '@services/guestMerge';
 import { onUserDoc } from '@data/userRepository';
 import { onRecentSessions } from '@data/sessionRepository';
 import type { SessionRecord } from '@exercises/types';

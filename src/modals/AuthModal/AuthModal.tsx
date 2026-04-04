@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import './AuthModal.scss';
-import { loginWithEmail, registerWithEmail, translateAuthError } from '@lib/authService';
+import { loginWithEmail, registerWithEmail, translateAuthError } from '@services/authService';
 import { useAuthCore } from '@hooks/useAuth';
 import { useModalClose } from '@hooks/shared/useModalClose';
+import { useFocusTrap } from '@hooks/shared/useFocusTrap';
 
 interface AuthModalProps {
     onClose: () => void;
@@ -22,8 +23,10 @@ export function AuthModal({ onClose, onSuccess, initialMode = 'login', promoBann
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const { closing, handleClose, handleAnimationEnd } = useModalClose(onClose);
+    const modalRef = useRef<HTMLDivElement>(null);
     const emailInputRef = useRef<HTMLInputElement>(null);
     const usernameInputRef = useRef<HTMLInputElement>(null);
+    useFocusTrap(modalRef);
 
     // Focus on the appropriate first field when mode changes or modal opens
     useEffect(() => {
@@ -74,6 +77,7 @@ export function AuthModal({ onClose, onSuccess, initialMode = 'login', promoBann
 
     return (
         <div
+            ref={modalRef}
             className={`auth-modal-overlay${closing ? ' auth-modal-overlay--exit' : ''}`}
             onAnimationEnd={handleAnimationEnd}
             role="dialog"

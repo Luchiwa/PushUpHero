@@ -9,11 +9,11 @@
  */
 import { useState, useCallback } from 'react';
 import { useAuthCore } from './useAuth';
-import { levelFromTotalXp, totalXpForLevel } from '@lib/xpSystem';
+import { levelFromTotalXp, totalXpForLevel } from '@domain/xpSystem';
 import type { ExerciseType, ExerciseXpMap } from '@exercises/types';
 
 // ─── Re-export pure functions & types so existing imports keep working ───────
-export { levelFromTotalXp, totalXpForLevel } from '@lib/xpSystem';
+export { levelFromTotalXp, totalXpForLevel } from '@domain/xpSystem';
 export type { ExerciseXpMap } from '@exercises/types';
 
 // ─── LocalStorage keys (XP-based) ───────────────────────────────────────────

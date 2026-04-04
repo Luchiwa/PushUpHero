@@ -1,16 +1,9 @@
 import type { SessionRecord } from '@exercises/types';
 import type { MetricMode } from '../StatsScreen';
+import type { WeeklySummary } from './computeWeeklySummary';
 import './KPIGrid.scss';
 
 type ExerciseFilter = 'all' | import('@exercises/types').ExerciseType;
-
-interface WeeklySummary {
-    totalXp: number;
-    totalReps: number;
-    sessionCount: number;
-    activeDays: number;
-    bestSession: number;
-}
 
 function compactNum(n: number): string {
     if (n >= 10_000) return `${(n / 1000).toFixed(1)}k`;
@@ -21,56 +14,6 @@ function pctChange(current: number, previous: number): number | null {
     if (previous === 0 && current === 0) return null;
     if (previous === 0) return 100;
     return Math.round(((current - previous) / previous) * 100);
-}
-
-export function computeWeeklySummary(
-    sessions: SessionRecord[],
-    exerciseFilter: ExerciseFilter,
-): WeeklySummary {
-    let totalXp = 0;
-    let totalReps = 0;
-    let bestXp = 0;
-    let bestReps = 0;
-    const activeDaysSet = new Set<number>();
-
-    for (const s of sessions) {
-        const day = new Date(s.date).getDay();
-        activeDaysSet.add(day);
-
-        if (exerciseFilter !== 'all' && s.xpPerExercise) {
-            const match = s.xpPerExercise.find(e => e.exerciseType === exerciseFilter);
-            if (match) totalXp += match.finalXp;
-            if (match && match.finalXp > bestXp) bestXp = match.finalXp;
-        } else {
-            totalXp += s.xpEarned ?? 0;
-            if ((s.xpEarned ?? 0) > bestXp) bestXp = s.xpEarned ?? 0;
-        }
-
-        if (exerciseFilter !== 'all' && s.isMultiExercise && s.blocks && s.sets) {
-            let setIdx = 0;
-            let sessionReps = 0;
-            for (const block of s.blocks) {
-                const blockSets = s.sets.slice(setIdx, setIdx + block.numberOfSets);
-                setIdx += block.numberOfSets;
-                if (block.exerciseType === exerciseFilter) {
-                    sessionReps += blockSets.reduce((sum, st) => sum + st.reps, 0);
-                }
-            }
-            totalReps += sessionReps;
-            if (sessionReps > bestReps) bestReps = sessionReps;
-        } else {
-            totalReps += s.reps;
-            if (s.reps > bestReps) bestReps = s.reps;
-        }
-    }
-
-    return {
-        totalXp,
-        totalReps,
-        sessionCount: sessions.length,
-        activeDays: activeDaysSet.size,
-        bestSession: bestReps,
-    };
 }
 
 interface KPIGridProps {

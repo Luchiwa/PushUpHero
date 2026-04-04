@@ -3,68 +3,104 @@
 
 .reload-prompt-container {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 1rem;
+    bottom: max(16px, env(safe-area-inset-bottom, 16px));
+    left: 50%;
+    transform: translateX(-50%);
     z-index: $z-toast;
-    display: flex;
-    justify-content: center;
     pointer-events: none;
 }
 
 .reload-prompt-toast {
-    background: $bg;
-    border: 1px solid rgba($text, 0.1);
-    border-radius: $radius-sm;
-    padding: 1rem 1.25rem;
     display: flex;
-    flex-direction: column;
-    gap: 0.8rem;
-    box-shadow: 0 8px 32px rgba($black, 0.12);
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    width: min(calc(100vw - 32px), 420px);
+
+    background: linear-gradient(135deg, rgba($indigo, 0.15) 0%, rgba($purple, 0.08) 100%);
     backdrop-filter: blur($blur-sm);
     -webkit-backdrop-filter: blur($blur-sm);
+    border: 1.5px solid rgba($indigo, 0.3);
+    border-radius: $radius;
+    box-shadow: 0 4px 24px rgba($indigo, 0.15);
+
     pointer-events: all;
-    animation: slide-up 0.4s $ease-out-expo both;
-    width: min(90vw, 360px);
+    animation: reload-slide-up 0.4s $ease-out-back;
 }
 
-.reload-prompt-message {
-    font-size: 0.9rem;
-    font-weight: 700;
+@keyframes reload-slide-up {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.reload-prompt-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: $gradient-accent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: $white;
+    box-shadow: $shadow-accent-sm;
+}
+
+.reload-prompt-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.reload-prompt-title {
+    font-size: 0.85rem;
+    font-weight: 800;
     color: $text;
-    text-align: center;
+}
+
+.reload-prompt-sub {
+    font-size: $font-xs;
+    color: $text-muted;
+    @include text-truncate;
 }
 
 .reload-prompt-actions {
     display: flex;
-    justify-content: center;
-    gap: 0.75rem;
-
-    button {
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        font-size: 0.8rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        transition: $transition;
-    }
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
 }
 
-.btn-reload {
-    background: $gradient-green;
-    color: $white;
+.reload-prompt-btn {
+    padding: 6px 16px;
+    border-radius: $radius-pill;
     border: none;
-    box-shadow: 0 0 16px rgba($green, 0.4);
+    background: linear-gradient(135deg, $accent, $accent-dark);
+    box-shadow: 0 2px 12px rgba($accent, 0.35);
+    color: $white;
+    font-size: $font-sm;
+    font-weight: 800;
+    font-family: inherit;
+    cursor: pointer;
+    transition: box-shadow $transition-fast, transform 0.15s ease;
 
     &:active { transform: scale(0.95); }
 }
 
-.btn-close {
-    background: rgba($text, 0.04);
+.reload-prompt-dismiss {
+    background: rgba($black, 0.05);
+    border: none;
+    border-radius: 50%;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: $text-muted;
-    border: 1px solid rgba($text, 0.1);
+    cursor: pointer;
+    transition: background $transition-fast;
 
-    &:active { background: rgba($text, 0.07); }
+    &:hover { background: rgba($black, 0.1); }
 }

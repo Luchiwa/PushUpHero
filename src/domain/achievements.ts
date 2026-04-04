@@ -197,6 +197,26 @@ function trainingTimeAchievements(): AchievementDef[] {
     }));
 }
 
+function sessionDurationAchievements(): AchievementDef[] {
+    const tiers: { threshold: number; tier: AchievementTier; title: string; description: string }[] = [
+        { threshold: 300,  tier: 'bronze',   title: 'Quick Burn',      description: 'Complete a 5-minute session' },
+        { threshold: 600,  tier: 'bronze',   title: 'Steady Pace',     description: 'Complete a 10-minute session' },
+        { threshold: 1200, tier: 'silver',   title: 'Endurance Test',  description: 'Complete a 20-minute session' },
+        { threshold: 1800, tier: 'silver',   title: 'Half Hour Hero',  description: 'Complete a 30-minute session' },
+        { threshold: 3600, tier: 'gold',     title: 'Iron Hour',       description: 'Complete a 60-minute session' },
+        { threshold: 5400, tier: 'platinum', title: 'Unstoppable',     description: 'Complete a 90-minute session' },
+    ];
+    return tiers.map(({ threshold, tier, title, description }) => ({
+        id: `session_duration_${threshold}`,
+        category: 'discipline' as const,
+        tier,
+        title,
+        description,
+        statKey: 'sessionDuration',
+        threshold,
+    }));
+}
+
 function performanceAchievements(): AchievementDef[] {
     return [
         // Grade S
@@ -223,6 +243,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     ...sessionsCountAchievements(),
     ...streakAchievements(),
     ...trainingTimeAchievements(),
+    ...sessionDurationAchievements(),
     ...friendsAchievements(),
     ...encouragementsAchievements(),
     ...performanceAchievements(),

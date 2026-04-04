@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { SearchResult } from '@hooks/useFriends';
 import { Avatar } from '@components/Avatar/Avatar';
-import { getTier } from '@lib/xpSystem';
+import { getTier } from '@domain/xpSystem';
 import { TierBadge } from '../TierBadge/TierBadge';
 import './SearchResultCard.scss';
 

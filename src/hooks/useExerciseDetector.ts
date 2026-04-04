@@ -2,7 +2,7 @@ import { useRef, useState, useCallback, useEffect } from 'react';
 import type { BaseExerciseDetector } from '@exercises/BaseExerciseDetector';
 import type { CapturedRatios } from '@exercises/BaseExerciseDetector';
 import type { ExerciseState, Landmark } from '@exercises/types';
-import type { BodyProfile } from '@lib/bodyProfile';
+import type { BodyProfile } from '@domain/bodyProfile';
 
 
 interface UseExerciseDetectorProps {
@@ -22,10 +22,10 @@ export function useExerciseDetector({
     const detectorRef = useRef(detector);
     useEffect(() => { detectorRef.current = detector; }, [detector]);
 
-    // Inject body profile into the detector whenever it changes
+    // Inject body profile into the detector whenever it or the detector changes
     useEffect(() => {
         detectorRef.current.setBodyProfile(bodyProfile ?? null);
-    }, [bodyProfile]);
+    }, [bodyProfile, detector]);
 
     // Keep isActive in a ref so processLandmarks always reads the latest value
     // without needing to be re-created (avoids circular-dependency issues).

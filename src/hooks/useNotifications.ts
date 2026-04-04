@@ -1,6 +1,6 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { onUnreadNotifications } from '@data/notificationRepository';
-import { registerFcmToken, dismissNotification } from '@lib/notificationService';
+import { registerFcmToken, dismissNotification } from '@services/notificationService';
 import { useAuthCore } from './useAuth';
 
 export function useNotifications() {

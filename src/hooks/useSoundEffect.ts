@@ -3,7 +3,7 @@
  * Provides stable callback references for components.
  */
 import { useCallback } from 'react';
-import * as engine from '@lib/soundEngine';
+import * as engine from '@infra/soundEngine';
 
 export function useSoundEffect() {
     const initAudio = useCallback(() => engine.initAudio(), []);

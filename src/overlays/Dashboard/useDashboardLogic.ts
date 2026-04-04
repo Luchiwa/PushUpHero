@@ -8,7 +8,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSoundEffect } from '@hooks/useSoundEffect';
 import type { RepResult, ExerciseType, RepFeedback } from '@exercises/types';
-import { processRepFeedback, resetCoach, speakCalibrationGuide, processIncompleteRep } from '@lib/coachEngine';
+import { processRepFeedback, resetCoach, speakCalibrationGuide, processIncompleteRep } from '@infra/coachEngine';
 
 interface UseDashboardLogicProps {
     exerciseType: ExerciseType;
@@ -72,12 +72,15 @@ export function useDashboardLogic({
         };
     }, [isCalibrated, soundEnabled, exerciseType]);
 
-    // ── Incomplete rep coaching ───────────────────────────────────
-    useEffect(() => {
-        if (!incompleteRepFeedback || !soundEnabled || !isCalibrated) return;
-        const phrase = processIncompleteRep(exerciseType);
-        if (phrase) setCoachPhrase(phrase);
-    }, [incompleteRepFeedback, soundEnabled, isCalibrated, exerciseType]);
+    // ── Incomplete rep coaching (derived state during render) ──────
+    const [prevIncompleteRep, setPrevIncompleteRep] = useState(incompleteRepFeedback);
+    if (incompleteRepFeedback !== prevIncompleteRep) {
+        setPrevIncompleteRep(incompleteRepFeedback);
+        if (incompleteRepFeedback && soundEnabled && isCalibrated) {
+            const phrase = processIncompleteRep(exerciseType);
+            if (phrase) setCoachPhrase(phrase);
+        }
+    }
 
     // ── Invalid-position banner (debounced ~2s at 30fps) ─────────
     const invalidFramesRef = useRef(0);
@@ -104,19 +107,23 @@ export function useDashboardLogic({
         if (soundEnabled) initAudio();
     }, [soundEnabled, initAudio]);
 
-    // Play rep sound + vocal coach
+    // Coach vocal feedback (derived state during render)
+    const [prevRepCount, setPrevRepCount] = useState(repCount);
+    if (repCount > prevRepCount) {
+        setPrevRepCount(repCount);
+        if (soundEnabled && lastRepResult) {
+            const phrase = processRepFeedback(lastRepResult.feedback, lastRepResult.score);
+            if (phrase) setCoachPhrase(phrase);
+        }
+    }
+
+    // Play rep sound
     useEffect(() => {
         if (repCount > prevRepCountRef.current) {
             if (soundEnabled) playRepSound();
-
-            // Coach vocal feedback (only when sound is on)
-            if (soundEnabled && lastRepResult) {
-                const phrase = processRepFeedback(lastRepResult.feedback, lastRepResult.score);
-                if (phrase) setCoachPhrase(phrase);
-            }
         }
         prevRepCountRef.current = repCount;
-    }, [repCount, playRepSound, soundEnabled, lastRepResult]);
+    }, [repCount, playRepSound, soundEnabled]);
 
     // Play "ready to start" sound when calibration completes
     useEffect(() => {

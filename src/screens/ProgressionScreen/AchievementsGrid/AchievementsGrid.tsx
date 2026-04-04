@@ -1,7 +1,7 @@
-import { ACHIEVEMENTS_BY_CATEGORY, CATEGORY_META, TIER_COLORS } from '@lib/achievements';
-import type { AchievementCategory, AchievementDef } from '@lib/achievements';
-import { getAchievementProgress } from '@lib/achievementEngine';
-import type { UserStats, AchievementMap } from '@lib/achievementEngine';
+import { ACHIEVEMENTS_BY_CATEGORY, CATEGORY_META, TIER_COLORS } from '@domain/achievements';
+import type { AchievementCategory, AchievementDef } from '@domain/achievements';
+import { getAchievementProgress } from '@domain/achievementEngine';
+import type { UserStats, AchievementMap } from '@domain/achievementEngine';
 import './AchievementsGrid.scss';
 
 interface AchievementsGridProps {

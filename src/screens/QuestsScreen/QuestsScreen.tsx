@@ -1,7 +1,7 @@
 /**
  * QuestsScreen — Full-screen quest journal showing all quests grouped by category.
- * Each quest shows its status: completed (✅), available (playable), or locked (🔒).
- * Accessible from StartScreen and ProfileModal.
+ * Each quest shows its status: completed, available (playable), accepted (active), or locked.
+ * Supports multiple accepted quests (up to MAX_ACCEPTED_QUESTS) and quick-start.
  */
 import { useMemo } from 'react';
 import { PageLayout } from '@components/PageLayout/PageLayout';
@@ -11,8 +11,13 @@ import {
     getQuestStats,
     getQuestsByCategory,
     getQuestById,
-} from '@lib/quests';
-import type { QuestDef, QuestProgress, QuestStatus } from '@lib/quests';
+    getAcceptedQuests,
+    isQuestQuickStartable,
+    getComplexQuestHint,
+    MAX_ACCEPTED_QUESTS,
+} from '@domain/quests';
+import { getExerciseLabel } from '@exercises/types';
+import type { QuestDef, QuestProgress, QuestStatus } from '@domain/quests';
 import './QuestsScreen.scss';
 
 interface QuestsScreenProps {
@@ -20,11 +25,25 @@ interface QuestsScreenProps {
     questProgress: QuestProgress;
     userLevel: number;
     onAcceptQuest?: (questId: string) => void;
+    onAbandonQuest?: (questId: string) => void;
+    onQuestStart?: (quest: QuestDef) => void;
+    isReady?: boolean;
 }
 
-export function QuestsScreen({ onClose, questProgress, userLevel, onAcceptQuest }: QuestsScreenProps) {
+export function QuestsScreen({
+    onClose,
+    questProgress,
+    userLevel,
+    onAcceptQuest,
+    onAbandonQuest,
+    onQuestStart,
+    isReady,
+}: QuestsScreenProps) {
     const stats = useMemo(() => getQuestStats(questProgress), [questProgress]);
     const byCategory = useMemo(() => getQuestsByCategory(), []);
+    const acceptedQuests = useMemo(() => getAcceptedQuests(questProgress, userLevel), [questProgress, userLevel]);
+    const slotsUsed = acceptedQuests.length;
+    const slotsFull = slotsUsed >= MAX_ACCEPTED_QUESTS;
 
     const progressPct = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
 
@@ -58,7 +77,9 @@ export function QuestsScreen({ onClose, questProgress, userLevel, onAcceptQuest 
                     <span className="quests-header-sub">
                         {stats.completed === stats.total
                             ? 'All quests completed! 🎉'
-                            : `${stats.available} quest${stats.available !== 1 ? 's' : ''} remaining`
+                            : slotsUsed > 0
+                                ? `${slotsUsed}/${MAX_ACCEPTED_QUESTS} active · ${stats.available} remaining`
+                                : `${stats.available} quest${stats.available !== 1 ? 's' : ''} remaining`
                         }
                     </span>
                 </div>
@@ -86,7 +107,11 @@ export function QuestsScreen({ onClose, questProgress, userLevel, onAcceptQuest 
                                     status={getQuestStatus(quest, questProgress, userLevel)}
                                     completedAt={questProgress.completed[quest.id] ?? null}
                                     userLevel={userLevel}
+                                    slotsFull={slotsFull}
+                                    isReady={isReady}
                                     onAccept={onAcceptQuest}
+                                    onAbandon={onAbandonQuest}
+                                    onStart={onQuestStart}
                                 />
                             ))}
                         </div>
@@ -104,28 +129,37 @@ function QuestCard({
     status,
     completedAt,
     userLevel,
+    slotsFull,
+    isReady,
     onAccept,
+    onAbandon,
+    onStart,
 }: {
     quest: QuestDef;
     status: QuestStatus;
     completedAt: number | null;
     userLevel: number;
+    slotsFull: boolean;
+    isReady?: boolean;
     onAccept?: (questId: string) => void;
+    onAbandon?: (questId: string) => void;
+    onStart?: (quest: QuestDef) => void;
 }) {
     const lockReason = useMemo(() => {
         if (status !== 'locked') return null;
         const reasons: string[] = [];
-        // Check level
         if (quest.requiredLevel > 0 && userLevel < quest.requiredLevel) {
             reasons.push(`Level ${quest.requiredLevel} required`);
         }
-        // Check quest prerequisites
         for (const preId of quest.prerequisites) {
             const pre = getQuestById(preId);
             if (pre) reasons.push(`Complete "${pre.title}" first`);
         }
         return reasons.join(' · ') || 'Locked';
     }, [status, quest, userLevel]);
+
+    const quickStartable = isQuestQuickStartable(quest);
+    const complexHint = getComplexQuestHint(quest);
 
     return (
         <div className={`quest-item quest-item--${status}`}>
@@ -153,14 +187,48 @@ function QuestCard({
                         Completed {new Date(completedAt).toLocaleDateString()}
                     </span>
                 )}
+                {/* ── Available: Accept button (disabled if slots full) ── */}
                 {status === 'available' && onAccept && (
-                    <button
-                        type="button"
-                        className="quest-item-accept"
-                        onClick={() => onAccept(quest.id)}
-                    >
-                        ✨ Accept
-                    </button>
+                    slotsFull ? (
+                        <span className="quest-item-slots-full">Max {MAX_ACCEPTED_QUESTS} active quests</span>
+                    ) : (
+                        <button
+                            type="button"
+                            className="quest-item-accept"
+                            onClick={() => onAccept(quest.id)}
+                        >
+                            ✨ Accept
+                        </button>
+                    )
+                )}
+                {/* ── Accepted: Start / Hint / Abandon ── */}
+                {status === 'accepted' && (
+                    <div className="quest-item-actions">
+                        {quickStartable && onStart ? (
+                            <button
+                                type="button"
+                                className="quest-item-start"
+                                onClick={() => onStart(quest)}
+                                disabled={!isReady}
+                            >
+                                {quest.goal.exerciseType
+                                    ? `🚀 Start — ${quest.goal.reps} ${getExerciseLabel(quest.goal.exerciseType)}`
+                                    : `🚀 Start — ${quest.goal.reps} reps`
+                                }
+                            </button>
+                        ) : complexHint ? (
+                            <span className="quest-item-hint">{complexHint}</span>
+                        ) : null}
+                        {onAbandon && (
+                            <button
+                                type="button"
+                                className="quest-item-abandon"
+                                onClick={() => onAbandon(quest.id)}
+                            >
+                                Abandon
+                            </button>
+                        )}
+                    </div>
                 )}
             </div>
             <div className="quest-item-right">

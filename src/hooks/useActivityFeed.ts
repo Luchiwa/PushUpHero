@@ -24,7 +24,7 @@ export interface ActivityEvent {
     createdAt: number; // Unix ms
 }
 
-import { EVENTS_PER_FRIEND, getGradeLetter } from '@lib/constants';
+import { EVENTS_PER_FRIEND, getGradeLetter } from '@domain/constants';
 
 export function formatRelativeTime(ms: number): string {
     const diffSec = Math.floor((Date.now() - ms) / 1000);
@@ -163,5 +163,15 @@ export function useActivityFeed(friends: Friend[]) {
     // refresh() always bypasses cache
     const refresh = useCallback(() => fetchFeed(true), [fetchFeed]);
 
-    return { feed, loading, error, refresh };
+    // Enrich cached feed with latest friend photo data (avatars arrive after stats fetch)
+    const enrichedFeed = useMemo(() => {
+        const friendMap = new Map(friends.map(f => [f.uid, f]));
+        return feed.map(event => {
+            const friend = friendMap.get(event.uid);
+            if (!friend) return event;
+            return { ...event, photoURL: friend.photoURL, photoThumb: friend.photoThumb };
+        });
+    }, [feed, friends]);
+
+    return { feed: enrichedFeed, loading, error, refresh };
 }

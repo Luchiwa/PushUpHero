@@ -49,10 +49,10 @@ export interface UseWorkoutPlanReturn {
   buildCurrentSetRecord: () => SetRecord;
 
   // Timing refs
-  setStartTimeRef: MutableRefObject<number>;
   workoutStartTimeRef: MutableRefObject<number>;
 
   // Helpers
+  stampSetStartTime: () => void;
   resetTimingRefs: () => void;
   syncConfigFromBlock: (block: WorkoutBlock) => void;
 }
@@ -111,6 +111,10 @@ export function useWorkoutPlan({
   }, [exerciseState, currentBlock]);
 
   // ── Helpers ──────────────────────────────────────────────────
+  const stampSetStartTime = useCallback(() => {
+    setStartTimeRef.current = Date.now();
+  }, []);
+
   const resetTimingRefs = useCallback(() => {
     setStartTimeRef.current = Date.now();
     workoutStartTimeRef.current = Date.now();
@@ -134,8 +138,8 @@ export function useWorkoutPlan({
     flatSetIndex,
     activeExerciseType,
     buildCurrentSetRecord,
-    setStartTimeRef, workoutStartTimeRef,
-    resetTimingRefs, syncConfigFromBlock,
+    workoutStartTimeRef,
+    stampSetStartTime, resetTimingRefs, syncConfigFromBlock,
   };
 }
 

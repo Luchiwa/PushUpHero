@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { changePassword, translateAuthError } from '@lib/authService';
+import { changePassword, translateAuthError } from '@services/authService';
 import './PasswordChangeSection.scss';
 
 export function PasswordChangeSection() {

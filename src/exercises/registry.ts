@@ -10,10 +10,12 @@
  * Every other file reads from this registry — no other changes needed.
  */
 import type { ExerciseType } from './types';
-import type { BaseExerciseDetector } from './BaseExerciseDetector';
+import type { BaseExerciseDetector, CapturedRatios } from './BaseExerciseDetector';
+import type { BodyProfile } from '@domain/bodyProfile';
 import { PushUpDetector } from './pushup/PushUpDetector';
 import { SquatDetector } from './squat/SquatDetector';
 import { PullUpDetector } from './pullup/PullUpDetector';
+import { EXERCISE_DIFFICULTY } from './exerciseDifficulty';
 
 // ── Config types ────────────────────────────────────────────────
 
@@ -44,7 +46,7 @@ export interface ExerciseConfig {
 export const EXERCISE_REGISTRY: Record<ExerciseType, ExerciseConfig> = {
     pushup: {
         createDetector: () => new PushUpDetector(),
-        difficulty: 1.3,
+        difficulty: EXERCISE_DIFFICULTY.pushup,
         keyJoints: new Set([11, 12, 13, 14, 15, 16, 23, 24]),
         positionGuide: {
             emoji: '🧑‍💻',
@@ -61,7 +63,7 @@ export const EXERCISE_REGISTRY: Record<ExerciseType, ExerciseConfig> = {
     },
     squat: {
         createDetector: () => new SquatDetector(),
-        difficulty: 1.0,
+        difficulty: EXERCISE_DIFFICULTY.squat,
         keyJoints: new Set([11, 12, 23, 24, 25, 26, 27, 28]),
         positionGuide: {
             emoji: '🦵',
@@ -78,7 +80,7 @@ export const EXERCISE_REGISTRY: Record<ExerciseType, ExerciseConfig> = {
     },
     pullup: {
         createDetector: () => new PullUpDetector(),
-        difficulty: 2.5,
+        difficulty: EXERCISE_DIFFICULTY.pullup,
         keyJoints: new Set([11, 12, 13, 14, 15, 16, 23, 24]),
         positionGuide: {
             emoji: '💪',
@@ -93,4 +95,34 @@ export const EXERCISE_REGISTRY: Record<ExerciseType, ExerciseConfig> = {
         ],
         incompleteRepPhrases: ['Pull higher!', 'Chin over bar!', 'All the way up!'],
     },
+};
+
+// ── Body Profile Merge Map ─────────────────────────────────────
+// Data-driven mapping: each exercise type declares how to merge captured ratios
+// into the BodyProfile. Adding a new exercise = adding one entry here.
+// Lives in the exercises module (not domain/) because it's per-exercise config
+// that depends on CapturedRatios.
+
+export const BODY_PROFILE_MERGE: Record<ExerciseType, (
+  captured: CapturedRatios,
+  dynamicCalibration: number | undefined,
+) => Partial<BodyProfile>> = {
+  pushup: (c, cal) => c.pushup ? {
+    pushup: {
+      ...c.pushup,
+      naturalMinElbowAngle: cal ?? c.pushup.naturalElbowExtension - 70,
+    },
+  } : {},
+  squat: (c, cal) => c.squat ? {
+    squat: {
+      ...c.squat,
+      naturalMinKneeAngle: cal ?? c.squat.naturalKneeExtension - 70,
+    },
+  } : {},
+  pullup: (c, cal) => c.pullup ? {
+    pullup: {
+      ...c.pullup,
+      naturalMaxRiseFraction: cal ?? 0.5,
+    },
+  } : {},
 };

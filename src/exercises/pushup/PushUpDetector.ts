@@ -1,7 +1,7 @@
 import { BaseExerciseDetector } from '../BaseExerciseDetector';
 import type { ExerciseState, Landmark, RepFeedback } from '../types';
-import { getPushupThresholds } from '@lib/bodyProfile';
-import type { PushupThresholds } from '@lib/bodyProfile';
+import { getPushupThresholds } from '@domain/bodyProfile';
+import type { BodyProfile, PushupThresholds } from '@domain/bodyProfile';
 
 const LM = {
     LEFT_SHOULDER: 11, RIGHT_SHOULDER: 12,
@@ -19,6 +19,10 @@ const WRIST_BELOW_SHOULDER_MARGIN = -0.15;
 const ARM_SYMMETRY_TOLERANCE = 15;
 const HIP_DEVIATION_TOLERANCE = 0.04;
 
+// ── Debounce ───────────────────────────────────────────────────
+/** Minimum milliseconds between two counted reps (blocks jitter-induced false reps) */
+const MIN_REP_INTERVAL_MS = 500;
+
 // ── Key landmarks for post-calibration visibility check ─────────
 const KEY_LANDMARKS = [LM.LEFT_SHOULDER, LM.RIGHT_SHOULDER, LM.LEFT_ELBOW, LM.RIGHT_ELBOW, LM.LEFT_HIP, LM.RIGHT_HIP];
 
@@ -31,10 +35,17 @@ export class PushUpDetector extends BaseExerciseDetector {
     private calibrationFrames: { spread: number; wristOffset: number; armLen: number; bodySpread: number; torsoLen: number; elbowAngle: number }[] = [];
     private calibratedMaxBodyVerticalSpread = MAX_BODY_VERTICAL_SPREAD;
     private calibratedWristBelowShoulderMargin = WRIST_BELOW_SHOULDER_MARGIN;
+    /** Max shoulder–hip Y distance allowed (rejects upright/leaning poses) */
+    private calibratedMaxTorsoTilt = 0.25;
 
     constructor() {
         super();
         this.thresholds = getPushupThresholds(this._bodyProfile?.pushup ?? undefined);
+    }
+
+    override setBodyProfile(profile: BodyProfile | null): void {
+        super.setBodyProfile(profile);
+        this.thresholds = getPushupThresholds(profile?.pushup ?? undefined);
     }
 
     reset(): void {
@@ -44,11 +55,13 @@ export class PushUpDetector extends BaseExerciseDetector {
         this.calibrationFrames = [];
         this.calibratedMaxBodyVerticalSpread = MAX_BODY_VERTICAL_SPREAD;
         this.calibratedWristBelowShoulderMargin = WRIST_BELOW_SHOULDER_MARGIN;
+        this.calibratedMaxTorsoTilt = 0.25;
         this.thresholds = getPushupThresholds(this._bodyProfile?.pushup ?? undefined);
     }
 
     processPose(landmarks: Landmark[]): ExerciseState {
         if (!landmarks || landmarks.length < 29) return this.getState();
+        if (!this.areLandmarksPlausible(landmarks)) return this.getState();
 
         const lShoulder = landmarks[LM.LEFT_SHOULDER], rShoulder = landmarks[LM.RIGHT_SHOULDER];
         const lElbow = landmarks[LM.LEFT_ELBOW], rElbow = landmarks[LM.RIGHT_ELBOW];
@@ -96,7 +109,8 @@ export class PushUpDetector extends BaseExerciseDetector {
         // ── 4. Post-calibration guards ──────────────────────────────
         if (!this.checkPostCalibrationGuards(landmarks, KEY_LANDMARKS)) return this.getState();
 
-        const isBodyHorizontal = bodyVerticalSpread < this.calibratedMaxBodyVerticalSpread;
+        const isTorsoFlat = torsoLen < this.calibratedMaxTorsoTilt;
+        const isBodyHorizontal = bodyVerticalSpread < this.calibratedMaxBodyVerticalSpread && isTorsoFlat;
         const areWristsBelowShoulders = wristOffset < this.calibratedWristBelowShoulderMargin;
         const isValid = isBodyHorizontal && areWristsBelowShoulders;
         this.state.isValidPosition = isValid;
@@ -107,40 +121,20 @@ export class PushUpDetector extends BaseExerciseDetector {
         const hipDeviation = midHipY - expectedHipY;
         const alignmentScore = this.computeAlignmentScore(armAsymmetry, hipDeviation);
 
-        // ── 6. State machine ────────────────────────────────────────
+        // ── 6. State machine (template method) ───────────────────────
         const { angleUpThreshold: ANGLE_UP, angleDownThreshold: ANGLE_DOWN } = this.thresholds;
         const prevPhase = this.state.currentPhase;
-        this.state.incompleteRepFeedback = null;
 
-        if (smoothedAngle >= ANGLE_UP) {
-            if (this.wasDescending && !this.hasReachedValidDown && this.minAngleThisRep < 170) {
-                this.state.incompleteRepFeedback = 'go_lower';
-            }
-            this.wasDescending = false;
-
-            if (this.hasReachedValidDown) {
-                const repAmplitude = this.computeAmplitudeScore(this.minAngleThisRep);
-                const repAlignment = this.bestAlignmentThisRep;
-                const repScore = Math.round(repAmplitude * 0.6 + repAlignment * 0.4);
-                const now = Date.now();
-                const repDuration = this.lastRepTimestamp > 0 ? now - this.lastRepTimestamp : 2000;
-                const feedback = this.determineFeedback(repAmplitude, repAlignment, this.worstHipDeviation, this.worstArmAsymmetry, repDuration);
-                this.lastRepTimestamp = now;
-                this.recordRep(repScore, repAmplitude, repAlignment, this.minAngleThisRep, feedback);
-                this.captureDynamicCalibration(this.minAngleThisRep, 'min');
-                this.resetRepTracking();
-                this.worstHipDeviation = 0;
-                this.worstArmAsymmetry = 0;
-            }
-            this.state.currentPhase = 'up';
-        } else if (smoothedAngle <= ANGLE_DOWN) {
-            this.hasReachedValidDown = isBodyHorizontal;
-            this.wasDescending = true;
-            this.state.currentPhase = 'down';
-        } else {
-            if (prevPhase === 'up' || prevPhase === 'idle') this.wasDescending = true;
-            this.state.currentPhase = 'transition';
-        }
+        this.processAngleBasedPhase(
+            smoothedAngle, ANGLE_UP, ANGLE_DOWN,
+            isBodyHorizontal, MIN_REP_INTERVAL_MS,
+            (repDuration) => ({
+                amplitudeScore: this.computeAmplitudeScore(this.minAngleThisRep),
+                alignmentScore: this.bestAlignmentThisRep,
+                feedback: this.determineFeedback(this.computeAmplitudeScore(this.minAngleThisRep), this.bestAlignmentThisRep, this.worstHipDeviation, this.worstArmAsymmetry, repDuration),
+            }),
+            () => { this.worstHipDeviation = 0; this.worstArmAsymmetry = 0; },
+        );
 
         // ── 7. Track stats ──────────────────────────────────────────
         if (prevPhase !== 'idle') {
@@ -156,19 +150,22 @@ export class PushUpDetector extends BaseExerciseDetector {
     // ── Calibration finalization ─────────────────────────────────
 
     private finalizeCalibration(landmarks: Landmark[]): void {
-        const n = this.calibrationFrames.length;
-        const avg = (fn: (f: typeof this.calibrationFrames[0]) => number) =>
-            this.calibrationFrames.reduce((s, f) => s + fn(f), 0) / n;
+        // Use median for robustness against outlier frames
+        const med = (fn: (f: typeof this.calibrationFrames[0]) => number) =>
+            this.medianOf(this.calibrationFrames.map(fn));
 
-        this.calibratedMaxBodyVerticalSpread = avg(f => f.spread) + 0.30;
-        this.calibratedWristBelowShoulderMargin = avg(f => f.wristOffset) + 0.15;
+        this.calibratedMaxBodyVerticalSpread = med(f => f.spread) + 0.30;
+        this.calibratedWristBelowShoulderMargin = med(f => f.wristOffset) + 0.15;
 
-        const avgTorso = avg(f => f.torsoLen);
-        if (avgTorso > 0.01) {
+        const medTorso = med(f => f.torsoLen);
+        // In plank position, shoulder–hip Y distance is small. Allow generous margin
+        // but reject clearly upright/leaning poses (e.g. getting up after push-ups).
+        this.calibratedMaxTorsoTilt = medTorso + 0.15;
+        if (medTorso > 0.01) {
             this._capturedRatios.pushup = {
-                armToTorsoRatio: avg(f => f.armLen) / avgTorso,
-                bodySpreadRatio: avg(f => f.bodySpread) / avgTorso,
-                naturalElbowExtension: Math.round(avg(f => f.elbowAngle)),
+                armToTorsoRatio: med(f => f.armLen) / medTorso,
+                bodySpreadRatio: med(f => f.bodySpread) / medTorso,
+                naturalElbowExtension: Math.round(med(f => f.elbowAngle)),
             };
         }
 
@@ -178,11 +175,7 @@ export class PushUpDetector extends BaseExerciseDetector {
     // ── Scoring ─────────────────────────────────────────────────
 
     private computeAmplitudeScore(minAngle: number): number {
-        const { angleDownThreshold, perfectAmplitudeAngle } = this.thresholds;
-        if (minAngle <= perfectAmplitudeAngle) return 100;
-        if (minAngle >= angleDownThreshold) return 0;
-        return Math.round(Math.max(0, Math.min(100,
-            ((angleDownThreshold - minAngle) / (angleDownThreshold - perfectAmplitudeAngle)) * 100)));
+        return this.linearScore(minAngle, this.thresholds.angleDownThreshold, this.thresholds.perfectAmplitudeAngle);
     }
 
     private computeAlignmentScore(armAsymmetry: number, hipDeviation: number): number {

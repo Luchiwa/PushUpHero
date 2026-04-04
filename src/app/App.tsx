@@ -13,7 +13,7 @@ import { EXERCISE_REGISTRY } from '@exercises/registry';
 import { useWorkoutStateMachine, durationToSeconds } from './useWorkoutStateMachine';
 import { WorkoutContext } from './WorkoutContext';
 import type { WorkoutContextType } from './WorkoutContext';
-import { totalXpForLevel } from '@lib/xpSystem';
+import { totalXpForLevel } from '@domain/xpSystem';
 import { StartScreen } from '@screens/StartScreen/StartScreen';
 import { Dashboard } from '@overlays/Dashboard/Dashboard';
 
@@ -31,7 +31,7 @@ import { getExerciseLabel } from '@exercises/types';
 import { useInGameAchievements } from '@hooks/useInGameAchievements';
 import { useBodyProfile } from '@hooks/useBodyProfile';
 import { useQuestProgress } from '@hooks/useQuestProgress';
-import { getActiveQuest, getAvailableQuests } from '@lib/quests';
+import { getActiveQuest, getFeaturedQuest, getAvailableQuests, isQuestAccepted } from '@domain/quests';
 import { AchievementToast } from '@components/AchievementToast/AchievementToast';
 import './App.scss';
 
@@ -43,15 +43,16 @@ function App() {
   // ── Exercise detector ────────────────────────────────────────────
   const [isActive, setIsActive] = useState(false);
   const { bodyProfile, saveBodyProfile } = useBodyProfile();
-  const { questProgress, completeQuests, acceptQuest } = useQuestProgress();
+  const { questProgress, completeQuests, acceptQuest, abandonQuest } = useQuestProgress();
   const { level: userLevel } = useLevel();
   const { user } = useAuthCore();
   const activeQuest = getActiveQuest(questProgress, userLevel);
+  const featuredQuest = getFeaturedQuest(questProgress, userLevel);
   const availableQuests = getAvailableQuests(questProgress, userLevel);
+  const acceptedQuests = availableQuests.filter(q => isQuestAccepted(q, questProgress));
 
   // ── Pending signup prompt (guest quest completion) ──────────────
   const [pendingSignupPrompt, setPendingSignupPrompt] = useState(false);
-  const prevScreenRef = useRef<string>('idle');
 
   const { exerciseState, processLandmarks, resetDetector, getCapturedRatios } = useExerciseDetector({
     detector,
@@ -74,7 +75,7 @@ function App() {
     startCamera,
     onExerciseTypeChange: handleExerciseTypeChange,
     activeQuest,
-    availableQuests,
+    availableQuests: acceptedQuests,
     bodyProfile,
     onSaveBodyProfile: saveBodyProfile,
     onCompleteQuests: completeQuests,
@@ -82,40 +83,44 @@ function App() {
   });
 
   // ── Combined exercise type setter (for WorkoutContext) ──────────
+  const { setWorkoutPlan } = wm;
   const changeExerciseType = useCallback((type: ExerciseType) => {
     setExerciseType(type);
-    wm.setWorkoutPlan(prev => ({
+    setWorkoutPlan(prev => ({
       blocks: prev.blocks.map((b, i) => i === 0 ? { ...b, exerciseType: type } : b),
     }));
-  }, [wm.setWorkoutPlan]);
+  }, [setWorkoutPlan]);
 
   // ── WorkoutContext value ───────────────────────────────────────────
-  const workoutCtx: WorkoutContextType = {
+  // Memoize to avoid unnecessary re-renders of consumers when unrelated App state changes.
+  // exerciseState IS a dep (changes per frame), but that's unavoidable — Dashboard needs it.
+  // The key win: other state changes in App won't cascade to context consumers.
+  const workoutCtx: WorkoutContextType = useMemo(() => ({
     ...wm,
     exerciseType,
     exerciseState,
     changeExerciseType,
-  };
+  }), [wm, exerciseType, exerciseState, changeExerciseType]);
 
-  // Sync isActive from state machine screen
-  useEffect(() => { setIsActive(wm.screen === 'active'); }, [wm.screen]);
+  // Sync isActive from state machine screen (derived state during render)
+  const [prevWmScreen, setPrevWmScreen] = useState(wm.screen);
+  if (wm.screen !== prevWmScreen) {
+    setPrevWmScreen(wm.screen);
+    setIsActive(wm.screen === 'active');
 
-  // Detect transition from summary → idle for guest quest signup prompt
-  useEffect(() => {
-    const prevScreen = prevScreenRef.current;
-    prevScreenRef.current = wm.screen;
+    // Detect transition from summary/levelup → idle for guest quest signup prompt
     if (
-      (prevScreen === 'stopped' || prevScreen === 'levelup') &&
+      (prevWmScreen === 'stopped' || prevWmScreen === 'levelup') &&
       wm.screen === 'idle' &&
       !user &&
-      wm.questCompletedThisSession
+      wm.questCompletedThisSession.length > 0
     ) {
       setPendingSignupPrompt(true);
     }
-  }, [wm.screen, user, wm.questCompletedThisSession]);
+  }
 
   // ── In-game achievements ─────────────────────────────────────────
-  const { achievementQueue, dismissFirst, shownIdsRef: inGameShownRef } = useInGameAchievements({
+  const { achievementQueue, dismissFirst, shownIds: inGameShownIds } = useInGameAchievements({
     exerciseType,
     exerciseState,
     completedSetsReps: wm.completedSetsReps,
@@ -185,10 +190,12 @@ function App() {
           <StartScreen
             isModelReady={isModelReady}
             cameraError={modelError ?? cameraError}
+            featuredQuest={featuredQuest}
             activeQuest={activeQuest}
             questProgress={questProgress}
             userLevel={userLevel}
             onAcceptQuest={acceptQuest}
+            onAbandonQuest={abandonQuest}
             pendingSignupPrompt={pendingSignupPrompt}
             onSignupPromptHandled={() => setPendingSignupPrompt(false)}
           />
@@ -239,7 +246,7 @@ function App() {
             <SummaryScreen
               newAchievements={
                 wm.lastSessionXp?.newAchievements?.filter(
-                  a => !inGameShownRef.current.has(a.id),
+                  a => !inGameShownIds.has(a.id),
                 )
               }
             />

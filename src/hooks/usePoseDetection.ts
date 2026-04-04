@@ -5,7 +5,8 @@ import {
 } from '@mediapipe/tasks-vision';
 import type { PoseLandmarkerResult } from '@mediapipe/tasks-vision';
 import type { Landmark } from '@exercises/types';
-import { isMobile } from '@lib/device';
+import { isMobile } from '@infra/device';
+import { LandmarkSmoother } from '@infra/oneEuroFilter';
 
 // Cap detection at ~30fps on all platforms (saves CPU/GPU), 20fps on mobile
 const DETECTION_INTERVAL_MS = isMobile ? 50 : 33;
@@ -37,6 +38,7 @@ export function usePoseDetection({
     const lastVideoTimeRef = useRef<number>(-1);
     const lastDetectionTimeRef = useRef<number>(0);
     const onFrameRef = useRef(onFrame);
+    const smootherRef = useRef(new LandmarkSmoother());
 
     // Keep callback ref fresh without re-triggering the detection loop
     useEffect(() => { onFrameRef.current = onFrame; }, [onFrame]);
@@ -49,14 +51,18 @@ export function usePoseDetection({
             const vision = await FilesetResolver.forVisionTasks(
                 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.32/wasm'
             );
+            const model = 'pose_landmarker_full';
             return PoseLandmarker.createFromOptions(vision, {
                 baseOptions: {
                     modelAssetPath:
-                        'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
+                        `https://storage.googleapis.com/mediapipe-models/pose_landmarker/${model}/float16/1/${model}.task`,
                     delegate,
                 },
                 runningMode: 'VIDEO',
                 numPoses: 1,
+                minPoseDetectionConfidence: 0.6,
+                minPosePresenceConfidence: 0.6,
+                minTrackingConfidence: 0.6,
             });
         }
 
@@ -103,7 +109,7 @@ export function usePoseDetection({
             }
             lastDetectionTimeRef.current = now;
 
-            if (video.videoWidth === 0 || video.videoHeight === 0) {
+            if (video.videoWidth === 0 || video.videoHeight === 0 || video.readyState < 2) {
                 animFrameRef.current = requestAnimationFrame(() => detectRef.current());
                 return;
             }
@@ -114,7 +120,8 @@ export function usePoseDetection({
                 const result = landmarker.detectForVideo(video, performance.now());
                 const lms = result.landmarks?.[0] as Landmark[] | undefined;
                 if (lms && lms.length > 0) {
-                    onFrameRef.current(lms, result);
+                    const smoothed = smootherRef.current.smooth(lms, performance.now());
+                    onFrameRef.current(smoothed, result);
                 }
             }
             animFrameRef.current = requestAnimationFrame(() => detectRef.current());
@@ -124,6 +131,7 @@ export function usePoseDetection({
     useEffect(() => {
         if (!isModelReady || !isVideoReady || !isActive) {
             cancelAnimationFrame(animFrameRef.current);
+            smootherRef.current.reset();
             return;
         }
         animFrameRef.current = requestAnimationFrame(() => detectRef.current());

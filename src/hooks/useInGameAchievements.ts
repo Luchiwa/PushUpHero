@@ -8,13 +8,13 @@
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { ExerciseType, ExerciseState } from '@exercises/types';
-import type { AchievementDef } from '@lib/achievements';
-import { ACHIEVEMENTS } from '@lib/achievements';
-import type { AchievementMap, UserStats } from '@lib/achievementEngine';
-import { getStatValue, isLiveStatKey } from '@lib/achievementEngine';
+import type { AchievementDef } from '@domain/achievements';
+import { ACHIEVEMENTS } from '@domain/achievements';
+import type { AchievementMap, UserStats } from '@domain/achievementEngine';
+import { getStatValue, isLiveStatKey } from '@domain/achievementEngine';
 import { useAuthCore } from './useAuth';
-import { playAchievementSound } from '@lib/soundEngine';
-import { getGuestAchievements, getGuestLifetimeReps } from '@lib/guestStatsStore';
+import { playAchievementSound } from '@infra/soundEngine';
+import { getGuestAchievements, getGuestLifetimeReps } from '@services/guestStatsStore';
 
 /** Achievements that CAN be unlocked mid-session (rep-based stat keys). */
 const LIVE_ACHIEVEMENTS = ACHIEVEMENTS.filter(a => isLiveStatKey(a.statKey));
@@ -37,45 +37,41 @@ export function useInGameAchievements({
 }: UseInGameAchievementsProps) {
     const { dbUser } = useAuthCore();
     const [queue, setQueue] = useState<AchievementDef[]>([]);
+    const [shownIds, setShownIds] = useState<Set<string>>(new Set());
+    const [prevActive, setPrevActive] = useState(false);
+    const [prevEvalRepCount, setPrevEvalRepCount] = useState(0);
+    const [soundTrigger, setSoundTrigger] = useState(0);
 
-    // Track which achievements we've already surfaced this session to avoid duplicates
-    const shownThisSessionRef = useRef<Set<string>>(new Set());
-    const prevRepCountRef = useRef(0);
+    // Reset when a new session starts (derived state during render)
+    if (isActive && !prevActive) {
+        setPrevActive(true);
+        setQueue([]);
+        setShownIds(new Set());
+        setPrevEvalRepCount(0);
+        setSoundTrigger(0);
+    }
+    if (!isActive && prevActive) {
+        setPrevActive(false);
+    }
 
-    // Reset when a new session starts
-    useEffect(() => {
-        if (isActive) {
-            shownThisSessionRef.current = new Set();
-            setQueue([]);
-            prevRepCountRef.current = 0;
-        }
-    }, [isActive]);
+    // Evaluate on every rep increase (derived state during render)
+    if (isActive && exerciseState.repCount > prevEvalRepCount) {
+        setPrevEvalRepCount(exerciseState.repCount);
 
-    // Evaluate on every rep change
-    useEffect(() => {
-        if (!isActive) return;
-
-        const currentReps = exerciseState.repCount;
-        // Only evaluate when reps actually increase
-        if (currentReps <= prevRepCountRef.current) return;
-        prevRepCountRef.current = currentReps;
-
-        const totalSessionReps = completedSetsReps + currentReps;
+        const totalSessionReps = completedSetsReps + exerciseState.repCount;
 
         // Build lifetime reps from either dbUser (logged in) or localStorage (guest)
         const lifetimeReps: Partial<Record<ExerciseType, number>> = dbUser
             ? { ...dbUser.lifetimeReps }
             : { ...getGuestLifetimeReps() };
-        // Add current session reps to the lifetime count
         lifetimeReps[exerciseType] = (lifetimeReps[exerciseType] ?? 0) + totalSessionReps;
 
-        // Build a lightweight UserStats with only the rep fields that change mid-session
         const stats: UserStats = {
             lifetimeRepsByExercise: lifetimeReps,
             sessionRepsByExercise: { [exerciseType]: totalSessionReps },
             totalSessions: 0, bestStreak: 0, friendsCount: 0,
             totalEncouragementsSent: 0, sGradeCount: 0, sessionXp: 0,
-            globalLevel: 0, lifetimeTrainingTime: 0,
+            globalLevel: 0, lifetimeTrainingTime: 0, sessionDuration: 0,
         };
 
         // Build already-unlocked map from either dbUser or localStorage
@@ -84,8 +80,8 @@ export function useInGameAchievements({
             : { ...getGuestAchievements() };
 
         // Also mark achievements already shown this session as "unlocked" so we don't re-queue
-        for (const id of shownThisSessionRef.current) {
-            if (!alreadyUnlocked[id]) alreadyUnlocked[id] = Date.now();
+        for (const id of shownIds) {
+            if (!alreadyUnlocked[id]) alreadyUnlocked[id] = 1;
         }
 
         const newlyUnlocked: AchievementDef[] = [];
@@ -94,15 +90,26 @@ export function useInGameAchievements({
             if (alreadyUnlocked[ach.id]) continue;
             if (getStatValue(stats, ach) >= ach.threshold) {
                 newlyUnlocked.push(ach);
-                shownThisSessionRef.current.add(ach.id);
             }
         }
 
         if (newlyUnlocked.length > 0) {
-            if (soundEnabled) playAchievementSound();
+            const newShown = new Set(shownIds);
+            for (const a of newlyUnlocked) newShown.add(a.id);
+            setShownIds(newShown);
             setQueue(prev => [...prev, ...newlyUnlocked]);
+            setSoundTrigger(c => c + 1);
         }
-    }, [exerciseState.repCount, isActive, dbUser, exerciseType, completedSetsReps, soundEnabled]);
+    }
+
+    // Play achievement sound (external side effect, no setState)
+    const prevSoundTriggerRef = useRef(0);
+    useEffect(() => {
+        if (soundTrigger > prevSoundTriggerRef.current && soundEnabled) {
+            playAchievementSound();
+        }
+        prevSoundTriggerRef.current = soundTrigger;
+    }, [soundTrigger, soundEnabled]);
 
     /** Called by the toast queue when a toast finishes animating */
     const dismissFirst = useCallback(() => {
@@ -115,6 +122,6 @@ export function useInGameAchievements({
         /** Call when the current toast is done animating */
         dismissFirst,
         /** Set of achievement IDs already shown in-game (to filter from SummaryScreen) */
-        shownIdsRef: shownThisSessionRef,
+        shownIds,
     };
 }

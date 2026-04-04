@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useAuthCore, useLevel } from '@hooks/useAuth';
-import { getTier } from '@lib/xpSystem';
+import { getTier } from '@domain/xpSystem';
 import { Avatar } from '@components/Avatar/Avatar';
 import { useSessionHistory } from '@hooks/useSessionHistory';
 import { useFriends } from '@hooks/useFriends';
@@ -10,6 +10,7 @@ import { FriendsFeedPanel } from '@modals/panels/FriendsFeedPanel/FriendsFeedPan
 import { SettingsModal } from '@modals/SettingsModal/SettingsModal';
 import { ProgressionScreen } from '@screens/ProgressionScreen/ProgressionScreen';
 import { PageLayout } from '@components/PageLayout/PageLayout';
+import { useFocusTrap } from '@hooks/shared/useFocusTrap';
 import './ProfileModal.scss';
 
 type ProfileTab = 'friends' | 'feed';
@@ -37,6 +38,8 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
     const [showProgression, setShowProgression] = useState(false);
     const [uploading, setUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const modalRef = useRef<HTMLDivElement>(null);
+    useFocusTrap(modalRef);
 
     const handleAvatarClick = () => fileInputRef.current?.click();
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,6 +75,7 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
 
     return (
         <>
+        <div ref={modalRef}>
         <PageLayout
             title="Profile"
             onClose={onClose}
@@ -215,6 +219,7 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
                     </div>
                 )}
         </PageLayout>
+        </div>
 
         {showSettings && (
             <SettingsModal

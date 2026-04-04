@@ -7,7 +7,7 @@
 
 import { query, where, onSnapshot, limit } from 'firebase/firestore';
 import type { DocumentChange, DocumentData } from 'firebase/firestore';
-import { notificationsCol } from '@lib/refs';
+import { notificationsCol } from '@infra/refs';
 
 /**
  * Real-time listener on unread notifications (max 50).

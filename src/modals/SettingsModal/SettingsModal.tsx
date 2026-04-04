@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useAuthCore } from '@hooks/useAuth';
 import { useModalClose } from '@hooks/shared/useModalClose';
+import { useFocusTrap } from '@hooks/shared/useFocusTrap';
 import { PasswordChangeSection } from './PasswordChangeSection/PasswordChangeSection';
 import { DeleteAccountSection } from './DeleteAccountSection/DeleteAccountSection';
 import './SettingsModal.scss';
@@ -38,6 +39,8 @@ function SettingsAccordion({ title, danger, isOpen, onToggle, children }: {
 export function SettingsModal({ onClose, onAccountDeleted }: SettingsModalProps) {
     const { user, logout } = useAuthCore();
     const { closing, handleClose, handleAnimationEnd } = useModalClose(onClose);
+    const modalRef = useRef<HTMLDivElement>(null);
+    useFocusTrap(modalRef);
 
     const handleLogout = async () => {
         await logout();
@@ -52,6 +55,7 @@ export function SettingsModal({ onClose, onAccountDeleted }: SettingsModalProps)
 
     return (
         <div
+            ref={modalRef}
             className={`settings-overlay${closing ? ' settings-overlay--exit' : ''}`}
             role="presentation"
             onClick={handleClose}

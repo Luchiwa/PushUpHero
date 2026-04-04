@@ -4,6 +4,8 @@
 
 The Push-Up Detector uses **MediaPipe Pose Landmarks** to track elbow flexion/extension as the primary signal for rep counting. It enforces a plank-like starting position during calibration and scores each rep on both **amplitude** (depth of descent) and **alignment** (form quality).
 
+Landmarks are pre-smoothed by a **One Euro Filter** (`src/infra/oneEuroFilter.ts`) in the pose detection pipeline before reaching the detector. This eliminates high-frequency jitter while preserving fast movements.
+
 ---
 
 ## 1. Landmarks Used
@@ -21,36 +23,46 @@ The Push-Up Detector uses **MediaPipe Pose Landmarks** to track elbow flexion/ex
 | Left Ankle | 27 | Body-line reference |
 | Right Ankle | 28 | Body-line reference |
 
-All landmarks must have a **visibility score ≥ 0.4** to be processed.
+**Post-calibration visibility check** (key landmarks): shoulders, elbows, hips — must have **visibility ≥ 0.6**.
 
 ---
 
-## 2. Calibration Phase
+## 2. Pre-Detection Guards
+
+Before any processing, two guards run on every frame:
+
+1. **Landmark plausibility** (`areLandmarksPlausible`): Core landmarks (shoulders + hips, indices 11/12/23/24) must be visible (≥ 0.5) and form a plausible body — core bounding box must not span > 60% of the frame nor be collapsed (< 1%).
+2. **Minimum landmarks**: At least 29 landmarks must be present.
+
+---
+
+## 3. Calibration Phase
 
 ### Goal
-Detect a valid **plank position** and hold it for **90 consecutive frames** (~3 seconds at 30 fps).
+Detect a valid **plank position** and hold it for **90 consecutive frames** (~3 seconds at 30 fps). If a body profile already exists for push-ups, calibration completes in half the frames (~45).
 
 ### Validation Criteria
 
-1. **Landmarks visible**: All 10 required landmarks pass the visibility threshold.
-2. **Body horizontal**: The vertical distance between the average shoulder Y and average ankle Y is **< 25%** of the horizontal distance between them. This ensures the user's body is roughly horizontal (not standing).
-3. **Wrists below shoulders**: Average wrist Y > average shoulder Y (in screen coordinates, Y increases downward), confirming the user's hands are on the ground.
-4. **Arms extended**: The smoothed elbow angle must be **≥ 150°**, confirming the user is in the "up" position of a push-up.
+1. **Body horizontal**: The vertical distance between the average shoulder Y and average ankle Y is **< 65%** of frame height (MAX_BODY_VERTICAL_SPREAD).
+2. **Wrists below shoulders**: `midShoulderY - midWristY < -0.15` (in screen coordinates, Y increases downward).
 
-### Calibration Coaching
+### Calibration Data Capture
 
-The vocal coach provides guidance every 8 seconds if calibration is not yet complete:
-- *"Get into plank position with arms extended"*
-- *"Make sure your full body is visible"*
-- *"Hold steady, almost there"*
+During each valid frame, the detector captures: body vertical spread, wrist offset, arm length, body spread, torso length, and smoothed elbow angle. These are stored for **median-based** finalization (robust against outlier frames).
 
-Once 90 valid frames are counted, `isCalibrated` flips to `true` and the state machine transitions to the **up** phase.
+### Calibration Finalization
+
+Uses **median** of all captured frames (not average) to compute:
+- `calibratedMaxBodyVerticalSpread` = median spread + 0.30
+- `calibratedWristBelowShoulderMargin` = median wrist offset + 0.15
+- `calibratedMaxTorsoTilt` = median torso length + 0.15
+- **Body profile ratios**: arm-to-torso ratio, body spread ratio, natural elbow extension
+
+A **bounding box lock** is set from the calibration pose to reject poses from different people (anti-cheat).
 
 ---
 
-## 3. State Machine
-
-The detector operates as a three-phase state machine:
+## 4. State Machine
 
 ```
          ┌──────────┐
@@ -61,14 +73,17 @@ The detector operates as a three-phase state machine:
          ┌──────────┐
     ┌───▶│    up    │◀───────────────┐
     │    └────┬─────┘                │
-    │         │ elbow angle ≤ DOWN   │
-    │         │ (≤ 140°)             │
+    │         │ angle ≤ ANGLE_DOWN   │
+    │         │ (2 consecutive       │
+    │         │  frames required)    │
     │         ▼                      │
     │    ┌──────────┐                │
     │    │   down   │────────────────┘
-    │    └──────────┘   elbow angle ≥ UP
-    │                    (≥ 155°)
-    │                    → rep counted
+    │    └──────────┘  angle ≥ ANGLE_UP
+    │         │         → rep counted
+    │    ┌──────────┐
+    │    │transition│  (between up/down thresholds)
+    │    └──────────┘
     └────────────────────────────────┘
 ```
 
@@ -77,130 +92,120 @@ The detector operates as a three-phase state machine:
 | From | To | Condition |
 | ---- | -- | --------- |
 | `idle` | `up` | Calibration complete |
-| `up` | `down` | Smoothed elbow angle **≤ 140°** |
-| `down` | `up` | Smoothed elbow angle **≥ 155°** → **rep recorded** |
+| `up`/`transition` | `down` | Smoothed elbow angle **≤ ANGLE_DOWN** for **2 consecutive frames** (hysteresis) |
+| `down` | `up` | Smoothed elbow angle **≥ ANGLE_UP** + body horizontal → **rep recorded** |
+| any | `transition` | Between ANGLE_DOWN and ANGLE_UP thresholds |
+
+### Debounce
+
+A minimum of **500ms** between reps (`MIN_REP_INTERVAL_MS`) prevents jitter-induced double-counting.
 
 ### Incomplete Rep Detection
 
-When the user descends (`wasDescending = true`, angle drops below 140°) but then comes back up **without** reaching the DOWN threshold deeply enough or without completing the full extension:
-- If `wasDescending` is true and the user returns to UP without a rep being recorded, an **incomplete rep feedback** is emitted (e.g., *"Go lower!"* or *"Full range of motion!"*).
+When the user descends (`wasDescending = true`) but returns to UP without completing the full range of motion (and `minAngleThisRep < 170`), an incomplete rep feedback is emitted: *"Go lower!"*.
 
 ---
 
-## 4. Primary Signal — Elbow Angle
+## 5. Primary Signal — Elbow Angle
 
 The **elbow angle** is computed for both arms as the angle at the elbow joint (vertex) formed by the shoulder→elbow→wrist vectors.
 
-```
-angle = computeAngle(shoulder, elbow, wrist)
-```
+### Smoothing (two layers)
 
-The `computeAngle(a, b, c)` function from `BaseExerciseDetector` uses `Math.atan2` to calculate the angle at point **b** in degrees.
+1. **One Euro Filter** (upstream, per-landmark): Adaptive low-pass filter applied to all landmarks before the detector receives them. Parameters: `min_cutoff=1.5, beta=0.5`.
+2. **Visibility-weighted side selection + sliding window** (in detector):
+   - If both sides have good visibility (elbow+wrist sum ≥ 0.8): weighted average by visibility
+   - Otherwise: use the more visible side
+   - Then: sliding window average over **3 frames** (SMOOTHING_WINDOW)
 
-### Smoothing
+### Angle Thresholds (adaptive)
 
-A simple **exponential moving average** (EMA) is applied to reduce jitter:
+Thresholds come from `getPushupThresholds(bodyProfile)` and adapt to the user's body. Defaults:
 
-```
-smoothedAngle = α × rawAngle + (1 - α) × previousSmoothedAngle
-```
-
-where **α = 0.35** (SMOOTHING_FACTOR).
-
-### Angle Thresholds
-
-| Constant | Value | Meaning |
-| -------- | ----- | ------- |
-| `ANGLE_UP` | 155° | Arms nearly fully extended — "up" position |
-| `ANGLE_DOWN` | 140° | Arms bent enough — entering "down" phase |
-| `PERFECT_ANGLE` | 80° | Deep push-up — elbows at ~90° or below |
+| Constant | Default Value | Meaning |
+| -------- | ------------- | ------- |
+| `angleUpThreshold` | ~155° | Arms nearly fully extended — "up" position |
+| `angleDownThreshold` | ~140° | Arms bent enough — entering "down" phase |
+| `perfectAmplitudeAngle` | ~80° | Deep push-up — elbows at ~90° or below |
 
 ---
 
-## 5. Scoring
+## 6. Scoring
 
-Each rep receives a **total score** (0–100) composed of two equally weighted components:
+Each rep receives a **total score** (0–100):
 
 ```
-totalScore = 0.5 × amplitudeScore + 0.5 × alignmentScore
+totalScore = 0.6 × amplitudeScore + 0.4 × alignmentScore
 ```
 
-### 5.1 Amplitude Score
+### 6.1 Amplitude Score
 
 Based on the **minimum elbow angle** recorded during the rep (the deepest point of descent):
 
 | Depth | Score |
 | ----- | ----- |
-| minAngle ≤ PERFECT_ANGLE (80°) | **100** |
-| minAngle between PERFECT and DOWN | Linear interpolation 50 → 100 |
-| minAngle ≥ ANGLE_DOWN (140°) | **50** (minimum if rep counted) |
+| minAngle ≤ perfectAmplitudeAngle | **100** |
+| minAngle between perfect and down threshold | Linear interpolation **0 → 100** |
+| minAngle ≥ angleDownThreshold | **0** |
 
-```
-amplitudeScore = 50 + 50 × (ANGLE_DOWN - minAngle) / (ANGLE_DOWN - PERFECT_ANGLE)
-```
+### 6.2 Alignment Score
 
-### 5.2 Alignment Score
-
-Evaluated at the moment the rep is recorded (transition from down → up), combining two sub-scores:
+Combining two sub-scores (50/50):
 
 #### Arm Symmetry (50%)
 
-Compares the left and right elbow angles at the time of scoring:
-
 ```
 diff = |leftAngle - rightAngle|
-armSymmetry = max(0, 100 - diff × 5)
+armSymmetry = diff ≤ 15° ? 100 : max(0, 100 - ((diff - 15) / 30) × 100)
 ```
 
-Every degree of asymmetry costs 5 points.
+Tolerance of 15° before penalties begin.
 
 #### Hip Deviation (50%)
 
-Measures how far the hip midpoint deviates vertically from the shoulder–ankle midline:
+Measures how far the hip midpoint deviates from the shoulder–ankle midline:
 
 ```
-midlineY = (avgShoulderY + avgAnkleY) / 2
-deviation = |avgHipY - midlineY| / |avgShoulderY - avgAnkleY|
-hipScore = max(0, 100 - deviation × 400)
+expectedHipY = (avgShoulderY + avgAnkleY) / 2
+hipDeviation = avgHipY - expectedHipY
+hipScore = |dev| ≤ 0.04 ? 100 : max(0, 100 - ((|dev| - 0.04) / 0.08) × 100)
 ```
 
-A deviation of 25% of the body length → score of 0. This penalizes both **hip sag** (hips dropping) and **hip pike** (hips rising).
+Penalizes both **hip sag** (positive deviation) and **hip pike** (negative deviation).
 
 ---
 
-## 6. Feedback System
+## 7. Feedback System
 
-After each rep, the detector returns a `feedback` string selected by priority:
+After each rep, the detector returns a `RepFeedback` string selected by priority:
 
-| Priority | Condition | Example Feedback |
-| -------- | --------- | ---------------- |
-| 1 (highest) | amplitudeScore < 60 | *"Go lower!"* or *"Chest to the ground!"* |
-| 2 | hipScore < 60 | *"Keep your hips in line!"* or *"Don't let your hips sag!"* |
-| 3 | armSymmetry < 70 | *"Even arms!"* or *"Balance both sides!"* |
-| 4 | rep took > 4s | *"Pick up the pace!"* |
-| 5 | totalScore ≥ 90 | *"Perfect form!"* |
-| 6 (default) | totalScore ≥ 60 | *"Good rep!"* |
-
-### Incomplete Rep Feedback
-
-If the user starts descending but doesn't complete the rep:
-- *"Go lower!"*, *"Full range of motion!"*, *"Don't stop halfway!"*, *"Complete the rep!"*
+| Priority | Condition | Feedback |
+| -------- | --------- | -------- |
+| 1 | amplitude ≥ 90 AND alignment ≥ 85 | `perfect` |
+| 2 | amplitudeScore < 60 | `go_lower` |
+| 3 | worst hip deviation > 0.08 (sag) | `body_sagging` |
+| 4 | worst hip deviation < -0.08 (pike) | `body_piking` |
+| 5 | worst arm asymmetry > 30° | `arms_uneven` |
+| 6 | rep duration < 800ms | `too_fast` |
+| 7 (default) | | `good` |
 
 ---
 
-## 7. Anti-Cheat Measures
+## 8. Anti-Cheat & Robustness
 
-1. **Landmark Visibility**: All 10 landmarks must have visibility ≥ 0.4. If any are occluded, the frame is skipped entirely.
-2. **Body Horizontal Check**: During calibration, the system verifies the body is horizontal (not standing upright trying to fake push-ups).
-3. **Wrist Position Check**: Wrists must be below (Y >) shoulders during calibration, confirming hands are on the ground.
-4. **Angle Hysteresis**: The UP (155°) and DOWN (140°) thresholds have a **15° gap** to prevent rapid oscillation from counting as reps.
-5. **Smoothing Filter**: EMA with α=0.35 eliminates transient jitter spikes.
+1. **One Euro Filter**: Upstream landmark smoothing eliminates jitter without adding latency on fast movements.
+2. **Landmark Plausibility**: Core bounding box check rejects hallucinated/exploded skeletons before processing.
+3. **Bounding Box Lock**: After calibration, locks the user's position. Rejects poses that drift too far (center > 25%, size > ±45%). Slowly adapts to gradual movement.
+4. **Post-Calibration Visibility**: Key landmarks (shoulders, elbows, hips) must have visibility ≥ 0.6.
+5. **Down Phase Hysteresis**: 2 consecutive frames below ANGLE_DOWN required before confirming down phase.
+6. **Rep Debounce**: Minimum 500ms between reps.
+7. **Median Calibration**: Uses median (not average) of calibration frames — robust against outlier readings.
+8. **Angle Hysteresis**: ANGLE_UP and ANGLE_DOWN thresholds have a ~15° gap to prevent oscillation.
+9. **Dynamic Calibration**: First 5 reps capture the user's actual depth for adaptive threshold adjustment.
 
 ---
 
-## 8. Grade Mapping
-
-The average score across all reps maps to a letter grade:
+## 9. Grade Mapping
 
 | Grade | Score Range |
 | ----- | ----------- |

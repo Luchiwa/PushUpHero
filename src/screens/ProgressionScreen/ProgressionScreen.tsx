@@ -3,12 +3,12 @@ import { useAuthCore, useLevel } from '@hooks/useAuth';
 import { useSessionHistory } from '@hooks/useSessionHistory';
 import { useFriends } from '@hooks/useFriends';
 import { PageLayout } from '@components/PageLayout/PageLayout';
-import { ACHIEVEMENTS_BY_CATEGORY } from '@lib/achievements';
-import { computeLifetimeReps, countSGrades } from '@lib/achievementEngine';
-import type { UserStats, AchievementMap, RecordsMap } from '@lib/achievementEngine';
-import { emptyRecords } from '@lib/achievementEngine';
-import { checkLiveAchievements } from '@lib/userService';
-import { getGuestStatsSnapshot } from '@lib/guestStatsStore';
+import { ACHIEVEMENTS_BY_CATEGORY } from '@domain/achievements';
+import { computeLifetimeReps, countSGrades } from '@domain/achievementEngine';
+import type { UserStats, AchievementMap, RecordsMap } from '@domain/achievementEngine';
+import { emptyRecords } from '@domain/achievementEngine';
+import { checkLiveAchievements } from '@services/achievementService';
+import { getGuestStatsSnapshot } from '@services/guestStatsStore';
 import { LevelsSection } from './LevelsSection/LevelsSection';
 import { AchievementsGrid } from './AchievementsGrid/AchievementsGrid';
 import { RecordsSection } from './RecordsSection/RecordsSection';
@@ -44,11 +44,18 @@ export function ProgressionScreen({ onClose }: ProgressionScreenProps) {
             sessionXp: 0,
             globalLevel: level,
             lifetimeTrainingTime,
+            sessionDuration: 0,
         };
     }, [dbUser, guestSnapshot, sessions, totalSessionCount, friends.length, level]);
 
-    const achievements: AchievementMap = dbUser?.achievements ?? guestSnapshot?.achievements ?? {};
-    const records: RecordsMap = dbUser?.records ?? guestSnapshot?.records ?? emptyRecords();
+    const achievements: AchievementMap = useMemo(
+        () => dbUser?.achievements ?? guestSnapshot?.achievements ?? {},
+        [dbUser?.achievements, guestSnapshot?.achievements],
+    );
+    const records: RecordsMap = useMemo(
+        () => dbUser?.records ?? guestSnapshot?.records ?? emptyRecords(),
+        [dbUser?.records, guestSnapshot?.records],
+    );
 
     // ── Evaluate live (non-session) achievements on mount / when stats change ──
     const liveCheckedRef = useRef('');

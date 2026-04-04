@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { getGradeColor } from '@lib/constants';
+import { getGradeColor } from '@domain/constants';
 import './ScoreRing.scss';
 
 export interface ScoreRingProps {

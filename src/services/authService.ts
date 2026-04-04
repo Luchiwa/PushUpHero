@@ -15,8 +15,8 @@ import {
     updatePassword as fbUpdatePassword,
 } from 'firebase/auth';
 import { runTransaction } from 'firebase/firestore';
-import { auth, db } from './firebase';
-import { userRef, usernameRef } from './refs';
+import { auth, db } from '@infra/firebase';
+import { userRef, usernameRef } from '@infra/refs';
 
 // ── Error translation ────────────────────────────────────────────────────────
 

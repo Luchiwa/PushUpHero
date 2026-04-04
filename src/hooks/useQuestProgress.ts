@@ -4,9 +4,9 @@
  */
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuthCore } from './useAuth';
-import { updateQuestProgress } from '@lib/userService';
-import type { QuestProgress } from '@lib/quests';
-import { emptyQuestProgress } from '@lib/quests';
+import { updateQuestProgress } from '@services/profileService';
+import type { QuestProgress } from '@domain/quests';
+import { emptyQuestProgress } from '@domain/quests';
 
 const LS_QUEST_KEY = 'pushup-hero-quest-progress';
 
@@ -90,11 +90,20 @@ export function useQuestProgress() {
         return updated;
     }, [questProgress, saveQuestProgress]);
 
+    const abandonQuest = useCallback((questId: string) => {
+        const { [questId]: _removed, ...rest } = questProgress.accepted;
+        void _removed;
+        const updated: QuestProgress = { ...questProgress, accepted: rest };
+        saveQuestProgress(updated);
+        return updated;
+    }, [questProgress, saveQuestProgress]);
+
     return {
         questProgress,
         saveQuestProgress,
         completeQuest,
         completeQuests,
         acceptQuest,
+        abandonQuest,
     };
 }

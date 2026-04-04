@@ -1,6 +1,6 @@
 import type { SetRecord, WorkoutPlan } from '@exercises/types';
 import { getExerciseLabel } from '@exercises/types';
-import { getGradeLetter, getGradeClass } from '@lib/constants';
+import { getGradeLetter, getGradeClass } from '@domain/constants';
 import './SetsBreakdown.scss';
 
 function ScoreGrade({ score }: { score: number }) {

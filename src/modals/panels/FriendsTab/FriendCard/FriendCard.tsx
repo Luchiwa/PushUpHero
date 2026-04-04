@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Friend } from '@hooks/useFriends';
 import { Avatar } from '@components/Avatar/Avatar';
-import { ENCOURAGE_COOLDOWN_MS } from '@lib/constants';
-import { getTier } from '@lib/xpSystem';
+import { ENCOURAGE_COOLDOWN_MS } from '@domain/constants';
+import { getTier } from '@domain/xpSystem';
 import { TierBadge } from '../TierBadge/TierBadge';
 import './FriendCard.scss';
 

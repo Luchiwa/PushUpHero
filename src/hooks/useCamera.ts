@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { isMobile } from '@lib/device';
+import { isMobile } from '@infra/device';
 
 export type FacingMode = 'user' | 'environment';
 
