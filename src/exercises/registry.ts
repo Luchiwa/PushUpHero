@@ -15,6 +15,7 @@ import type { BodyProfile } from '@domain/bodyProfile';
 import { PushUpDetector } from './pushup/PushUpDetector';
 import { SquatDetector } from './squat/SquatDetector';
 import { PullUpDetector } from './pullup/PullUpDetector';
+import { LegRaiseDetector } from './legraise/LegRaiseDetector';
 import { EXERCISE_DIFFICULTY } from './exerciseDifficulty';
 
 // ── Config types ────────────────────────────────────────────────
@@ -95,6 +96,23 @@ export const EXERCISE_REGISTRY: Record<ExerciseType, ExerciseConfig> = {
         ],
         incompleteRepPhrases: ['Pull higher!', 'Chin over bar!', 'All the way up!'],
     },
+    legraise: {
+        createDetector: () => new LegRaiseDetector(),
+        difficulty: EXERCISE_DIFFICULTY.legraise,
+        keyJoints: new Set([11, 12, 23, 24, 25, 26, 27, 28]),
+        positionGuide: {
+            emoji: '🧘',
+            title: 'Lie on your back',
+            description: 'Position the camera to the side so it can see your full body lying flat.',
+            calibrationText: 'Hold still…',
+        },
+        calibrationPhrases: [
+            'Lie on your back',
+            'Keep your legs straight',
+            'Let the camera see your full body',
+        ],
+        incompleteRepPhrases: ['Raise higher!', 'Legs up!', 'All the way up!'],
+    },
 };
 
 // ── Body Profile Merge Map ─────────────────────────────────────
@@ -123,6 +141,12 @@ export const BODY_PROFILE_MERGE: Record<ExerciseType, (
     pullup: {
       ...c.pullup,
       naturalMaxRiseFraction: cal ?? 0.5,
+    },
+  } : {},
+  legraise: (c, cal) => c.legraise ? {
+    legraise: {
+      ...c.legraise,
+      naturalMinHipAngle: cal ?? c.legraise.naturalHipExtension - 70,
     },
   } : {},
 };

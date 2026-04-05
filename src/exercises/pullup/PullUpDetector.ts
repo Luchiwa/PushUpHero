@@ -1,7 +1,7 @@
 import { BaseExerciseDetector } from '../BaseExerciseDetector';
 import type { ExerciseState, Landmark, RepFeedback } from '../types';
 import { getPullupThresholds } from '@domain/bodyProfile';
-import type { BodyProfile, PullupThresholds } from '@domain/bodyProfile';
+import type { PullupThresholds } from '@domain/bodyProfile';
 
 const LM = {
     LEFT_SHOULDER: 11, RIGHT_SHOULDER: 12,
@@ -55,12 +55,7 @@ export class PullUpDetector extends BaseExerciseDetector {
 
     constructor() {
         super();
-        this.thresholds = getPullupThresholds(this._bodyProfile?.pullup ?? undefined);
-    }
-
-    override setBodyProfile(profile: BodyProfile | null): void {
-        super.setBodyProfile(profile);
-        this.thresholds = getPullupThresholds(profile?.pullup ?? undefined);
+        this.thresholds = getPullupThresholds();
     }
 
     reset(): void {
@@ -76,7 +71,7 @@ export class PullUpDetector extends BaseExerciseDetector {
         this.calibratedWristAboveShoulderMargin = WRIST_ABOVE_SHOULDER_MARGIN;
         this.calibratedBaselineShoulderY = 0;
         this.calibratedTorsoLength = 0.2;
-        this.thresholds = getPullupThresholds(this._bodyProfile?.pullup ?? undefined);
+        this.thresholds = getPullupThresholds();
     }
 
     processPose(landmarks: Landmark[]): ExerciseState {
@@ -189,7 +184,7 @@ export class PullUpDetector extends BaseExerciseDetector {
             }
             this.wasDescending = false;
             if (this._downConfirmCount >= 2) {
-                this.hasReachedValidDown = isValid;
+                this.hasReachedValidDown = true;
             }
             this.state.currentPhase = 'down';
         } else {

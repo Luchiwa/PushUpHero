@@ -35,6 +35,9 @@ const FEEDBACK_PHRASES: Record<RepFeedback, string[]> = {
     torso_lean:    ['Keep your torso up', 'Stay vertical'],
     kipping:       ['No kipping', 'Strict form!'],
     body_sway:     ['Stay still', 'Minimize sway'],
+    raise_higher:      ['Raise higher', 'Legs up!', 'Higher!'],
+    keep_legs_straight: ['Straighten your legs', 'Keep legs straight'],
+    keep_back_flat:     ['Keep your back flat', 'Back on the ground'],
 };
 
 const ENCOURAGEMENTS = [

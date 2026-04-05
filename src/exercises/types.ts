@@ -5,13 +5,13 @@ export interface Landmark {
     visibility?: number;
 }
 
-export type ExerciseType = 'pushup' | 'squat' | 'pullup';
+export type ExerciseType = 'pushup' | 'squat' | 'pullup' | 'legraise';
 
 /** Per-exercise XP map — single source of truth for all modules. */
 export type ExerciseXpMap = Partial<Record<ExerciseType, number>>;
 
 /** All exercise types in display order. Single source of truth. */
-export const EXERCISE_TYPES: ExerciseType[] = ['pushup', 'squat', 'pullup'];
+export const EXERCISE_TYPES: ExerciseType[] = ['pushup', 'squat', 'pullup', 'legraise'];
 
 export interface ExerciseMeta {
     type: ExerciseType;
@@ -27,7 +27,8 @@ export interface ExerciseMeta {
 export const EXERCISE_META: ExerciseMeta[] = [
     { type: 'pushup', label: 'Push-ups', emoji: '💪', invalidPositionMessage: '⚠️ Get back into push-up position',  shareTagline: 'Track your push-ups with Push-Up Hero 💪' },
     { type: 'squat',  label: 'Squats',   emoji: '🦵', invalidPositionMessage: '⚠️ Stand upright facing the camera',  shareTagline: 'Track your squats with Push-Up Hero 💪' },
-    { type: 'pullup', label: 'Pull-ups', emoji: '🏋️', invalidPositionMessage: '⚠️ Get back into hang position',     shareTagline: 'Track your pull-ups with Push-Up Hero 💪' },
+    { type: 'pullup',   label: 'Pull-ups',   emoji: '🏋️', invalidPositionMessage: '⚠️ Get back into hang position',     shareTagline: 'Track your pull-ups with Push-Up Hero 💪' },
+    { type: 'legraise', label: 'Leg Raises', emoji: '🧘', invalidPositionMessage: '⚠️ Lie flat on your back',          shareTagline: 'Track your leg raises with Push-Up Hero 💪' },
 ];
 
 const META_MAP: Record<ExerciseType, ExerciseMeta> = Object.fromEntries(
@@ -69,6 +70,9 @@ export type RepFeedback =
     | 'torso_lean'
     | 'kipping'
     | 'body_sway'
+    | 'raise_higher'
+    | 'keep_legs_straight'
+    | 'keep_back_flat'
     | 'good';
 
 export interface RepResult {

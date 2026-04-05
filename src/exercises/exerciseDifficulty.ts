@@ -14,6 +14,7 @@ export const EXERCISE_DIFFICULTY: Record<ExerciseType, number> = {
     pushup: 1.3,
     squat: 1.0,
     pullup: 2.5,
+    legraise: 1.2,
 };
 
 /**

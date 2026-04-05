@@ -1,7 +1,7 @@
 import { BaseExerciseDetector } from '../BaseExerciseDetector';
 import type { ExerciseState, Landmark, RepFeedback } from '../types';
 import { getPushupThresholds } from '@domain/bodyProfile';
-import type { BodyProfile, PushupThresholds } from '@domain/bodyProfile';
+import type { PushupThresholds } from '@domain/bodyProfile';
 
 const LM = {
     LEFT_SHOULDER: 11, RIGHT_SHOULDER: 12,
@@ -24,7 +24,9 @@ const HIP_DEVIATION_TOLERANCE = 0.04;
 const MIN_REP_INTERVAL_MS = 500;
 
 // ── Key landmarks for post-calibration visibility check ─────────
-const KEY_LANDMARKS = [LM.LEFT_SHOULDER, LM.RIGHT_SHOULDER, LM.LEFT_ELBOW, LM.RIGHT_ELBOW, LM.LEFT_HIP, LM.RIGHT_HIP];
+// Elbows removed: visibility drops when arms are fully extended at the top of a push-up,
+// which would reject frames at the exact moment the UP phase should trigger.
+const KEY_LANDMARKS = [LM.LEFT_SHOULDER, LM.RIGHT_SHOULDER, LM.LEFT_HIP, LM.RIGHT_HIP];
 
 export class PushUpDetector extends BaseExerciseDetector {
     private worstHipDeviation = 0;
@@ -40,12 +42,7 @@ export class PushUpDetector extends BaseExerciseDetector {
 
     constructor() {
         super();
-        this.thresholds = getPushupThresholds(this._bodyProfile?.pushup ?? undefined);
-    }
-
-    override setBodyProfile(profile: BodyProfile | null): void {
-        super.setBodyProfile(profile);
-        this.thresholds = getPushupThresholds(profile?.pushup ?? undefined);
+        this.thresholds = getPushupThresholds();
     }
 
     reset(): void {
@@ -56,7 +53,7 @@ export class PushUpDetector extends BaseExerciseDetector {
         this.calibratedMaxBodyVerticalSpread = MAX_BODY_VERTICAL_SPREAD;
         this.calibratedWristBelowShoulderMargin = WRIST_BELOW_SHOULDER_MARGIN;
         this.calibratedMaxTorsoTilt = 0.25;
-        this.thresholds = getPushupThresholds(this._bodyProfile?.pushup ?? undefined);
+        this.thresholds = getPushupThresholds();
     }
 
     processPose(landmarks: Landmark[]): ExerciseState {
@@ -110,10 +107,9 @@ export class PushUpDetector extends BaseExerciseDetector {
         if (!this.checkPostCalibrationGuards(landmarks, KEY_LANDMARKS)) return this.getState();
 
         const isTorsoFlat = torsoLen < this.calibratedMaxTorsoTilt;
-        const isBodyHorizontal = bodyVerticalSpread < this.calibratedMaxBodyVerticalSpread && isTorsoFlat;
+        const isBodyHorizontal = bodyVerticalSpread < this.calibratedMaxBodyVerticalSpread;
         const areWristsBelowShoulders = wristOffset < this.calibratedWristBelowShoulderMargin;
-        const isValid = isBodyHorizontal && areWristsBelowShoulders;
-        this.state.isValidPosition = isValid;
+        this.state.isValidPosition = isBodyHorizontal && isTorsoFlat && areWristsBelowShoulders;
 
         // ── 5. Alignment metrics ────────────────────────────────────
         const armAsymmetry = Math.abs(leftAngle - rightAngle);

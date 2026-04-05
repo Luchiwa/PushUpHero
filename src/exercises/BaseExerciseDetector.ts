@@ -1,6 +1,7 @@
 import type { ExerciseState, Landmark, RepFeedback } from './types';
 import type { BodyProfile } from '@domain/bodyProfile';
 import { CALIBRATION_FRAMES_REQUIRED } from '@domain/constants';
+import { OneEuroFilter } from '@infra/oneEuroFilter';
 
 // ── Captured Ratios ──────────────────────────────────────────────
 // Detectors populate these during calibration + first reps.
@@ -20,6 +21,10 @@ export interface CapturedRatios {
         armToTorsoRatio: number;
         naturalArmExtension: number;
     };
+    legraise?: {
+        legToTorsoRatio: number;
+        naturalHipExtension: number;
+    };
     /** Dynamic calibration value captured during first N reps (min angle for pushup/squat, max rise for pullup) */
     dynamicCalibration?: number;
 }
@@ -35,8 +40,6 @@ const BBOX_ADAPT_AFTER_FRAMES = 90;
 /** How much the lock drifts toward the current bbox per adaptation step. */
 const BBOX_ADAPT_RATE = 0.05;
 
-/** Number of frames to smooth the angle signal */
-const SMOOTHING_WINDOW = 3;
 /** Number of reps to capture for dynamic calibration */
 const DYNAMIC_CAPTURE_REPS = 5;
 
@@ -57,8 +60,10 @@ export abstract class BaseExerciseDetector {
     protected _bodyProfile: BodyProfile | null = null;
     protected _capturedRatios: CapturedRatios = {};
 
-    // ── Angle smoothing ─────────────────────────────────────────
-    private _angleHistory: number[] = [];
+    // ── Angle smoothing (adaptive One Euro Filter) ───────────────
+    // Replaces the fixed 3-frame sliding window. Adaptive: more smoothing at
+    // rest, less lag during fast movements → preserves angle peaks better.
+    private _angleSmoother = new OneEuroFilter(2.0, 0.7);
 
     // ── Calibration ─────────────────────────────────────────────
     protected calibrationFrameCount = 0;
@@ -101,7 +106,7 @@ export abstract class BaseExerciseDetector {
     /** Reset all state (called on "Try Again"). */
     reset(): void {
         this.state = this.initialState();
-        this._angleHistory = [];
+        this._angleSmoother = new OneEuroFilter(2.0, 0.7);
         this.calibrationFrameCount = 0;
         this.minAngleThisRep = 180;
         this.bestAlignmentThisRep = -Infinity;
@@ -133,7 +138,7 @@ export abstract class BaseExerciseDetector {
     /**
      * Compute a smoothed joint angle from left/right measurements.
      * Selects the more visible side (or averages if equal), then applies
-     * a sliding-window smooth.
+     * an adaptive One Euro Filter (replaces the old 3-frame sliding window).
      */
     protected smoothAngle(
         leftAngle: number, rightAngle: number,
@@ -143,7 +148,6 @@ export abstract class BaseExerciseDetector {
         const MIN_SIDE_VIS = 0.8; // elbow+wrist visibility sum threshold
         let angle: number;
         if (leftVis >= MIN_SIDE_VIS && rightVis >= MIN_SIDE_VIS) {
-            // Both sides visible: weighted average (smooth, no flipping)
             const total = leftVis + rightVis;
             angle = (leftAngle * leftVis + rightAngle * rightVis) / total;
         } else if (leftVis >= MIN_SIDE_VIS) {
@@ -151,16 +155,13 @@ export abstract class BaseExerciseDetector {
         } else if (rightVis >= MIN_SIDE_VIS) {
             angle = rightAngle;
         } else {
-            // Both low: weighted average of what we have
             const total = leftVis + rightVis;
             angle = total > 0
                 ? (leftAngle * leftVis + rightAngle * rightVis) / total
                 : (leftAngle + rightAngle) / 2;
         }
 
-        this._angleHistory.push(angle);
-        if (this._angleHistory.length > SMOOTHING_WINDOW) this._angleHistory.shift();
-        return this._angleHistory.reduce((s, v) => s + v, 0) / this._angleHistory.length;
+        return this._angleSmoother.filter(angle, Date.now() / 1000);
     }
 
     // ── Calibration Orchestration ───────────────────────────────
@@ -286,7 +287,7 @@ export abstract class BaseExerciseDetector {
         smoothedAngle: number,
         angleUp: number,
         angleDown: number,
-        isPositionValid: boolean,
+        _isPositionValid: boolean,
         minRepIntervalMs: number,
         onCountRep: (repDuration: number) => { amplitudeScore: number; alignmentScore: number; feedback: RepFeedback },
         onRepReset?: () => void,
@@ -301,7 +302,7 @@ export abstract class BaseExerciseDetector {
             }
             this.wasDescending = false;
 
-            if (this.hasReachedValidDown && isPositionValid) {
+            if (this.hasReachedValidDown) {
                 const now = Date.now();
                 const repDuration = this.lastRepTimestamp > 0 ? now - this.lastRepTimestamp : 2000;
                 if (repDuration >= minRepIntervalMs) {
@@ -318,7 +319,7 @@ export abstract class BaseExerciseDetector {
         } else if (smoothedAngle <= angleDown) {
             this._downConfirmCount++;
             if (this._downConfirmCount >= 2) {
-                this.hasReachedValidDown = isPositionValid;
+                this.hasReachedValidDown = true;
             }
             this.wasDescending = true;
             this.state.currentPhase = 'down';

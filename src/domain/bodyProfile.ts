@@ -43,10 +43,20 @@ export interface PullupProfile {
     naturalMaxRiseFraction: number;
 }
 
+export interface LegRaiseProfile {
+    /** Hip-ankle distance / shoulder-hip distance (leg length relative to torso) */
+    legToTorsoRatio: number;
+    /** Hip angle when legs are flat (degrees) */
+    naturalHipExtension: number;
+    /** Minimum hip angle reached during reps (degrees) — natural raise depth */
+    naturalMinHipAngle: number;
+}
+
 export interface BodyProfile {
     pushup?: PushupProfile;
     squat?: SquatProfile;
     pullup?: PullupProfile;
+    legraise?: LegRaiseProfile;
     /** Timestamp of last profile capture */
     capturedAt: number;
     /** Schema version for future migrations */
@@ -76,7 +86,7 @@ export function getPushupThresholds(profile?: PushupProfile): PushupThresholds {
         || profile.naturalElbowExtension < 150
         || profile.naturalMinElbowAngle < 30
         || profile.naturalMinElbowAngle >= profile.naturalElbowExtension) {
-        return { angleUpThreshold: 155, angleDownThreshold: 140, perfectAmplitudeAngle: 80 };
+        return { angleUpThreshold: 150, angleDownThreshold: 130, perfectAmplitudeAngle: 80 };
     }
     // UP = ~5° below their natural extension (accounts for not-perfectly-straight arms)
     const angleUp = Math.min(170, Math.max(140, profile.naturalElbowExtension - 5));
@@ -122,6 +132,26 @@ export function getPullupThresholds(profile?: PullupProfile): PullupThresholds {
         riseUpFraction: Math.round(riseUp * 100) / 100,
         perfectRiseFraction: Math.round(perfect * 100) / 100,
     };
+}
+
+export interface LegRaiseThresholds {
+    angleUpThreshold: number;
+    angleDownThreshold: number;
+    perfectAmplitudeAngle: number;
+}
+
+export function getLegRaiseThresholds(profile?: LegRaiseProfile): LegRaiseThresholds {
+    if (!profile
+        || profile.naturalHipExtension < 140
+        || profile.naturalMinHipAngle < 30
+        || profile.naturalMinHipAngle >= profile.naturalHipExtension) {
+        return { angleUpThreshold: 155, angleDownThreshold: 110, perfectAmplitudeAngle: 85 };
+    }
+    const angleUp = Math.min(170, Math.max(140, profile.naturalHipExtension - 5));
+    const midpoint = (profile.naturalHipExtension + profile.naturalMinHipAngle) / 2;
+    const angleDown = Math.min(angleUp - 15, Math.max(80, midpoint));
+    const perfect = Math.max(50, profile.naturalMinHipAngle + 5);
+    return { angleUpThreshold: Math.round(angleUp), angleDownThreshold: Math.round(angleDown), perfectAmplitudeAngle: Math.round(perfect) };
 }
 
 // ── Calibration speed boost ──────────────────────────────────────

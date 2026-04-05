@@ -1,7 +1,7 @@
 import { BaseExerciseDetector } from '../BaseExerciseDetector';
 import type { ExerciseState, Landmark, RepFeedback } from '../types';
 import { getSquatThresholds } from '@domain/bodyProfile';
-import type { BodyProfile, SquatThresholds } from '@domain/bodyProfile';
+import type { SquatThresholds } from '@domain/bodyProfile';
 
 const LM = {
     LEFT_SHOULDER: 11, RIGHT_SHOULDER: 12,
@@ -35,12 +35,7 @@ export class SquatDetector extends BaseExerciseDetector {
 
     constructor() {
         super();
-        this.thresholds = getSquatThresholds(this._bodyProfile?.squat ?? undefined);
-    }
-
-    override setBodyProfile(profile: BodyProfile | null): void {
-        super.setBodyProfile(profile);
-        this.thresholds = getSquatThresholds(profile?.squat ?? undefined);
+        this.thresholds = getSquatThresholds();
     }
 
     reset(): void {
@@ -50,7 +45,7 @@ export class SquatDetector extends BaseExerciseDetector {
         this.calibrationFrames = [];
         this.calibratedMinBodyVerticalSpread = MIN_BODY_VERTICAL_SPREAD;
         this.calibratedShoulderAboveHipMargin = SHOULDER_ABOVE_HIP_MARGIN;
-        this.thresholds = getSquatThresholds(this._bodyProfile?.squat ?? undefined);
+        this.thresholds = getSquatThresholds();
     }
 
     processPose(landmarks: Landmark[]): ExerciseState {
