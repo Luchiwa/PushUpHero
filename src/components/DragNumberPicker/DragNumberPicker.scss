@@ -1,102 +1,164 @@
 @use 'variables' as *;
 @use 'mixins' as *;
 
-// ── Drag number picker ───────────────────────────────────────────
+// ── Slot wheel number picker ───────────────────────────────────
+// iOS-style vertical wheel. The wheel translates inside a fixed-
+// height viewport; the centered row is the "spotlight" — the
+// active value scaled and gradient-tinted. The viewport's
+// mask-image fades rows as they leave the spotlight band.
+//
+// Important: ITEM_HEIGHT (44) is duplicated in DragNumberPicker.tsx.
+// padding-top/bottom on the wheel = (viewport-height - 44) / 2 so
+// that the first item is naturally centered when translateY = 0.
+
 .drag-picker {
-    width: 100%;
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
-    cursor: ns-resize;
+    width: 100%;
     user-select: none;
     -webkit-user-select: none;
-    position: relative;
-    touch-action: none;
-}
 
-.drag-picker-track {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    @include progress-track($bg: rgba($text, 0.06));
-}
-
-.drag-picker-fill {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    @include progress-fill(linear-gradient(to top, $accent, $accent-light));
-    transition: height 0.1s ease;
-}
-
-.drag-picker-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.4rem;
-    width: 100%;
-}
-
-.drag-picker-btn {
-    background: rgba($text, 0.04);
-    border: 1px solid rgba($text, 0.1);
-    border-radius: $radius-xs;
-    color: $text-muted;
-    font-size: 0.7rem;
-    width: 36px;
-    height: 28px;
-    cursor: pointer;
-    transition: $transition;
-    font-family: inherit;
-    @include flex-center;
-
-    &:hover {
-        background: rgba($text, 0.07);
-        color: $text;
+    // Invisible spacer that mirrors the unit label below the viewport,
+    // so the wheel's vertical center stays coincident with the picker's
+    // vertical center. This lets a sibling element aligned via flex
+    // `align-items: center` (e.g. the colon in TimePicker) line up with
+    // the spotlight row instead of drifting up.
+    &::before {
+        content: '';
+        flex-shrink: 0;
+        height: 22px;
     }
 }
 
-.drag-picker-value {
+.drag-picker__unit {
+    display: block;
+    margin: 4px 0 0;
+    height: 18px;
+    line-height: 18px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: $accent;
+    pointer-events: none;
+}
+
+.drag-picker__viewport {
+    position: relative;
+    width: 100%;
+    height: 220px;
+    overflow: hidden;
+    cursor: ns-resize;
+    touch-action: none;
+    background: transparent;
+    border: none;
+    padding: 0;
+    border-radius: $radius-sm;
+    // Edge fade so neighbour rows soft-vanish toward the rim
+    mask-image: linear-gradient(
+        to bottom,
+        transparent 0%,
+        black 22%,
+        black 78%,
+        transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent 0%,
+        black 22%,
+        black 78%,
+        transparent 100%
+    );
+
+    &:focus-visible {
+        outline: 2px solid rgba($accent, 0.5);
+        outline-offset: 2px;
+    }
+}
+
+.drag-picker__spotlight {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 52px;
+    transform: translateY(-50%);
+    background: linear-gradient(
+        90deg,
+        rgba($accent, 0.04),
+        rgba($accent, 0.14),
+        rgba($accent, 0.04)
+    );
+    border-top: 1.5px solid rgba($accent, 0.35);
+    border-bottom: 1.5px solid rgba($accent, 0.35);
+    pointer-events: none;
+    z-index: $z-base;
+}
+
+.drag-picker__wheel {
+    position: relative;
     display: flex;
     flex-direction: column;
+    padding-top: 88px;     // (220 - 44) / 2
+    padding-bottom: 88px;
+    transition: transform 0.32s $ease-out-expo;
+    will-change: transform;
+
+    .drag-picker.is-dragging & {
+        transition: none; // follow finger 1:1 while dragging
+    }
+}
+
+.drag-picker__item {
+    height: 44px;
+    display: flex;
     align-items: center;
-    gap: 0.1rem;
-    padding: 0.5rem 0;
+    justify-content: center;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: $text-muted;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.45;
+    pointer-events: none;
+    transition:
+        opacity 0.3s ease,
+        font-size 0.3s $ease-out-back,
+        font-weight 0.3s ease,
+        color 0.3s ease;
+
+    &.is-current {
+        @include text-gradient($gradient-accent-rich);
+        font-size: 2.2rem;
+        font-weight: 900;
+        opacity: 1;
+    }
 }
 
-.drag-picker-number {
-    font-size: 3.5rem;
-    font-weight: 900;
-    line-height: 1;
-    @include text-gradient($gradient-accent-rich);
-    transition: transform 0.1s ease;
-    min-width: 3ch;
-    text-align: center;
-}
-
-.drag-picker-unit {
-    @include label(0.75rem);
-    font-weight: 600;
-}
-
-.drag-picker-hint {
+.drag-picker__hint {
+    margin: 6px 0 0;
     font-size: 0.7rem;
     color: $text-muted;
     text-align: center;
-}
-
-.drag-picker-active .drag-picker-number {
-    transform: scale(1.08);
+    letter-spacing: 0.04em;
 }
 
 @media (max-width: 480px) {
-    .drag-picker { gap: 0.4rem; }
-    .drag-picker-number { font-size: 2.8rem; }
-    .drag-picker-unit { font-size: 0.65rem; }
-    .drag-picker-btn { width: 32px; height: 24px; font-size: 0.65rem; }
-    .drag-picker-track { width: 3px; }
+    .drag-picker__viewport {
+        height: 180px;
+    }
+
+    .drag-picker__wheel {
+        padding-top: 68px;  // (180 - 44) / 2
+        padding-bottom: 68px;
+    }
+
+    .drag-picker__item.is-current {
+        font-size: 1.9rem;
+    }
+
+    .drag-picker__hint {
+        font-size: 0.65rem;
+    }
 }

@@ -13,6 +13,8 @@ import {
     getQuestById,
     getAcceptedQuests,
     isQuestQuickStartable,
+    isSingleSessionQuest,
+    getQuestProgressCount,
     getComplexQuestHint,
     MAX_ACCEPTED_QUESTS,
 } from '@domain/quests';
@@ -105,6 +107,7 @@ export function QuestsScreen({
                                     key={quest.id}
                                     quest={quest}
                                     status={getQuestStatus(quest, questProgress, userLevel)}
+                                    questProgress={questProgress}
                                     completedAt={questProgress.completed[quest.id] ?? null}
                                     userLevel={userLevel}
                                     slotsFull={slotsFull}
@@ -127,6 +130,7 @@ export function QuestsScreen({
 function QuestCard({
     quest,
     status,
+    questProgress,
     completedAt,
     userLevel,
     slotsFull,
@@ -137,6 +141,7 @@ function QuestCard({
 }: {
     quest: QuestDef;
     status: QuestStatus;
+    questProgress: QuestProgress;
     completedAt: number | null;
     userLevel: number;
     slotsFull: boolean;
@@ -187,6 +192,20 @@ function QuestCard({
                         Completed {new Date(completedAt).toLocaleDateString()}
                     </span>
                 )}
+                {/* ── Progress bar (cross-session accepted quests) ── */}
+                {status === 'accepted' && !isSingleSessionQuest(quest) && (() => {
+                    const current = getQuestProgressCount(quest, questProgress);
+                    const goal = quest.goal.reps;
+                    const pct = Math.min(100, Math.round((current / goal) * 100));
+                    return (
+                        <div className="quest-item-progress">
+                            <div className="quest-item-progress-bar">
+                                <div className="quest-item-progress-fill" style={{ width: `${pct}%` }} />
+                            </div>
+                            <span className="quest-item-progress-label">{current}/{goal}</span>
+                        </div>
+                    );
+                })()}
                 {/* ── Available: Accept button (disabled if slots full) ── */}
                 {status === 'available' && onAccept && (
                     slotsFull ? (

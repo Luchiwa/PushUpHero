@@ -1,6 +1,7 @@
 import { DragNumberPicker } from '@components/DragNumberPicker/DragNumberPicker';
 import { TimePicker } from '@components/TimePicker/TimePicker';
 import { ExercisePicker } from '@components/ExercisePicker/ExercisePicker';
+import { SegmentedToggle } from '@components/SegmentedToggle/SegmentedToggle';
 import { MIN_SETS, MAX_SETS, MAX_REST_SECONDS, MAX_EXERCISE_REST_SECONDS } from '@domain/constants';
 import { getExerciseLabel } from '@exercises/types';
 import type { WorkoutBlock } from '@exercises/types';
@@ -115,28 +116,27 @@ export function BlockEditor({
                             <p className="wc-step-subtitle">Target for each set of {getExerciseLabel(exerciseType)}</p>
                         </div>
                         <div className="wc-step-content">
-                            <div className="wc-mode-toggle">
-                                <div
-                                    className="wc-mode-indicator"
-                                    style={{ left: sessionMode === 'reps' ? '4px' : 'calc(50% + 2px)' }}
-                                />
-                                <button
-                                    type="button"
-                                    className={`wc-mode-btn${sessionMode === 'reps' ? ' active' : ''}`}
-                                    onClick={() => onUpdateBlock({ sessionMode: 'reps' })}
-                                >
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>
-                                    Reps
-                                </button>
-                                <button
-                                    type="button"
-                                    className={`wc-mode-btn${sessionMode === 'time' ? ' active' : ''}`}
-                                    onClick={() => onUpdateBlock({ sessionMode: 'time' })}
-                                >
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-                                    Time
-                                </button>
-                            </div>
+                            <SegmentedToggle
+                                value={sessionMode}
+                                onChange={(v) => onUpdateBlock({ sessionMode: v })}
+                                aria-label="Session mode"
+                                options={[
+                                    {
+                                        value: 'reps',
+                                        label: 'Reps',
+                                        icon: (
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>
+                                        ),
+                                    },
+                                    {
+                                        value: 'time',
+                                        label: 'Time',
+                                        icon: (
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                                        ),
+                                    },
+                                ]}
+                            />
                             {sessionMode === 'reps' ? (
                                 <DragNumberPicker
                                     value={goalReps}

@@ -66,31 +66,6 @@
     }
 }
 
-// ── TOGGLE ──────────────────────────────────────────────────────
-// Reps / Timer mode toggle
-.btn-toggle {
-    @extend %btn-base;
-    padding: 0.6rem 1.2rem;
-    border: 1px solid rgba($text, 0.15);
-    background: rgba($text, 0.04);
-    color: $text-muted;
-    border-radius: $radius-sm;
-    font-size: 0.85rem;
-    font-weight: 600;
-
-    &:hover {
-        background: rgba($text, 0.07);
-        border-color: rgba($text, 0.25);
-    }
-
-    &.active {
-        background: $gradient-accent;
-        color: $white;
-        border-color: $accent;
-        box-shadow: 0 4px 12px rgba($accent, 0.3);
-    }
-}
-
 // ── ICON ────────────────────────────────────────────────────────
 // Circular icon buttons — Back ←, Settings ⚙️, Close ✕
 .btn-icon {

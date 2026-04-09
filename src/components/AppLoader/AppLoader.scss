@@ -1,0 +1,440 @@
+@use 'sass:color';
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// ── Animation timing ────────────────────────────────────────────
+$cycle: 3.2s;
+
+// ── Layout ──────────────────────────────────────────────────────
+.app-loader {
+    @include fill;
+    @include flex-center(column);
+    z-index: $z-raised;
+    background: $bg;
+    gap: $spacing-lg;
+}
+
+// ── Barbell assembly ────────────────────────────────────────────
+.app-loader__barbell {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    position: relative;
+    animation: barbell-press $cycle $ease-out-expo infinite;
+}
+
+// ── Floor shadow (pseudo) ───────────────────────────────────────
+.app-loader__barbell::before {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%) scaleX(1);
+    width: 120px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba($text, 0.12);
+    animation: shadow-scale $cycle $ease-default infinite;
+}
+
+// ── Central bar ─────────────────────────────────────────────────
+.app-loader__bar {
+    width: 160px;
+    height: 12px;
+    border-radius: 12px;
+    // Metallic gradient — simulates cylindrical shape
+    background: linear-gradient(180deg,
+        $accent-light 0%,
+        $accent 35%,
+        $accent-dark 70%,
+        $accent 100%
+    );
+    box-shadow: $shadow-accent-sm;
+    position: relative;
+    overflow: hidden;
+    animation: bar-glow $cycle $ease-default infinite;
+
+    // Shine sweep
+    &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 60%;
+        height: 100%;
+        background: linear-gradient(105deg,
+            transparent 0%,
+            rgba($white, 0) 40%,
+            rgba($white, 0.45) 50%,
+            rgba($white, 0) 60%,
+            transparent 100%
+        );
+        pointer-events: none;
+        animation: bar-shine $cycle ease-in-out infinite;
+    }
+}
+
+// ── Plates (shared) ─────────────────────────────────────────────
+.app-loader__plate {
+    border-radius: $radius-xs;
+    position: relative;
+    opacity: 0;
+    transform: scaleX(0);
+
+    // Sparkle flash on lock-in
+    &::after {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border-radius: inherit;
+        background: radial-gradient(circle, rgba($accent, 0.5) 0%, transparent 70%);
+        opacity: 0;
+        pointer-events: none;
+    }
+}
+
+// ── Small plates ────────────────────────────────────────────────
+.app-loader__plate--left-sm,
+.app-loader__plate--right-sm {
+    width: 14px;
+    height: 48px;
+    background: linear-gradient(180deg,
+        color.adjust($accent, $lightness: 5%) 0%,
+        $accent 50%,
+        color.adjust($accent, $lightness: -5%) 100%
+    );
+    border: 1.5px solid rgba($white, 0.2);
+}
+
+.app-loader__plate--left-sm {
+    animation: plate-sm-in $cycle $ease-default infinite;
+
+    &::after {
+        animation: plate-flash-sm $cycle $ease-default infinite;
+    }
+}
+
+.app-loader__plate--right-sm {
+    animation: plate-sm-in $cycle $ease-default 0.1s infinite;
+
+    &::after {
+        animation: plate-flash-sm $cycle $ease-default 0.1s infinite;
+    }
+}
+
+// ── Large plates ────────────────────────────────────────────────
+.app-loader__plate--left-lg,
+.app-loader__plate--right-lg {
+    width: 18px;
+    height: 72px;
+    // Inner gradient for 3D depth
+    background: linear-gradient(90deg,
+        rgba($black, 0.12) 0%,
+        transparent 18%,
+        transparent 82%,
+        rgba($black, 0.12) 100%
+    ), linear-gradient(180deg,
+        $accent 0%,
+        $accent-dark 50%,
+        color.adjust($accent-dark, $lightness: -5%) 100%
+    );
+    border: 1.5px solid rgba($white, 0.12);
+}
+
+.app-loader__plate--left-lg {
+    animation: plate-lg-in $cycle $ease-default infinite;
+
+    &::after {
+        animation: plate-flash-lg $cycle $ease-default infinite;
+    }
+}
+
+.app-loader__plate--right-lg {
+    animation: plate-lg-in $cycle $ease-default 0.15s infinite;
+
+    &::after {
+        animation: plate-flash-lg $cycle $ease-default 0.15s infinite;
+    }
+}
+
+// ── Brand wrapper ───────────────────────────────────────────────
+// Anchors the absolutely-positioned heartbeat trace around the wordmark.
+.app-loader__brand {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    isolation: isolate;
+}
+
+// ── Heartbeat trace (classic ECG sawtooth) ──────────────────────
+// SVG line that draws itself horizontally across "HERO". Path:
+// flat baseline → small bump → sharp QRS spike → flat baseline.
+// stroke-dasharray covers the full path length, then dashoffset is
+// animated from full (invisible) → 0 (fully drawn), creating the
+// "tracing" effect of a heart monitor.
+//
+// The trace sits ON TOP of the wordmark (z-index 1) so the spike
+// visibly cuts through "HERO". The brand wrapper has
+// `isolation: isolate` to keep stacking local.
+.app-loader__heartbeat {
+    position: absolute;
+    // Anchor to the optical center of the hero wordmark, not the
+    // wrapper center (which is dragged down by the caption below).
+    top: 38%;
+    left: 50%;
+    width: 280px;
+    height: 64px;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 1;
+    overflow: visible;
+    opacity: 0;
+    // Starts immediately alongside the barbell — no cold-start delay.
+    animation: heartbeat-fade-in 0.4s ease-out 0s forwards;
+}
+
+.app-loader__heartbeat-line {
+    fill: none;
+    stroke: $accent;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    // Path length is ~340; set dasharray slightly above so the loop
+    // starts cleanly with the line fully off-screen.
+    stroke-dasharray: 360;
+    stroke-dashoffset: 360;
+    filter: drop-shadow(0 0 6px rgba($accent, 0.85))
+            drop-shadow(0 0 14px rgba($accent, 0.4));
+    // Loops from t=0 in lockstep with the barbell — both animations
+    // run simultaneously, no second-phase staging.
+    animation: heartbeat-trace 1.8s ease-in-out 0s infinite;
+}
+
+// ── Wordmark — Push-Up (prefix) + HERO (hero) ───────────────────
+.app-loader__wordmark {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    line-height: 1;
+}
+
+.app-loader__wordmark-prefix {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: $text-muted;
+    margin-bottom: 4px;
+    opacity: 0;
+    transform: translateY(6px);
+    animation: prefix-in 0.4s $ease-out-expo 0.55s forwards;
+}
+
+.app-loader__wordmark-hero {
+    font-size: 3.6rem;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 0.95;
+    @include text-gradient($gradient-accent-rich);
+    // IMPORTANT: use filter: drop-shadow rather than text-shadow on
+    // gradient text. background-clip: text makes the glyphs transparent,
+    // so a text shadow has nothing to shadow and produces a smeared blur
+    // instead of a glow. drop-shadow operates on the rendered pixels.
+    filter: drop-shadow(0 4px 22px rgba($accent, 0.45));
+
+    span {
+        display: inline-block;
+        opacity: 0;
+        transform: translateY(12px);
+        animation: letter-in 0.5s $ease-out-back forwards;
+
+        &:nth-child(1) { animation-delay: 0.70s; }
+        &:nth-child(2) { animation-delay: 0.76s; }
+        &:nth-child(3) { animation-delay: 0.82s; }
+        &:nth-child(4) { animation-delay: 0.88s; }
+    }
+}
+
+// ── Caption (replaces "Loading…") ───────────────────────────────
+.app-loader__caption {
+    margin: $spacing-md 0 0;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: $text-muted;
+    opacity: 0;
+    animation: caption-in 0.4s ease-out 1.05s forwards;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// KEYFRAMES
+// ═══════════════════════════════════════════════════════════════════
+
+// ── Small plates entrance/exit ──────────────────────────────────
+@keyframes plate-sm-in {
+    0%          { opacity: 0; transform: scaleX(0); }
+    12%         { opacity: 1; transform: scaleX(1.18); }
+    18%         { opacity: 1; transform: scaleX(1); }
+    62%         { opacity: 1; transform: scaleX(1); }
+    74%         { opacity: 0; transform: scaleX(0); }
+    100%        { opacity: 0; transform: scaleX(0); }
+}
+
+// ── Large plates entrance/exit (delayed start) ──────────────────
+@keyframes plate-lg-in {
+    0%, 8%      { opacity: 0; transform: scaleX(0); }
+    22%         { opacity: 1; transform: scaleX(1.14); }
+    28%         { opacity: 1; transform: scaleX(1); }
+    58%         { opacity: 0.95; transform: scaleX(1); }
+    70%         { opacity: 0; transform: scaleX(0); }
+    100%        { opacity: 0; transform: scaleX(0); }
+}
+
+// ── Barbell press (lift + bounce) ───────────────────────────────
+@keyframes barbell-press {
+    0%, 32%     { transform: translateY(0); }
+    40%         { transform: translateY(-14px); }
+    48%         { transform: translateY(0); }
+    53%         { transform: translateY(-7px); }
+    60%         { transform: translateY(0); }
+    100%        { transform: translateY(0); }
+}
+
+// ── Bar glow pulse (synced with press) ──────────────────────────
+@keyframes bar-glow {
+    0%, 30%     { box-shadow: $shadow-accent-sm; }
+    42%         { box-shadow: 0 0 6px rgba($accent, 0.8), 0 0 16px rgba($accent, 0.35); }
+    60%         { box-shadow: $shadow-accent-sm; }
+    100%        { box-shadow: $shadow-accent-sm; }
+}
+
+// ── Bar shine sweep (synced with press) ─────────────────────────
+@keyframes bar-shine {
+    0%, 35%     { left: -100%; opacity: 0; }
+    38%         { opacity: 1; }
+    55%         { left: 160%; opacity: 1; }
+    58%, 100%   { left: 160%; opacity: 0; }
+}
+
+// ── Floor shadow (inverse of press height) ──────────────────────
+@keyframes shadow-scale {
+    0%, 32%     { transform: translateX(-50%) scaleX(1);    opacity: 0.12; }
+    40%         { transform: translateX(-50%) scaleX(0.82); opacity: 0.2; }
+    48%         { transform: translateX(-50%) scaleX(1);    opacity: 0.12; }
+    53%         { transform: translateX(-50%) scaleX(0.9);  opacity: 0.16; }
+    60%         { transform: translateX(-50%) scaleX(1);    opacity: 0.12; }
+    100%        { transform: translateX(-50%) scaleX(1);    opacity: 0.12; }
+}
+
+// ── Plate sparkle flash (small plates timing) ───────────────────
+@keyframes plate-flash-sm {
+    0%, 14%     { opacity: 0; transform: scale(0.8); }
+    18%         { opacity: 0.7; transform: scale(1.3); }
+    26%         { opacity: 0; transform: scale(1.5); }
+    100%        { opacity: 0; }
+}
+
+// ── Plate sparkle flash (large plates timing — delayed) ─────────
+@keyframes plate-flash-lg {
+    0%, 22%     { opacity: 0; transform: scale(0.8); }
+    28%         { opacity: 0.7; transform: scale(1.3); }
+    36%         { opacity: 0; transform: scale(1.5); }
+    100%        { opacity: 0; }
+}
+
+// ── Wordmark prefix entrance ────────────────────────────────────
+@keyframes prefix-in {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+// ── Hero letter stagger entrance ────────────────────────────────
+@keyframes letter-in {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+// ── Caption entrance ────────────────────────────────────────────
+@keyframes caption-in {
+    to { opacity: 1; }
+}
+
+// ── Heartbeat container fade-in (one-shot, after letters) ───────
+@keyframes heartbeat-fade-in {
+    to { opacity: 1; }
+}
+
+// ── Heartbeat trace (ECG sweep) ─────────────────────────────────
+// 0%: line invisible (offset = full dasharray) and faded out so the
+//     loop seam is hidden.
+// 8%: trace becomes visible at the left edge.
+// 60%: line fully drawn (offset = 0) — the QRS spike has just swept
+//      across the wordmark.
+// 88%: holds full line briefly so the eye registers the shape.
+// 100%: fades out, ready to restart from 0% with the offset jump
+//       hidden by opacity 0.
+@keyframes heartbeat-trace {
+    0%   { stroke-dashoffset: 360; opacity: 0; }
+    8%   { stroke-dashoffset: 360; opacity: 1; }
+    60%  { stroke-dashoffset: 0;   opacity: 1; }
+    88%  { stroke-dashoffset: 0;   opacity: 1; }
+    100% { stroke-dashoffset: 0;   opacity: 0; }
+}
+
+// ── Mobile adjustments ──────────────────────────────────────────
+@media (max-width: 480px) {
+    .app-loader__wordmark-hero {
+        font-size: 2.6rem;
+    }
+
+    .app-loader__wordmark-prefix {
+        font-size: 0.72rem;
+        letter-spacing: 0.28em;
+    }
+
+    .app-loader__caption {
+        font-size: 0.62rem;
+    }
+
+    .app-loader__heartbeat {
+        width: 220px;
+        height: 56px;
+    }
+}
+
+// ── Reduced motion ──────────────────────────────────────────────
+@media (prefers-reduced-motion: reduce) {
+    .app-loader__barbell,
+    .app-loader__barbell::before,
+    .app-loader__bar,
+    .app-loader__bar::after,
+    .app-loader__plate,
+    .app-loader__plate::after,
+    .app-loader__heartbeat,
+    .app-loader__heartbeat-line {
+        animation: none !important;
+    }
+
+    .app-loader__plate {
+        opacity: 1;
+        transform: none;
+    }
+
+    // Show the static ECG line (no draw animation, no fade) so the
+    // visual identity is preserved without movement.
+    .app-loader__heartbeat {
+        opacity: 0.6;
+    }
+    .app-loader__heartbeat-line {
+        stroke-dashoffset: 0;
+    }
+
+    .app-loader__wordmark-prefix,
+    .app-loader__wordmark-hero span,
+    .app-loader__caption {
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
+    }
+}

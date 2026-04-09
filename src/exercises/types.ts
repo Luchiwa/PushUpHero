@@ -17,6 +17,8 @@ export interface ExerciseMeta {
     type: ExerciseType;
     label: string;
     emoji: string;
+    /** Short editorial tag shown under the label in pickers, e.g. 'UPPER BODY' */
+    category: string;
     /** Banner shown when user leaves the valid position mid-session */
     invalidPositionMessage: string;
     /** Tagline for the share card */
@@ -25,10 +27,10 @@ export interface ExerciseMeta {
 
 /** Display metadata per exercise — drives pickers, filters, etc. */
 export const EXERCISE_META: ExerciseMeta[] = [
-    { type: 'pushup', label: 'Push-ups', emoji: '💪', invalidPositionMessage: '⚠️ Get back into push-up position',  shareTagline: 'Track your push-ups with Push-Up Hero 💪' },
-    { type: 'squat',  label: 'Squats',   emoji: '🦵', invalidPositionMessage: '⚠️ Stand upright facing the camera',  shareTagline: 'Track your squats with Push-Up Hero 💪' },
-    { type: 'pullup',   label: 'Pull-ups',   emoji: '🏋️', invalidPositionMessage: '⚠️ Get back into hang position',     shareTagline: 'Track your pull-ups with Push-Up Hero 💪' },
-    { type: 'legraise', label: 'Leg Raises', emoji: '🧘', invalidPositionMessage: '⚠️ Lie flat on your back',          shareTagline: 'Track your leg raises with Push-Up Hero 💪' },
+    { type: 'pushup',   label: 'Push-ups',   emoji: '💪', category: 'Upper Body', invalidPositionMessage: '⚠️ Get back into push-up position',  shareTagline: 'Track your push-ups with Push-Up Hero 💪' },
+    { type: 'squat',    label: 'Squats',     emoji: '🦵', category: 'Lower Body', invalidPositionMessage: '⚠️ Stand upright facing the camera',  shareTagline: 'Track your squats with Push-Up Hero 💪' },
+    { type: 'pullup',   label: 'Pull-ups',   emoji: '🏋️', category: 'Pull',       invalidPositionMessage: '⚠️ Get back into hang position',     shareTagline: 'Track your pull-ups with Push-Up Hero 💪' },
+    { type: 'legraise', label: 'Leg Raises', emoji: '🧘', category: 'Core',       invalidPositionMessage: '⚠️ Lie flat on your back',          shareTagline: 'Track your leg raises with Push-Up Hero 💪' },
 ];
 
 const META_MAP: Record<ExerciseType, ExerciseMeta> = Object.fromEntries(

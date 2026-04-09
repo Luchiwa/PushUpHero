@@ -1,0 +1,2 @@
+- [CSS naming preferences](feedback_css_naming.md) — user prefers explicit color names over generic ($accent), no dark mode yet but architecture ready
+- [Heavy model consideration](project_heavy_model.md) — deferred: not worth 30MB cost for leg raises alone, revisit when more exercises need it

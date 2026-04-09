@@ -13,7 +13,7 @@ import { useSoundEffect } from '@hooks/useSoundEffect';
 import type { ExerciseState, ExerciseType, WorkoutBlock, SetRecord, TimeDuration } from '@exercises/types';
 import { createDefaultBlock } from '@exercises/types';
 import { warmUpSpeech } from '@infra/speechEngine';
-import type { QuestDef } from '@domain/quests';
+import type { QuestDef, QuestProgress } from '@domain/quests';
 import type { BodyProfile } from '@domain/bodyProfile';
 import type { CapturedRatios } from '@exercises/BaseExerciseDetector';
 import { workoutReducer, INITIAL_WORKOUT_STATE } from './workoutReducer';
@@ -34,9 +34,11 @@ interface UseWorkoutStateMachineProps {
   onExerciseTypeChange: (type: ExerciseType) => void;
   activeQuest: QuestDef | null;
   availableQuests: QuestDef[];
+  questProgress: QuestProgress;
   bodyProfile: BodyProfile;
   onSaveBodyProfile: (profile: BodyProfile) => void;
   onCompleteQuests: (questIds: string[]) => void;
+  onAddProgress: (questId: string, contribution: number) => number;
   getCapturedRatios: () => CapturedRatios;
 }
 
@@ -49,9 +51,11 @@ export function useWorkoutStateMachine({
   onExerciseTypeChange,
   activeQuest,
   availableQuests,
+  questProgress,
   bodyProfile,
   onSaveBodyProfile,
   onCompleteQuests,
+  onAddProgress,
   getCapturedRatios,
 }: UseWorkoutStateMachineProps) {
   // ── Reducer (screen transitions + progression indexes) ─────
@@ -76,9 +80,11 @@ export function useWorkoutStateMachine({
     currentSetReps,
     workoutStartTimeRef: plan.workoutStartTimeRef,
     availableQuests,
+    questProgress,
     bodyProfile,
     onSaveBodyProfile,
     onCompleteQuests,
+    onAddProgress,
     getCapturedRatios,
     dispatch,
   });

@@ -16,6 +16,7 @@ function loadQuestProgress(): QuestProgress {
         if (raw) {
             const parsed = JSON.parse(raw) as QuestProgress;
             if (!parsed.accepted) parsed.accepted = {};
+            if (!parsed.progress) parsed.progress = {};
             return parsed;
         }
     } catch { /* corrupt data, ignore */ }
@@ -35,7 +36,11 @@ export function useQuestProgress() {
         const localQuests = loadQuestProgress();
 
         if (dbUser.questProgress && Object.keys(dbUser.questProgress.completed ?? {}).length > 0) {
-            const cloud = { ...dbUser.questProgress, accepted: dbUser.questProgress.accepted ?? {} };
+            const cloud = {
+                ...dbUser.questProgress,
+                accepted: dbUser.questProgress.accepted ?? {},
+                progress: dbUser.questProgress.progress ?? {},
+            };
             setQuestProgressState(cloud);
             localStorage.setItem(LS_QUEST_KEY, JSON.stringify(cloud));
         } else if (Object.keys(localQuests.completed).length > 0 || Object.keys(localQuests.accepted).length > 0) {
@@ -93,9 +98,23 @@ export function useQuestProgress() {
     const abandonQuest = useCallback((questId: string) => {
         const { [questId]: _removed, ...rest } = questProgress.accepted;
         void _removed;
-        const updated: QuestProgress = { ...questProgress, accepted: rest };
+        const { [questId]: _removedProgress, ...restProgress } = questProgress.progress;
+        void _removedProgress;
+        const updated: QuestProgress = { ...questProgress, accepted: rest, progress: restProgress };
         saveQuestProgress(updated);
         return updated;
+    }, [questProgress, saveQuestProgress]);
+
+    /** Add qualifying reps to quest progress. Returns the new total for that quest. */
+    const addProgress = useCallback((questId: string, contribution: number): number => {
+        const current = questProgress.progress[questId] ?? 0;
+        const newTotal = current + contribution;
+        const updated: QuestProgress = {
+            ...questProgress,
+            progress: { ...questProgress.progress, [questId]: newTotal },
+        };
+        saveQuestProgress(updated);
+        return newTotal;
     }, [questProgress, saveQuestProgress]);
 
     return {
@@ -105,5 +124,6 @@ export function useQuestProgress() {
         completeQuests,
         acceptQuest,
         abandonQuest,
+        addProgress,
     };
 }

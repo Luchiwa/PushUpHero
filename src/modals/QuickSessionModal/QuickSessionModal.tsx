@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { DragNumberPicker } from '@components/DragNumberPicker/DragNumberPicker';
 import { TimePicker } from '@components/TimePicker/TimePicker';
 import { ExercisePicker } from '@components/ExercisePicker/ExercisePicker';
+import { SegmentedToggle } from '@components/SegmentedToggle/SegmentedToggle';
 import { useWorkout } from '@app/WorkoutContext';
 import { useModalClose } from '@hooks/shared/useModalClose';
 import { useFocusTrap } from '@hooks/shared/useFocusTrap';
@@ -42,22 +43,27 @@ export function QuickSessionModal({ onClose, isReady }: QuickSessionModalProps) 
 
                 <ExercisePicker value={exerciseType} onChange={changeExerciseType} />
 
-                <div className="session-mode-toggle">
-                    <button
-                        type="button"
-                        className={`btn-toggle ${sessionMode === 'reps' ? 'active' : ''}`}
-                        onClick={() => setSessionMode('reps')}
-                    >
-                        🎯 Reps
-                    </button>
-                    <button
-                        type="button"
-                        className={`btn-toggle ${sessionMode === 'time' ? 'active' : ''}`}
-                        onClick={() => setSessionMode('time')}
-                    >
-                        ⏱ Time
-                    </button>
-                </div>
+                <SegmentedToggle
+                    value={sessionMode}
+                    onChange={setSessionMode}
+                    aria-label="Session mode"
+                    options={[
+                        {
+                            value: 'reps',
+                            label: 'Reps',
+                            icon: (
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>
+                            ),
+                        },
+                        {
+                            value: 'time',
+                            label: 'Time',
+                            icon: (
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                            ),
+                        },
+                    ]}
+                />
 
                 <div className="goal-section">
                     <p className="goal-label">{sessionMode === 'reps' ? 'Set your goal' : 'Time limit'}</p>

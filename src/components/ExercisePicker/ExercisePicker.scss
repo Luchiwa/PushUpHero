@@ -1,76 +1,308 @@
 @use 'variables' as *;
+@use 'mixins' as *;
+
+// ── Spotlight Carousel ─────────────────────────────────────────
+// One hero card centered, with a subtle peek of the previous /
+// next exercise on each side. Native scroll-snap drives swipe.
+// Pagination dots below give explicit navigation feedback.
 
 .exercise-picker {
   display: flex;
-  justify-content: center;
-  gap: $spacing-sm;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-xs;
   width: 100%;
+}
+
+// ── Viewport ───────────────────────────────────────────────────
+// `overflow-x: auto` is the actual scroller. CSS spec: setting one
+// overflow axis to anything ≠ visible forces the other to clipped.
+// → The hero card's box-shadow would be clipped vertically.
+// → Solution: pad-block the viewport so the shadow has room to
+//   render INSIDE the scroll area. The bottom padding is asymmetric
+//   to fit the downward-biased shadow without wasting top space.
+//
+// Edge spacers (::before / ::after at 11%) center the first/last
+// clones via scroll-snap-align: center.
+.exercise-picker__viewport {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  gap: $spacing-md;
+  padding: 18px 0 52px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none; // Firefox
-  padding: 2px 0; // room for box-shadow
+  scrollbar-width: none;
 
   &::-webkit-scrollbar {
-    display: none; // Chrome / Safari
+    display: none;
+  }
+
+  // Edge spacers — 11% on each side so first/last cards snap centered.
+  &::before,
+  &::after {
+    content: '';
+    flex: 0 0 11%;
   }
 }
 
-.exercise-picker-card {
+// ── Card (peek state — default) ────────────────────────────────
+.exercise-picker__card {
+  position: relative;
+  flex: 0 0 78%;
+  scroll-snap-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
-  padding: 0.75rem 1.1rem;
+  gap: $spacing-sm;
+  min-height: 150px;
+  padding: $spacing-lg $spacing-md $spacing-md;
   border-radius: $radius;
-  border: 1.5px solid transparent;
   background: rgba($black, 0.04);
+  border: 1.5px solid transparent;
   cursor: pointer;
-  transition: background $transition-fast, transform $transition-fast,
-    box-shadow $transition-fast, border-color $transition-fast;
-  flex: 0 0 auto; // don't stretch — natural size
-  min-width: 90px;
-  scroll-snap-align: center;
-
-  &:hover {
-    background: rgba($black, 0.07);
-  }
+  overflow: hidden;
+  isolation: isolate;
+  -webkit-tap-highlight-color: transparent;
+  transform: scale(0.9);
+  opacity: 0.55;
+  filter: saturate(0.65);
+  transition:
+    transform 0.45s $ease-out-back,
+    opacity 0.35s ease,
+    filter 0.35s ease,
+    background 0.35s ease,
+    border-color 0.35s ease,
+    box-shadow 0.35s ease;
 
   &:active {
-    transform: scale(0.97);
+    transform: scale(0.88);
   }
 
-  &--selected {
-    background: $surface;
-    border-color: $accent;
-    box-shadow: 0 2px 12px rgba($accent, 0.18);
+  // ── HERO state ──────────────────────────────────────────────
+  &.is-selected {
+    transform: scale(1);
+    opacity: 1;
+    filter: none;
+    background: $gradient-accent-rich;
+    border-color: $accent-light;
+    box-shadow:
+      0 22px 44px -16px rgba($accent, 0.55),
+      0 6px 16px -6px rgba($black, 0.18),
+      inset 0 1px 0 rgba($white, 0.4);
 
-    &:hover {
-      background: $surface-hover;
+    &:active {
+      transform: scale(0.98);
+    }
+
+    // Shine sweep — reuses the global mixin (animates infinitely).
+    &::before {
+      @include shine-sweep;
     }
   }
 }
 
-.exercise-picker-emoji {
-  font-size: 1.6rem;
-  line-height: 1;
-  transition: transform $transition-fast;
+// ── Decorative background layer (visible only on hero) ────────
+// Radial highlight + diagonal stripe pattern. mix-blend-mode lets
+// the orange gradient glow through the white texture.
+.exercise-picker__bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(circle at 18% 0%, rgba($white, 0.4), transparent 55%),
+    radial-gradient(circle at 95% 110%, rgba($black, 0.25), transparent 50%),
+    repeating-linear-gradient(135deg,
+      rgba($white, 0.06) 0 2px,
+      transparent 2px 14px);
+  mix-blend-mode: overlay;
+  transition: opacity 0.4s ease;
+  z-index: 0;
 
-  .exercise-picker-card--selected & {
-    transform: scale(1.12);
+  .exercise-picker__card.is-selected & {
+    opacity: 1;
   }
 }
 
-.exercise-picker-label {
-  font-size: $font-xs;
-  font-weight: 700;
-  color: $text-muted;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-  transition: color $transition-fast;
+// ── Index counter (top-left of hero) ───────────────────────────
+.exercise-picker__index {
+  position: absolute;
+  top: $spacing-sm;
+  left: $spacing-md;
+  z-index: 1;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: rgba($white, 0.9);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 2px rgba($black, 0.2);
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.3s ease 0.1s, transform 0.3s ease 0.1s;
 
-  .exercise-picker-card--selected & {
-    color: $accent-dark;
+  .exercise-picker__card.is-selected & {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.exercise-picker__index-dim {
+  opacity: 0.55;
+  margin-left: 1px;
+}
+
+// ── Corner accent (top-right arrow on hero) ────────────────────
+.exercise-picker__corner {
+  position: absolute;
+  top: $spacing-sm;
+  right: $spacing-md;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba($white, 0.18);
+  border: 1px solid rgba($white, 0.35);
+  color: $white;
+  opacity: 0;
+  transform: translate(4px, -4px) scale(0.8);
+  transition: opacity 0.3s ease 0.15s, transform 0.3s $ease-out-back 0.15s;
+
+  .exercise-picker__card.is-selected & {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+// ── Emoji ──────────────────────────────────────────────────────
+.exercise-picker__emoji {
+  position: relative;
+  z-index: 1;
+  font-size: 2.6rem;
+  line-height: 1;
+  filter: drop-shadow(0 4px 10px rgba($black, 0.18));
+  transition: filter 0.35s ease;
+
+  .exercise-picker__card.is-selected & {
+    filter: drop-shadow(0 6px 16px rgba($black, 0.32));
+    animation: ep-emoji-pop 0.55s $ease-out-back;
+  }
+}
+
+// ── Label ──────────────────────────────────────────────────────
+.exercise-picker__label {
+  position: relative;
+  z-index: 1;
+  font-size: 1.3rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  color: $text;
+  white-space: nowrap;
+  transition: color 0.35s ease;
+
+  .exercise-picker__card.is-selected & {
+    color: $white;
+    text-shadow: 0 1px 4px rgba($black, 0.28);
+    animation: ep-label-slide 0.45s $ease-out-expo;
+  }
+}
+
+// ── Category tag ───────────────────────────────────────────────
+.exercise-picker__tag {
+  position: relative;
+  z-index: 1;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba($white, 0.8);
+  padding: 3px 10px;
+  border: 1px solid rgba($white, 0.4);
+  border-radius: $radius-pill;
+  white-space: nowrap;
+  background: rgba($white, 0.08);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.3s ease 0.18s, transform 0.3s ease 0.18s;
+
+  .exercise-picker__card.is-selected & {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ── Pagination dots ────────────────────────────────────────────
+.exercise-picker__dots {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: 0;
+}
+
+.exercise-picker__dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba($text, 0.18);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    width 0.4s $ease-out-back,
+    background 0.3s ease,
+    transform 0.3s $ease-out-back,
+    box-shadow 0.3s ease;
+
+  &:hover {
+    background: rgba($text, 0.35);
+    transform: scale(1.25);
+  }
+
+  &.is-active {
+    width: 28px;
+    border-radius: $radius-pill;
+    background: $gradient-accent;
+    box-shadow: $shadow-accent-sm;
+    transform: scale(1);
+
+    &:hover {
+      transform: scale(1);
+    }
+  }
+}
+
+// ── Animations (component-local) ───────────────────────────────
+@keyframes ep-emoji-pop {
+  0% {
+    transform: scale(0.5) rotate(-12deg);
+  }
+
+  55% {
+    transform: scale(1.18) rotate(5deg);
+  }
+
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes ep-label-slide {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

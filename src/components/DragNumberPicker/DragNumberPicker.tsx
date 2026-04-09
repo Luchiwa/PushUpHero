@@ -7,15 +7,28 @@ interface DragNumberPickerProps {
     max?: number;
     onChange: (value: number) => void;
     unit?: string;
-    showTrack?: boolean;
     showHint?: boolean;
 }
 
+// ── Layout constants ───────────────────────────────────────────
+// Keep ITEM_HEIGHT in sync with the matching `.drag-picker__item`
+// height in DragNumberPicker.scss. The SCSS owns the viewport
+// dimensions (220px desktop, 180px mobile) and derives the
+// padding-top from `(viewport - item) / 2`.
+const ITEM_HEIGHT = 44;
+const TAP_THRESHOLD = 5;            // px of motion before a press counts as a drag
+const HOLD_DELAY = 400;             // ms before hold-to-repeat kicks in
+const HOLD_INTERVAL = 80;           // ms between repeated steps
+
 /**
- * A drag/swipe number picker.
- * Drag UP to increase, drag DOWN to decrease.
- * Works with both mouse and touch events.
- * Hold ▲▼ buttons to continuously increment/decrement.
+ * Slot-wheel number picker (iOS-style).
+ *
+ * Interactions:
+ * - Drag vertically — wheel rolls 1:1 with the finger; value updates as it
+ *   crosses each row. Drag UP to increase, DOWN to decrease.
+ * - Tap above the centered value → +1, tap below → -1. Hold to repeat.
+ * - Mouse wheel — scroll up to increase, down to decrease.
+ * - Keyboard — Arrow / Page / Home / End.
  */
 export function DragNumberPicker({
     value,
@@ -23,53 +36,33 @@ export function DragNumberPicker({
     max = 100,
     onChange,
     unit = 'reps',
-    showTrack = true,
     showHint = true,
 }: DragNumberPickerProps) {
+    const viewportRef = useRef<HTMLDivElement>(null);
     const startYRef = useRef<number | null>(null);
     const startValueRef = useRef<number>(value);
-    const [isDragging, setIsDragging] = useState(false);
-    const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    const holdTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    // Keep a ref to current value for use inside intervals
+    const wasDraggedRef = useRef(false);
+    const tapDirectionRef = useRef<0 | 1 | -1>(0);
+    const holdFiredRef = useRef(false);
     const valueRef = useRef(value);
+    const holdTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    const [isDragMotion, setIsDragMotion] = useState(false);
+    const [dragDeltaPx, setDragDeltaPx] = useState(0);
+
     useEffect(() => { valueRef.current = value; }, [value]);
 
-    // px of drag required to change by 1 unit
-    const PX_PER_UNIT = 8;
+    const itemCount = Math.max(0, max - min + 1);
+    const items = Array.from({ length: itemCount }, (_, i) => min + i);
 
-    const onDragStart = useCallback((clientY: number) => {
-        startYRef.current = clientY;
-        startValueRef.current = value;
-        setIsDragging(true);
-    }, [value]);
+    // Wheel translation: align value with viewport center, plus the residual
+    // pixel offset from the in-flight drag (so the wheel follows the finger
+    // continuously rather than snapping per row).
+    const baseTranslate = -((value - min) * ITEM_HEIGHT);
+    const wheelTranslate = baseTranslate + dragDeltaPx;
 
-    const onDragMove = useCallback((clientY: number) => {
-        if (startYRef.current === null) return;
-        const dy = startYRef.current - clientY; // positive = dragged up = increase
-        const delta = Math.round(dy / PX_PER_UNIT);
-        const newVal = Math.min(max, Math.max(min, startValueRef.current + delta));
-        onChange(newVal);
-    }, [min, max, onChange]);
-
-    const onDragEnd = useCallback(() => {
-        startYRef.current = null;
-        setIsDragging(false);
-    }, []);
-
-    // Hold-to-repeat logic
-    const startHold = useCallback((direction: 1 | -1) => {
-        const step = () => {
-            const newVal = Math.min(max, Math.max(min, valueRef.current + direction));
-            onChange(newVal);
-        };
-        // First tick immediately, then accelerate after 400ms
-        step();
-        holdTimeoutRef.current = setTimeout(() => {
-            holdIntervalRef.current = setInterval(step, 80);
-        }, 400);
-    }, [min, max, onChange]);
-
+    // ── Hold-to-repeat ─────────────────────────────────────────
     const stopHold = useCallback(() => {
         if (holdTimeoutRef.current) clearTimeout(holdTimeoutRef.current);
         if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
@@ -77,116 +70,177 @@ export function DragNumberPicker({
         holdIntervalRef.current = null;
     }, []);
 
-    // Mouse events (main drag area)
+    const startHold = useCallback((direction: 1 | -1) => {
+        stopHold();
+        holdFiredRef.current = false;
+        holdTimeoutRef.current = setTimeout(() => {
+            holdFiredRef.current = true;
+            holdIntervalRef.current = setInterval(() => {
+                const next = Math.min(max, Math.max(min, valueRef.current + direction));
+                if (next !== valueRef.current) {
+                    valueRef.current = next; // optimistic — drives the next tick
+                    onChange(next);
+                }
+            }, HOLD_INTERVAL);
+        }, HOLD_DELAY);
+    }, [min, max, onChange, stopHold]);
+
+    useEffect(() => () => stopHold(), [stopHold]);
+
+    // ── Pointer lifecycle (mouse + touch share these) ──────────
+    const onPointerDown = useCallback((clientY: number) => {
+        startYRef.current = clientY;
+        startValueRef.current = value;
+        wasDraggedRef.current = false;
+        holdFiredRef.current = false;
+        setIsDragMotion(false);
+        setDragDeltaPx(0);
+
+        // Decide which tap zone the press landed in. The center band is the
+        // spotlight — pressing it does nothing (only drag).
+        const rect = viewportRef.current?.getBoundingClientRect();
+        if (rect) {
+            const tapY = clientY - rect.top;
+            const center = rect.height / 2;
+            if (tapY < center - ITEM_HEIGHT / 2) tapDirectionRef.current = 1;
+            else if (tapY > center + ITEM_HEIGHT / 2) tapDirectionRef.current = -1;
+            else tapDirectionRef.current = 0;
+        }
+
+        if (tapDirectionRef.current !== 0) {
+            startHold(tapDirectionRef.current);
+        }
+    }, [value, startHold]);
+
+    const onPointerMove = useCallback((clientY: number) => {
+        if (startYRef.current === null) return;
+        const dy = startYRef.current - clientY; // up = positive = increase
+        if (!wasDraggedRef.current && Math.abs(dy) > TAP_THRESHOLD) {
+            wasDraggedRef.current = true;
+            setIsDragMotion(true);
+            stopHold(); // dragging cancels any pending hold-to-repeat
+        }
+        if (!wasDraggedRef.current) return;
+        const unitDelta = Math.round(dy / ITEM_HEIGHT);
+        const target = Math.min(max, Math.max(min, startValueRef.current + unitDelta));
+        const consumedDelta = target - startValueRef.current;
+        // Visual residual = total finger displacement minus the chunks already
+        // committed to value changes. Clamped near a row so we don't overshoot
+        // when at the bounds.
+        const residual = dy - consumedDelta * ITEM_HEIGHT;
+        const maxResidual = ITEM_HEIGHT * 0.8;
+        setDragDeltaPx(Math.max(-maxResidual, Math.min(maxResidual, residual)));
+        if (target !== valueRef.current) {
+            onChange(target);
+        }
+    }, [min, max, onChange, stopHold]);
+
+    const onPointerUp = useCallback(() => {
+        const wasDragged = wasDraggedRef.current;
+        const tapDir = tapDirectionRef.current;
+        const holdFired = holdFiredRef.current;
+        stopHold();
+        startYRef.current = null;
+        wasDraggedRef.current = false;
+        tapDirectionRef.current = 0;
+        holdFiredRef.current = false;
+        setIsDragMotion(false);
+        setDragDeltaPx(0);
+
+        // Tap (no drag, no hold-repeat fired) — single-step ±1
+        if (!wasDragged && !holdFired && tapDir !== 0) {
+            const next = Math.min(max, Math.max(min, valueRef.current + tapDir));
+            if (next !== valueRef.current) onChange(next);
+        }
+    }, [min, max, onChange, stopHold]);
+
+    // ── DOM event wiring ───────────────────────────────────────
     const handleMouseDown = (e: React.MouseEvent) => {
         e.preventDefault();
-        onDragStart(e.clientY);
-
-        const handleMouseMove = (ev: MouseEvent) => onDragMove(ev.clientY);
-        const handleMouseUp = () => {
-            onDragEnd();
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseup', handleMouseUp);
+        onPointerDown(e.clientY);
+        const move = (ev: MouseEvent) => onPointerMove(ev.clientY);
+        const up = () => {
+            onPointerUp();
+            window.removeEventListener('mousemove', move);
+            window.removeEventListener('mouseup', up);
         };
-        window.addEventListener('mousemove', handleMouseMove);
-        window.addEventListener('mouseup', handleMouseUp);
+        window.addEventListener('mousemove', move);
+        window.addEventListener('mouseup', up);
     };
 
-    // Touch events (main drag area)
     const handleTouchStart = (e: React.TouchEvent) => {
-        onDragStart(e.touches[0].clientY);
+        onPointerDown(e.touches[0].clientY);
     };
     const handleTouchMove = (e: React.TouchEvent) => {
-        onDragMove(e.touches[0].clientY);
+        onPointerMove(e.touches[0].clientY);
     };
-    const handleTouchEnd = () => onDragEnd();
+    const handleTouchEnd = () => onPointerUp();
+    const handleTouchCancel = () => onPointerUp();
 
-    // Keyboard support for the drag area
+    // Mouse wheel (desktop bonus)
+    const handleWheel = (e: React.WheelEvent) => {
+        const dir = e.deltaY > 0 ? -1 : 1;
+        const next = Math.min(max, Math.max(min, value + dir));
+        if (next !== value) onChange(next);
+    };
+
+    // Keyboard
     const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-        let newVal: number | null = null;
+        let next: number | null = null;
         switch (e.key) {
             case 'ArrowUp':
-            case 'ArrowRight':
-                newVal = Math.min(max, value + 1);
-                break;
+            case 'ArrowRight': next = Math.min(max, value + 1); break;
             case 'ArrowDown':
-            case 'ArrowLeft':
-                newVal = Math.max(min, value - 1);
-                break;
-            case 'PageUp':
-                newVal = Math.min(max, value + 10);
-                break;
-            case 'PageDown':
-                newVal = Math.max(min, value - 10);
-                break;
-            case 'Home':
-                newVal = min;
-                break;
-            case 'End':
-                newVal = max;
-                break;
-            default:
-                return; // don't prevent default for unhandled keys
+            case 'ArrowLeft': next = Math.max(min, value - 1); break;
+            case 'PageUp': next = Math.min(max, value + 10); break;
+            case 'PageDown': next = Math.max(min, value - 10); break;
+            case 'Home': next = min; break;
+            case 'End': next = max; break;
+            default: return;
         }
         e.preventDefault();
-        if (newVal !== null) onChange(newVal);
+        if (next !== null && next !== value) onChange(next);
     }, [value, min, max, onChange]);
 
-    const percentage = ((value - min) / (max - min)) * 100;
-
     return (
-        <div
-            className={`drag-picker ${isDragging ? 'drag-picker-active' : ''}`}
-            role="slider"
-            tabIndex={0}
-            aria-valuenow={value}
-            aria-valuemin={min}
-            aria-valuemax={max}
-            aria-label={`${unit} picker`}
-            onMouseDown={handleMouseDown}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            onKeyDown={handleKeyDown}
-        >
-            {showTrack && (
-                <div className="drag-picker-track">
-                    <div className="drag-picker-fill" style={{ height: `${percentage}%` }} />
+        <div className={`drag-picker${isDragMotion ? ' is-dragging' : ''}`}>
+            <div
+                ref={viewportRef}
+                className="drag-picker__viewport"
+                role="slider"
+                tabIndex={0}
+                aria-valuenow={value}
+                aria-valuemin={min}
+                aria-valuemax={max}
+                aria-label={`${unit} picker`}
+                onMouseDown={handleMouseDown}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                onTouchCancel={handleTouchCancel}
+                onWheel={handleWheel}
+                onKeyDown={handleKeyDown}
+            >
+                <div className="drag-picker__spotlight" aria-hidden="true" />
+                <div
+                    className="drag-picker__wheel"
+                    style={{ transform: `translate3d(0, ${wheelTranslate}px, 0)` }}
+                >
+                    {items.map((v) => (
+                        <div
+                            key={v}
+                            className={`drag-picker__item${v === value ? ' is-current' : ''}`}
+                            aria-hidden={v !== value}
+                        >
+                            {String(v).padStart(2, '0')}
+                        </div>
+                    ))}
                 </div>
-            )}
-
-            <div className="drag-picker-content">
-                <button
-                    type="button"
-                    className="drag-picker-btn"
-                    aria-label="Increment"
-                    onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); startHold(1); }}
-                    onMouseUp={stopHold}
-                    onMouseLeave={stopHold}
-                    onTouchStart={(e) => { e.stopPropagation(); e.preventDefault(); startHold(1); }}
-                    onTouchEnd={(e) => { e.stopPropagation(); e.preventDefault(); stopHold(); }}
-                >▲</button>
-
-                <div className="drag-picker-value">
-                    <span className="drag-picker-number">{String(value).padStart(2, '0')}</span>
-                    <span className="drag-picker-unit">{unit}</span>
-                </div>
-
-                <button
-                    type="button"
-                    className="drag-picker-btn"
-                    aria-label="Decrement"
-                    onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); startHold(-1); }}
-                    onMouseUp={stopHold}
-                    onMouseLeave={stopHold}
-                    onTouchStart={(e) => { e.stopPropagation(); e.preventDefault(); startHold(-1); }}
-                    onTouchEnd={(e) => { e.stopPropagation(); e.preventDefault(); stopHold(); }}
-                >▼</button>
             </div>
-
+            <span className="drag-picker__unit" aria-hidden="true">{unit}</span>
             {showHint && (
-                <p className="drag-picker-hint">
-                    {isDragging ? '🎯 Release to confirm' : '↕ Drag or tap ▲▼'}
+                <p className="drag-picker__hint">
+                    {isDragMotion ? 'Release to confirm' : 'Drag, tap or scroll'}
                 </p>
             )}
         </div>

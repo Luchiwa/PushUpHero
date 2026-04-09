@@ -1,0 +1,91 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// ── Segmented Toggle ───────────────────────────────────────────
+// A track holding 2–4 button options with a sliding white pill
+// indicator behind the active one. Active label + icon flip to
+// $accent. Indicator runs an infinite shine sweep for polish.
+
+.segmented-toggle {
+    position: relative;
+    display: flex;
+    background: rgba($text, 0.05);
+    border: 1px solid rgba($text, 0.06);
+    border-radius: $radius-sm;
+    padding: 4px;
+    width: 100%;
+    isolation: isolate;
+}
+
+.segmented-toggle__indicator {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    background: $white;
+    border-radius: calc($radius-sm - 2px);
+    box-shadow:
+        0 4px 14px rgba($accent, 0.18),
+        0 1px 4px rgba($black, 0.08);
+    transition:
+        left 0.35s $ease-out-back,
+        width 0.35s $ease-out-back;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: $z-base;
+
+    &::before {
+        @include shine-sweep;
+    }
+}
+
+.segmented-toggle__btn {
+    position: relative;
+    flex: 1 1 0;
+    z-index: $z-base + 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 12px;
+    background: transparent;
+    border: none;
+    border-radius: calc($radius-sm - 2px);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: $text-muted;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+        color 0.25s ease,
+        font-weight 0.25s ease;
+
+    &:focus-visible {
+        outline: 2px solid rgba($accent, 0.5);
+        outline-offset: 2px;
+    }
+
+    &.is-active {
+        color: $accent;
+        font-weight: 800;
+
+        .segmented-toggle__icon {
+            color: $accent;
+            transform: scale(1.05);
+        }
+    }
+}
+
+.segmented-toggle__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: $text-muted;
+    transition:
+        color 0.25s ease,
+        transform 0.25s $ease-out-back;
+}
+
+.segmented-toggle__label {
+    line-height: 1;
+}

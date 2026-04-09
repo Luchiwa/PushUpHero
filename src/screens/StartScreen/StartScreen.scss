@@ -87,14 +87,6 @@
 }
 
 
-// ── Session mode toggle ────────────────────────────────────────
-.session-mode-toggle {
-    display: flex;
-    gap: 0.5rem;
-    width: 100%;
-    justify-content: center;
-}
-
 // ── Quick Session Button ─────────────────────────────────────────
 .btn-quick-session {
     width: 100%;
@@ -133,15 +125,6 @@
 
     .goal-label {
         font-size: 0.65rem;
-    }
-
-    .session-mode-toggle {
-        gap: 0.4rem;
-    }
-
-    .btn-toggle {
-        padding: 0.5rem 0.9rem;
-        font-size: 0.75rem;
     }
 
     .status-area {

@@ -98,6 +98,35 @@
     font-style: italic;
 }
 
+// ── Progress bar (cross-session quests) ──────────────────────────
+.quest-card-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.quest-card-progress-bar {
+    flex: 1;
+    height: 6px;
+    background: rgba($indigo, 0.15);
+    border-radius: $radius-pill;
+    overflow: hidden;
+}
+
+.quest-card-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, $indigo, $purple);
+    border-radius: $radius-pill;
+    transition: width 0.4s $ease-out-expo;
+}
+
+.quest-card-progress-label {
+    font-size: $font-xs;
+    font-weight: 700;
+    color: $indigo;
+    white-space: nowrap;
+}
+
 .quest-card-config {
     margin-top: 0.25rem;
 }

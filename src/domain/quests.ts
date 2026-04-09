@@ -11,13 +11,18 @@
  *   - requiredLevel: minimum global level needed
  *
  * ── Completion conditions ──
- * Each quest has a `goal` that describes what the user must achieve
- * in a single session:
- *   - reps:          minimum total reps
- *   - exerciseType:  restrict to a specific exercise (optional)
- *   - minAvgScore:   minimum average score (0–100, optional)
- *   - multiSet:      session must be multi-set (optional)
- *   - multiExercise: session must be multi-exercise (optional)
+ * Each quest has a `goal` that describes what the user must achieve:
+ *   - reps:           minimum total reps (accumulated across sessions by default)
+ *   - exerciseType:   restrict to a specific exercise (optional)
+ *   - minAvgScore:    minimum session avg score to count reps (0–100, optional)
+ *   - multiSet:       session must be multi-set — implies single-session (optional)
+ *   - multiExercise:  session must be multi-exercise — implies single-session (optional)
+ *   - singleSession:  all conditions must be met in one session (optional)
+ *
+ * By default, reps accumulate across sessions. For quests with minAvgScore,
+ * only reps from sessions where the average score meets the threshold count.
+ * Endurance quests and structural quests (multiSet/multiExercise) are
+ * single-session by design.
  *
  * Design: quests are evaluated client-side. Completion state is stored
  * alongside the body profile in localStorage + Firestore.
@@ -29,18 +34,20 @@ import type { ExerciseType } from '@exercises/types';
 
 export type QuestStatus = 'locked' | 'available' | 'accepted' | 'completed';
 
-/** What the user must achieve in a single session to complete the quest */
+/** What the user must achieve to complete the quest */
 export interface QuestGoal {
-    /** Minimum total reps in the session */
+    /** Minimum total reps */
     reps: number;
     /** If set, reps must come from this exercise */
     exerciseType?: ExerciseType;
     /** Minimum average score (0–100) */
     minAvgScore?: number;
-    /** Must be a multi-set session (≥2 sets) */
+    /** Must be a multi-set session (≥2 sets) — implies single-session */
     multiSet?: boolean;
-    /** Must be a multi-exercise session (≥2 exercises) */
+    /** Must be a multi-exercise session (≥2 exercises) — implies single-session */
     multiExercise?: boolean;
+    /** If true, all conditions must be met in a single session (no cross-session accumulation) */
+    singleSession?: boolean;
 }
 
 export interface QuestDef {
@@ -104,7 +111,7 @@ export const QUESTS: QuestDef[] = [
         order: 1,
         category: 'onboarding',
         title: 'Warm Up',
-        description: 'Complete a session with at least 10 reps.',
+        description: 'Complete 10 reps of any exercise.',
         emoji: '🔥',
         xpReward: 75,
         goal: { reps: 10 },
@@ -118,7 +125,7 @@ export const QUESTS: QuestDef[] = [
         order: 10,
         category: 'exercise',
         title: 'Push-Up Initiate',
-        description: 'Complete 15 push-ups in a single session.',
+        description: 'Complete 15 push-ups.',
         emoji: '💪',
         xpReward: 100,
         goal: { reps: 15, exerciseType: 'pushup' },
@@ -130,7 +137,7 @@ export const QUESTS: QuestDef[] = [
         order: 11,
         category: 'exercise',
         title: 'Squat Initiate',
-        description: 'Complete 15 squats in a single session.',
+        description: 'Complete 15 squats.',
         emoji: '🦵',
         xpReward: 100,
         goal: { reps: 15, exerciseType: 'squat' },
@@ -142,7 +149,7 @@ export const QUESTS: QuestDef[] = [
         order: 12,
         category: 'exercise',
         title: 'Leg Raise Initiate',
-        description: 'Complete 15 leg raises in a single session.',
+        description: 'Complete 15 leg raises.',
         emoji: '🧘',
         xpReward: 100,
         goal: { reps: 15, exerciseType: 'legraise' },
@@ -154,7 +161,7 @@ export const QUESTS: QuestDef[] = [
         order: 13,
         category: 'exercise',
         title: 'Pull-Up Initiate',
-        description: 'Complete 5 pull-ups in a single session.',
+        description: 'Complete 5 pull-ups.',
         emoji: '🏋️',
         xpReward: 150,
         goal: { reps: 5, exerciseType: 'pullup' },
@@ -233,7 +240,7 @@ export const QUESTS: QuestDef[] = [
         description: 'Complete 25 reps in a single session.',
         emoji: '🏃',
         xpReward: 125,
-        goal: { reps: 25 },
+        goal: { reps: 25, singleSession: true },
         prerequisites: ['warm_up'],
         requiredLevel: 2,
     },
@@ -245,7 +252,7 @@ export const QUESTS: QuestDef[] = [
         description: 'Complete 50 reps in a single session.',
         emoji: '🔩',
         xpReward: 250,
-        goal: { reps: 50 },
+        goal: { reps: 50, singleSession: true },
         prerequisites: ['marathon_starter'],
         requiredLevel: 5,
     },
@@ -257,7 +264,7 @@ export const QUESTS: QuestDef[] = [
         description: 'Complete 100 reps in a single session.',
         emoji: '💯',
         xpReward: 500,
-        goal: { reps: 100 },
+        goal: { reps: 100, singleSession: true },
         prerequisites: ['iron_will'],
         requiredLevel: 10,
     },
@@ -316,10 +323,12 @@ export interface QuestProgress {
     completed: Record<string, number>;
     /** Map of questId → acceptance timestamp (millis). Absent = not accepted yet. */
     accepted: Record<string, number>;
+    /** Map of questId → accumulated qualifying reps (cross-session quests only). */
+    progress: Record<string, number>;
 }
 
 export function emptyQuestProgress(): QuestProgress {
-    return { completed: {}, accepted: {} };
+    return { completed: {}, accepted: {}, progress: {} };
 }
 
 // ── Quest evaluation ─────────────────────────────────────────────
@@ -369,22 +378,62 @@ export function isBodyProfileQuest(quest: QuestDef): boolean {
     return quest.captures === 'body_profile';
 }
 
-/** Check if a session result meets a quest's completion goal */
-export function isQuestGoalMet(
-    quest: QuestDef,
-    sessionData: {
-        totalReps: number;
-        avgScore: number;
-        exerciseType: ExerciseType;
-        isMultiSet: boolean;
-        isMultiExercise: boolean;
-        /** For multi-exercise: reps per exercise type */
-        repsByExercise?: Partial<Record<ExerciseType, number>>;
-    },
-): boolean {
+/** Session data shape used for quest evaluation */
+export interface QuestSessionData {
+    totalReps: number;
+    avgScore: number;
+    exerciseType: ExerciseType;
+    isMultiSet: boolean;
+    isMultiExercise: boolean;
+    /** For multi-exercise: reps per exercise type */
+    repsByExercise?: Partial<Record<ExerciseType, number>>;
+}
+
+/** Whether a quest must be completed in a single session (no cross-session accumulation) */
+export function isSingleSessionQuest(quest: QuestDef): boolean {
+    return !!quest.goal.singleSession || !!quest.goal.multiSet || !!quest.goal.multiExercise;
+}
+
+/**
+ * Compute how many qualifying reps a session contributes toward a quest.
+ *
+ * - Single-session quests: returns goal.reps if ALL conditions met, 0 otherwise.
+ * - Cross-session quests: returns the number of qualifying reps from this session.
+ *   For quests with minAvgScore, reps only count if the session avgScore meets the threshold.
+ */
+export function getSessionQuestContribution(quest: QuestDef, sessionData: QuestSessionData): number {
     const { goal } = quest;
 
-    // Check exercise-specific reps
+    // Single-session quests: all-or-nothing
+    if (isSingleSessionQuest(quest)) {
+        return isQuestGoalMetSingleSession(quest, sessionData) ? goal.reps : 0;
+    }
+
+    // Cross-session: check quality gate
+    if (goal.minAvgScore && sessionData.avgScore < goal.minAvgScore) return 0;
+
+    // Count qualifying reps
+    if (goal.exerciseType) {
+        return sessionData.repsByExercise?.[goal.exerciseType]
+            ?? (sessionData.exerciseType === goal.exerciseType ? sessionData.totalReps : 0);
+    }
+    return sessionData.totalReps;
+}
+
+/** Get accumulated progress toward a quest (0 if not started) */
+export function getQuestProgressCount(quest: QuestDef, progress: QuestProgress): number {
+    return progress.progress[quest.id] ?? 0;
+}
+
+/** Check if a quest's accumulated progress meets its goal */
+export function isQuestProgressComplete(quest: QuestDef, progress: QuestProgress): boolean {
+    return getQuestProgressCount(quest, progress) >= quest.goal.reps;
+}
+
+/** Check if a single-session quest's goal is met by the given session */
+function isQuestGoalMetSingleSession(quest: QuestDef, sessionData: QuestSessionData): boolean {
+    const { goal } = quest;
+
     if (goal.exerciseType) {
         const exerciseReps = sessionData.repsByExercise?.[goal.exerciseType]
             ?? (sessionData.exerciseType === goal.exerciseType ? sessionData.totalReps : 0);
@@ -393,16 +442,19 @@ export function isQuestGoalMet(
         if (sessionData.totalReps < goal.reps) return false;
     }
 
-    // Check average score
     if (goal.minAvgScore && sessionData.avgScore < goal.minAvgScore) return false;
-
-    // Check multi-set
     if (goal.multiSet && !sessionData.isMultiSet) return false;
-
-    // Check multi-exercise
     if (goal.multiExercise && !sessionData.isMultiExercise) return false;
 
     return true;
+}
+
+/**
+ * @deprecated Use getSessionQuestContribution + getQuestProgressCount instead.
+ * Kept for backward compatibility during migration.
+ */
+export function isQuestGoalMet(quest: QuestDef, sessionData: QuestSessionData): boolean {
+    return isQuestGoalMetSingleSession(quest, sessionData);
 }
 
 /** Group quests by category for display */

@@ -1,5 +1,6 @@
 import { ExercisePicker } from '@components/ExercisePicker/ExercisePicker';
-import type { QuestDef } from '@domain/quests';
+import type { QuestDef, QuestProgress } from '@domain/quests';
+import { isSingleSessionQuest, getQuestProgressCount } from '@domain/quests';
 import { getExerciseLabel } from '@exercises/types';
 import type { ExerciseType } from '@exercises/types';
 import './QuestCard.scss';
@@ -7,6 +8,7 @@ import './QuestCard.scss';
 interface QuestCardProps {
     activeQuest: QuestDef;
     questAccepted: boolean;
+    questProgress: QuestProgress;
     catMeta: { label: string; color: string } | null;
     isReady: boolean;
     exerciseType: ExerciseType;
@@ -18,6 +20,7 @@ interface QuestCardProps {
 export function QuestCard({
     activeQuest,
     questAccepted,
+    questProgress,
     catMeta,
     isReady,
     exerciseType,
@@ -48,9 +51,19 @@ export function QuestCard({
 
     // Accepted + quick-startable → show Start button
     const hasSpecificExercise = !!activeQuest.goal.exerciseType;
-    const startLabel = hasSpecificExercise
-        ? `🚀 Start — ${activeQuest.goal.reps} ${getExerciseLabel(activeQuest.goal.exerciseType!)}`
-        : `🚀 Start — ${activeQuest.goal.reps} reps`;
+    const isCrossSession = !isSingleSessionQuest(activeQuest);
+    const currentReps = isCrossSession ? getQuestProgressCount(activeQuest, questProgress) : 0;
+    const goalReps = activeQuest.goal.reps;
+    const remaining = Math.max(0, goalReps - currentReps);
+
+    const repsLabel = hasSpecificExercise
+        ? getExerciseLabel(activeQuest.goal.exerciseType!)
+        : 'reps';
+    const startLabel = isCrossSession && currentReps > 0
+        ? `🚀 Start — ${remaining} ${repsLabel} left`
+        : `🚀 Start — ${goalReps} ${repsLabel}`;
+
+    const progressPct = isCrossSession ? Math.min(100, Math.round((currentReps / goalReps) * 100)) : 0;
 
     return (
         <div className="quest-card quest-card--active" style={{ '--quest-color': catMeta?.color ?? '#6366f1' } as React.CSSProperties}>
@@ -65,6 +78,15 @@ export function QuestCard({
                     <p className="quest-card-desc">{activeQuest.description}</p>
                 </div>
             </div>
+
+            {isCrossSession && currentReps > 0 && (
+                <div className="quest-card-progress">
+                    <div className="quest-card-progress-bar">
+                        <div className="quest-card-progress-fill" style={{ width: `${progressPct}%` }} />
+                    </div>
+                    <span className="quest-card-progress-label">{currentReps}/{goalReps} {repsLabel}</span>
+                </div>
+            )}
 
             {!hasSpecificExercise && (
                 <div className="quest-card-config">

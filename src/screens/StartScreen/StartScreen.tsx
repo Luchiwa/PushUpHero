@@ -168,6 +168,7 @@ export function StartScreen({
                     <QuestCard
                         activeQuest={featuredQuest}
                         questAccepted={!!featuredAccepted}
+                        questProgress={questProgress!}
                         catMeta={catMeta}
                         isReady={isReady}
                         exerciseType={exerciseType}

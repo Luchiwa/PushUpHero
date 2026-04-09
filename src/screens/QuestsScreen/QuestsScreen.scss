@@ -195,6 +195,36 @@
   margin: 0;
 }
 
+// ── Progress bar (cross-session quests) ──────────────────────────
+.quest-item-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.3rem;
+}
+
+.quest-item-progress-bar {
+  flex: 1;
+  height: 5px;
+  background: rgba($indigo, 0.12);
+  border-radius: $radius-pill;
+  overflow: hidden;
+}
+
+.quest-item-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, $indigo, $purple);
+  border-radius: $radius-pill;
+  transition: width 0.4s ease;
+}
+
+.quest-item-progress-label {
+  font-size: $font-xs;
+  font-weight: 700;
+  color: $indigo;
+  white-space: nowrap;
+}
+
 .quest-item-lock-reason {
   font-size: $font-xs;
   font-weight: 600;

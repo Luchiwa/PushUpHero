@@ -15,6 +15,7 @@ import { WorkoutContext } from './WorkoutContext';
 import type { WorkoutContextType } from './WorkoutContext';
 import { totalXpForLevel } from '@domain/xpSystem';
 import { StartScreen } from '@screens/StartScreen/StartScreen';
+import { AppLoader } from '@components/AppLoader/AppLoader';
 import { Dashboard } from '@overlays/Dashboard/Dashboard';
 
 // Lazy-loaded screens (only parsed when their state is active)
@@ -43,9 +44,9 @@ function App() {
   // ── Exercise detector ────────────────────────────────────────────
   const [isActive, setIsActive] = useState(false);
   const { bodyProfile, saveBodyProfile } = useBodyProfile();
-  const { questProgress, completeQuests, acceptQuest, abandonQuest } = useQuestProgress();
+  const { questProgress, completeQuests, acceptQuest, abandonQuest, addProgress } = useQuestProgress();
   const { level: userLevel } = useLevel();
-  const { user } = useAuthCore();
+  const { user, loading: authLoading } = useAuthCore();
   const activeQuest = getActiveQuest(questProgress, userLevel);
   const featuredQuest = getFeaturedQuest(questProgress, userLevel);
   const availableQuests = getAvailableQuests(questProgress, userLevel);
@@ -76,9 +77,11 @@ function App() {
     onExerciseTypeChange: handleExerciseTypeChange,
     activeQuest,
     availableQuests: acceptedQuests,
+    questProgress,
     bodyProfile,
     onSaveBodyProfile: saveBodyProfile,
     onCompleteQuests: completeQuests,
+    onAddProgress: addProgress,
     getCapturedRatios,
   });
 
@@ -186,20 +189,24 @@ function App() {
       )}
 
       {wm.screen === 'idle' && (
-        <ErrorBoundary fallback="section">
-          <StartScreen
-            isModelReady={isModelReady}
-            cameraError={modelError ?? cameraError}
-            featuredQuest={featuredQuest}
-            activeQuest={activeQuest}
-            questProgress={questProgress}
-            userLevel={userLevel}
-            onAcceptQuest={acceptQuest}
-            onAbandonQuest={abandonQuest}
-            pendingSignupPrompt={pendingSignupPrompt}
-            onSignupPromptHandled={() => setPendingSignupPrompt(false)}
-          />
-        </ErrorBoundary>
+        authLoading
+          ? <AppLoader />
+          : (
+            <ErrorBoundary fallback="section">
+              <StartScreen
+                isModelReady={isModelReady}
+                cameraError={modelError ?? cameraError}
+                featuredQuest={featuredQuest}
+                activeQuest={activeQuest}
+                questProgress={questProgress}
+                userLevel={userLevel}
+                onAcceptQuest={acceptQuest}
+                onAbandonQuest={abandonQuest}
+                pendingSignupPrompt={pendingSignupPrompt}
+                onSignupPromptHandled={() => setPendingSignupPrompt(false)}
+              />
+            </ErrorBoundary>
+          )
       )}
 
       <Suspense fallback={null}>

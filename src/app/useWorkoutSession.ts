@@ -15,8 +15,8 @@ import { useFriends } from '@hooks/useFriends';
 import { levelFromTotalXp, calculateSessionXp, projectLiveXp } from '@domain/xpSystem';
 import type { BonusContext, SessionXpResult } from '@domain/xpSystem';
 import type { SaveSessionResult } from '@services/sessionService';
-import type { QuestDef } from '@domain/quests';
-import { isBodyProfileQuest, isQuestGoalMet } from '@domain/quests';
+import type { QuestDef, QuestProgress } from '@domain/quests';
+import { isBodyProfileQuest, isSingleSessionQuest, getSessionQuestContribution } from '@domain/quests';
 import type { BodyProfile } from '@domain/bodyProfile';
 import { BODY_PROFILE_VERSION } from '@domain/bodyProfile';
 import { BODY_PROFILE_MERGE } from '@exercises/registry';
@@ -34,9 +34,11 @@ interface UseWorkoutSessionProps {
   currentSetReps: number;
   workoutStartTimeRef: React.MutableRefObject<number>;
   availableQuests: QuestDef[];
+  questProgress: QuestProgress;
   bodyProfile: BodyProfile;
   onSaveBodyProfile: (profile: BodyProfile) => void;
   onCompleteQuests: (questIds: string[]) => void;
+  onAddProgress: (questId: string, contribution: number) => number;
   getCapturedRatios: () => CapturedRatios;
   dispatch: Dispatch<WorkoutAction>;
 }
@@ -67,9 +69,11 @@ export function useWorkoutSession({
   currentSetReps,
   workoutStartTimeRef,
   availableQuests,
+  questProgress,
   bodyProfile,
   onSaveBodyProfile,
   onCompleteQuests,
+  onAddProgress,
   getCapturedRatios,
   dispatch,
 }: UseWorkoutSessionProps): UseWorkoutSessionReturn {
@@ -155,7 +159,7 @@ export function useWorkoutSession({
       setLastSessionXp(result);
       dispatch({ type: 'SAVE_COMPLETED' });
 
-      // ── Quest completion — evaluate ALL available quests ──
+      // ── Quest progress — accumulate qualifying reps across sessions ──
       const sessionData = {
         totalReps,
         avgScore,
@@ -167,8 +171,20 @@ export function useWorkoutSession({
 
       const completedQuests: QuestDef[] = [];
       for (const quest of availableQuests) {
-        if (isQuestGoalMet(quest, sessionData)) {
+        const contribution = getSessionQuestContribution(quest, sessionData);
+        if (contribution <= 0) continue;
+
+        if (isSingleSessionQuest(quest)) {
+          // Single-session: contribution > 0 means all conditions met
           completedQuests.push(quest);
+        } else {
+          // Cross-session: accumulate progress, check if goal reached
+          const currentProgress = (questProgress.progress[quest.id] ?? 0);
+          const newTotal = currentProgress + contribution;
+          onAddProgress(quest.id, contribution);
+          if (newTotal >= quest.goal.reps) {
+            completedQuests.push(quest);
+          }
         }
       }
 
@@ -199,7 +215,7 @@ export function useWorkoutSession({
       sessionSavedRef.current = false;
       dispatch({ type: 'SAVE_FAILED' });
     });
-  }, [addSession, currentBlock, isMultiExercise, workoutPlan.blocks, totalXp, dbUser, friends.length, availableQuests, bodyProfile, onSaveBodyProfile, onCompleteQuests, getCapturedRatios, workoutStartTimeRef, dispatch]);
+  }, [addSession, currentBlock, isMultiExercise, workoutPlan.blocks, totalXp, dbUser, friends.length, availableQuests, questProgress, bodyProfile, onSaveBodyProfile, onCompleteQuests, onAddProgress, getCapturedRatios, workoutStartTimeRef, dispatch]);
 
   // ── Reset ────────────────────────────────────────────────────
   const resetSessionState = useCallback(() => {

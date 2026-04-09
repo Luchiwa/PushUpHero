@@ -73,25 +73,34 @@ export class LegRaiseDetector extends BaseExerciseDetector {
         const lKnee = landmarks[LM.LEFT_KNEE], rKnee = landmarks[LM.RIGHT_KNEE];
         const lAnkle = landmarks[LM.LEFT_ANKLE], rAnkle = landmarks[LM.RIGHT_ANKLE];
 
-        // ── 1. Smoothed hip angle (shoulder → hip → ankle) ──────────
-        const leftAngle = this.computeAngle(lShoulder, lHip, lAnkle);
-        const rightAngle = this.computeAngle(rShoulder, rHip, rAnkle);
-        const leftVis = (lHip.visibility ?? 0) + (lAnkle.visibility ?? 0);
-        const rightVis = (rHip.visibility ?? 0) + (rAnkle.visibility ?? 0);
+        // ── 1. Smoothed hip angle (shoulder → hip → knee) ────────────
+        // Always use knees instead of ankles for the primary angle.
+        // Knees are consistently more visible in lying poses, and when legs
+        // are straight, shoulder→hip→knee ≈ shoulder→hip→ankle.
+        // Switching between ankle/knee mid-signal causes discontinuities
+        // that break the One Euro Filter and prevent threshold detection.
+        const leftAngle = this.computeAngle(lShoulder, lHip, lKnee);
+        const rightAngle = this.computeAngle(rShoulder, rHip, rKnee);
+        const leftVis = (lHip.visibility ?? 0) + (lKnee.visibility ?? 0);
+        const rightVis = (rHip.visibility ?? 0) + (rKnee.visibility ?? 0);
         const smoothedAngle = this.smoothAngle(leftAngle, rightAngle, leftVis, rightVis);
 
         // ── 2. Positional metrics ───────────────────────────────────
         const midShoulderY = (lShoulder.y + rShoulder.y) / 2;
         const midHipY = (lHip.y + rHip.y) / 2;
-        const midAnkleY = (lAnkle.y + rAnkle.y) / 2;
-        const bodyVerticalSpread = Math.abs(midShoulderY - midAnkleY);
+        const midKneeY = (lKnee.y + rKnee.y) / 2;
+        const bodyVerticalSpread = Math.abs(midShoulderY - midKneeY);
         const torsoTilt = Math.abs(midShoulderY - midHipY);
 
         const torsoLen = torsoTilt;
-        const legLen = Math.abs(midHipY - midAnkleY);
+        const legLen = Math.abs(midHipY - midKneeY);
 
-        const leftKneeAngle = this.computeAngle(lHip, lKnee, lAnkle);
-        const rightKneeAngle = this.computeAngle(rHip, rKnee, rAnkle);
+        // Knee straightness: only measurable when ankles are visible
+        const lAnkleVis = lAnkle.visibility ?? 0;
+        const rAnkleVis = rAnkle.visibility ?? 0;
+        const anklesVisible = lAnkleVis >= 0.3 && rAnkleVis >= 0.3;
+        const leftKneeAngle = anklesVisible ? this.computeAngle(lHip, lKnee, lAnkle) : 180;
+        const rightKneeAngle = anklesVisible ? this.computeAngle(rHip, rKnee, rAnkle) : 180;
         const avgKneeAngle = (leftKneeAngle + rightKneeAngle) / 2;
 
         const shoulderRise = this.calibratedBaselineShoulderY > 0
@@ -101,8 +110,8 @@ export class LegRaiseDetector extends BaseExerciseDetector {
         // ── 3. Calibration ──────────────────────────────────────────
         if (!this.state.isCalibrated) {
             const hipVis = Math.max(lHip.visibility ?? 0, rHip.visibility ?? 0);
-            const ankleVis = Math.max(lAnkle.visibility ?? 0, rAnkle.visibility ?? 0);
-            const areLowerVisible = hipVis > MIN_LANDMARK_VISIBILITY && ankleVis > MIN_LANDMARK_VISIBILITY;
+            const kneeVis = Math.max(lKnee.visibility ?? 0, rKnee.visibility ?? 0);
+            const areLowerVisible = hipVis > MIN_LANDMARK_VISIBILITY && kneeVis > MIN_LANDMARK_VISIBILITY;
 
             const isRoughlyLying =
                 areLowerVisible &&
@@ -138,7 +147,7 @@ export class LegRaiseDetector extends BaseExerciseDetector {
 
         // ── 5. Alignment metrics ────────────────────────────────────
         const kneeStraightness = avgKneeAngle;
-        const alignmentScore = this.computeAlignmentScore(kneeStraightness, shoulderRise);
+        const alignmentScore = this.computeAlignmentScore(kneeStraightness, shoulderRise, !anklesVisible);
 
         // ── 6. State machine (INVERTED — count at peak, not at rest) ─
         //
@@ -236,14 +245,17 @@ export class LegRaiseDetector extends BaseExerciseDetector {
         return this.linearScore(minAngle, this.thresholds.angleDownThreshold, this.thresholds.perfectAmplitudeAngle);
     }
 
-    private computeAlignmentScore(kneeStraightness: number, shoulderRise: number): number {
+    private computeAlignmentScore(kneeStraightness: number, shoulderRise: number, anklesNotVisible: boolean): number {
+        const shoulderScore = shoulderRise <= SHOULDER_RISE_TOLERANCE
+            ? 100 : Math.max(0, 100 - ((shoulderRise - SHOULDER_RISE_TOLERANCE) / 0.06) * 100);
+
+        // When ankles aren't visible, we can't judge knee straightness — score on shoulders only
+        if (anklesNotVisible) return Math.min(100, Math.round(shoulderScore));
+
         const kneeScore = kneeStraightness >= 170
             ? 100 : kneeStraightness >= KNEE_STRAIGHT_TOLERANCE
                 ? Math.round(((kneeStraightness - KNEE_STRAIGHT_TOLERANCE) / 20) * 100)
                 : 0;
-
-        const shoulderScore = shoulderRise <= SHOULDER_RISE_TOLERANCE
-            ? 100 : Math.max(0, 100 - ((shoulderRise - SHOULDER_RISE_TOLERANCE) / 0.06) * 100);
 
         return Math.min(100, Math.round(kneeScore * 0.5 + shoulderScore * 0.5));
     }

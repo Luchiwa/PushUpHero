@@ -52,7 +52,6 @@ export function TimePicker({
                 max={maxMinutes}
                 onChange={handleMinutesChange}
                 unit="min"
-                showTrack={false}
                 showHint={false}
             />
             <span className="time-picker-colon">:</span>
@@ -62,7 +61,6 @@ export function TimePicker({
                 max={secMax}
                 onChange={handleSecondsChange}
                 unit="sec"
-                showTrack={false}
                 showHint={false}
             />
         </div>
