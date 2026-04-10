@@ -1,81 +1,170 @@
+@use 'sass:color';
 @use 'variables' as *;
 @use 'mixins' as *;
 
-// ── Level cards ──────────────────────────────────────────────────
+// ── Local entrance keyframe (shared by levels + records) ─────────
+@keyframes progression-tile-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+// ── Per-exercise card grid (2 cols) ──────────────────────────────
+.level-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: $spacing-sm;
+}
+
+// ── Base level card (white shell + accent gradient + lift) ───────
 .level-card {
-  background: $surface;
-  border-radius: $radius-sm;
-  padding: $spacing-md;
-  margin-bottom: $spacing-sm;
+    --kpi-color: #{$accent}; // single accent identity for level cards
+    position: relative;
+    background: $white;
+    background-image: linear-gradient(135deg,
+            color-mix(in srgb, var(--kpi-color) 8%, transparent) 0%,
+            color-mix(in srgb, var(--kpi-color) 2%, transparent) 50%,
+            transparent 100%);
+    border: 1px solid color-mix(in srgb, var(--kpi-color) 22%, transparent);
+    border-radius: $radius-sm;
+    padding: $spacing-md;
+    margin-bottom: $spacing-sm;
+    box-shadow: 0 1px 4px rgba($black, 0.04);
+    transition: transform 0.2s $ease-default,
+        box-shadow 0.25s $ease-default,
+        border-color 0.25s $ease-default,
+        background-image 0.25s $ease-default;
+
+    &:hover {
+        transform: translateY(-2px);
+        border-color: color-mix(in srgb, var(--kpi-color) 38%, transparent);
+        background-image: linear-gradient(135deg,
+                color-mix(in srgb, var(--kpi-color) 14%, transparent) 0%,
+                color-mix(in srgb, var(--kpi-color) 4%, transparent) 50%,
+                transparent 100%);
+        box-shadow: 0 6px 18px color-mix(in srgb, var(--kpi-color) 16%, transparent),
+            0 0 8px color-mix(in srgb, var(--kpi-color) 8%, transparent);
+    }
 }
 
+.level-card--exercise {
+    margin-bottom: 0; // grid handles spacing
+    animation: progression-tile-in 0.4s $ease-out-expo both;
+    animation-delay: calc(var(--i, 0) * 60ms);
+}
+
+// ── Global hero card (orange gradient identity) ──────────────────
 .level-card--global {
-  background: $gradient-accent;
-  color: $white;
-
-  .level-card-label,
-  .level-card-level,
-  .level-progress-text {
+    background: linear-gradient(135deg, $accent, $accent-dark);
+    background-image: linear-gradient(135deg, $accent 0%, $accent-dark 100%);
+    border: none;
+    border-radius: 16px;
+    padding: $spacing-md $spacing-md ($spacing-md + 2);
     color: $white;
-  }
+    box-shadow: 0 6px 22px rgba($accent, 0.25), 0 0 12px rgba($accent, 0.1);
+    overflow: hidden;
+    transition: box-shadow 0.25s $ease-default;
 
-  .level-progress-bar {
-    background: rgba($white, 0.25);
-  }
+    &:hover {
+        transform: none; // hero card stays still
+        box-shadow: 0 10px 30px rgba($accent, 0.32), 0 0 14px rgba($accent, 0.14);
+    }
 
-  .level-progress-fill {
-    background: $bg;
-  }
+    .level-card-label,
+    .level-progress-text {
+        color: $white;
+    }
+
+    .level-progress-bar {
+        background: rgba($white, 0.25);
+        height: 8px;
+    }
+
+    .level-progress-fill {
+        background: $white;
+    }
 }
 
+// ── Card header layout ───────────────────────────────────────────
 .level-card-header {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  margin-bottom: $spacing-sm;
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    margin-bottom: $spacing-sm;
 }
 
 .level-card-emoji {
-  font-size: 1.2rem;
+    font-size: 1.2rem;
+    line-height: 1;
 }
 
 .level-card-label {
-  font-size: $font-md;
-  font-weight: 600;
-  color: $text;
-  flex: 1;
+    font-size: $font-md;
+    font-weight: 700;
+    color: $text;
+    flex: 1;
 }
 
 .level-card-level {
-  font-size: $font-lg;
-  font-weight: 800;
-  color: $accent;
-  min-width: 32px;
-  text-align: right;
+    font-size: $font-xl;
+    font-weight: 800;
+    color: $accent;
+    min-width: 32px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    line-height: 1;
 }
 
+// ── Global hero number group ─────────────────────────────────────
+.level-card-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    line-height: 1;
+}
+
+.level-card-hero-label {
+    @include label(0.55rem);
+    color: rgba($white, 0.75);
+    letter-spacing: 0.12em;
+}
+
+.level-card-hero-value {
+    font-size: $font-2xl;
+    font-weight: 900;
+    color: $white;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    text-shadow: 0 2px 8px rgba($black, 0.15);
+}
+
+// ── Progress bar ─────────────────────────────────────────────────
 .level-progress-bar {
-  height: 6px;
-  background: $border;
-  border-radius: 3px;
-  overflow: hidden;
-  margin-bottom: 4px;
+    height: 6px;
+    background: rgba($text, 0.08);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 4px;
 }
 
 .level-progress-fill {
-  height: 100%;
-  background: $accent;
-  border-radius: 3px;
-  transition: width $transition;
+    height: 100%;
+    background: $accent;
+    border-radius: 3px;
+    transition: width $transition;
 }
 
 .level-progress-text {
-  font-size: $font-xs;
-  color: $text-muted;
-}
-
-.level-cards-grid {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-sm;
+    font-size: $font-xs;
+    color: $text-muted;
+    font-variant-numeric: tabular-nums;
 }

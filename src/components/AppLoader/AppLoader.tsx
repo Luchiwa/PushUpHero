@@ -13,9 +13,9 @@ export function AppLoader() {
 
             <div className="app-loader__brand">
                 {/* Classic ECG trace — sawtooth heartbeat that draws itself
-                    across the wordmark in a continuous loop. The line is
-                    rendered above the hero text (z-index 1) so the spike
-                    visibly cuts through "HERO". */}
+                    across the wordmark in a continuous loop. Sits above the
+                    wordmark (z-index 1) so the QRS spike visibly cuts
+                    through it. */}
                 <svg
                     className="app-loader__heartbeat"
                     viewBox="0 0 300 60"
@@ -27,13 +27,7 @@ export function AppLoader() {
                         d="M 0 30 H 105 L 118 30 L 128 22 L 138 8 L 148 50 L 158 18 L 168 34 L 178 30 H 300"
                     />
                 </svg>
-                <h1 className="app-loader__wordmark">
-                    <span className="app-loader__wordmark-prefix">Push-Up</span>
-                    <span className="app-loader__wordmark-hero">
-                        <span>H</span><span>E</span><span>R</span><span>O</span>
-                    </span>
-                </h1>
-                <p className="app-loader__caption">Live Form Tracker</p>
+                <h1 className="app-loader__wordmark">Push-Up Hero</h1>
             </div>
         </div>
     );

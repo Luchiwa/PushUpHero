@@ -1,25 +1,123 @@
+@use 'sass:color';
 @use 'variables' as *;
 @use 'mixins' as *;
 
+// ═══════════════════════════════════════════════════════════════════════════
+// CHART CARD SHELL — white card with subtle accent gradient
+// Wraps the SVG chart, header strip, and any loading/empty overlays.
+// Replaces the old `.stats-chart-wrap` rule that lived in StatsScreen.scss.
+// ═══════════════════════════════════════════════════════════════════════════
+.stats-chart-card {
+    position: relative;
+    background: $white;
+    background-image: linear-gradient(135deg,
+            color-mix(in srgb, $accent 7%, transparent) 0%,
+            color-mix(in srgb, $accent 2%, transparent) 50%,
+            transparent 100%);
+    border: 1px solid color-mix(in srgb, $accent 18%, transparent);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba($accent, 0.06);
+    transition: box-shadow 0.25s $ease-default,
+        background-image 0.25s $ease-default,
+        border-color 0.25s $ease-default;
+
+    &:hover {
+        border-color: color-mix(in srgb, $accent 28%, transparent);
+        background-image: linear-gradient(135deg,
+                color-mix(in srgb, $accent 11%, transparent) 0%,
+                color-mix(in srgb, $accent 3%, transparent) 50%,
+                transparent 100%);
+        box-shadow: 0 6px 22px rgba($accent, 0.12), 0 0 8px rgba($accent, 0.06);
+    }
+}
+
+// ── Header strip (label + week total) ──────────────────────────
+.stats-chart-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $spacing-sm;
+    padding: 10px 14px 8px;
+    border-bottom: 1px dashed rgba($text, 0.07);
+}
+
+.stats-chart-card__label {
+    @include label(0.6rem);
+    color: $text-muted;
+    letter-spacing: 0.1em;
+}
+
+.stats-chart-card__total {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: $accent;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+}
+
+// ── Empty state overlay (rendered alongside the SVG) ───────────
+.stats-chart-card__empty {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 38px; // below the header strip
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    text-align: center;
+    pointer-events: none;
+    background: rgba($white, 0.35);
+}
+
+.stats-chart-card__empty-icon {
+    font-size: 1.6rem;
+    line-height: 1;
+}
+
+.stats-chart-card__empty-text {
+    font-size: $font-xs;
+    color: $text-muted;
+    margin: 0;
+    font-weight: 600;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SVG chart
+// ═══════════════════════════════════════════════════════════════════════════
 .weekly-chart {
     width: 100%;
     height: auto;
     display: block;
     overflow: visible;
+    padding: 4px 0;
     filter: drop-shadow(0 2px 6px rgba($accent, 0.08));
 }
 
+// ── Gridlines (dashed) ─────────────────────────────────────────
+.chart-gridline {
+    stroke: rgba($text, 0.1);
+    stroke-width: 1;
+    stroke-dasharray: 2 4;
+}
+
+// ── Axis & day labels ──────────────────────────────────────────
 .chart-axis-label {
     font-size: 9px;
     fill: $text-muted;
     font-family: inherit;
+    font-variant-numeric: tabular-nums;
 }
 
 .chart-day-label {
     font-size: 10px;
     fill: $text-muted;
     font-family: inherit;
-    font-weight: 500;
+    font-weight: 600;
+    letter-spacing: 0.04em;
 
     &--today {
         fill: $accent;
@@ -27,16 +125,114 @@
     }
 }
 
-.chart-today-label {
-    font-size: 9px;
-    fill: $accent;
-    font-weight: 700;
-    font-family: inherit;
+// ── Animated line draw on mount / data change ──────────────────
+// `key` prop on the <path> re-mounts the element so the animation
+// re-runs whenever the week, metric, filter, or totals change.
+@keyframes chart-draw {
+    from {
+        stroke-dashoffset: 1000;
+    }
+
+    to {
+        stroke-dashoffset: 0;
+    }
 }
 
-.chart-tooltip-text {
-    font-size: 10px;
+@keyframes chart-fill-fade {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.chart-line {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: chart-draw 0.9s $ease-out-expo 0.1s forwards;
+}
+
+.chart-fill {
+    opacity: 0;
+    animation: chart-fill-fade 0.6s ease 0.4s forwards;
+}
+
+// ── Today pulsing halo ─────────────────────────────────────────
+@keyframes chart-halo-pulse {
+
+    0%,
+    100% {
+        r: 6;
+        opacity: 0.7;
+    }
+
+    50% {
+        r: 11;
+        opacity: 0.05;
+    }
+}
+
+.chart-today-halo {
+    animation: chart-halo-pulse 2s $ease-default infinite;
+    transform-origin: center;
+}
+
+// ── Data dots ──────────────────────────────────────────────────
+.chart-dot {
+    transition: r 0.2s $ease-out-back;
+}
+
+// ── Tooltip ────────────────────────────────────────────────────
+.chart-tooltip-bg {
     fill: $white;
-    font-weight: 700;
+    stroke: rgba($text, 0.1);
+    stroke-width: 1;
+    filter: drop-shadow(0 4px 10px rgba($black, 0.12));
+}
+
+.chart-tooltip-caret {
+    fill: $white;
+    stroke: rgba($text, 0.1);
+    stroke-width: 1;
+}
+
+.chart-tooltip-day {
+    font-size: 8px;
+    fill: $text-muted;
     font-family: inherit;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+}
+
+.chart-tooltip-value {
+    font-size: 10px;
+    fill: $accent;
+    font-family: inherit;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Loading skeleton
+// ═══════════════════════════════════════════════════════════════════════════
+.stats-chart-card--loading {
+    pointer-events: none;
+}
+
+.stats-chart-card__skeleton {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    height: 130px;
+    padding: 10px 14px 16px;
+    gap: 8px;
+}
+
+.stats-chart-skel-bar {
+    flex: 1;
+    max-width: 22px;
+    border-radius: 4px 4px 0 0;
+    @include shimmer(4px);
 }

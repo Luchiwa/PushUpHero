@@ -4,6 +4,7 @@
  * Supports multiple accepted quests (up to MAX_ACCEPTED_QUESTS) and quick-start.
  */
 import { useMemo } from 'react';
+import type { CSSProperties } from 'react';
 import { PageLayout } from '@components/PageLayout/PageLayout';
 import {
     QUEST_CATEGORY_META,
@@ -88,21 +89,21 @@ export function QuestsScreen({
             </div>
 
             {/* ── Quest categories ─────────────────────────────────── */}
-            {Array.from(byCategory.entries()).map(([category, quests]) => {
+            {Array.from(byCategory.entries()).map(([category, quests], catIdx) => {
                 const meta = QUEST_CATEGORY_META[category];
                 const catCompleted = quests.filter(q => questProgress.completed[q.id]).length;
                 return (
-                    <section key={category} className="quests-category">
+                    <section
+                        key={category}
+                        className="quests-category"
+                        style={{ '--category-color': meta.color, '--i': catIdx } as CSSProperties}
+                    >
                         <div className="quests-category-header">
-                            <span
-                                className="quests-category-dot"
-                                style={{ background: meta.color }}
-                            />
                             <span className="quests-category-label">{meta.label}</span>
                             <span className="quests-category-count">{catCompleted}/{quests.length}</span>
                         </div>
                         <div className="quests-list">
-                            {quests.map(quest => (
+                            {quests.map((quest, i) => (
                                 <QuestCard
                                     key={quest.id}
                                     quest={quest}
@@ -115,6 +116,8 @@ export function QuestsScreen({
                                     onAccept={onAcceptQuest}
                                     onAbandon={onAbandonQuest}
                                     onStart={onQuestStart}
+                                    categoryColor={meta.color}
+                                    index={i}
                                 />
                             ))}
                         </div>
@@ -138,6 +141,8 @@ function QuestCard({
     onAccept,
     onAbandon,
     onStart,
+    categoryColor,
+    index,
 }: {
     quest: QuestDef;
     status: QuestStatus;
@@ -149,6 +154,8 @@ function QuestCard({
     onAccept?: (questId: string) => void;
     onAbandon?: (questId: string) => void;
     onStart?: (quest: QuestDef) => void;
+    categoryColor: string;
+    index: number;
 }) {
     const lockReason = useMemo(() => {
         if (status !== 'locked') return null;
@@ -167,7 +174,10 @@ function QuestCard({
     const complexHint = getComplexQuestHint(quest);
 
     return (
-        <div className={`quest-item quest-item--${status}`}>
+        <div
+            className={`quest-item quest-item--${status}`}
+            style={{ '--category-color': categoryColor, '--i': index } as CSSProperties}
+        >
             <div className="quest-item-left">
                 <span className="quest-item-emoji">
                     {status === 'locked' ? '🔒' : quest.emoji}

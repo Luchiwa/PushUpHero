@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { RECORDS } from '@domain/achievements';
 import type { RecordsMap } from '@domain/achievementEngine';
 import type { ExerciseType } from '@exercises/types';
@@ -13,10 +14,14 @@ export function RecordsSection({ records }: RecordsSectionProps) {
         <section className="progression-section">
             <h3 className="progression-section-title">📊 Records</h3>
             <div className="records-grid">
-                {RECORDS.map(rec => {
+                {RECORDS.map((rec, i) => {
                     const value = getRecordValue(records, rec.key);
                     return (
-                        <div key={rec.key} className={`record-card ${value !== null ? '' : 'record-card--empty'}`}>
+                        <div
+                            key={rec.key}
+                            className={`record-card ${value !== null ? '' : 'record-card--empty'}`}
+                            style={{ '--i': i } as CSSProperties}
+                        >
                             <span className="record-card-emoji">{rec.emoji}</span>
                             <span className="record-card-label">{rec.label}</span>
                             <span className="record-card-value">

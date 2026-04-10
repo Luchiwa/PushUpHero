@@ -1,0 +1,85 @@
+@use 'variables' as *;
+
+// ── Compact segmented toggle for the StatsScreen topbar ─────────
+// Lives in PageLayout's rightAction slot. Constrained to ≤ 130px so the
+// centered title in the topbar isn't crowded on narrow phones.
+.metric-toggle {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: rgba($accent, 0.08);
+    border: 1px solid rgba($accent, 0.18);
+    border-radius: $radius-pill;
+    padding: 3px;
+    height: 30px;
+    width: 124px;
+    flex-shrink: 0;
+    box-shadow: 0 1px 4px rgba($accent, 0.08);
+}
+
+.metric-toggle__indicator {
+    position: absolute;
+    top: 3px;
+    bottom: 3px;
+    width: calc(50% - 4px);
+    background: linear-gradient(135deg, $accent, $accent-dark);
+    border-radius: $radius-pill;
+    box-shadow: 0 2px 8px rgba($accent, 0.35);
+    transition: left 0.28s $ease-out-expo;
+    pointer-events: none;
+    z-index: $z-base;
+}
+
+.metric-toggle__btn {
+    position: relative;
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 0 8px;
+    height: 100%;
+    background: transparent;
+    border: none;
+    border-radius: $radius-pill;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: $text-muted;
+    cursor: pointer;
+    transition: color 0.2s $ease-default;
+    z-index: $z-content;
+    letter-spacing: 0.02em;
+    font-family: inherit;
+
+    svg {
+        opacity: 0.55;
+        transition: opacity 0.2s $ease-default;
+    }
+
+    &.active {
+        color: $white;
+
+        svg {
+            opacity: 1;
+        }
+    }
+
+    &:not(.active):hover {
+        color: $text;
+
+        svg {
+            opacity: 0.85;
+        }
+    }
+}
+
+@media (max-width: 360px) {
+    .metric-toggle {
+        width: 110px;
+        height: 28px;
+    }
+
+    .metric-toggle__btn {
+        font-size: 0.65rem;
+    }
+}

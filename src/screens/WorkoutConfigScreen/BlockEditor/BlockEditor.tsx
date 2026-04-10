@@ -40,6 +40,12 @@ export function BlockEditor({
         <PageLayout
             title={isAddingNew ? 'Add Exercise' : `Edit Exercise ${editingBlockIndex + 1}`}
             onClose={onBack}
+            // At non-first wizard steps, "back" navigates within the same mounted
+            // BlockEditor (just changes blockStep). Bypass PageLayout's exit
+            // animation so it doesn't end up stuck in its post-exit state.
+            // At step 0, "back" actually unmounts BlockEditor, so the animated
+            // close path is the right one.
+            onBack={blockStepIndex > 0 ? onBack : undefined}
             zIndex={200}
             bodyClassName="wc-layout"
             transition="sheet"

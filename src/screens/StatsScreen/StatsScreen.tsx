@@ -8,6 +8,7 @@ import { PageLayout } from '@components/PageLayout/PageLayout';
 import { KPIGrid } from './KPIGrid/KPIGrid';
 import { computeWeeklySummary } from './KPIGrid/computeWeeklySummary';
 import { WeekNavigator } from './WeekNavigator/WeekNavigator';
+import { MetricToggle } from './MetricToggle/MetricToggle';
 import './StatsScreen.scss';
 
 type ExerciseFilter = 'all' | ExerciseType;
@@ -95,7 +96,9 @@ export function StatsScreen({ onClose }: StatsScreenProps) {
 
     const isNextDisabled = weekOffset >= 0;
 
-    const hasActivity = filteredSessions.some(s => s.reps > 0);
+    // Skeleton only fires when there are truly no sessions yet — avoids flicker
+    // when navigating between cached weeks.
+    const showSkeleton = loading && sessions.length === 0;
 
     const goPrev = useCallback(() => {
         if (!isPrevDisabled) setWeekOffset(w => w - 1);
@@ -106,16 +109,23 @@ export function StatsScreen({ onClose }: StatsScreenProps) {
     const swipeHandlers = useSwipe(goNext, goPrev);
 
     return (
-        <PageLayout title="Statistics" onClose={onClose} zIndex={200} bodyClassName="stats-body">
-                <div className="stats-fixed-top">
+        <PageLayout
+            title="Statistics"
+            onClose={onClose}
+            zIndex={200}
+            bodyClassName="stats-body"
+            rightAction={<MetricToggle metric={metric} onChange={setMetric} />}
+        >
+            <div className="stats-fixed-top">
 
                 {/* Exercise type filter */}
                 <div className="stats-filter-row">
-                    {FILTERS.map(f => (
+                    {FILTERS.map((f, i) => (
                         <button
                             key={f.value}
                             type="button"
                             className={`stats-filter-pill${exerciseFilter === f.value ? ' active' : ''}`}
+                            style={{ animationDelay: `${i * 60}ms` }}
                             onClick={() => setExerciseFilter(f.value)}
                         >
                             <span className="stats-filter-emoji">{f.emoji}</span>
@@ -124,39 +134,18 @@ export function StatsScreen({ onClose }: StatsScreenProps) {
                     ))}
                 </div>
 
-                {/* Metric toggle: XP / Reps */}
-                <div className="stats-metric-toggle">
-                    <button
-                        type="button"
-                        className={`stats-metric-btn${metric === 'xp' ? ' active' : ''}`}
-                        onClick={() => setMetric('xp')}
-                    >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
-                        XP
-                    </button>
-                    <button
-                        type="button"
-                        className={`stats-metric-btn${metric === 'reps' ? ' active' : ''}`}
-                        onClick={() => setMetric('reps')}
-                    >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10" /><polyline points="23 20 23 14 17 14" /><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" /></svg>
-                        Reps
-                    </button>
-                    <div className="stats-metric-indicator" style={{ left: metric === 'xp' ? '4px' : 'calc(50% + 2px)' }} />
-                </div>
-
                 {/* Week chart section */}
                 <div className="stats-chart-section" {...swipeHandlers}>
                     <WeekNavigator
                         currentWeekOffset={weekOffset}
-                        onPrev={() => setWeekOffset(w => w - 1)}
-                        onNext={() => setWeekOffset(w => w + 1)}
+                        onPrev={goPrev}
+                        onNext={goNext}
                         weekLabel={formatWeekRange(weekOffset)}
                         isPrevDisabled={isPrevDisabled}
                         isNextDisabled={isNextDisabled}
                     />
 
-                    {!loading && hasActivity && (
+                    {!showSkeleton && (
                         <KPIGrid
                             summary={summary}
                             prevSummary={prevSummary}
@@ -165,40 +154,44 @@ export function StatsScreen({ onClose }: StatsScreenProps) {
                             metric={metric}
                         />
                     )}
-
-                    {/* Chart or empty state */}
-                    {loading ? (
-                        <div className="stats-chart-placeholder">
-                            <span className="stats-loading-dot" />
-                        </div>
-                    ) : hasActivity ? (
-                        <div className="stats-chart-wrap">
-                            <WeeklyChart sessions={filteredSessions} weekOffset={weekOffset} exerciseFilter={exerciseFilter} metric={metric} />
-                        </div>
-                    ) : (
-                        <div className="stats-empty-week">
-                            <span className="stats-empty-icon">{exerciseFilter === 'all' ? '🏖️' : '🔍'}</span>
-                            <p className="stats-empty-title">{weekOffset === 0 ? 'No activity yet this week' : 'Rest week'}</p>
-                            <p className="stats-empty-sub">{exerciseFilter === 'all' ? 'Complete a session to see your chart' : 'No matching sessions this week'}</p>
-                        </div>
+                    {showSkeleton && (
+                        <KPIGrid
+                            summary={summary}
+                            prevSummary={prevSummary}
+                            filteredSessions={filteredSessions}
+                            exerciseFilter={exerciseFilter}
+                            metric={metric}
+                            loading
+                        />
                     )}
+
+                    <WeeklyChart
+                        sessions={filteredSessions}
+                        weekOffset={weekOffset}
+                        exerciseFilter={exerciseFilter}
+                        metric={metric}
+                        loading={showSkeleton}
+                    />
                 </div>
 
-                </div>{/* end stats-fixed-top */}
+            </div>{/* end stats-fixed-top */}
 
-                {(filteredSessions.length > 0 || !loading) && (
-                    <div className="stats-sessions-divider">
-                        <span>Sessions</span>
-                    </div>
+            {(filteredSessions.length > 0 || !loading) && (
+                <div className="stats-sessions-divider">
+                    <span className="stats-sessions-divider__label">This week's sessions</span>
+                    {filteredSessions.length > 0 && (
+                        <span className="stats-sessions-divider__count">{filteredSessions.length}</span>
+                    )}
+                </div>
+            )}
+
+            <div className="stats-sessions-scroll">
+                {filteredSessions.length > 0 ? (
+                    <SessionHistoryPanel sessions={filteredSessions} />
+                ) : !loading && (
+                    <p className="stats-sessions-empty">No sessions to display.</p>
                 )}
-
-                <div className="stats-sessions-scroll">
-                    {filteredSessions.length > 0 ? (
-                        <SessionHistoryPanel sessions={filteredSessions} />
-                    ) : !loading && (
-                        <p className="stats-sessions-empty">No sessions to display.</p>
-                    )}
-                </div>
+            </div>
         </PageLayout>
     );
 }

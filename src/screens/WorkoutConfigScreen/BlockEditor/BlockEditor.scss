@@ -1,12 +1,6 @@
 @use 'variables' as *;
 @use 'mixins' as *;
 
-// ── Body override — removes default page-body constraints ────────────────────
-.wc-layout {
-    max-width: none;
-    padding: 0;
-}
-
 // ── Progress bar (segmented pill tracker) ───────────────────────────────────
 .wc-progress {
     display: flex;
@@ -21,7 +15,7 @@
     position: relative;
     display: flex;
     gap: 3px;
-    background: rgba($text, 0.06);
+    background: color-mix(in srgb, $accent 6%, transparent);
     border-radius: $radius-pill;
     padding: 3px;
     width: 160px;
@@ -32,11 +26,11 @@
 .wc-progress-seg {
     flex: 1;
     border-radius: $radius-pill;
-    background: rgba($text, 0.0);
-    transition: background 0.25s ease;
+    background: transparent;
+    transition: background 0.25s $ease-default;
 
     &--done {
-        background: rgba($accent, 0.2);
+        background: color-mix(in srgb, $accent 20%, transparent);
     }
 }
 
@@ -47,7 +41,8 @@
     background: $accent;
     border-radius: $radius-pill;
     transition: left 0.3s $ease-out-expo, width 0.3s $ease-out-expo;
-    box-shadow: 0 0 8px rgba($accent, 0.6), 0 0 16px rgba($accent, 0.25);
+    box-shadow: 0 0 8px color-mix(in srgb, $accent 60%, transparent),
+        0 0 16px color-mix(in srgb, $accent 25%, transparent);
     animation: wc-progress-glow 2s ease-in-out infinite;
 }
 
@@ -55,11 +50,13 @@
 
     0%,
     100% {
-        box-shadow: 0 0 6px rgba($accent, 0.5), 0 0 12px rgba($accent, 0.2);
+        box-shadow: 0 0 6px color-mix(in srgb, $accent 50%, transparent),
+            0 0 12px color-mix(in srgb, $accent 20%, transparent);
     }
 
     50% {
-        box-shadow: 0 0 10px rgba($accent, 0.7), 0 0 20px rgba($accent, 0.35);
+        box-shadow: 0 0 10px color-mix(in srgb, $accent 70%, transparent),
+            0 0 20px color-mix(in srgb, $accent 35%, transparent);
     }
 }
 
@@ -68,18 +65,6 @@
     font-weight: 700;
     color: $text-muted;
     letter-spacing: 0.04em;
-}
-
-// ── Body ────────────────────────────────────────────────────────────────────
-.wc-body {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    max-width: 480px;
-    width: 100%;
-    margin: 0 auto;
-    padding: 0 $spacing-lg;
 }
 
 // ── Individual step ─────────────────────────────────────────────────────────
@@ -112,21 +97,24 @@
     text-align: center;
 }
 
-// SVG icon badge replacing emoji
+// SVG icon badge — white shell + accent gradient
 .wc-step-icon {
     width: 60px;
     height: 60px;
     border-radius: $radius-sm;
-    background: rgba($accent, 0.1);
-    border: 1.5px solid rgba($accent, 0.2);
+    background: $white;
+    background-image: linear-gradient(135deg,
+            color-mix(in srgb, $accent 12%, transparent) 0%,
+            color-mix(in srgb, $accent 4%, transparent) 100%);
+    border: 1.5px solid color-mix(in srgb, $accent 22%, transparent);
     display: flex;
     align-items: center;
     justify-content: center;
     margin-bottom: 0.35rem;
     color: $accent;
-    box-shadow: 0 4px 16px rgba($accent, 0.12);
+    box-shadow: 0 4px 16px color-mix(in srgb, $accent 12%, transparent);
     animation: wc-icon-breath 3s ease-in-out infinite;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: transform 0.2s $ease-default, box-shadow 0.2s $ease-default;
 
     svg {
         width: 28px;
@@ -138,11 +126,12 @@
 
     0%,
     100% {
-        box-shadow: 0 4px 14px rgba($accent, 0.1);
+        box-shadow: 0 4px 14px color-mix(in srgb, $accent 10%, transparent);
     }
 
     50% {
-        box-shadow: 0 4px 20px rgba($accent, 0.2), 0 0 8px rgba($accent, 0.1);
+        box-shadow: 0 4px 20px color-mix(in srgb, $accent 20%, transparent),
+            0 0 8px color-mix(in srgb, $accent 10%, transparent);
     }
 }
 
@@ -167,54 +156,12 @@
     gap: 1rem;
 }
 
-// ── Bottom action bar ────────────────────────────────────────────────────────
-.wc-bottom-bar {
-    flex-shrink: 0;
-    max-width: 480px;
-    width: 100%;
-    margin: 0 auto;
-    padding: $spacing-md $spacing-lg;
-}
-
-.wc-next-btn {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-
-    svg {
-        flex-shrink: 0;
-    }
-
-    &--loading {
-        opacity: 0.8;
-    }
-}
-
-// Loading spinner on Start button
-.wc-start-spinner {
-    width: 14px;
-    height: 14px;
-    border: 2px solid rgba($white, 0.3);
-    border-top-color: $white;
-    border-radius: 50%;
-    animation: wc-spin 0.7s linear infinite;
-    flex-shrink: 0;
-}
-
-@keyframes wc-spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
 // ── Footer ──────────────────────────────────────────────────────────────────
 .wc-footer {
     flex-shrink: 0;
     padding: $spacing-sm $spacing-md $spacing-md;
     text-align: center;
-    border-top: 1px solid $border;
+    border-top: 1px dashed color-mix(in srgb, $text 8%, transparent);
 }
 
 .wc-step-counter {
@@ -227,10 +174,6 @@
 
 // ── Mobile adjustments ──────────────────────────────────────────────────────
 @media (max-width: 480px) {
-    .wc-body {
-        padding: 0 $spacing-md;
-    }
-
     .wc-step {
         padding: $spacing-lg 0;
     }
@@ -251,9 +194,5 @@
 
     .wc-step-subtitle {
         font-size: 0.75rem;
-    }
-
-    .wc-bottom-bar {
-        padding: $spacing-sm $spacing-md;
     }
 }

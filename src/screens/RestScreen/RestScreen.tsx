@@ -6,6 +6,8 @@
 import { useEffect, useState, useRef } from 'react';
 import { getGradeLetter, getGradeClass } from '@domain/constants';
 import type { SetRecord } from '@exercises/types';
+import { useWorkout } from '@app/WorkoutContext';
+import { useBackButton } from '@hooks/shared/useBackButton';
 import './RestScreen.scss';
 
 interface RestScreenProps {
@@ -39,6 +41,10 @@ export function RestScreen({
 }: RestScreenProps) {
     const [remaining, setRemaining] = useState(restDuration);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    // Android / system back button → stops the workout, mirroring the active screen.
+    const { handleStop } = useWorkout();
+    useBackButton(true, handleStop);
 
     const progressPct = ((restDuration - remaining) / restDuration) * 100;
 

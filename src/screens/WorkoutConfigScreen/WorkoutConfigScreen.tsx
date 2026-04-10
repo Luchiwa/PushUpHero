@@ -6,6 +6,7 @@
  * 2. Block editor — step-by-step wizard for one block (exercise → sets → goal → rest)
  */
 import { useState, useCallback, useMemo } from 'react';
+import type { CSSProperties } from 'react';
 import type { WorkoutPlan, WorkoutBlock } from '@exercises/types';
 import { createDefaultBlock } from '@exercises/types';
 import { PageLayout } from '@components/PageLayout/PageLayout';
@@ -33,6 +34,8 @@ function getBlockSteps(block: WorkoutBlock): BlockStep[] {
     steps.push('rest-exercise');
     return steps;
 }
+
+const KPI_COLOR = { accent: '#ff7f00', indigo: '#6366f1', amber: '#f59e0b' };
 
 // ── Component ────────────────────────────────────────────────────
 
@@ -204,17 +207,17 @@ export function WorkoutConfigScreen({
                 )}
                 {blocks.length > 0 && (
                     <div className="wc-summary-grid">
-                        <div className="wc-summary-kpi wc-summary-kpi--accent">
+                        <div className="wc-summary-kpi" style={{ '--kpi-color': KPI_COLOR.accent } as CSSProperties}>
                             <span className="wc-summary-kpi-value">{blocks.length}</span>
                             <span className="wc-summary-kpi-label">Exercises</span>
                         </div>
-                        <div className="wc-summary-kpi wc-summary-kpi--indigo">
+                        <div className="wc-summary-kpi" style={{ '--kpi-color': KPI_COLOR.indigo } as CSSProperties}>
                             <span className="wc-summary-kpi-value">{totalSets}</span>
                             <span className="wc-summary-kpi-label">Total sets</span>
                         </div>
                         {allReps && totalRepsEstimate > 0 && (
-                            <div className="wc-summary-kpi wc-summary-kpi--amber">
-                                <span className="wc-summary-kpi-value wc-summary-kpi-value--accent">{totalRepsEstimate}</span>
+                            <div className="wc-summary-kpi" style={{ '--kpi-color': KPI_COLOR.amber } as CSSProperties}>
+                                <span className="wc-summary-kpi-value">{totalRepsEstimate}</span>
                                 <span className="wc-summary-kpi-label">Est. reps</span>
                             </div>
                         )}

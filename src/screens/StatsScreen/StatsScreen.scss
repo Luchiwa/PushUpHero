@@ -1,3 +1,4 @@
+@use 'sass:color';
 @use 'variables' as *;
 @use 'mixins' as *;
 
@@ -22,10 +23,22 @@
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    padding-bottom: 2px; // room for focus ring
+    padding-bottom: 2px;
 
     &::-webkit-scrollbar {
         display: none;
+    }
+}
+
+@keyframes stats-filter-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
@@ -44,91 +57,32 @@
     border: 1.5px solid transparent;
     white-space: nowrap;
     scroll-snap-align: start;
-    transition: background $transition-fast, color $transition-fast, border-color $transition-fast;
     cursor: pointer;
+    animation: stats-filter-in 0.4s $ease-out-expo both;
+    transition: background $transition-fast,
+        color $transition-fast,
+        border-color $transition-fast,
+        transform 0.2s $ease-out-back,
+        box-shadow $transition-fast;
 
-    &:hover {
+    &:hover:not(.active) {
         background: $surface-hover;
+        color: $text;
+        transform: translateY(-1px);
     }
 
     &.active {
-        color: $accent;
-        background: rgba($accent, 0.12);
-        border-color: $accent;
-        box-shadow: 0 0 8px rgba($accent, 0.15);
+        color: $white;
+        background: linear-gradient(135deg, $accent, $accent-dark);
+        border-color: transparent;
+        box-shadow: 0 4px 12px rgba($accent, 0.28), 0 0 8px rgba($accent, 0.12);
+        font-weight: 700;
     }
 }
 
 .stats-filter-emoji {
     font-size: 0.95rem;
     line-height: 1;
-}
-
-// ── Metric toggle (XP / Reps) ────────────────────────────────────────────────
-.stats-metric-toggle {
-    position: relative;
-    display: flex;
-    gap: 0;
-    background: rgba($text, 0.05);
-    border-radius: $radius-sm;
-    padding: 4px;
-    margin-bottom: $spacing-sm;
-    overflow: hidden;
-}
-
-.stats-metric-indicator {
-    position: absolute;
-    top: 4px;
-    bottom: 4px;
-    width: calc(50% - 6px);
-    background: $white;
-    border-radius: calc($radius-sm - 2px);
-    box-shadow: 0 2px 10px rgba($accent, 0.12), 0 1px 4px rgba($black, 0.08);
-    transition: left 0.25s $ease-out-expo;
-    pointer-events: none;
-    z-index: $z-base;
-}
-
-.stats-metric-btn {
-    position: relative;
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    padding: 0.5rem $spacing-sm;
-    border-radius: calc($radius-sm - 2px);
-    font-size: $font-sm;
-    font-weight: 600;
-    color: $text-muted;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    transition: color 0.2s;
-    z-index: $z-content;
-
-    svg {
-        opacity: 0.5;
-        transition: opacity 0.2s;
-    }
-
-    &:hover:not(.active) {
-        color: $text;
-
-        svg {
-            opacity: 0.7;
-        }
-    }
-
-    &.active {
-        color: $accent;
-        font-weight: 700;
-
-        svg {
-            opacity: 1;
-            color: $accent;
-        }
-    }
 }
 
 // ── Chart section ────────────────────────────────────────────────────────────
@@ -139,106 +93,44 @@
     touch-action: pan-y;
 }
 
-// Loading placeholder (keeps chart height while fetching)
-.stats-chart-placeholder {
-    height: 150px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.stats-loading-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: $accent;
-    opacity: 0.6;
-    animation: stats-pulse 1s ease-in-out infinite;
-}
-
-@keyframes stats-pulse {
-
-    0%,
-    100% {
-        transform: scale(1);
-        opacity: 0.6;
-    }
-
-    50% {
-        transform: scale(1.4);
-        opacity: 1;
-    }
-}
-
-// Chart wrapper card
-.stats-chart-wrap {
-    background: $white;
-    border: 1px solid $border;
-    border-radius: $radius-sm;
-    padding: 4px 0;
-    overflow: hidden;
-    box-shadow: 0 2px 12px rgba($accent, 0.06);
-    transition: box-shadow 0.2s;
-
-    &:hover {
-        box-shadow: 0 4px 18px rgba($accent, 0.1), 0 0 8px rgba($accent, 0.04);
-    }
-}
-
-// Empty week state
-.stats-empty-week {
-    height: 150px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    text-align: center;
-}
-
-.stats-empty-icon {
-    font-size: 2rem;
-    margin-bottom: 2px;
-}
-
-.stats-empty-title {
-    font-size: $font-sm;
-    font-weight: 700;
-    color: $text;
-    margin: 0;
-}
-
-.stats-empty-sub {
-    font-size: $font-xs;
-    color: $text-muted;
-    margin: 0;
-}
-
-// ── Sessions divider + list scrollable area ──────────────────────────────────
+// ── Sessions divider ─────────────────────────────────────────────────────────
 .stats-sessions-divider {
     flex-shrink: 0;
     display: flex;
     align-items: center;
     gap: $spacing-sm;
-    padding: $spacing-sm 0 $spacing-xs;
+    padding: $spacing-md 0 $spacing-xs;
 
-    &::before,
+    &::before {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba($text, 0.12), transparent);
+    }
+
     &::after {
         content: '';
         flex: 1;
         height: 1px;
-        background: $border;
+        background: linear-gradient(90deg, transparent, rgba($text, 0.12), transparent);
     }
+}
 
-    span {
-        font-size: 0.68rem;
-        font-weight: 700;
-        color: $text-muted;
-        text-transform: uppercase;
-        letter-spacing: 0.07em;
-        white-space: nowrap;
-        padding: 0 2px;
-    }
+.stats-sessions-divider__label {
+    @include label(0.62rem);
+    color: $text-muted;
+    letter-spacing: 0.09em;
+    white-space: nowrap;
+    padding: 0 2px;
+}
+
+.stats-sessions-divider__count {
+    @include badge($accent, $accent);
+    background: rgba($accent, 0.12);
+    font-size: 0.6rem;
+    padding: 1px 7px;
+    line-height: 1.4;
+    box-shadow: 0 0 6px rgba($accent, 0.12);
 }
 
 .stats-sessions-scroll {
@@ -247,7 +139,7 @@
     -webkit-overflow-scrolling: touch;
     padding-bottom: $spacing-xl;
 
-    // Masquer le titre interne de SessionHistoryPanel (on affiche le nôtre)
+    // Hide the panel's internal title — we render our own divider above.
     .session-history-title {
         display: none;
     }

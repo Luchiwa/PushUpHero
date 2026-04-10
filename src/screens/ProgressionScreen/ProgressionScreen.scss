@@ -1,4 +1,5 @@
 @use '../../styles/variables' as *;
+@use '../../styles/mixins' as *;
 
 // ── Body override ────────────────────────────────────────────────
 .progression-body {
@@ -16,20 +17,41 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: $spacing-sm;
+  padding-bottom: $spacing-xs;
+  margin-bottom: $spacing-md;
+  border-bottom: 1px dashed rgba($text, 0.08);
 }
 
+// Title used in sections without a dedicated header wrapper.
 .progression-section-title {
-  font-size: $font-lg;
-  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  font-size: $font-md;
+  font-weight: 800;
   color: $text;
-  margin-bottom: $spacing-md;
+  letter-spacing: 0.01em;
+  margin: 0 0 $spacing-md;
+  padding-bottom: $spacing-xs;
+  border-bottom: 1px dashed rgba($text, 0.08);
+}
+
+// When the title sits inside a section header (with a count badge),
+// drop its own border and bottom margin so the wrapper owns those.
+.progression-section-header .progression-section-title {
+  margin: 0;
+  padding: 0;
+  border: none;
 }
 
 .progression-section-count {
-  font-size: $font-sm;
-  font-weight: 600;
-  color: $text-muted;
-  background: $surface;
-  padding: 2px $spacing-sm;
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: $accent;
+  background: rgba($accent, 0.12);
+  padding: 1px 8px;
   border-radius: $radius-pill;
+  letter-spacing: 0.04em;
+  box-shadow: 0 0 6px rgba($accent, 0.12);
 }

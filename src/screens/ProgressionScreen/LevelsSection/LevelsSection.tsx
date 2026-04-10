@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { getExerciseLabel, EXERCISE_TYPES, EXERCISE_META } from '@exercises/types';
 import type { ExerciseType } from '@exercises/types';
 import './LevelsSection.scss';
@@ -32,11 +33,14 @@ export function LevelsSection({
         <section className="progression-section">
             <h3 className="progression-section-title">🎮 Levels</h3>
 
-            {/* Global level */}
+            {/* Global level — hero card */}
             <div className="level-card level-card--global">
                 <div className="level-card-header">
                     <span className="level-card-label">Global Level</span>
-                    <span className="level-card-level">{level}</span>
+                    <div className="level-card-hero">
+                        <span className="level-card-hero-label">LEVEL</span>
+                        <span className="level-card-hero-value">{level}</span>
+                    </div>
                 </div>
                 <div className="level-progress-bar">
                     <div className="level-progress-fill" style={{ width: `${levelProgressPct}%` }} />
@@ -46,12 +50,16 @@ export function LevelsSection({
                 </span>
             </div>
 
-            {/* Per-exercise levels */}
+            {/* Per-exercise levels — 2x2 grid */}
             <div className="level-cards-grid">
-                {EXERCISE_TYPES.map(ex => {
+                {EXERCISE_TYPES.map((ex, i) => {
                     const prog = getExerciseLevelProgress(ex);
                     return (
-                        <div key={ex} className="level-card level-card--exercise">
+                        <div
+                            key={ex}
+                            className="level-card level-card--exercise"
+                            style={{ '--i': i } as CSSProperties}
+                        >
                             <div className="level-card-header">
                                 <span className="level-card-emoji">{EXERCISE_EMOJIS[ex]}</span>
                                 <span className="level-card-label">{getExerciseLabel(ex)}</span>

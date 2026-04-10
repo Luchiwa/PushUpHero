@@ -2,6 +2,7 @@ import { memo, useEffect, useRef, useState } from 'react';
 import './Dashboard.scss';
 import { getExerciseLabel, getInvalidPositionMessage } from '@exercises/types';
 import { useWorkout } from '@app/WorkoutContext';
+import { useBackButton } from '@hooks/shared/useBackButton';
 import { useDashboardLogic } from './useDashboardLogic';
 import { nextCombo, computeGoalProgress } from '@domain/scoring';
 
@@ -24,6 +25,9 @@ export const Dashboard = memo(function Dashboard({ facingMode, onFlipCamera }: D
     } = useWorkout();
 
     const { repCount, averageScore, lastRepResult, isValidPosition, isCalibrated, incompleteRepFeedback, poseRejectedByLock } = exerciseState;
+
+    // Android / system back button → behaves like the stop button.
+    useBackButton(true, handleStop);
 
     // Derived display values
     const currentSet = flatSetIndex + 1;

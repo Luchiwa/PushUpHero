@@ -1,11 +1,16 @@
+@use 'sass:color';
 @use 'variables' as *;
 @use 'mixins' as *;
 
+// ── Outer wrapper ────────────────────────────────────────────────────────────
+// Class names kept (.session-history, .session-history-list, .session-history-title)
+// so the existing `.stats-sessions-scroll .session-history-title { display: none }`
+// rule in StatsScreen.scss still hides our title where needed.
 .session-history {
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    gap: $spacing-sm;
 }
 
 .session-history-title {
@@ -17,14 +22,14 @@
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    gap: $spacing-sm;
 }
 
-// ── Session item card ─────────────────────────────────────────────────────────
+// ── Card entrance ────────────────────────────────────────────────────────────
 @keyframes session-item-in {
     from {
         opacity: 0;
-        transform: translateY(5px);
+        transform: translateY(8px);
     }
 
     to {
@@ -33,46 +38,60 @@
     }
 }
 
-.session-history-item {
+// ═══════════════════════════════════════════════════════════════════════════
+// SESSION CARD — hero card with three zones (identity / metrics / score)
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// Card uses --grade-color (set inline by JSX from getGradeColor) so the
+// gradient + border + hover shadow read the session's grade colour without
+// needing a per-grade selector. The "modern vibe" — subtle 135° gradient,
+// tinted border, soft colored shadow on hover — mirrors PlayerHUD.scss.
+.session-card {
+    --grade-color: #{$accent}; // fallback; overridden inline
+    position: relative;
     display: flex;
     flex-direction: column;
     background: $white;
-    border: 1px solid $border;
-    border-left: 3px solid $border;
-    border-radius: 10px;
-    font-size: 0.8rem;
+    background-image: linear-gradient(135deg,
+            color-mix(in srgb, var(--grade-color) 7%, transparent) 0%,
+            color-mix(in srgb, var(--grade-color) 2%, transparent) 35%,
+            transparent 70%);
+    border: 1px solid color-mix(in srgb, var(--grade-color) 22%, transparent);
+    border-radius: 14px;
     overflow: hidden;
-    animation: session-item-in 0.35s $ease-out-expo both;
-    transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+    animation: session-item-in 0.4s $ease-out-expo both;
+    transition: box-shadow 0.25s $ease-default,
+        transform 0.25s $ease-default,
+        border-color 0.25s $ease-default,
+        background-image 0.25s $ease-default;
+    box-shadow: 0 1px 6px rgba($black, 0.04);
 
     &:hover {
-        box-shadow: $shadow-md, 0 0 10px rgba($black, 0.04);
         transform: translateY(-2px);
+        border-color: color-mix(in srgb, var(--grade-color) 38%, transparent);
+        background-image: linear-gradient(135deg,
+                color-mix(in srgb, var(--grade-color) 12%, transparent) 0%,
+                color-mix(in srgb, var(--grade-color) 4%, transparent) 35%,
+                transparent 70%);
+        box-shadow: 0 6px 22px color-mix(in srgb, var(--grade-color) 16%, transparent),
+            0 0 10px color-mix(in srgb, var(--grade-color) 8%, transparent);
     }
 
-    &--expanded {
-        background: rgba($indigo, 0.02);
-        box-shadow: 0 2px 12px rgba($black, 0.07);
-    }
+    &--multi {
+        cursor: pointer;
 
-    // Grade-colored left border with glow on hover
-    @each $letter, $color in $grades {
-        &--grade-#{$letter} {
-            border-left-color: $color;
-
-            &:hover {
-                box-shadow: $shadow-md, 0 0 12px rgba($color, 0.12);
-            }
+        &:active {
+            animation: tap-bounce 0.35s $ease-out-back;
         }
     }
 }
 
-.session-history-row {
+// ── Card row (the clickable button) ────────────────────────────────────────
+.session-card__row {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.8rem;
-    padding: 0.55rem 0.85rem;
+    align-items: stretch;
+    gap: $spacing-md;
+    padding: 0.85rem 1rem;
     width: 100%;
     background: none;
     border: none;
@@ -81,163 +100,273 @@
     text-align: left;
 }
 
-.session-history-right {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    flex-shrink: 0;
-}
-
-.session-history-left {
-    flex: 1;
+// ═══════════════════════════════════════════════════════════════════════════
+// ZONE 1 — Identity stripe (icon + relative day + time)
+// ═══════════════════════════════════════════════════════════════════════════
+.session-card__identity {
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 0.3rem;
-    min-width: 0;
+    flex-shrink: 0;
+    width: 56px;
 }
 
-.session-date-row {
+.session-card__icon {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
-}
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    font-size: 1.5rem;
+    line-height: 1;
+    background: color-mix(in srgb, var(--grade-color) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--grade-color) 18%, transparent);
+    border-radius: $radius-xs;
+    transition: transform 0.25s $ease-out-back, background 0.25s $ease-default;
 
-.session-date {
-    color: $text-muted;
-    font-weight: 500;
-    @include text-truncate;
-    font-size: 0.75rem;
-}
-
-.session-exercise-badge {
-    @include badge($black, $text-muted);
-    font-size: 0.6rem;
-    padding: 0.1rem 0.35rem;
-    line-height: 1.4;
-
-    &--workout {
-        background: rgba($accent, 0.1);
-        color: $accent;
+    .session-card:hover & {
+        transform: scale(1.06);
+        background: color-mix(in srgb, var(--grade-color) 14%, transparent);
     }
 }
 
-.session-details {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
+.session-card__day {
+    @include label($font-xs);
+    line-height: 1;
+    letter-spacing: 0.06em;
+    color: var(--grade-color);
+    font-weight: 800;
 }
 
-.session-reps {
-    font-weight: 800;
-    color: $text;
-    font-size: 0.9rem;
+.session-card__time {
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: $text-muted;
+    line-height: 1;
     font-variant-numeric: tabular-nums;
 }
 
-.session-goal {
-    font-weight: 500;
-    color: $text-muted;
-    font-size: 0.75rem;
+// ═══════════════════════════════════════════════════════════════════════════
+// ZONE 2 — Metrics (exercise label + hero number + meta chips)
+// ═══════════════════════════════════════════════════════════════════════════
+.session-card__metrics {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    justify-content: center;
 }
 
-.session-trophy {
-    font-size: 0.85rem;
+.session-card__exercise-label {
+    font-size: $font-sm;
+    font-weight: 700;
+    color: $text;
+    @include text-truncate;
+    letter-spacing: -0.005em;
+}
+
+.session-card__hero {
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
     line-height: 1;
-    filter: drop-shadow(0 0 4px rgba($amber, 0.6));
 }
 
-.session-sets-badge {
-    @include badge($accent, $accent);
-    font-size: 0.6rem;
-    padding: 0.15rem 0.45rem;
+.session-card__hero-number {
+    font-size: 1.85rem;
+    font-weight: 900;
+    color: $text;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    line-height: 1;
 }
 
-// ── Square grade badge (matches feed-grade-badge style) ──────────────────────
-.session-grade-badge {
-    @include grade-badge(26px, 0.7rem);
-
-    .session-history-item:hover & {
-        transform: scale(1.06);
-        box-shadow: 0 0 10px currentColor;
-    }
-}
-
-.session-xp-badge {
-    @include badge($accent, $accent);
-    font-size: 0.62rem;
-    padding: 0.1rem 0.4rem;
-    flex-shrink: 0;
-    box-shadow: 0 0 6px rgba($accent, 0.1);
-    transition: box-shadow 0.2s;
-
-    .session-history-item:hover & {
-        box-shadow: 0 0 10px rgba($accent, 0.2);
-    }
-}
-
-.session-chevron {
-    font-size: 0.7rem;
+.session-card__hero-suffix {
+    font-size: 0.72rem;
+    font-weight: 600;
     color: $text-muted;
-    transition: transform 0.2s ease;
+    font-variant-numeric: tabular-nums;
+}
+
+.session-card__trophy {
+    font-size: 0.95rem;
+    line-height: 1;
+    margin-left: 0.15rem;
+    filter: drop-shadow(0 0 5px rgba($amber, 0.6));
+}
+
+.session-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: 0.1rem;
+}
+
+.session-card__chip {
+    @include badge($text, $text-muted);
+    background: rgba($text, 0.05);
+    font-size: 0.58rem;
+    padding: 2px 7px;
+    font-weight: 700;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ZONE 3 — Score capsule (grade badge + XP + chevron)
+// ═══════════════════════════════════════════════════════════════════════════
+.session-card__score {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+    min-width: 56px;
+}
+
+.session-card__grade {
+    @include grade-badge(40px, 1.05rem);
+    @include grade-colors;
+    background-image: linear-gradient(135deg,
+            color-mix(in srgb, var(--grade-color) 18%, transparent),
+            color-mix(in srgb, var(--grade-color) 8%, transparent));
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--grade-color) 22%, transparent);
+
+    .session-card:hover & {
+        transform: scale(1.06);
+        box-shadow: 0 3px 12px color-mix(in srgb, var(--grade-color) 35%, transparent);
+    }
+}
+
+.session-card__xp {
+    @include badge($accent, $accent);
+    font-size: 0.58rem;
+    padding: 2px 7px;
+    line-height: 1.4;
+    box-shadow: 0 0 6px rgba($accent, 0.12);
+    transition: box-shadow 0.25s $ease-default;
+
+    .session-card:hover & {
+        box-shadow: 0 0 10px rgba($accent, 0.22);
+    }
+}
+
+.session-card__chevron {
+    font-size: 0.78rem;
+    color: $text-muted;
+    line-height: 1;
+    transition: transform 0.25s $ease-default, color 0.25s $ease-default;
+
+    .session-card:hover & {
+        color: var(--grade-color);
+    }
 
     &--open {
         transform: rotate(180deg);
     }
 }
 
-// ── Multi-exercise expanded detail ───────────────────────────────────────────
-.session-multi-detail {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-    padding: 0.3rem 0.85rem 0.6rem;
-    border-top: 1px solid $border;
-    background: rgba($indigo, 0.02);
+// ═══════════════════════════════════════════════════════════════════════════
+// MULTI-EXERCISE INTEGRATED BREAKDOWN
+// Uses max-height + opacity to slide open inside the same card.
+// ═══════════════════════════════════════════════════════════════════════════
+.session-card__breakdown {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.35s $ease-out-expo, opacity 0.25s $ease-default;
+
+    .session-card--expanded & {
+        max-height: 800px;
+        opacity: 1;
+    }
 }
 
-.session-block-row {
+.session-card__breakdown-inner {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 0 1rem 0.85rem 1.4rem;
+    border-top: 1px dashed color-mix(in srgb, var(--grade-color) 16%, transparent);
+    margin-top: 0.1rem;
+    padding-top: 0.65rem;
+
+    // Vertical guide rail connecting the blocks like a step list.
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0.95rem;
+        bottom: 0.95rem;
+        left: 1rem;
+        width: 2px;
+        background: rgba($text, 0.08);
+        border-radius: 2px;
+    }
+}
+
+.session-card__block {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 0.15rem;
-    padding: 0.35rem 0.55rem;
-    background: $white;
-    border: 1px solid $border;
-    border-radius: 7px;
+    padding: 0.4rem 0.55rem 0.4rem 0.6rem;
+    background: rgba($white, 0.6);
+    border: 1px solid rgba($text, 0.06);
+    border-radius: $radius-xs;
+
+    // Dot anchor on the vertical guide rail.
+    &::before {
+        content: '';
+        position: absolute;
+        left: -0.55rem;
+        top: 50%;
+        width: 8px;
+        height: 8px;
+        background: var(--grade-color);
+        border: 2px solid $white;
+        border-radius: 50%;
+        transform: translateY(-50%);
+        box-shadow: 0 0 0 1px rgba($text, 0.06);
+    }
 }
 
-.session-block-header {
+.session-card__block-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 0.4rem;
 }
 
-.session-block-exercise {
+.session-card__block-label {
     font-weight: 700;
-    font-size: 0.75rem;
-    white-space: nowrap;
+    font-size: 0.73rem;
+    color: $text;
+    @include text-truncate;
 }
 
-.session-block-grade {
-    @include grade-badge(20px, 0.65rem);
-    border-radius: 4px;
+.session-card__block-grade {
+    @include grade-badge(22px, 0.65rem);
     @include grade-colors;
 }
 
-.session-block-meta {
+.session-card__block-meta {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 0.3rem;
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     color: $text-muted;
     font-variant-numeric: tabular-nums;
 }
 
-.session-block-sep {
+.session-card__block-sep {
     opacity: 0.4;
 }
 
-// ── View all button ────────────────────────────────────────────────────────
+// ── View all button (legacy) ────────────────────────────────────────────────
 .session-history-view-all {
     align-self: center;
     margin-top: 0.25rem;
@@ -259,63 +388,86 @@
     }
 }
 
-// ── Mobile ───────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// MOBILE
+// ═══════════════════════════════════════════════════════════════════════════
 @media (max-width: 480px) {
-    .session-history {
-        gap: 0.3rem;
-    }
-
+    .session-history,
     .session-history-list {
-        gap: 0.25rem;
+        gap: 0.55rem;
     }
 
-    .session-history-item {
-        font-size: 0.7rem;
-        border-radius: 8px;
+    .session-card {
+        border-radius: 12px;
     }
 
-    .session-history-row {
-        padding: 0.4rem 0.6rem;
-        gap: 0.5rem;
+    .session-card__row {
+        padding: 0.65rem 0.75rem;
+        gap: 0.7rem;
     }
 
-    .session-multi-detail {
-        padding: 0.2rem 0.6rem 0.4rem;
+    // Identity stripe collapses: smaller icon, day/time stay stacked but tighter.
+    .session-card__identity {
+        width: 42px;
+        gap: 0.2rem;
     }
 
-    .session-history-left {
-        gap: 0.25rem;
+    .session-card__icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1.25rem;
     }
 
-    .session-date {
-        font-size: 0.65rem;
-    }
-
-    .session-details {
-        gap: 0.4rem;
-    }
-
-    .session-reps {
-        font-size: 0.75rem;
-    }
-
-    .session-goal {
-        font-size: 0.6rem;
-        display: none;
-    }
-
-    .session-trophy {
-        font-size: 0.65rem;
-    }
-
-    .session-grade-badge {
-        width: 22px;
-        height: 22px;
-        font-size: 0.62rem;
-    }
-
-    .session-xp-badge {
+    .session-card__day {
         font-size: 0.55rem;
-        padding: 0.08rem 0.3rem;
+    }
+
+    .session-card__time {
+        font-size: 0.55rem;
+    }
+
+    .session-card__exercise-label {
+        font-size: 0.78rem;
+    }
+
+    .session-card__hero-number {
+        font-size: 1.5rem;
+    }
+
+    .session-card__hero-suffix {
+        font-size: 0.65rem;
+    }
+
+    .session-card__trophy {
+        font-size: 0.8rem;
+    }
+
+    .session-card__chip {
+        font-size: 0.54rem;
+        padding: 1px 5px;
+    }
+
+    .session-card__score {
+        min-width: 44px;
+        gap: 0.25rem;
+    }
+
+    .session-card__grade {
+        width: 34px;
+        height: 34px;
+        font-size: 0.88rem;
+    }
+
+    .session-card__xp {
+        font-size: 0.52rem;
+        padding: 1px 5px;
+    }
+
+    .session-card__breakdown-inner {
+        padding: 0.55rem 0.75rem 0.7rem 1.15rem;
+
+        &::before {
+            left: 0.75rem;
+        }
     }
 }

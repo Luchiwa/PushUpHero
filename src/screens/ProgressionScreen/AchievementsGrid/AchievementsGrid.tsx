@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { ACHIEVEMENTS_BY_CATEGORY, CATEGORY_META, TIER_COLORS } from '@domain/achievements';
 import type { AchievementCategory, AchievementDef } from '@domain/achievements';
 import { getAchievementProgress } from '@domain/achievementEngine';
@@ -29,26 +30,29 @@ export function AchievementsGrid({
                     const meta = CATEGORY_META[category];
                     const categoryUnlocked = defs.filter(a => achievements[a.id]).length;
                     return (
-                        <div key={category} className="achievement-category">
+                        <div
+                            key={category}
+                            className="achievement-category"
+                            style={{ '--category-color': meta.color } as CSSProperties}
+                        >
                             <div className="achievement-category-header">
                                 <span className="achievement-category-emoji">{meta.emoji}</span>
                                 <span className="achievement-category-label">{meta.label}</span>
                                 <span className="achievement-category-count">{categoryUnlocked}/{defs.length}</span>
                             </div>
                             <div className="achievement-grid">
-                                {defs.map(ach => {
+                                {defs.map((ach, i) => {
                                     const prog = getAchievementProgress(ach, stats, achievements);
                                     return (
                                         <div
                                             key={ach.id}
                                             className={`achievement-badge ${prog.unlocked ? 'achievement-badge--unlocked' : 'achievement-badge--locked'}`}
+                                            style={{
+                                                '--tier-color': TIER_COLORS[ach.tier],
+                                                '--i': i,
+                                            } as CSSProperties}
                                         >
-                                            <div
-                                                className="achievement-badge-ring"
-                                                style={{
-                                                    borderColor: prog.unlocked ? TIER_COLORS[ach.tier] : undefined,
-                                                }}
-                                            >
+                                            <div className="achievement-badge-ring">
                                                 <span className="achievement-badge-tier">{tierEmoji(ach.tier)}</span>
                                             </div>
                                             <span className="achievement-badge-title">{ach.title}</span>

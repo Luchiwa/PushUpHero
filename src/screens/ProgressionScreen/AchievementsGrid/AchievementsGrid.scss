@@ -1,124 +1,200 @@
+@use 'sass:color';
 @use 'variables' as *;
 @use 'mixins' as *;
 
-// ── Achievement category ─────────────────────────────────────────
+// ── Local entrance keyframe ──────────────────────────────────────
+@keyframes achievement-tile-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+// ── Category block ───────────────────────────────────────────────
 .achievement-category {
-  margin-bottom: $spacing-lg;
+    --category-color: #{$accent}; // overridden inline by JSX
+    margin-bottom: $spacing-lg;
 }
 
 .achievement-category-header {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  margin-bottom: $spacing-sm;
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    margin-bottom: $spacing-sm;
+    padding: 4px 0 4px $spacing-sm;
+    border-left: 4px solid var(--category-color);
+    border-radius: 2px;
 }
 
 .achievement-category-emoji {
-  font-size: 1rem;
+    font-size: 1.05rem;
+    line-height: 1;
 }
 
 .achievement-category-label {
-  font-size: $font-md;
-  font-weight: 600;
-  color: $text;
-  flex: 1;
+    font-size: $font-md;
+    font-weight: 700;
+    color: $text;
+    flex: 1;
+    letter-spacing: 0.01em;
 }
 
 .achievement-category-count {
-  font-size: $font-xs;
-  color: $text-muted;
+    font-size: 0.6rem;
+    font-weight: 800;
+    color: var(--category-color);
+    background: color-mix(in srgb, var(--category-color) 12%, transparent);
+    padding: 1px 7px;
+    border-radius: $radius-pill;
+    letter-spacing: 0.04em;
 }
 
 // ── Achievement grid ─────────────────────────────────────────────
 .achievement-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: $spacing-sm;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+    gap: $spacing-sm;
 }
 
+// ── Single badge tile ────────────────────────────────────────────
 .achievement-badge {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: $spacing-sm;
-  border-radius: $radius-sm;
-  background: $surface;
-  gap: 4px;
-  transition: transform $transition-fast;
+    --tier-color: #{$accent}; // overridden inline by JSX
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: $spacing-sm;
+    gap: 4px;
+    background: $white;
+    background-image: linear-gradient(135deg,
+            color-mix(in srgb, var(--tier-color) 8%, transparent) 0%,
+            color-mix(in srgb, var(--tier-color) 2%, transparent) 50%,
+            transparent 100%);
+    border: 1px solid color-mix(in srgb, var(--tier-color) 22%, transparent);
+    border-radius: $radius-sm;
+    box-shadow: 0 1px 4px rgba($black, 0.04);
+    animation: achievement-tile-in 0.4s $ease-out-expo both;
+    animation-delay: calc(var(--i, 0) * 35ms);
+    transition: transform 0.2s $ease-default,
+        box-shadow 0.25s $ease-default,
+        border-color 0.25s $ease-default,
+        background-image 0.25s $ease-default;
 
-  &:active {
-    transform: scale(0.96);
-  }
+    &:active {
+        transform: scale(0.97);
+    }
 }
 
-.achievement-badge--locked {
-  opacity: 0.5;
-  filter: grayscale(0.6);
-}
-
+// ── Unlocked variant: vivid + hover lift ─────────────────────────
 .achievement-badge--unlocked {
-  opacity: 1;
-  filter: none;
+    cursor: default;
+
+    &:hover {
+        transform: translateY(-2px);
+        border-color: color-mix(in srgb, var(--tier-color) 42%, transparent);
+        background-image: linear-gradient(135deg,
+                color-mix(in srgb, var(--tier-color) 14%, transparent) 0%,
+                color-mix(in srgb, var(--tier-color) 4%, transparent) 50%,
+                transparent 100%);
+        box-shadow: 0 6px 18px color-mix(in srgb, var(--tier-color) 18%, transparent),
+            0 0 8px color-mix(in srgb, var(--tier-color) 10%, transparent);
+    }
 }
 
+// ── Locked variant: muted + dashed border (no grayscale filter) ──
+.achievement-badge--locked {
+    --tier-color: #{rgba($text, 0.45)};
+    opacity: 0.78;
+    border-style: dashed;
+    border-color: rgba($text, 0.18);
+
+    .achievement-badge-tier {
+        opacity: 0.7;
+    }
+
+    .achievement-badge-title {
+        color: $text-muted;
+    }
+}
+
+// ── Tier ring ────────────────────────────────────────────────────
 .achievement-badge-ring {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 3px solid $border;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 3px solid var(--tier-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    background: $white;
+    transition: box-shadow 0.25s $ease-default;
 
-  .achievement-badge--unlocked & {
-    border-width: 3px;
-    box-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
-  }
+    .achievement-badge--unlocked & {
+        box-shadow: 0 0 14px color-mix(in srgb, var(--tier-color) 35%, transparent),
+            inset 0 0 8px color-mix(in srgb, var(--tier-color) 12%, transparent);
+    }
+
+    .achievement-badge--locked & {
+        border-style: dashed;
+    }
 }
 
+.achievement-badge-tier {
+    line-height: 1;
+}
+
+// ── Title ────────────────────────────────────────────────────────
 .achievement-badge-title {
-  font-size: $font-xs;
-  font-weight: 600;
-  color: $text;
-  line-height: 1.2;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
+    font-size: $font-xs;
+    font-weight: 700;
+    color: $text;
+    line-height: 1.2;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
 }
 
 .achievement-badge-date {
-  font-size: 0.6rem;
-  color: $text-muted;
+    font-size: 0.6rem;
+    color: $text-muted;
+    font-variant-numeric: tabular-nums;
 }
 
-// ── Achievement progress bar ─────────────────────────────────────
+// ── Progress bar (locked tiles only) ─────────────────────────────
 .achievement-badge-progress {
-  width: 100%;
+    width: 100%;
+    margin-top: 2px;
 }
 
 .achievement-badge-bar {
-  height: 4px;
-  background: $border;
-  border-radius: 2px;
-  overflow: hidden;
-  margin-bottom: 2px;
+    height: 6px;
+    background: rgba($text, 0.08);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 2px;
 }
 
 .achievement-badge-bar-fill {
-  height: 100%;
-  background: $accent;
-  border-radius: 2px;
-  transition: width $transition;
+    height: 100%;
+    background: var(--tier-color);
+    border-radius: 3px;
+    transition: width $transition;
 }
 
 .achievement-badge-progress-text {
-  font-size: 0.6rem;
-  color: $text-muted;
+    font-size: 0.6rem;
+    color: $text-muted;
+    font-variant-numeric: tabular-nums;
 }

@@ -168,26 +168,25 @@ $cycle: 3.2s;
 }
 
 // ── Heartbeat trace (classic ECG sawtooth) ──────────────────────
-// SVG line that draws itself horizontally across "HERO". Path:
+// SVG line that draws itself horizontally across the wordmark. Path:
 // flat baseline → small bump → sharp QRS spike → flat baseline.
 // stroke-dasharray covers the full path length, then dashoffset is
 // animated from full (invisible) → 0 (fully drawn), creating the
 // "tracing" effect of a heart monitor.
 //
-// The trace sits ON TOP of the wordmark (z-index 1) so the spike
-// visibly cuts through "HERO". The brand wrapper has
-// `isolation: isolate` to keep stacking local.
+// The trace sits BEHIND the wordmark (z-index 0; the wordmark uses
+// position: relative + z-index 1) so the text reads cleanly while the
+// QRS spike sweeps past it. The brand wrapper has `isolation: isolate`
+// to keep stacking local.
 .app-loader__heartbeat {
     position: absolute;
-    // Anchor to the optical center of the hero wordmark, not the
-    // wrapper center (which is dragged down by the caption below).
-    top: 38%;
+    top: 50%;
     left: 50%;
     width: 280px;
     height: 64px;
     transform: translate(-50%, -50%);
     pointer-events: none;
-    z-index: 1;
+    z-index: 0;
     overflow: visible;
     opacity: 0;
     // Starts immediately alongside the barbell — no cold-start delay.
@@ -211,62 +210,31 @@ $cycle: 3.2s;
     animation: heartbeat-trace 1.8s ease-in-out 0s infinite;
 }
 
-// ── Wordmark — Push-Up (prefix) + HERO (hero) ───────────────────
+// ── Wordmark "Push-Up Hero" ─────────────────────────────────────
 .app-loader__wordmark {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    // position + z-index keeps the text above the absolutely-positioned
+    // heartbeat SVG so the ECG sweeps behind the letters, not over them.
+    position: relative;
+    z-index: 1;
     margin: 0;
     line-height: 1;
-}
-
-.app-loader__wordmark-prefix {
     font-size: 0.85rem;
     font-weight: 700;
     letter-spacing: 0.32em;
     text-transform: uppercase;
     color: $text-muted;
-    margin-bottom: 4px;
+    // White halo so the text stays legible when the orange ECG sweeps
+    // behind it. Multiple stacked shadows build up a thick, even glow
+    // (a single text-shadow blurs out too thin to fully knock out the
+    // line behind the glyphs).
+    text-shadow:
+        0 0 6px $white,
+        0 0 6px $white,
+        0 0 6px $white,
+        0 0 6px $white;
     opacity: 0;
     transform: translateY(6px);
-    animation: prefix-in 0.4s $ease-out-expo 0.55s forwards;
-}
-
-.app-loader__wordmark-hero {
-    font-size: 3.6rem;
-    font-weight: 900;
-    letter-spacing: -0.02em;
-    line-height: 0.95;
-    @include text-gradient($gradient-accent-rich);
-    // IMPORTANT: use filter: drop-shadow rather than text-shadow on
-    // gradient text. background-clip: text makes the glyphs transparent,
-    // so a text shadow has nothing to shadow and produces a smeared blur
-    // instead of a glow. drop-shadow operates on the rendered pixels.
-    filter: drop-shadow(0 4px 22px rgba($accent, 0.45));
-
-    span {
-        display: inline-block;
-        opacity: 0;
-        transform: translateY(12px);
-        animation: letter-in 0.5s $ease-out-back forwards;
-
-        &:nth-child(1) { animation-delay: 0.70s; }
-        &:nth-child(2) { animation-delay: 0.76s; }
-        &:nth-child(3) { animation-delay: 0.82s; }
-        &:nth-child(4) { animation-delay: 0.88s; }
-    }
-}
-
-// ── Caption (replaces "Loading…") ───────────────────────────────
-.app-loader__caption {
-    margin: $spacing-md 0 0;
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: $text-muted;
-    opacity: 0;
-    animation: caption-in 0.4s ease-out 1.05s forwards;
+    animation: wordmark-in 0.4s $ease-out-expo 0.2s forwards;
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -345,22 +313,12 @@ $cycle: 3.2s;
     100%        { opacity: 0; }
 }
 
-// ── Wordmark prefix entrance ────────────────────────────────────
-@keyframes prefix-in {
+// ── Wordmark entrance ───────────────────────────────────────────
+@keyframes wordmark-in {
     to { opacity: 1; transform: translateY(0); }
 }
 
-// ── Hero letter stagger entrance ────────────────────────────────
-@keyframes letter-in {
-    to { opacity: 1; transform: translateY(0); }
-}
-
-// ── Caption entrance ────────────────────────────────────────────
-@keyframes caption-in {
-    to { opacity: 1; }
-}
-
-// ── Heartbeat container fade-in (one-shot, after letters) ───────
+// ── Heartbeat container fade-in (one-shot) ──────────────────────
 @keyframes heartbeat-fade-in {
     to { opacity: 1; }
 }
@@ -384,17 +342,9 @@ $cycle: 3.2s;
 
 // ── Mobile adjustments ──────────────────────────────────────────
 @media (max-width: 480px) {
-    .app-loader__wordmark-hero {
-        font-size: 2.6rem;
-    }
-
-    .app-loader__wordmark-prefix {
+    .app-loader__wordmark {
         font-size: 0.72rem;
         letter-spacing: 0.28em;
-    }
-
-    .app-loader__caption {
-        font-size: 0.62rem;
     }
 
     .app-loader__heartbeat {
@@ -430,9 +380,7 @@ $cycle: 3.2s;
         stroke-dashoffset: 0;
     }
 
-    .app-loader__wordmark-prefix,
-    .app-loader__wordmark-hero span,
-    .app-loader__caption {
+    .app-loader__wordmark {
         opacity: 1 !important;
         transform: none !important;
         animation: none !important;
