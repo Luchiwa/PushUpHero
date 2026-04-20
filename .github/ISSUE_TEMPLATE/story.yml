@@ -1,0 +1,44 @@
+name: User story
+description: Propose a new feature or enhancement
+title: "[Story] "
+labels: ["type:story"]
+body:
+  - type: textarea
+    id: story
+    attributes:
+      label: User story
+      description: "Follow the format: As a ..., I want ..., so that ..."
+      placeholder: "As a user doing a home workout, I want the coach to announce my best streak so that I stay motivated between sets."
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Checklist of what must be true for this story to be considered done.
+      value: |
+        - [ ]
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes, links, design
+      description: Mocks, references, related issues, technical considerations. Link any Figma / prior discussion here.
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority (suggested)
+      description: Rough priority — the owner will confirm during triage.
+      options:
+        - "P1 — High"
+        - "P2 — Medium (default)"
+        - "P3 — Low / nice to have"
+      default: 1
+    validations:
+      required: true
