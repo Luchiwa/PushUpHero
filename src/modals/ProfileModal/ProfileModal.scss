@@ -1,59 +1,95 @@
-@use 'sass:color';
-@use 'sass:map';
-@use 'variables' as *;
+@use 'tokens' as *;
 @use 'mixins' as *;
 
-// ── Settings button (right slot in PageLayout topbar) ────────────
+// ══════════════════════════════════════════════════════════════════
+// ProfileModal — Arena RPG player card. Obsidian base, tier-colored
+// accents (bronze / silver / gold / platinum), ember-gradient tabs,
+// obsidian-2 stat tiles.
+// ══════════════════════════════════════════════════════════════════
+
+// ── Tier color map (local — Arena-coherent tier palette) ─────────
+$player-tiers: (
+    'bronze':   #b87a3e,
+    'silver':   #c0c6d8,
+    'gold':     $gold,
+    'platinum': $ice,
+);
+
 .profile-settings-btn {
+    transition: transform 0.25s $ease-arena, color 0.25s $ease-arena, background 0.25s $ease-arena;
+
     &:hover {
         transform: rotate(30deg);
+        color: $ember;
     }
 }
 
-// ── Content overrides (extends .page-body via bodyClassName) ─────
 .profile-content {
-    padding-top: $spacing-md;
-    gap: $spacing-lg;
+    padding-top: $space-md;
+    gap: $space-lg;
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// ── PLAYER CARD — RPG-style profile hero card ────────────────────
-// ═══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
+// PLAYER CARD
+// ══════════════════════════════════════════════════════════════════
+@keyframes player-card-in {
+    0%   { opacity: 0; transform: translateY(12px) scale(0.97); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .player-card {
+    --tier-color: #b87a3e;
     position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.6rem;
+    gap: $space-sm;
     width: 100%;
-    padding: 1.25rem 1rem 1rem;
-    border-radius: $radius-sm;
-    border: 1px solid rgba($accent, 0.20);
+    padding: $space-md $space-md ($space-md + 2);
+    background: $card;
+    background-image: linear-gradient(
+        160deg,
+        color-mix(in srgb, var(--tier-color) 16%, transparent) 0%,
+        color-mix(in srgb, #{$ember} 6%, transparent) 55%,
+        color-mix(in srgb, var(--tier-color) 10%, transparent) 100%
+    );
+    border-radius: $radius-lg;
+    border: 1px solid color-mix(in srgb, var(--tier-color) 35%, transparent);
     overflow: hidden;
+    box-shadow:
+        0 4px 18px rgba(0, 0, 0, 0.45),
+        0 0 14px color-mix(in srgb, var(--tier-color) 14%, transparent);
     animation: player-card-in 0.5s $ease-out-expo both;
 
-    // Default (bronze) gradient background
-    @include tier-bg($tier-bronze);
-
-    // ── Tier variants ──
-    @include tier-card-variants;
+    @each $name, $color in $player-tiers {
+        &.tier-#{$name} {
+            --tier-color: #{$color};
+        }
+    }
 }
 
-// ── Shine sweep (same pattern as stats widget) ───────────────────
+// Shine sweep — soft ember-tinted highlight
+@keyframes player-card-shine {
+    0%, 100% { left: -100%; }
+    50%      { left: 130%; }
+}
+
 .player-card-shine {
-    @include shine-sweep;
-}
-
-@keyframes player-card-in {
-    0% {
-        opacity: 0;
-        transform: translateY(12px) scale(0.97);
-    }
-
-    100% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(
+        105deg,
+        transparent 0%,
+        color-mix(in srgb, #{$ember} 0%, transparent) 40%,
+        color-mix(in srgb, #{$ember} 22%, transparent) 50%,
+        color-mix(in srgb, #{$ember} 0%, transparent) 60%,
+        transparent 100%
+    );
+    pointer-events: none;
+    animation: player-card-shine 7s ease-in-out 1s infinite;
 }
 
 // ── Avatar + tier ring + level badge ─────────────────────────────
@@ -61,12 +97,14 @@
     position: relative;
     width: 88px;
     height: 88px;
-    @include flex-center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     .avatar {
         position: relative;
         z-index: 1;
-        box-shadow: 0 4px 18px rgba($accent, 0.25);
+        box-shadow: 0 4px 18px color-mix(in srgb, var(--tier-color) 40%, transparent);
     }
 
     &--uploading {
@@ -84,36 +122,22 @@
 
 .player-card-ring-track {
     fill: none;
-    stroke: rgba($text, 0.06);
+    stroke: color-mix(in srgb, #{$text} 10%, transparent);
     stroke-width: 3;
+}
+
+@keyframes pc-ring-draw {
+    from { stroke-dasharray: 0 276.5; }
 }
 
 .player-card-ring-fill {
     fill: none;
-    stroke: $accent;
+    stroke: var(--tier-color);
     stroke-width: 3;
     stroke-linecap: round;
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--tier-color) 40%, transparent));
     transition: stroke-dasharray 0.8s $ease-out-expo;
     animation: pc-ring-draw 1.2s $ease-out-expo 0.3s both;
-
-    // Tier colors for the ring
-    .tier-silver & {
-        stroke: $tier-silver;
-    }
-
-    .tier-gold & {
-        stroke: $tier-gold;
-    }
-
-    .tier-platinum & {
-        stroke: $tier-platinum;
-    }
-}
-
-@keyframes pc-ring-draw {
-    from {
-        stroke-dasharray: 0 276.5;
-    }
 }
 
 .player-card-edit-hint {
@@ -121,73 +145,95 @@
     z-index: 2;
     bottom: 4px;
     right: 4px;
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
-    background: $accent;
-    color: $white;
-    font-size: 0.6rem;
+    background: $gradient-ember-cta;
+    color: $text;
+    font-size: 0.65rem;
     display: flex;
     align-items: center;
     justify-content: center;
     pointer-events: none;
-    box-shadow: 0 1px 4px rgba($black, 0.2);
-    border: 1.5px solid $bg;
+    border: 2px solid $obsidian;
+    box-shadow: $shadow-ember-glow;
 }
 
 .player-card-level {
     position: absolute;
     z-index: 2;
     top: -2px;
-    right: -4px;
-    background: $accent;
-    color: $white;
-    font-size: 0.58rem;
+    right: -6px;
+    font-family: $font-mono;
+    font-size: 0.6rem;
     font-weight: 800;
-    letter-spacing: 0.04em;
-    padding: 2px 6px;
-    border-radius: $radius-xs;
+    letter-spacing: 1px;
+    padding: 3px 7px;
+    border-radius: $radius-sm;
     line-height: 1.3;
-    border: 1.5px solid $bg;
-    box-shadow: 0 2px 6px rgba($accent, 0.5);
+    background: var(--tier-color);
+    color: $obsidian;
+    border: 2px solid $obsidian;
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--tier-color) 50%, transparent);
     pointer-events: none;
-
-    @include tier-badge-variants;
 }
 
 // ── Name + streak ────────────────────────────────────────────────
 .player-card-identity {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    margin-top: 0.15rem;
+    gap: $space-sm;
+    margin-top: 4px;
 }
 
 .player-card-name {
     margin: 0;
-    font-size: 1.3rem;
-    font-weight: 900;
+    font-family: $font-display;
+    font-size: 1.4rem;
+    font-weight: 700;
     color: $text;
-    letter-spacing: -0.02em;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-shadow: 0 0 12px color-mix(in srgb, var(--tier-color) 30%, transparent);
+}
+
+@keyframes fire-glow {
+    0%, 100% { box-shadow: 0 0 8px color-mix(in srgb, #{$blood} 55%, transparent); }
+    50%      { box-shadow: 0 0 14px color-mix(in srgb, #{$blood} 85%, transparent); }
+}
+
+@keyframes flame-dance {
+    from { transform: translateY(0) scale(1); }
+    to   { transform: translateY(-1px) scale(1.08); }
 }
 
 .player-card-streak {
-    @include badge($amber, $amber-dark);
-    gap: 2px;
-    transition: background $transition, box-shadow $transition;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-family: $font-mono;
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: $blood;
+    background: color-mix(in srgb, #{$blood} 14%, transparent);
+    border: 1px solid color-mix(in srgb, #{$blood} 32%, transparent);
+    border-radius: $radius-pill;
+    padding: 3px 9px;
+    letter-spacing: 0.5px;
+    font-variant-numeric: tabular-nums;
 
     &.on-fire {
-        --fire-rgb: #{color.channel($amber, 'red', $space: rgb)},
-        #{color.channel($amber, 'green', $space: rgb)},
-        #{color.channel($amber, 'blue', $space: rgb)};
-        background: linear-gradient(135deg, rgba($amber, 0.25), rgba($red, 0.18));
-        box-shadow: 0 0 8px rgba($amber, 0.4);
-        animation: fire-glow 1.2s ease-in-out infinite;
+        background: linear-gradient(135deg,
+            color-mix(in srgb, #{$blood} 22%, transparent),
+            color-mix(in srgb, #{$ember} 18%, transparent)
+        );
+        border-color: color-mix(in srgb, #{$blood} 50%, transparent);
+        animation: fire-glow 1.4s ease-in-out infinite;
     }
 }
 
 .player-card-streak-icon {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     line-height: 1;
     display: inline-block;
 
@@ -197,9 +243,9 @@
 }
 
 .player-card-since {
-    font-size: $font-xs;
-    color: $text-muted;
-    margin-top: -0.2rem;
+    @include micro;
+    color: $dim;
+    letter-spacing: 1.5px;
 }
 
 // ── XP bar — clickable Progression zone ──────────────────────────
@@ -208,45 +254,45 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
-    margin-top: 0.15rem;
-    padding: 0.55rem 0.65rem 0.5rem;
-    border-radius: $radius-xs;
-    border: 1px solid rgba($accent, 0.10);
-    background: linear-gradient(135deg, rgba($accent, 0.04) 0%, rgba($indigo, 0.03) 100%);
+    gap: 6px;
+    margin-top: 2px;
+    padding: $space-sm ($space-sm + 2);
+    border-radius: $radius-md;
+    border: 1px solid color-mix(in srgb, #{$ember} 22%, transparent);
+    background: color-mix(in srgb, #{$obsidian} 55%, transparent);
     cursor: pointer;
     font-family: inherit;
     text-align: left;
     transition:
-        background 0.25s ease,
-        border-color 0.25s ease,
-        box-shadow 0.25s ease,
-        transform 0.15s ease;
+        background 0.25s $ease-arena,
+        border-color 0.25s $ease-arena,
+        box-shadow 0.25s $ease-arena,
+        transform 0.15s $ease-arena;
 
     &:hover {
-        background: linear-gradient(135deg, rgba($accent, 0.08) 0%, rgba($indigo, 0.06) 100%);
-        border-color: rgba($accent, 0.25);
-        box-shadow: 0 4px 18px rgba($accent, 0.10), inset 0 0 0 1px rgba($accent, 0.05);
+        background: color-mix(in srgb, #{$obsidian} 70%, transparent);
+        border-color: color-mix(in srgb, #{$ember} 42%, transparent);
+        box-shadow:
+            0 4px 18px color-mix(in srgb, #{$ember} 20%, transparent),
+            inset 0 0 0 1px color-mix(in srgb, #{$ember} 10%, transparent);
 
         .player-card-xp-cta {
-            color: $white;
-            background: linear-gradient(135deg, $accent, $accent-dark);
-            border-color: $accent;
-            box-shadow: 0 2px 10px rgba($accent, 0.35);
+            background: $gradient-ember-cta;
+            border-color: $ember;
+            box-shadow: $shadow-ember-glow;
 
-            svg {
-                transform: translateX(2px);
-            }
+            svg { transform: translateX(2px); }
         }
 
         .player-card-xp-seg.tip {
-            box-shadow: 0 0 10px rgba($accent, 1), 0 0 22px rgba($accent, 0.5);
+            box-shadow: 0 0 10px color-mix(in srgb, var(--tier-color) 95%, transparent),
+                        0 0 22px color-mix(in srgb, var(--tier-color) 55%, transparent);
         }
     }
 
     &:active {
         transform: scale(0.985);
-        transition-duration: 0.06s;
+        transition-duration: 60ms;
     }
 }
 
@@ -257,39 +303,34 @@
     width: 100%;
 }
 
+@keyframes seg-fill {
+    from { opacity: 0; transform: scaleY(0.4); }
+    to   { opacity: 1; transform: scaleY(1); }
+}
+
+@keyframes seg-tip-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.7; }
+}
+
 .player-card-xp-seg {
     flex: 1;
     height: 6px;
     border-radius: 3px;
-    background: rgba($text, 0.07);
-    transition: box-shadow 0.35s ease;
-    --seg-color: #{$accent};
-    --seg-rgb: #{color.channel($accent, 'red', $space: rgb)},
-    #{color.channel($accent, 'green', $space: rgb)},
-    #{color.channel($accent, 'blue', $space: rgb)};
+    background: color-mix(in srgb, #{$text} 8%, transparent);
+    transition: box-shadow 0.35s $ease-arena;
 
     &.filled {
-        animation: seg-fill 0.35s $ease-default both;
+        background: var(--tier-color);
+        animation: seg-fill 0.35s $ease-arena both;
+        box-shadow: 0 0 4px color-mix(in srgb, var(--tier-color) 40%, transparent);
     }
 
     &.tip {
-        @include box-glow($accent);
         animation:
-            seg-fill 0.35s $ease-default both,
+            seg-fill 0.35s $ease-arena both,
             seg-tip-pulse 1.4s ease-in-out 0.8s infinite;
-    }
-
-    @each $name, $color in $tiers {
-        .tier-#{$name} & {
-            --seg-color: #{$color};
-            --seg-rgb: #{color.channel($color, 'red', $space: rgb)},
-            #{color.channel($color, 'green', $space: rgb)},
-            #{color.channel($color, 'blue', $space: rgb)};
-
-            &.tip {
-                @include box-glow($color);
-            }
-        }
+        box-shadow: 0 0 8px color-mix(in srgb, var(--tier-color) 75%, transparent);
     }
 }
 
@@ -297,50 +338,54 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: 0.65rem;
-    font-weight: 600;
-    color: $text-muted;
+    font-family: $font-mono;
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: $dim;
+    letter-spacing: 0.5px;
+    font-variant-numeric: tabular-nums;
 }
 
 .player-card-xp-next {
-    color: rgba($accent, 0.85);
-    font-weight: 700;
+    color: color-mix(in srgb, var(--tier-color) 90%, $text);
+    font-weight: 800;
 }
 
-// ── Progression CTA inside XP zone ───────────────────────────────
 .player-card-xp-cta {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.3rem;
+    gap: 5px;
     width: 100%;
-    margin-top: 0.1rem;
-    padding: 0.3rem 0;
-    font-size: 0.7rem;
+    margin-top: 3px;
+    padding: 5px 0;
+    font-family: $font-mono;
+    font-size: 0.66rem;
     font-weight: 800;
-    color: $accent-dark;
-    letter-spacing: 0.01em;
+    color: $text;
+    letter-spacing: 1px;
+    text-transform: uppercase;
     border-radius: $radius-pill;
-    background: linear-gradient(135deg, rgba($accent, 0.14), rgba($accent-dark, 0.08));
-    border: 1px solid rgba($accent, 0.22);
+    background: color-mix(in srgb, #{$ember} 14%, transparent);
+    border: 1px solid color-mix(in srgb, #{$ember} 32%, transparent);
     transition:
-        color 0.25s ease,
-        background 0.25s ease,
-        border-color 0.25s ease,
-        box-shadow 0.25s ease;
+        color 0.25s $ease-arena,
+        background 0.25s $ease-arena,
+        border-color 0.25s $ease-arena,
+        box-shadow 0.25s $ease-arena;
 
     svg {
         flex-shrink: 0;
-        transition: transform 0.2s ease;
+        transition: transform 0.2s $ease-arena;
     }
 }
 
 // ── Stat mini-cards ──────────────────────────────────────────────
 .player-card-stats {
     display: flex;
-    gap: $spacing-sm;
+    gap: $space-sm;
     width: 100%;
-    margin-top: 0.1rem;
+    margin-top: 2px;
 }
 
 .player-card-stat {
@@ -348,55 +393,66 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.1rem;
-    padding: 0.5rem 0.25rem;
-    background: rgba($white, 0.6);
-    border: 1px solid rgba($text, 0.06);
-    border-radius: $radius-xs;
-    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    gap: 2px;
+    padding: $space-sm $space-xs;
+    background: $obsidian-2;
+    border: 1px solid $line;
+    border-radius: $radius-md;
+    transition:
+        background 0.2s $ease-arena,
+        border-color 0.2s $ease-arena,
+        box-shadow 0.2s $ease-arena,
+        transform 0.2s $ease-arena;
 
     &:hover {
-        background: rgba($white, 0.9);
-        border-color: rgba($accent, 0.2);
-        box-shadow: 0 4px 14px rgba($accent, 0.1), 0 0 8px rgba($accent, 0.06);
+        background: color-mix(in srgb, #{$ember} 6%, #{$obsidian-2});
+        border-color: color-mix(in srgb, #{$ember} 30%, transparent);
+        box-shadow:
+            0 4px 14px color-mix(in srgb, #{$ember} 16%, transparent),
+            0 0 8px color-mix(in srgb, #{$ember} 10%, transparent);
         transform: translateY(-1px);
     }
 }
 
 .player-card-stat-icon {
-    color: $accent;
-    opacity: 0.7;
+    color: $ember;
+    opacity: 0.8;
     flex-shrink: 0;
+    filter: drop-shadow(0 0 6px color-mix(in srgb, #{$ember} 40%, transparent));
 }
 
 .player-card-stat-val {
-    font-size: 1.15rem;
-    font-weight: 900;
+    font-family: $font-display;
+    font-size: 1.2rem;
+    font-weight: 700;
     color: $text;
-    letter-spacing: -0.03em;
+    letter-spacing: 1px;
     font-variant-numeric: tabular-nums;
     line-height: 1.2;
+    text-shadow: 0 0 8px color-mix(in srgb, #{$ember} 22%, transparent);
 }
 
 .player-card-stat-lbl {
-    font-size: 0.58rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: $text-muted;
+    @include micro;
+    color: $dim;
+    letter-spacing: 2px;
     line-height: 1.3;
 }
 
-// ── Profile Tabs ──────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+// PROFILE TABS
+// ══════════════════════════════════════════════════════════════════
 .profile-tabs {
     position: relative;
     display: flex;
     gap: 0;
-    background: rgba($text, 0.04);
-    border-radius: $radius-sm;
+    background: $obsidian-2;
+    border: 1px solid color-mix(in srgb, #{$ember} 22%, transparent);
+    border-radius: $radius-pill;
     padding: 4px;
     flex-shrink: 0;
     overflow: hidden;
+    box-shadow: inset 0 1px 0 color-mix(in srgb, #{$ember} 8%, transparent);
 }
 
 .profile-tabs-indicator {
@@ -404,10 +460,10 @@
     top: 4px;
     bottom: 4px;
     width: calc(50% - 6px);
-    background: $white;
-    border-radius: calc($radius-sm - 2px);
-    box-shadow: 0 2px 10px rgba($accent, 0.12), 0 1px 4px rgba($black, 0.08);
-    transition: left 0.25s $ease-out-expo;
+    background: $gradient-ember-cta;
+    border-radius: $radius-pill;
+    box-shadow: $shadow-ember-glow;
+    transition: left 0.28s $ease-out-expo;
     pointer-events: none;
     z-index: $z-base;
 }
@@ -415,54 +471,80 @@
 .profile-tab {
     position: relative;
     flex: 1;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.4rem;
-    padding: 0.55rem 1rem;
+    gap: 6px;
+    padding: 8px $space-md;
     background: none;
     border: none;
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: $text-muted;
+    font-family: $font-mono;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: $dim;
     cursor: pointer;
-    transition: color 0.2s;
+    transition: color 0.2s $ease-arena;
     z-index: $z-content;
-    border-radius: calc($radius-sm - 2px);
+    border-radius: $radius-pill;
 
     svg {
-        transition: opacity 0.2s;
-        opacity: 0.5;
+        transition: opacity 0.2s $ease-arena;
+        opacity: 0.55;
     }
 
-    &:hover {
+    &:hover:not(&--active) {
         color: $text;
-
-        svg {
-            opacity: 0.75;
-        }
+        svg { opacity: 0.85; }
     }
 
     &--active {
-        color: $accent;
-        font-weight: 700;
+        color: $text;
 
         svg {
             opacity: 1;
-            color: $accent;
+            color: $text;
         }
     }
 }
 
+@keyframes badge-pulse {
+    0%, 100% { box-shadow: 0 0 8px color-mix(in srgb, #{$ember} 35%, transparent); }
+    50%      { box-shadow: 0 0 14px color-mix(in srgb, #{$ember} 60%, transparent); }
+}
+
 .profile-tab-badge {
-    @include count-badge;
-    box-shadow: 0 0 8px rgba($accent, 0.35);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: $ember;
+    color: $text;
+    font-family: $font-mono;
+    font-size: 0.6rem;
+    font-weight: 800;
+    border-radius: $radius-pill;
+    line-height: 1;
+    box-shadow: 0 0 8px color-mix(in srgb, #{$ember} 35%, transparent);
     animation: badge-pulse 2s ease-in-out infinite;
 }
 
-// ── Unread feed dot indicator ───────────────────────────────────────
+@keyframes dot-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.6; transform: scale(1.2); }
+}
+
 .profile-tab-dot {
-    @include notification-dot;
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    background: $ember;
+    border-radius: 50%;
+    box-shadow: 0 0 6px color-mix(in srgb, #{$ember} 60%, transparent);
+    animation: dot-pulse 1.4s ease-in-out infinite;
     margin-left: 5px;
     vertical-align: middle;
 }
@@ -474,7 +556,6 @@
     overflow: hidden;
     min-height: 0;
 
-    // ── Friends tab ──────────────────────────────────────────────
     .friends-tab {
         display: flex;
         flex-direction: column;
@@ -482,22 +563,19 @@
         min-height: 0;
         overflow: hidden;
 
-        .friends-search-form {
-            flex-shrink: 0;
-        }
+        .friends-search-form { flex-shrink: 0; }
 
         .friends-tab-scroll {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: $space-md;
             flex: 1;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            padding-bottom: $spacing-xl;
+            padding-bottom: $space-xl;
         }
     }
 
-    // ── Feed tab ─────────────────────────────────────────────────
     .friends-feed {
         display: flex;
         flex-direction: column;
@@ -505,15 +583,13 @@
         min-height: 0;
         overflow: hidden;
 
-        .feed-header {
-            flex-shrink: 0;
-        }
+        .feed-header { flex-shrink: 0; }
 
         .feed-scroll {
             flex: 1;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            padding-bottom: $spacing-xl;
+            padding-bottom: $space-xl;
         }
     }
 }
