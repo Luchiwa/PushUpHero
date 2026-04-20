@@ -19,10 +19,13 @@
 
 .xp-bar-label {
     color: $dim;
+    font-variant-numeric: tabular-nums;
+    animation: arena-xp-count-up $dur-xp-count-up $ease-arena both;
 }
 
 .xp-bar-remaining {
     color: $ember;
+    animation: arena-xp-count-up $dur-xp-count-up 120ms $ease-arena both;
 }
 
 .xp-bar-track {

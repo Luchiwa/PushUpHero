@@ -19,7 +19,7 @@
     -webkit-overflow-scrolling: touch;
     padding-top: max($space-md, env(safe-area-inset-top));
     padding-bottom: max($space-md, env(safe-area-inset-bottom));
-    animation: screen-in 0.4s $ease-out-expo both;
+    animation: arena-screen-in $dur-screen-transition $ease-arena both;
 
     &--victory {
         background:
