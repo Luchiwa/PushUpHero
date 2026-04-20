@@ -1,186 +1,81 @@
-@use 'variables' as *;
+@use 'tokens' as *;
 @use 'mixins' as *;
 
-// ── Quest Card (hero card) ───────────────────────────────────────
+// ── Home hero quest card — composes Arena QuestCard molecule ────
+// Only styles the domain-specific slots injected as children (progress,
+// picker, reward, emoji). The shell is the `QuestCard` atom.
 
-.quest-card {
-    width: 100%;
-    padding: 1rem 1.1rem;
-    background: linear-gradient(135deg, rgba($indigo, 0.12) 0%, rgba($purple, 0.06) 100%);
-    border: 1px solid rgba($indigo, 0.28);
-    border-radius: $radius-sm;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    animation: quest-slide-in 0.5s $ease-out-expo both;
-    transition: border-color $transition-fast, box-shadow $transition-fast;
-
-    &--active {
-        border-color: rgba($indigo, 0.45);
-        box-shadow: 0 2px 16px rgba($indigo, 0.12);
-    }
-}
-
-.quest-card-header {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.quest-card-badge {
-    font-size: 0.6rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: $white;
-    padding: 2px 8px;
-    border-radius: $radius-pill;
-    line-height: 1.5;
-}
-
-.quest-card-status {
-    font-size: $font-xs;
-    font-weight: 700;
-    color: $indigo;
-    background: rgba($indigo, 0.12);
-    padding: 2px 8px;
-    border-radius: $radius-pill;
-}
-
-.quest-card-xp {
-    margin-left: auto;
-    font-size: $font-xs;
-    font-weight: 700;
-    color: $purple;
-    background: rgba($purple, 0.10);
-    padding: 2px 8px;
-    border-radius: $radius-pill;
-}
-
-.quest-card-main {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-}
-
-.quest-card-emoji {
-    font-size: 2rem;
+.home-quest-emoji {
+    display: inline-block;
+    margin-right: $space-sm;
+    font-size: 24px;
     line-height: 1;
-    flex-shrink: 0;
+    vertical-align: -2px;
 }
 
-.quest-card-text {
-    flex: 1;
-    min-width: 0;
+// ── Reward (gold mono — rewards-only per Arena rules) ───────────
+.home-quest-reward {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 2px;
+    font-family: $font-mono;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    color: $gold;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
 }
 
-.quest-card-title {
-    font-size: 1rem;
-    font-weight: 800;
-    color: $text;
-    margin: 0;
-    line-height: 1.3;
+.home-quest-reward-plus {
+    font-size: 12px;
+    opacity: 0.8;
 }
 
-.quest-card-desc {
-    font-size: $font-sm;
-    color: $text-muted;
-    margin: 0.2rem 0 0;
-    line-height: 1.45;
+.home-quest-reward-unit {
+    margin-left: 3px;
+    font-size: 11px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: color-mix(in srgb, #{$gold} 85%, transparent);
 }
 
-.quest-card-hint {
-    font-size: $font-xs;
-    color: rgba($indigo, 0.7);
-    text-align: center;
-    margin: 0;
-    padding: 0.3rem 0;
-    font-style: italic;
-}
-
-// ── Progress bar (cross-session quests) ──────────────────────────
-.quest-card-progress {
+// ── Cross-session progress track ─────────────────────────────────
+.home-quest-progress {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-}
-
-.quest-card-progress-bar {
-    flex: 1;
-    height: 6px;
-    background: rgba($indigo, 0.15);
-    border-radius: $radius-pill;
-    overflow: hidden;
-}
-
-.quest-card-progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, $indigo, $purple);
-    border-radius: $radius-pill;
-    transition: width 0.4s $ease-out-expo;
-}
-
-.quest-card-progress-label {
-    font-size: $font-xs;
-    font-weight: 700;
-    color: $indigo;
-    white-space: nowrap;
-}
-
-.quest-card-config {
-    margin-top: 0.25rem;
-}
-
-.quest-card-accept,
-.quest-card-start {
+    gap: $space-md;
     width: 100%;
-    padding: 0.65rem 1rem;
-    border: none;
-    border-radius: $radius-sm;
-    font-size: 0.9rem;
-    font-weight: 800;
-    cursor: pointer;
-    transition: background $transition-fast, box-shadow $transition-fast, transform 0.15s ease;
-    text-align: center;
-
-    &:active:not(:disabled) {
-        transform: scale(0.97);
-    }
-
-    &:disabled {
-        opacity: 0.5;
-        cursor: default;
-    }
 }
 
-.quest-card-accept {
-    background: linear-gradient(135deg, $indigo, $purple);
-    color: $white;
-    box-shadow: 0 3px 16px rgba($indigo, 0.35);
-
-    &:hover:not(:disabled) {
-        box-shadow: 0 4px 22px rgba($indigo, 0.5);
-    }
+.home-quest-progress-track {
+    flex: 1;
+    height: 8px;
+    border-radius: $radius-pill;
+    background: rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+    position: relative;
 }
 
-.quest-card-start {
-    background: linear-gradient(135deg, $accent, $accent-dark);
-    color: $white;
-    box-shadow: 0 3px 16px rgba($accent, 0.35);
-
-    &:hover:not(:disabled) {
-        box-shadow: 0 4px 22px rgba($accent, 0.5);
-    }
+.home-quest-progress-fill {
+    display: block;
+    height: 100%;
+    width: var(--home-quest-progress, 0%);
+    background: $gradient-ember-gold-xp;
+    border-radius: $radius-pill;
+    box-shadow: 0 0 10px rgba(255, 122, 71, 0.4);
+    transition: width 420ms $ease-arena;
 }
 
-@keyframes quest-slide-in {
-    0% {
-        opacity: 0;
-        transform: translateY(-8px) scale(0.97);
-    }
+.home-quest-progress-label {
+    @include kicker;
+    letter-spacing: 1.5px;
+    color: $ember;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
 
-    100% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+// ── Exercise picker slot — padding lets it breathe inside card ──
+.home-quest-picker {
+    padding-top: $space-xs;
 }

@@ -1,7 +1,7 @@
-@use 'variables' as *;
+@use 'tokens' as *;
 @use 'mixins' as *;
 
-// ── Player HUD ──────────────────────────────────────────────────
+// ── Player HUD — Arena card, ember borders, hex level badge ──
 .player-hud {
     width: 100%;
 }
@@ -9,67 +9,50 @@
 .player-hud-card {
     display: flex;
     align-items: center;
-    gap: 0.875rem;
+    gap: $space-md;
     width: 100%;
-    padding: 0.75rem 0.875rem;
-    background: linear-gradient(135deg, rgba($accent, 0.10) 0%, rgba($accent, 0.04) 100%);
-    border: 1px solid rgba($accent, 0.22);
-    border-radius: $radius-sm;
+    padding: $space-lg $space-xl;
+    background: $card;
+    border: 1px solid color-mix(in srgb, #{$ember} 30%, transparent);
+    border-radius: $radius-2xl;
     cursor: pointer;
     text-align: left;
-    transition: background $transition-fast, border-color $transition-fast,
-        box-shadow $transition-fast, transform 0.2s $ease-out-back;
-    box-shadow: 0 2px 12px rgba($accent, 0.08);
+    transition: border-color 200ms ease, transform 180ms $ease-arena,
+                box-shadow 200ms ease;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
 
-    // ── Tier variants ──
-    &.tier-bronze {
-        border-color: rgba($tier-bronze, 0.30);
-        box-shadow: 0 2px 12px rgba($tier-bronze, 0.10);
-    }
-
+    // ── Tier accents (subtle — primary Arena color stays ember) ──
     &.tier-silver {
-        border-color: rgba($tier-silver, 0.40);
-        box-shadow: 0 2px 14px rgba($tier-silver, 0.14);
+        border-color: color-mix(in srgb, #{$ice} 25%, transparent);
     }
 
     &.tier-gold {
-        border-color: rgba($tier-gold, 0.45);
-        box-shadow: 0 2px 16px rgba($tier-gold, 0.18), inset 0 0 0 1px rgba($tier-gold, 0.08);
+        border-color: color-mix(in srgb, #{$gold} 35%, transparent);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45),
+                    inset 0 0 0 1px color-mix(in srgb, #{$gold} 12%, transparent);
     }
 
     &.tier-platinum {
-        border-color: rgba($tier-platinum, 0.55);
-        box-shadow: 0 2px 20px rgba($tier-platinum, 0.22), inset 0 0 0 1px rgba($tier-platinum, 0.12);
-        animation: diamond-shimmer 3s ease-in-out infinite;
+        border-color: color-mix(in srgb, #{$ice} 45%, transparent);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45),
+                    inset 0 0 0 1px color-mix(in srgb, #{$ice} 18%, transparent);
     }
 
     &:hover,
     &:focus-visible {
-        background: linear-gradient(135deg, rgba($accent, 0.16) 0%, rgba($accent, 0.08) 100%);
-        border-color: rgba($accent, 0.40);
-        box-shadow: 0 4px 20px rgba($accent, 0.18);
+        border-color: $ember;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5),
+                    $shadow-ember-glow;
         outline: none;
     }
 
-    // ── Tap bounce (#8) ──
     &:active {
-        animation: tap-bounce 0.35s $ease-out-back;
+        transform: translateY(0);
     }
 }
 
-@keyframes diamond-shimmer {
-
-    0%,
-    100% {
-        box-shadow: 0 2px 20px rgba($tier-platinum, 0.22), inset 0 0 0 1px rgba($tier-platinum, 0.12);
-    }
-
-    50% {
-        box-shadow: 0 2px 28px rgba($tier-platinum, 0.35), inset 0 0 0 1px rgba($tier-platinum, 0.20);
-    }
-}
-
-// ── Avatar + level badge ─────────────────────────────────────────
+// ── Avatar + hex level badge ─────────────────────────────────────
 .hud-avatar-wrap {
     position: relative;
     flex-shrink: 0;
@@ -77,44 +60,31 @@
 
 .hud-level-badge {
     position: absolute;
-    bottom: -5px;
-    right: -7px;
-    background: $accent;
-    color: $white;
-    font-size: 0.58rem;
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    padding: 2px 5px;
-    border-radius: 6px;
-    line-height: 1.3;
-    border: 1.5px solid $bg;
-    box-shadow: 0 2px 6px rgba($accent, 0.5);
+    bottom: -6px;
+    right: -8px;
+    @include hex-clip-pointy;
+    width: 26px;
+    height: 30px;
+    background: $ember;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: $font-display;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    color: #fff;
     pointer-events: none;
-    white-space: nowrap;
-    transition: background 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 2px 10px rgba(255, 122, 71, 0.6);
 
-    &.tier-bronze {
-        background: $tier-bronze;
-        box-shadow: 0 2px 6px rgba($tier-bronze, 0.5);
-    }
+    &.tier-silver { background: $ice; color: $obsidian; }
+    &.tier-gold   { background: $gold; color: #3a1f0a; }
+    &.tier-platinum { background: $ice; color: $obsidian; }
+}
 
-    &.tier-silver {
-        background: $tier-silver;
-        box-shadow: 0 2px 6px rgba($tier-silver, 0.5);
-        color: #333;
-    }
-
-    &.tier-gold {
-        background: $tier-gold;
-        box-shadow: 0 2px 8px rgba($tier-gold, 0.6);
-        color: #5a4000;
-    }
-
-    &.tier-platinum {
-        background: $tier-platinum;
-        box-shadow: 0 2px 8px rgba($tier-platinum, 0.6);
-        color: #1a6a7a;
-    }
+.hud-level-badge-num {
+    display: block;
+    line-height: 1;
 }
 
 // ── Info block ───────────────────────────────────────────────────
@@ -123,233 +93,136 @@
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
+    gap: $space-xs;
 }
 
 .hud-top-row {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: $space-sm;
 }
 
 .hud-name {
-    font-size: 0.92rem;
-    font-weight: 800;
+    font-family: $font-display;
+    font-size: 20px;
+    font-weight: 600;
     color: $text;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    letter-spacing: -0.01em;
+    min-width: 0;
 }
 
+.hud-kicker {
+    @include kicker;
+    letter-spacing: 2px;
+    color: $dim;
+}
+
+// ── Streak pill ──────────────────────────────────────────────────
 .hud-streak {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: $amber-dark;
-    background: rgba($amber, 0.15);
-    padding: 1px 6px;
-    border-radius: 20px;
-    white-space: nowrap;
-    flex-shrink: 0;
     display: inline-flex;
     align-items: center;
-    gap: 2px;
-    transition: background 0.3s ease, box-shadow 0.3s ease;
+    gap: 3px;
+    padding: 2px 8px;
+    border-radius: $radius-pill;
+    background: color-mix(in srgb, #{$gold} 12%, transparent);
+    border: 1px solid color-mix(in srgb, #{$gold} 35%, transparent);
+    color: $gold;
+    font-family: $font-mono;
+    font-weight: 600;
+    font-size: 11px;
+    line-height: 1;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    flex-shrink: 0;
 
     &.on-fire {
-        background: linear-gradient(135deg, rgba($amber, 0.25), rgba($red, 0.18));
-        box-shadow: 0 0 8px rgba($amber, 0.4);
-        animation: streak-fire 1.2s ease-in-out infinite;
+        box-shadow: 0 0 10px rgba(245, 200, 113, 0.35);
     }
 }
 
 .hud-streak-icon {
-    font-size: 0.8rem;
+    font-size: 11px;
     line-height: 1;
-    display: inline-block;
-
-    .on-fire & {
-        animation: flame-dance 0.6s ease-in-out infinite alternate;
-    }
 }
 
-@keyframes streak-fire {
-
-    0%,
-    100% {
-        box-shadow: 0 0 6px rgba($amber, 0.35);
-    }
-
-    50% {
-        box-shadow: 0 0 14px rgba($amber, 0.6), 0 0 4px rgba($red, 0.3);
-    }
-}
-
-// ── Total XP arcade counter (#6) ─────────────────────────────────
-.hud-total-xp {
-    margin-left: auto;
-    font-size: 0.7rem;
-    font-weight: 800;
-    color: $accent;
-    letter-spacing: 0.03em;
-    white-space: nowrap;
-    opacity: 0.85;
+.hud-streak-val {
     font-variant-numeric: tabular-nums;
 }
 
-// ── Segmented XP bar ─────────────────────────────────────────────
-.hud-xp-bar {
-    display: flex;
+// ── Total XP (mono, ember) ───────────────────────────────────────
+.hud-total-xp {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
     gap: 3px;
-    align-items: center;
-    width: 100%;
-}
-
-.hud-xp-seg {
-    flex: 1;
-    height: 6px;
-    border-radius: 3px;
-    background: rgba($text, 0.08);
-    transition: box-shadow 0.35s ease;
-
-    &.filled {
-        animation: seg-fill-in 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
-        // animation-delay set via inline style
-    }
-
-    &.tip {
-        box-shadow: 0 0 6px rgba($accent, 0.8), 0 0 12px rgba($accent, 0.4);
-        animation: seg-fill-in 0.3s cubic-bezier(0.4, 0, 0.2, 1) both,
-            xp-tip-pulse 1.4s ease-in-out 0.8s infinite;
-    }
-}
-
-@keyframes seg-fill-in {
-    0% {
-        background: rgba($text, 0.08);
-        transform: scaleY(0.5);
-    }
-
-    60% {
-        transform: scaleY(1.3);
-    }
-
-    100% {
-        background: $accent;
-        transform: scaleY(1);
-    }
-}
-
-@keyframes xp-tip-pulse {
-
-    0%,
-    100% {
-        box-shadow: 0 0 5px rgba($accent, 0.7), 0 0 10px rgba($accent, 0.3);
-    }
-
-    50% {
-        box-shadow: 0 0 10px rgba($accent, 1), 0 0 22px rgba($accent, 0.6);
-    }
-}
-
-.hud-xp-label {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 0.65rem;
+    font-family: $font-mono;
     font-weight: 600;
-    color: $text-muted;
-    letter-spacing: 0.01em;
+    font-size: 11px;
+    color: $ember;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
 }
 
-.hud-xp-next {
-    color: rgba($accent, 0.85);
-    font-weight: 700;
-}
-
-// ── Chevron ───────────────────────────────────────────────────────
+// ── Chevron ──────────────────────────────────────────────────────
 .hud-chevron {
-    font-size: 1.4rem;
+    font-family: $font-display;
+    font-size: 22px;
     line-height: 1;
-    color: rgba($accent, 0.5);
+    color: color-mix(in srgb, #{$ember} 60%, transparent);
     flex-shrink: 0;
-    transition: color $transition-fast, transform $transition-fast;
+    transition: color 180ms ease, transform 180ms $ease-arena;
 
-    .player-hud-card:hover & {
-        color: $accent;
-        transform: translateX(2px);
+    .player-hud-card:hover &,
+    .player-hud-card:focus-visible & {
+        color: $ember;
+        transform: translateX(3px);
     }
 }
 
-// ── Guest state ───────────────────────────────────────────────────
+// ── Guest state ──────────────────────────────────────────────────
 .player-hud-guest {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
+    gap: $space-md;
     width: 100%;
-    padding: 0.75rem 0.875rem;
-    background: rgba($text, 0.04);
-    border: 1px solid $border;
-    border-radius: $radius-sm;
+    padding: $space-lg $space-xl;
+    background: $card;
+    border: 1px solid $line;
+    border-radius: $radius-2xl;
 }
 
 .hud-guest-info {
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
+    gap: 4px;
+    min-width: 0;
 }
 
-.hud-guest-label {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: $text;
+.hud-guest-kicker {
+    @include kicker;
+    letter-spacing: 2px;
+    color: $ember;
 }
 
 .hud-guest-sub {
-    font-size: 0.7rem;
-    color: $text-muted;
-}
-
-.hud-signin-btn {
-    flex-shrink: 0;
-    padding: 0.45rem 1rem;
-    border-radius: $radius-pill;
-    background: $accent;
-    color: $white;
-    font-size: 0.8rem;
-    font-weight: 700;
-    border: none;
-    cursor: pointer;
-    transition: background $transition-fast, box-shadow $transition-fast;
-    box-shadow: 0 2px 8px rgba($accent, 0.35);
-
-    &:hover {
-        background: $accent-dark;
-        box-shadow: 0 4px 14px rgba($accent, 0.5);
-    }
+    @include caption;
+    color: $dim;
 }
 
 // ── Mobile responsive ────────────────────────────────────────────
 @media (max-width: 480px) {
-    .player-hud-card {
-        padding: 0.65rem 0.75rem;
-        gap: 0.7rem;
+    .player-hud-card,
+    .player-hud-guest {
+        padding: $space-md $space-lg;
     }
 
     .hud-name {
-        font-size: 0.82rem;
-    }
-
-    .hud-streak {
-        font-size: 0.7rem;
-    }
-
-    .hud-xp-seg {
-        height: 5px;
-    }
-
-    .hud-xp-label {
-        font-size: 0.6rem;
+        font-size: 18px;
     }
 }

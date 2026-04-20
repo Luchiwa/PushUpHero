@@ -1,8 +1,8 @@
 import type { AppUser, DbUser } from '@hooks/useAuth';
 import { Avatar } from '@components/Avatar/Avatar';
+import { XPBar } from '@components/XPBar/XPBar';
+import { PrimaryCTA } from '@components/PrimaryCTA/PrimaryCTA';
 import './PlayerHUD.scss';
-
-const XP_SEG_IDS = ['s0','s1','s2','s3','s4','s5','s6','s7','s8','s9','s10','s11'];
 
 interface PlayerHUDProps {
     user: AppUser | null;
@@ -27,11 +27,11 @@ export function PlayerHUD({
     totalXp,
     xpIntoCurrentLevel,
     xpNeededForNextLevel,
-    levelProgressPct,
     onOpenProfile,
     onOpenAuth,
 }: PlayerHUDProps) {
-    const filledSegments = Math.round(levelProgressPct / 100 * XP_SEG_IDS.length);
+    const levelLabel = `LV ${String(level).padStart(2, '0')} · ${xpIntoCurrentLevel.toLocaleString()}/${xpNeededForNextLevel.toLocaleString()}`;
+    const xpRemaining = Math.max(0, xpNeededForNextLevel - xpIntoCurrentLevel);
 
     return (
         <div className="player-hud">
@@ -42,50 +42,49 @@ export function PlayerHUD({
                             photoURL={dbUser?.photoURL}
                             photoThumb={dbUser?.photoThumb}
                             initials={dbUser?.displayName || 'U'}
-                            size={44}
+                            size={48}
                             className="hud-avatar"
                         />
-                        <span className={`hud-level-badge tier-${tier}`}>LV{level}</span>
+                        <span className={`hud-level-badge tier-${tier}`} aria-hidden="true">
+                            <span className="hud-level-badge-num">{level}</span>
+                        </span>
                     </div>
 
                     <div className="hud-info">
                         <div className="hud-top-row">
                             <span className="hud-name">{dbUser?.displayName || 'Player'}</span>
                             {streak > 0 && (
-                                <span className={`hud-streak${streak >= 7 ? ' on-fire' : ''}`}>
-                                    {streak}<span className="hud-streak-icon">🔥</span>
+                                <span className={`hud-streak${streak >= 7 ? ' on-fire' : ''}`} aria-label={`${streak} day streak`}>
+                                    <span className="hud-streak-icon" aria-hidden="true">🔥</span>
+                                    <span className="hud-streak-val">{streak}</span>
                                 </span>
                             )}
-                            <span className="hud-total-xp">⚡{totalXp.toLocaleString()}</span>
+                            <span className="hud-total-xp" aria-label={`${totalXp} total XP`}>
+                                <span aria-hidden="true">⚡</span>
+                                <span className="hud-total-xp-val">{totalXp.toLocaleString()}</span>
+                            </span>
                         </div>
 
-                        <div className="hud-xp-bar" role="progressbar" aria-valuenow={xpIntoCurrentLevel} aria-valuemax={xpNeededForNextLevel}>
-                            {XP_SEG_IDS.map((id, i) => (
-                                <div
-                                    key={id}
-                                    className={`hud-xp-seg${i < filledSegments ? ' filled' : ''}${i === filledSegments - 1 && filledSegments > 0 ? ' tip' : ''}`}
-                                    style={{ animationDelay: `${i * 60}ms` }}
-                                />
-                            ))}
-                        </div>
+                        <div className="hud-kicker">{levelLabel}</div>
 
-                        <div className="hud-xp-label">
-                            <span>{xpIntoCurrentLevel.toLocaleString()} XP</span>
-                            <span className="hud-xp-next">→ LV{level + 1} in {(xpNeededForNextLevel - xpIntoCurrentLevel).toLocaleString()} XP</span>
-                        </div>
+                        <XPBar
+                            current={xpIntoCurrentLevel}
+                            next={xpNeededForNextLevel}
+                            rightLabel={`${xpRemaining.toLocaleString()} XP → LV ${level + 1}`}
+                        />
                     </div>
 
-                    <span className="hud-chevron">›</span>
+                    <span className="hud-chevron" aria-hidden="true">›</span>
                 </button>
             ) : (
                 <div className="player-hud-guest">
                     <div className="hud-guest-info">
-                        <span className="hud-guest-label">🎮 Playing as Guest</span>
+                        <span className="hud-guest-kicker">Guest Profile</span>
                         <span className="hud-guest-sub">Sign in to save your progress</span>
                     </div>
-                    <button type="button" className="hud-signin-btn" onClick={onOpenAuth}>
+                    <PrimaryCTA variant="solid" size="md" onClick={onOpenAuth}>
                         Sign in
-                    </button>
+                    </PrimaryCTA>
                 </div>
             )}
         </div>
