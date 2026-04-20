@@ -68,8 +68,8 @@ export function QuestsScreen({
                         />
                         <defs>
                             <linearGradient id="quest-grad" x1="0" y1="0" x2="1" y2="1">
-                                <stop offset="0%" stopColor="#6366f1" />
-                                <stop offset="100%" stopColor="#a855f7" />
+                                <stop offset="0%" stopColor="var(--ember)" />
+                                <stop offset="100%" stopColor="var(--gold)" />
                             </linearGradient>
                         </defs>
                     </svg>

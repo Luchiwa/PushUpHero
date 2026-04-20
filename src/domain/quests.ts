@@ -82,11 +82,11 @@ export type QuestCategory =
     | 'variety';
 
 export const QUEST_CATEGORY_META: Record<QuestCategory, { label: string; color: string }> = {
-    onboarding: { label: 'Getting Started', color: '#6366f1' },
-    exercise:   { label: 'Exercise',        color: '#22c55e' },
-    mastery:    { label: 'Mastery',         color: '#f59e0b' },
-    endurance:  { label: 'Endurance',       color: '#ef4444' },
-    variety:    { label: 'Variety',         color: '#06b6d4' },
+    onboarding: { label: 'Getting Started', color: 'var(--ember)' },
+    exercise:   { label: 'Exercise',        color: 'var(--good)' },
+    mastery:    { label: 'Mastery',         color: 'var(--gold)' },
+    endurance:  { label: 'Endurance',       color: 'var(--blood)' },
+    variety:    { label: 'Variety',         color: 'var(--ice)' },
 };
 
 // ── Quest definitions ────────────────────────────────────────────
