@@ -242,75 +242,9 @@
         }
     }
 
-    // Primary (password update) button override
-    .btn-primary.settings-submit {
-        width: auto;
-        align-self: flex-start;
-        padding: 12px $space-2xl;
-        min-height: 44px;
-        font-family: $font-display;
-        font-size: 0.88rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        color: $text;
-        background: $gradient-ember-cta;
-        background-image: $gradient-ember-cta;
-        border: none;
-        border-radius: $radius-md;
-        cursor: pointer;
-        box-shadow: $shadow-ember-glow;
-        transition:
-            transform 0.2s $ease-arena,
-            box-shadow 0.25s $ease-arena,
-            filter 0.2s $ease-arena;
-
-        &:hover:not(:disabled) {
-            transform: translateY(-1px);
-            box-shadow: $shadow-ember-glow-lg;
-        }
-
-        &:disabled {
-            filter: grayscale(0.4) brightness(0.8);
-            cursor: not-allowed;
-        }
-    }
-
-    // Danger button override
     .btn-danger {
         width: 100%;
         align-self: stretch;
-        padding: 12px $space-2xl;
-        min-height: 44px;
-        font-family: $font-display;
-        font-size: 0.88rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        color: $text;
-        background: linear-gradient(180deg, #{$blood}, #c6324b);
-        border: 1px solid color-mix(in srgb, #{$blood} 55%, transparent);
-        border-radius: $radius-md;
-        cursor: pointer;
-        box-shadow:
-            0 6px 20px color-mix(in srgb, #{$blood} 35%, transparent),
-            inset 0 1px 0 rgba(255, 255, 255, 0.2);
-        transition:
-            transform 0.2s $ease-arena,
-            box-shadow 0.25s $ease-arena,
-            filter 0.2s $ease-arena;
-
-        &:hover:not(:disabled) {
-            transform: translateY(-1px);
-            box-shadow:
-                0 10px 30px color-mix(in srgb, #{$blood} 50%, transparent),
-                inset 0 1px 0 rgba(255, 255, 255, 0.25);
-        }
-
-        &:disabled {
-            filter: grayscale(0.4) brightness(0.7);
-            cursor: not-allowed;
-        }
     }
 }
 
@@ -350,41 +284,8 @@
     }
 }
 
-// ── Logout button ─────────────────────────────────────────────────
+// ── Logout button — layout-only local overrides ──────────────────
 .btn-logout {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: $space-sm;
     align-self: center;
     margin: $space-md $space-2xl $space-2xl;
-    padding: 10px $space-2xl;
-    min-height: 44px;
-    font-family: $font-mono;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: $dim;
-    background: $obsidian-2;
-    border: 1px solid $line;
-    border-radius: $radius-pill;
-    cursor: pointer;
-    transition:
-        color 0.2s $ease-arena,
-        border-color 0.2s $ease-arena,
-        background 0.2s $ease-arena,
-        transform 0.2s $ease-arena;
-
-    svg {
-        width: 16px;
-        height: 16px;
-    }
-
-    &:hover:not(:disabled) {
-        color: $blood;
-        border-color: color-mix(in srgb, #{$blood} 40%, transparent);
-        background: color-mix(in srgb, #{$blood} 6%, #{$obsidian-2});
-        transform: translateY(-1px);
-    }
 }

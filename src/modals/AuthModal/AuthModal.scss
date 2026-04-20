@@ -228,39 +228,6 @@
     }
 }
 
-.btn-google {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: $space-sm;
-    min-height: 44px;
-    padding: 10px $space-md;
-    font-family: $font-sans;
-    font-size: 0.9rem;
-    font-weight: 600;
-    letter-spacing: 0.3px;
-    color: $text;
-    background: $obsidian-2;
-    border: 1px solid $line;
-    border-radius: $radius-md;
-    cursor: pointer;
-    transition:
-        border-color 0.2s $ease-arena,
-        background 0.2s $ease-arena,
-        transform 0.2s $ease-arena;
-
-    &:hover:not(:disabled) {
-        border-color: color-mix(in srgb, #{$ember} 35%, transparent);
-        background: color-mix(in srgb, #{$ember} 5%, #{$obsidian-2});
-        transform: translateY(-1px);
-    }
-
-    &:disabled {
-        opacity: 0.55;
-        cursor: not-allowed;
-    }
-}
-
 .auth-switch {
     text-align: center;
     font-family: $font-sans;

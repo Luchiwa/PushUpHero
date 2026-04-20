@@ -95,38 +95,6 @@
     }
 }
 
-// Primary search button — inherits .btn-primary-sm global class,
-// restyled locally here.
-.friends-search-form .btn-primary-sm {
-    padding: 10px $space-lg;
-    min-height: 44px;
-    font-family: $font-mono;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: $text;
-    background: $gradient-ember-cta;
-    border: none;
-    border-radius: $radius-md;
-    cursor: pointer;
-    box-shadow: $shadow-ember-glow;
-    transition:
-        transform 0.2s $ease-arena,
-        box-shadow 0.25s $ease-arena,
-        filter 0.2s $ease-arena;
-
-    &:hover:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: $shadow-ember-glow-lg;
-    }
-
-    &:disabled {
-        filter: grayscale(0.4) brightness(0.7);
-        cursor: not-allowed;
-    }
-}
-
 // ── Section headers ───────────────────────────────────────────────
 .friends-section {
     display: flex;

@@ -287,37 +287,21 @@ $slot-h: 120px;
     font-variant-numeric: tabular-nums;
 }
 
-// ── Continue button ────────────────────────────────────────────────
+// ── Continue button — LevelUp variant of .btn-primary ─────────────
+// Display-font (Oswald) + md radius + pre-animation opacity.
 .levelup-btn {
     opacity: 0;
     transform: translateY(10px);
-    width: 100%;
-    padding: 12px $space-2xl;
     min-height: 48px;
+    padding: 12px $space-2xl;
+    border-radius: $radius-md;
     font-family: $font-display;
     font-size: 0.95rem;
-    font-weight: 700;
-    text-transform: uppercase;
     letter-spacing: 2.5px;
-    color: $text;
-    background: $gradient-ember-cta;
-    background-image: $gradient-ember-cta;
-    border: none;
-    border-radius: $radius-md;
-    cursor: pointer;
-    box-shadow: $shadow-ember-glow;
-    transition:
-        transform 0.2s $ease-arena,
-        box-shadow 0.25s $ease-arena;
 
     &--land,
     &--show {
         animation: levelup-fade-up 0.4s 0.1s ease both;
-    }
-
-    &:hover:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: $shadow-ember-glow-lg;
     }
 }
 

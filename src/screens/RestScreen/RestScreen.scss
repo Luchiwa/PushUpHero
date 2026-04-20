@@ -209,37 +209,6 @@
     text-align: center;
 }
 
-// ── Skip button (.btn-primary override) ─────────────────────────
-.rest-card .btn-primary {
-    width: 100%;
-    padding: 12px $space-2xl;
-    min-height: 48px;
-    font-family: $font-display;
-    font-size: 0.95rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: $text;
-    background: $gradient-ember-cta;
-    background-image: $gradient-ember-cta;
-    border: none;
-    border-radius: $radius-md;
-    cursor: pointer;
-    box-shadow: $shadow-ember-glow;
-    transition:
-        transform 0.2s $ease-arena,
-        box-shadow 0.25s $ease-arena;
-
-    &:hover:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: $shadow-ember-glow-lg;
-    }
-
-    &:active:not(:disabled) {
-        transform: translateY(0);
-    }
-}
-
 // ── Mobile ──────────────────────────────────────────────────────
 @media (max-width: 480px) {
     .rest-card {
