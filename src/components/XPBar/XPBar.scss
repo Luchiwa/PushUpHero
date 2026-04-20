@@ -1,0 +1,46 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+// ── XP bar — 14 segments, ember → gold gradient on filled ────
+.xp-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+}
+
+.xp-bar-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    @include kicker;
+    letter-spacing: 1.5px;
+}
+
+.xp-bar-label {
+    color: $dim;
+}
+
+.xp-bar-remaining {
+    color: $ember;
+}
+
+.xp-bar-track {
+    display: flex;
+    gap: 3px;
+    height: 8px;
+    width: 100%;
+}
+
+.xp-bar-seg {
+    flex: 1;
+    height: 100%;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    transition: background 320ms $ease-arena, box-shadow 240ms ease;
+
+    &--filled {
+        background: $gradient-ember-gold-xp;
+        box-shadow: 0 0 6px rgba(255, 122, 71, 0.45);
+    }
+}
