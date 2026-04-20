@@ -1,0 +1,44 @@
+@use 'tokens' as *;
+
+// ── Corner frame — 4 L-shape brackets around content ─────────
+.corner-frame {
+    position: relative;
+}
+
+.corner-frame-corner {
+    position: absolute;
+    width: var(--cf-size);
+    height: var(--cf-size);
+    border-color: var(--cf-color, #{$ember});
+    border-style: solid;
+    border-width: 0;
+    pointer-events: none;
+
+    &--tl {
+        top: var(--cf-inset);
+        left: var(--cf-inset);
+        border-top-width: var(--cf-thickness);
+        border-left-width: var(--cf-thickness);
+    }
+
+    &--tr {
+        top: var(--cf-inset);
+        right: var(--cf-inset);
+        border-top-width: var(--cf-thickness);
+        border-right-width: var(--cf-thickness);
+    }
+
+    &--bl {
+        bottom: var(--cf-inset);
+        left: var(--cf-inset);
+        border-bottom-width: var(--cf-thickness);
+        border-left-width: var(--cf-thickness);
+    }
+
+    &--br {
+        bottom: var(--cf-inset);
+        right: var(--cf-inset);
+        border-bottom-width: var(--cf-thickness);
+        border-right-width: var(--cf-thickness);
+    }
+}
