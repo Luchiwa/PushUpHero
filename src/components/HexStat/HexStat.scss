@@ -1,0 +1,54 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+// ── HexStat — HUD stat chip with tone-tinted border ──────────
+.hex-stat {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: $space-sm;
+    padding: $space-sm $space-md;
+
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid color-mix(in srgb, var(--hex-stat-tone, #{$ember}) 40%, transparent);
+    border-radius: 14px;
+
+    transition: border-color 200ms ease, background 200ms ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: color-mix(in srgb, var(--hex-stat-tone, #{$ember}) 70%, transparent);
+    }
+}
+
+.hex-stat-icon {
+    font-family: $font-mono;
+    font-size: 12px;
+    color: var(--hex-stat-tone, #{$ember});
+    line-height: 1;
+    display: inline-flex;
+    width: 16px;
+    justify-content: center;
+}
+
+.hex-stat-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.hex-stat-label {
+    @include micro;
+    letter-spacing: 1.5px;
+    color: $dim;
+}
+
+.hex-stat-value {
+    font-family: $font-display;
+    font-weight: 600;
+    font-size: 18px;
+    line-height: 1;
+    color: $text;
+    @include text-truncate;
+}
