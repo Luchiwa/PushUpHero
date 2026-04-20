@@ -67,7 +67,19 @@ export type WorkoutAction =
   | { type: 'SHOW_LEVEL_UP' }
   | { type: 'SAVE_STARTED' }
   | { type: 'SAVE_COMPLETED' }
-  | { type: 'SAVE_FAILED' };
+  | { type: 'SAVE_FAILED' }
+  | {
+      type: 'RESUME_WORKOUT';
+      completedSets: SetRecord[];
+      blockIndex: number;
+      setIndex: number;
+      elapsedTime: number;
+    }
+  | {
+      type: 'DISCARD_CHECKPOINT';
+      completedSets: SetRecord[];
+      elapsedTime: number;
+    };
 
 // ── Reducer ──────────────────────────────────────────────────────
 
@@ -156,6 +168,30 @@ export function workoutReducer(state: WorkoutState, action: WorkoutAction): Work
 
     case 'SAVE_FAILED':
       return { ...state, isSaving: false };
+
+    case 'RESUME_WORKOUT':
+      return {
+        ...INITIAL_WORKOUT_STATE,
+        screen: 'active',
+        currentBlockIndex: action.blockIndex,
+        currentSetIndex: action.setIndex,
+        completedSets: action.completedSets,
+        completedSetsReps: action.completedSets.reduce((sum, s) => sum + s.reps, 0),
+        elapsedTime: action.elapsedTime,
+      };
+
+    case 'DISCARD_CHECKPOINT': {
+      const totalReps = action.completedSets.reduce((sum, s) => sum + s.reps, 0);
+      if (totalReps === 0) return INITIAL_WORKOUT_STATE;
+      return {
+        ...INITIAL_WORKOUT_STATE,
+        screen: 'stopped',
+        completedSets: action.completedSets,
+        completedSetsReps: totalReps,
+        goalReached: false,
+        elapsedTime: action.elapsedTime,
+      };
+    }
 
     default:
       return state;

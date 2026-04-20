@@ -1,0 +1,168 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// ── Resume Banner — interrupted workout prompt ──────────────────
+.resume-banner {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0.875rem;
+    border: 1px solid color-mix(in srgb, $accent 22%, transparent);
+    border-radius: $radius-sm;
+    background: $white;
+    background-image: linear-gradient(145deg,
+            color-mix(in srgb, $accent 8%, transparent) 0%,
+            color-mix(in srgb, $accent 3%, transparent) 40%,
+            color-mix(in srgb, $accent 5%, transparent) 100%);
+    overflow: hidden;
+    animation: resume-banner-in 0.55s $ease-out-expo both;
+}
+
+@keyframes resume-banner-in {
+    0% {
+        opacity: 0;
+        transform: translateY(10px) scale(0.96);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+// ── Play icon ───────────────────────────────────────────────────
+.resume-banner-icon-wrap {
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    @include flex-center;
+    background: color-mix(in srgb, $accent 12%, transparent);
+    border-radius: 10px;
+    animation: resume-icon-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes resume-icon-pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, $accent 20%, transparent);
+    }
+
+    50% {
+        box-shadow: 0 0 0 6px color-mix(in srgb, $accent 0%, transparent);
+    }
+}
+
+.resume-banner-icon {
+    color: $accent;
+}
+
+// ── Info section ────────────────────────────────────────────────
+.resume-banner-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.resume-banner-title {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: $text;
+    letter-spacing: -0.01em;
+}
+
+.resume-banner-detail {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: $text-muted;
+    font-variant-numeric: tabular-nums;
+}
+
+.resume-banner-next {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: $accent;
+}
+
+// ── Action buttons ──────────────────────────────────────────────
+.resume-banner-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.resume-banner-btn {
+    border: none;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background $transition-fast, transform $transition-fast,
+        box-shadow $transition-fast, opacity $transition-fast;
+
+    &--resume {
+        padding: 0.45rem 0.85rem;
+        border-radius: $radius-xs;
+        background: $gradient-accent;
+        color: $white;
+        font-size: $font-xs;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        box-shadow: 0 3px 10px color-mix(in srgb, $accent 40%, transparent);
+
+        &:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px color-mix(in srgb, $accent 50%, transparent);
+        }
+
+        &:active:not(:disabled) {
+            transform: translateY(0) scale(0.97);
+        }
+
+        &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    }
+
+    &--discard {
+        width: 28px;
+        height: 28px;
+        @include flex-center;
+        border-radius: $radius-xs;
+        background: color-mix(in srgb, $text 6%, transparent);
+        color: $text-muted;
+
+        &:hover {
+            background: color-mix(in srgb, $red 10%, transparent);
+            color: $red;
+        }
+    }
+}
+
+// ── Mobile responsive ───────────────────────────────────────────
+@media (max-width: 480px) {
+    .resume-banner {
+        padding: 0.6rem 0.7rem;
+        gap: 0.6rem;
+    }
+
+    .resume-banner-icon-wrap {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+    }
+
+    .resume-banner-icon {
+        width: 20px;
+        height: 20px;
+    }
+
+    .resume-banner-title {
+        font-size: 0.78rem;
+    }
+}
