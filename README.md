@@ -55,48 +55,35 @@ npm install
 1. **Build → Firestore Database → Create database**
 2. Choose **Production** mode
 3. Pick the region closest to you (e.g. `europe-west1`)
-4. Once created, go to the **Rules** tab and replace the content with:
-
-```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /users/{userId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
-
-      match /sessions/{sessionId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-      match /notifications/{notifId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-    }
-  }
-}
-```
 
 ### 2.4 Enable Firebase Storage (avatars)
 
 1. **Build → Storage → Get started**
 2. Choose the same region as Firestore
-3. In the **Rules** tab, replace with:
 
-```
-rules_version = '2';
-service firebase.storage {
-  match /b/{bucket}/o {
-    match /avatars/{userId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId
-                   && request.resource.size < 2 * 1024 * 1024
-                   && request.resource.contentType.matches('image/.*');
-    }
-  }
-}
+### 2.5 Deploy security rules
+
+Rules live in `firestore.rules` and `storage.rules` at the repo root. Deploy them from source:
+
+```bash
+npm install -g firebase-tools   # if not already installed
+firebase login
+npm run deploy:rules
 ```
 
-### 2.5 Configure CORS for Storage (required for localhost)
+> Do **not** edit rules from the Firebase Console — changes made there will be overwritten on the next `npm run deploy:rules`. Always change rules via a PR.
+
+To iterate locally without touching prod, run the Firebase emulators:
+
+```bash
+npm run emulators
+# Firestore: http://localhost:8080
+# Storage:   http://localhost:9199
+# Auth:      http://localhost:9099
+# UI:        http://localhost:4000
+```
+
+### 2.6 Configure CORS for Storage (required for localhost)
 
 The `cors.json` file is already at the root of the project. Apply it once with `gsutil`:
 
@@ -113,7 +100,7 @@ Replace `YOUR_STORAGE_BUCKET` with the value of `VITE_FIREBASE_STORAGE_BUCKET` f
 
 > Without this step, avatars still display — but a CORS error will appear in the dev console.
 
-### 2.6 Get your Firebase config keys
+### 2.7 Get your Firebase config keys
 
 1. **Project Settings** (gear icon, top left) → **General** tab
 2. Scroll to **Your apps** → click **Add app** → Web icon (`</>`)
