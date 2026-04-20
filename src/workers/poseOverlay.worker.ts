@@ -5,6 +5,7 @@
  * Receives:
  *   { type: 'init', canvas }
  *   { type: 'set-key-joints', keyJoints: Record<string, number[]> }
+ *   { type: 'set-palette', palette: { invalid, down, up, neutral } }
  *   { type: 'draw', landmarks, width, height, phase, isValidPosition, exerciseType }
  */
 
@@ -24,6 +25,14 @@ const POSE_CONNECTIONS: [number, number][] = [
 /** Key joints to highlight per exercise type — sent from main thread via 'set-key-joints' */
 let keyJointsMap: Record<string, Set<number>> = {};
 
+/** Skeleton palette — Arena tones by default. Overridable via 'set-palette'. */
+let palette = {
+    invalid: '#ff5577', // blood
+    down: '#4ae8a0',    // good
+    up: '#7fc5ff',      // ice
+    neutral: '#ff7a47', // ember
+};
+
 let canvas: OffscreenCanvas | null = null;
 let ctx: OffscreenCanvasRenderingContext2D | null = null;
 
@@ -31,10 +40,10 @@ let ctx: OffscreenCanvasRenderingContext2D | null = null;
 let prevCoreCenter: { x: number; y: number } | null = null;
 
 function getPhaseColor(phase: string, isValidPosition: boolean): string {
-    if (!isValidPosition) return '#ef4444';
-    if (phase === 'down') return '#22c55e';
-    if (phase === 'up') return '#3b82f6';
-    return '#f59e0b';
+    if (!isValidPosition) return palette.invalid;
+    if (phase === 'down') return palette.down;
+    if (phase === 'up') return palette.up;
+    return palette.neutral;
 }
 
 function draw(
@@ -62,13 +71,11 @@ function draw(
     const MIN_VIS = 0.35;
 
     // Skip drawing if the skeleton looks "exploded" (incoherent landmark spread).
-    // Check that core landmarks (shoulders + hips) are visible and form a plausible body.
     const core = [11, 12, 23, 24].map(i => landmarks[i]).filter(l => l && (l.visibility ?? 0) > MIN_VIS);
-    if (core.length < 3) return; // not enough visible core landmarks
+    if (core.length < 3) return;
     const xs = core.map(l => l.x), ys = core.map(l => l.y);
     const coreW = Math.max(...xs) - Math.min(...xs);
     const coreH = Math.max(...ys) - Math.min(...ys);
-    // If the core bounding box is unreasonably large (>60% of frame) or tiny (<1%), skip
     if (coreW > 0.6 || coreH > 0.6 || (coreW < 0.01 && coreH < 0.01)) return;
 
     // Inter-frame consistency: reject skeleton teleportation (hallucination artifact)
@@ -77,7 +84,6 @@ function draw(
     if (prevCoreCenter) {
         const jump = Math.hypot(coreCX - prevCoreCenter.x, coreCY - prevCoreCenter.y);
         if (jump > 0.15) {
-            // Skeleton center jumped >15% of frame in one step — skip this frame
             prevCoreCenter = { x: coreCX, y: coreCY };
             return;
         }
@@ -135,6 +141,8 @@ self.onmessage = (e: MessageEvent) => {
         for (const [key, arr] of Object.entries(raw)) {
             keyJointsMap[key] = new Set(arr);
         }
+    } else if (msg.type === 'set-palette') {
+        palette = { ...palette, ...msg.palette };
     } else if (msg.type === 'draw') {
         draw(msg.landmarks, msg.width, msg.height, msg.phase, msg.isValidPosition, msg.exerciseType);
     }

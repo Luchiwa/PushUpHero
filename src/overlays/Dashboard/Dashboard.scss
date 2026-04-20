@@ -1,19 +1,9 @@
-@use 'variables' as *;
+@use 'tokens' as *;
 @use 'mixins' as *;
 
 // ══════════════════════════════════════════════════════════════════
-// Dashboard HUD — frames the camera feed without obstructing center
-//
-// Layout:
-//   ┌───────────────────────────────┐
-//   │ [REP + AVG]     [goal] [⚙ ■] │  ← top bar
-//   │                               │
-//   │          (camera feed)        │
-//   │         [ GRADE POP ]         │  ← ephemeral center
-//   │                               │
-//   │      [🎙️ coach hint]          │
-//   │   [⚠️ invalid position]       │  ← bottom (above PositionGuide)
-//   └───────────────────────────────┘
+// Dashboard HUD — Arena live-capture overlay on top of camera feed.
+// Ember accents, glassmorphism, mono stats, obsidian-tinted chrome.
 // ══════════════════════════════════════════════════════════════════
 
 .dashboard {
@@ -30,168 +20,186 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    padding: max(0.6rem, env(safe-area-inset-top)) 0.75rem 0;
+    padding: max($space-sm, env(safe-area-inset-top)) $space-md 0;
     pointer-events: all;
-    gap: 0.5rem;
+    gap: $space-sm;
 }
 
 // ── Left cluster: rep count + avg ────────────────────────────────
 .hud-left {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: $space-md;
 }
 
 .hud-rep-block {
-    position: relative; // for FloatyNumbers
+    position: relative;
     display: flex;
     align-items: baseline;
-    gap: 0.3rem;
+    gap: 6px;
 }
 
 .hud-rep-count {
-    font-size: 2.4rem;
+    font-family: $font-display;
+    font-size: 2.6rem;
     line-height: 1;
-    font-weight: 900;
-    color: $white;
-    text-shadow: 0 2px 8px rgba($black, 0.6);
+    font-weight: 700;
+    color: $text;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.75),
+                 0 0 18px rgba(255, 122, 71, 0.4);
+    font-variant-numeric: tabular-nums;
     animation: rep-pop 0.3s $ease-out-back both;
 }
 
 .hud-rep-label {
-    font-size: 0.65rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: rgba($white, 0.6);
+    @include micro;
+    letter-spacing: 2px;
+    color: $ember;
     align-self: flex-end;
-    margin-bottom: 0.25rem;
+    margin-bottom: 6px;
 }
 
 .hud-avg {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.1rem;
+    gap: 2px;
 }
 
 .hud-avg-label {
-    font-size: 0.55rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: rgba($white, 0.5);
+    @include micro;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: $dim;
 }
 
 // ── Right cluster: goal / timer / actions ────────────────────────
 .hud-right {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: $space-sm;
 }
 
 .set-indicator {
-    font-size: 0.7rem;
-    font-weight: 800;
-    color: rgba($white, 0.7);
-    background: rgba($black, 0.35);
-    padding: 0.2rem 0.55rem;
+    @include micro;
+    letter-spacing: 1.5px;
+    color: $ember;
+    background: rgba(12, 10, 16, 0.65);
+    border: 1px solid color-mix(in srgb, #{$ember} 30%, transparent);
+    padding: 5px 10px;
     border-radius: $radius-pill;
-    letter-spacing: 0.03em;
     white-space: nowrap;
+    backdrop-filter: blur($blur-xs);
+    -webkit-backdrop-filter: blur($blur-xs);
+    font-variant-numeric: tabular-nums;
 }
 
 .hud-timer {
-    font-size: 1.3rem;
-    font-weight: 900;
-    font-family: 'Courier New', monospace;
-    color: $white;
-    text-shadow: 0 0 8px rgba($accent, 0.4);
-    letter-spacing: 0.04em;
+    font-family: $font-mono;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: $text;
+    letter-spacing: 0.05em;
+    text-shadow: 0 0 10px rgba(255, 122, 71, 0.6),
+                 0 2px 8px rgba(0, 0, 0, 0.7);
+    font-variant-numeric: tabular-nums;
 }
 
 // Goal progress bar (horizontal, compact)
 .hud-goal {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: $space-xs;
 }
 
 .hud-goal-track {
-    width: 48px;
+    width: 52px;
     height: 6px;
-    background: rgba($white, 0.15);
-    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: $radius-pill;
     overflow: hidden;
 }
 
 .hud-goal-fill {
     height: 100%;
-    border-radius: 3px;
-    background: linear-gradient(90deg, $accent, $accent-light);
+    border-radius: $radius-pill;
+    background: $gradient-ember-gold-xp;
     transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 
     &--done {
-        background: $gradient-green;
-        box-shadow: 0 0 6px rgba($green, 0.5);
+        background: linear-gradient(90deg, $good, #2fb57a);
+        box-shadow: 0 0 8px rgba(74, 232, 160, 0.55);
     }
 }
 
 .hud-goal-count {
+    font-family: $font-mono;
     font-size: 0.72rem;
-    font-weight: 800;
-    color: rgba($white, 0.8);
+    font-weight: 700;
+    color: $text;
     white-space: nowrap;
+    font-variant-numeric: tabular-nums;
 }
 
 // ── Action buttons ───────────────────────────────────────────────
 .dashboard-actions {
     display: flex;
     align-items: center;
-    gap: 0.3rem;
+    gap: 4px;
 }
 
 // Scoped to .dashboard so we don't bleed into the global .btn-icon
 .dashboard .btn-icon {
-    padding: 0.35rem;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
+    padding: 0;
+    border-radius: $radius-sm;
+    width: 34px;
+    height: 34px;
     @include flex-center;
-    background: rgba($black, 0.35);
-    border: 1px solid rgba($white, 0.12);
-    color: $white;
+    background: rgba(12, 10, 16, 0.65);
+    border: 1px solid color-mix(in srgb, #{$ember} 22%, transparent);
+    color: $ember;
     cursor: pointer;
-    transition: $transition;
-    backdrop-filter: blur($blur);
+    transition: background 180ms $ease-arena,
+                border-color 180ms $ease-arena,
+                color 180ms $ease-arena;
+    backdrop-filter: blur($blur-sm);
+    -webkit-backdrop-filter: blur($blur-sm);
 
     &:hover,
     &:active {
-        background: rgba($black, 0.55);
+        background: rgba(12, 10, 16, 0.8);
+        border-color: $ember;
     }
 
     &--muted {
-        opacity: 0.5;
+        opacity: 0.55;
+        color: $dim;
+        border-color: $line;
     }
 }
 
 .dashboard .btn-stop {
-    padding: 0.35rem 0.6rem;
-    border-radius: $radius-pill;
-    background: rgba($red, 0.35);
-    border: 1px solid rgba($red, 0.45);
-    color: $white;
+    padding: 0 $space-md;
+    height: 34px;
+    border-radius: $radius-sm;
+    background: rgba(255, 85, 119, 0.18);
+    border: 1px solid color-mix(in srgb, #{$blood} 45%, transparent);
+    color: $blood;
+    font-family: $font-mono;
     font-size: 0.85rem;
     font-weight: 700;
-    font-family: inherit;
+    letter-spacing: 2px;
     cursor: pointer;
-    transition: $transition;
-    backdrop-filter: blur($blur);
+    transition: background 180ms $ease-arena, border-color 180ms $ease-arena;
+    backdrop-filter: blur($blur-sm);
+    -webkit-backdrop-filter: blur($blur-sm);
     line-height: 1;
 
     &:hover,
     &:active {
-        background: rgba($red, 0.55);
+        background: rgba(255, 85, 119, 0.3);
+        border-color: $blood;
     }
 }
 
@@ -204,7 +212,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.4rem;
+    gap: $space-xs;
     pointer-events: none;
 }
 
@@ -213,42 +221,58 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
-    // Leave enough space for PositionGuide card below
-    padding: 0 0.75rem;
-    margin-bottom: 13rem; // clears the PositionGuide card
+    gap: $space-sm;
+    padding: 0 $space-md;
+    margin-bottom: 13rem;
 }
 
 // ── Anti-cheat banner ────────────────────────────────────────────
 .invalid-position-banner {
-    padding: 0.4rem 0.7rem;
-    background: rgba($red, 0.2);
-    border: 1px solid rgba($red, 0.3);
+    padding: 6px 12px;
+    background: rgba(255, 85, 119, 0.18);
+    border: 1px solid color-mix(in srgb, #{$blood} 40%, transparent);
     border-radius: $radius-sm;
-    color: $white;
-    font-size: 0.72rem;
+    color: $text;
+    font-family: $font-sans;
+    font-size: 0.78rem;
     font-weight: 600;
     text-align: center;
-    backdrop-filter: blur($blur);
+    backdrop-filter: blur($blur-sm);
+    -webkit-backdrop-filter: blur($blur-sm);
     pointer-events: all;
     animation: slide-up 0.25s ease both;
 
     &--lock {
-        background: rgba($magenta, 0.2);
-        border-color: rgba($magenta, 0.4);
+        background: rgba(187, 140, 255, 0.18);
+        border-color: color-mix(in srgb, #{$purple} 45%, transparent);
+    }
+}
+
+// ── Rep pop animation (inline so no dependency) ──────────────────
+@keyframes rep-pop {
+    0% {
+        transform: scale(0.92);
+        opacity: 0.6;
+    }
+    60% {
+        transform: scale(1.08);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
     }
 }
 
 // ── Mobile responsive ────────────────────────────────────────────
 @media (max-width: 480px) {
     .hud-rep-count {
-        font-size: 2rem;
+        font-size: 2.15rem;
     }
 
     .dashboard-top {
-        padding-top: max(0.4rem, env(safe-area-inset-top));
-        padding-right: 0.5rem;
-        padding-left: 0.5rem;
+        padding-top: max(6px, env(safe-area-inset-top));
+        padding-right: $space-sm;
+        padding-left: $space-sm;
     }
 
     .dashboard-bottom {
@@ -256,6 +280,6 @@
     }
 
     .hud-goal-track {
-        width: 36px;
+        width: 40px;
     }
 }

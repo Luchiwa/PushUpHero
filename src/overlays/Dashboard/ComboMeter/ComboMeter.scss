@@ -1,31 +1,34 @@
-@use 'variables' as *;
+@use 'tokens' as *;
 @use 'mixins' as *;
 
 .combo-badge {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
-    background: rgba($accent, 0.2);
-    border: 1px solid rgba($accent, 0.45);
+    gap: $space-xs;
+    background: color-mix(in srgb, #{$ember} 22%, transparent);
+    border: 1px solid color-mix(in srgb, #{$ember} 55%, transparent);
     border-radius: $radius-pill;
-    padding: 0.15rem 0.6rem;
+    padding: 4px 12px;
     animation: combo-pop 0.4s $ease-out-back both;
     backdrop-filter: blur($blur-xs);
     -webkit-backdrop-filter: blur($blur-xs);
+    box-shadow: 0 0 12px rgba(255, 122, 71, 0.35);
 }
 
 .combo-count {
-    font-size: 1rem;
-    font-weight: 900;
-    color: $accent;
-    text-shadow: 0 0 6px rgba($accent, 0.5);
+    font-family: $font-display;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: $ember;
+    letter-spacing: 1px;
+    text-shadow: 0 0 8px rgba(255, 122, 71, 0.55);
+    font-variant-numeric: tabular-nums;
 }
 
 .combo-label {
-    font-size: 0.55rem;
-    font-weight: 800;
-    letter-spacing: 0.1em;
-    color: rgba($white, 0.75);
+    @include micro;
+    letter-spacing: 2px;
+    color: $text;
 }
 
 @keyframes combo-pop {
