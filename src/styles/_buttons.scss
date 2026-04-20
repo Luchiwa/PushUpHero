@@ -23,6 +23,10 @@
         color 0.2s $ease-arena,
         filter 0.2s $ease-arena;
 
+    &:focus-visible {
+        @include focus-visible;
+    }
+
     &:disabled {
         opacity: 0.5;
         cursor: not-allowed;
