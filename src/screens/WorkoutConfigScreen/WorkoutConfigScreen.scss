@@ -1,4 +1,4 @@
-@use 'variables' as *;
+@use 'tokens' as *;
 @use 'mixins' as *;
 
 // ── Body override — removes default page-body constraints ────────────────────
@@ -13,17 +13,17 @@
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-    max-width: 480px;
+    max-width: $mobile-max-width;
     width: 100%;
     margin: 0 auto;
-    padding: 0 $spacing-lg;
+    padding: 0 $space-lg;
 }
 
 // ── Block list body variant ──────────────────────────────────────────────────
 .wc-body--list {
-    gap: $spacing-sm;
-    padding-top: $spacing-lg;
-    padding-bottom: $spacing-lg;
+    gap: $space-md;
+    padding-top: $space-lg;
+    padding-bottom: $space-lg;
     background: transparent;
 }
 
@@ -32,33 +32,30 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.4rem;
-    padding: $spacing-xl $spacing-md;
-    background: $white;
-    background-image: linear-gradient(135deg,
-            color-mix(in srgb, $accent 5%, transparent) 0%,
-            transparent 100%);
-    border: 1px dashed color-mix(in srgb, $accent 18%, transparent);
-    border-radius: $radius-sm;
+    gap: $space-xs;
+    padding: $space-4xl $space-lg;
+    background: $card;
+    border: 1.5px dashed color-mix(in srgb, #{$ember} 28%, transparent);
+    border-radius: $radius-lg;
+    text-align: center;
 }
 
 .wc-empty-icon {
-    font-size: 2.8rem;
+    font-size: 2.6rem;
     line-height: 1;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.4rem;
+    filter: drop-shadow(0 0 12px rgba(255, 122, 71, 0.35));
 }
 
 .wc-empty-title {
-    font-size: $font-md;
-    font-weight: 800;
+    @include title-m;
     color: $text;
     margin: 0;
 }
 
 .wc-empty-sub {
-    font-size: $font-sm;
-    color: $text-muted;
-    text-align: center;
+    @include caption;
+    color: $dim;
     margin: 0;
 }
 
@@ -67,28 +64,39 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.6rem;
+    gap: $space-sm;
     width: 100%;
-    padding: 0.9rem;
-    border: 2px dashed color-mix(in srgb, $accent 35%, transparent);
-    border-radius: $radius-sm;
-    background: color-mix(in srgb, $accent 2.5%, transparent);
-    color: color-mix(in srgb, $accent 70%, transparent);
-    font-size: $font-sm;
+    min-height: $hit-target-min;
+    padding: $space-md;
+    border: 1.5px dashed color-mix(in srgb, #{$ember} 40%, transparent);
+    border-radius: $radius-lg;
+    background: color-mix(in srgb, #{$ember} 4%, transparent);
+    color: $ember;
+    font-family: $font-mono;
+    font-size: 11px;
     font-weight: 700;
-    font-family: inherit;
-    cursor: pointer;
-    transition: border-color $transition-fast, color $transition-fast, background $transition-fast, transform $transition-fast, box-shadow $transition-fast;
-    letter-spacing: 0.02em;
+    letter-spacing: 2px;
     text-transform: uppercase;
+    cursor: pointer;
+    transition: border-color 180ms $ease-arena,
+                background 180ms $ease-arena,
+                transform 180ms $ease-arena,
+                box-shadow 180ms $ease-arena;
 
-    &:hover {
-        border-color: $accent;
-        color: $accent;
-        background: color-mix(in srgb, $accent 7%, transparent);
+    &:hover,
+    &:focus-visible {
+        border-color: $ember;
+        background: color-mix(in srgb, #{$ember} 10%, transparent);
         transform: translateY(-2px);
-        box-shadow: 0 4px 18px color-mix(in srgb, $accent 18%, transparent),
-            0 0 8px color-mix(in srgb, $accent 8%, transparent);
+        box-shadow: 0 6px 22px rgba(255, 122, 71, 0.22),
+                    0 0 10px rgba(255, 122, 71, 0.18);
+        outline: none;
+
+        .wc-add-block-icon {
+            background: $ember;
+            color: $obsidian;
+            transform: rotate(90deg);
+        }
     }
 }
 
@@ -96,50 +104,49 @@
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background: color-mix(in srgb, $accent 15%, transparent);
-    color: $accent;
+    background: color-mix(in srgb, #{$ember} 22%, transparent);
+    color: $ember;
     font-size: 1rem;
     font-weight: 900;
     @include flex-center;
-    transition: background $transition-fast, transform $transition-fast;
-
-    .wc-add-block-btn:hover & {
-        background: color-mix(in srgb, $accent 25%, transparent);
-        transform: rotate(90deg);
-    }
+    transition: background 180ms $ease-arena,
+                color 180ms $ease-arena,
+                transform 260ms $ease-arena;
 }
 
-// ── Summary divider ─────────────────────────────────────────────────────────
+// ── Summary divider (Arena kicker) ──────────────────────────────────────────
 .wc-summary-divider {
     display: flex;
     align-items: center;
-    gap: $spacing-sm;
-    margin-top: $spacing-lg;
-    margin-bottom: $spacing-xs;
+    gap: $space-sm;
+    margin-top: $space-lg;
+    margin-bottom: $space-xs;
 
     &::before,
     &::after {
         content: '';
         flex: 1;
         height: 1px;
-        background: linear-gradient(90deg, transparent, color-mix(in srgb, $text 12%, transparent), transparent);
+        background: linear-gradient(90deg,
+            transparent,
+            color-mix(in srgb, #{$ember} 30%, transparent) 20%,
+            color-mix(in srgb, #{$ember} 30%, transparent) 80%,
+            transparent
+        );
     }
 
     span {
-        font-size: 0.68rem;
-        font-weight: 700;
-        color: $text-muted;
-        text-transform: uppercase;
-        letter-spacing: 0.07em;
+        @include kicker;
+        color: $ember;
         white-space: nowrap;
     }
 }
 
-// ── Summary KPI grid ─────────────────────────────────────────────────────────
+// ── Summary KPI grid ────────────────────────────────────────────────────────
 @keyframes wc-kpi-in {
     from {
         opacity: 0;
-        transform: translateY(5px);
+        transform: translateY(6px);
     }
 
     to {
@@ -150,7 +157,7 @@
 
 .wc-summary-grid {
     display: flex;
-    gap: $spacing-xs;
+    gap: $space-sm;
 }
 
 .wc-summary-kpi {
@@ -158,88 +165,78 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2px;
-    padding: 8px $spacing-xs 6px;
-    background: $white;
-    background-image: linear-gradient(135deg,
-            color-mix(in srgb, var(--kpi-color) 8%, transparent) 0%,
-            color-mix(in srgb, var(--kpi-color) 2%, transparent) 50%,
-            transparent 100%);
-    border: 1px solid color-mix(in srgb, var(--kpi-color) 22%, transparent);
-    border-radius: $radius-sm;
+    gap: 4px;
+    padding: $space-md $space-sm;
+    background: $card;
+    border: 1px solid color-mix(in srgb, var(--kpi-color) 32%, transparent);
+    border-radius: $radius-lg;
     animation: wc-kpi-in 0.35s $ease-out-expo both;
-    transition: transform 0.2s $ease-default,
-        box-shadow 0.25s $ease-default,
-        border-color 0.25s $ease-default,
-        background-image 0.25s $ease-default;
+    transition: transform 180ms $ease-arena,
+                box-shadow 180ms $ease-arena,
+                border-color 180ms $ease-arena;
 
     &:hover {
         transform: translateY(-2px);
-        border-color: color-mix(in srgb, var(--kpi-color) 35%, transparent);
-        background-image: linear-gradient(135deg,
-                color-mix(in srgb, var(--kpi-color) 14%, transparent) 0%,
-                color-mix(in srgb, var(--kpi-color) 4%, transparent) 50%,
-                transparent 100%);
-        box-shadow: 0 4px 16px color-mix(in srgb, var(--kpi-color) 15%, transparent),
-            0 0 6px color-mix(in srgb, var(--kpi-color) 8%, transparent);
+        border-color: color-mix(in srgb, var(--kpi-color) 55%, transparent);
+        box-shadow: 0 6px 18px color-mix(in srgb, var(--kpi-color) 25%, transparent);
     }
 
     &:nth-child(1) { animation-delay: 0ms; }
-    &:nth-child(2) { animation-delay: 50ms; }
-    &:nth-child(3) { animation-delay: 100ms; }
+    &:nth-child(2) { animation-delay: 60ms; }
+    &:nth-child(3) { animation-delay: 120ms; }
 }
 
 .wc-summary-kpi-value {
-    font-size: 1.3rem;
-    font-weight: 900;
-    color: $text;
+    font-family: $font-display;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--kpi-color);
+    letter-spacing: 0.5px;
+    line-height: 1.05;
     font-variant-numeric: tabular-nums;
-    line-height: 1.1;
-    letter-spacing: -0.03em;
 }
 
 .wc-summary-kpi-label {
-    font-size: 0.56rem;
-    font-weight: 800;
-    color: $text-muted;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    @include micro;
+    letter-spacing: 2px;
+    color: $dim;
 }
 
-// ── Bottom action bar ────────────────────────────────────────────────────────
+// ── Bottom action bar ───────────────────────────────────────────────────────
 .wc-bottom-bar {
     flex-shrink: 0;
-    max-width: 480px;
+    max-width: $mobile-max-width;
     width: 100%;
     margin: 0 auto;
-    padding: $spacing-md $spacing-lg;
+    padding: $space-md $space-lg calc(env(safe-area-inset-bottom, 0px) + #{$space-md});
+    position: relative;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: $space-lg;
+        right: $space-lg;
+        height: 1px;
+        background: linear-gradient(90deg,
+            transparent,
+            color-mix(in srgb, #{$ember} 20%, transparent) 40%,
+            color-mix(in srgb, #{$ember} 20%, transparent) 60%,
+            transparent
+        );
+    }
 }
 
-.wc-next-btn {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-
-    svg {
-        flex-shrink: 0;
-    }
-
-    &--loading {
-        opacity: 0.8;
-    }
-}
-
-// Loading spinner on Start button
+// Loading spinner on Start button (used inside PrimaryCTA)
 .wc-start-spinner {
     width: 14px;
     height: 14px;
-    border: 2px solid rgba($white, 0.3);
-    border-top-color: $white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
     border-radius: 50%;
     animation: wc-spin 0.7s linear infinite;
     flex-shrink: 0;
+    display: inline-block;
 }
 
 @keyframes wc-spin {
@@ -251,10 +248,11 @@
 // ── Mobile adjustments ──────────────────────────────────────────────────────
 @media (max-width: 480px) {
     .wc-body {
-        padding: 0 $spacing-md;
+        padding: 0 $space-md;
     }
 
     .wc-bottom-bar {
-        padding: $spacing-sm $spacing-md;
+        padding-left: $space-md;
+        padding-right: $space-md;
     }
 }

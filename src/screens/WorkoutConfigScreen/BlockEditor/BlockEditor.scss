@@ -1,4 +1,4 @@
-@use 'variables' as *;
+@use 'tokens' as *;
 @use 'mixins' as *;
 
 // ── Progress bar (segmented pill tracker) ───────────────────────────────────
@@ -6,8 +6,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: $spacing-md 0 0;
+    gap: $space-sm;
+    padding: $space-md 0 0;
     flex-shrink: 0;
 }
 
@@ -15,11 +15,12 @@
     position: relative;
     display: flex;
     gap: 3px;
-    background: color-mix(in srgb, $accent 6%, transparent);
+    background: color-mix(in srgb, #{$ember} 8%, transparent);
+    border: 1px solid color-mix(in srgb, #{$ember} 15%, transparent);
     border-radius: $radius-pill;
     padding: 3px;
     width: 160px;
-    height: 10px;
+    height: 12px;
     overflow: hidden;
 }
 
@@ -27,10 +28,10 @@
     flex: 1;
     border-radius: $radius-pill;
     background: transparent;
-    transition: background 0.25s $ease-default;
+    transition: background 0.25s $ease-arena;
 
     &--done {
-        background: color-mix(in srgb, $accent 20%, transparent);
+        background: color-mix(in srgb, #{$ember} 22%, transparent);
     }
 }
 
@@ -38,11 +39,11 @@
     position: absolute;
     top: 3px;
     bottom: 3px;
-    background: $accent;
+    background: $gradient-ember-cta;
     border-radius: $radius-pill;
     transition: left 0.3s $ease-out-expo, width 0.3s $ease-out-expo;
-    box-shadow: 0 0 8px color-mix(in srgb, $accent 60%, transparent),
-        0 0 16px color-mix(in srgb, $accent 25%, transparent);
+    box-shadow: 0 0 8px rgba(255, 122, 71, 0.6),
+                0 0 16px rgba(255, 122, 71, 0.25);
     animation: wc-progress-glow 2s ease-in-out infinite;
 }
 
@@ -50,21 +51,21 @@
 
     0%,
     100% {
-        box-shadow: 0 0 6px color-mix(in srgb, $accent 50%, transparent),
-            0 0 12px color-mix(in srgb, $accent 20%, transparent);
+        box-shadow: 0 0 6px rgba(255, 122, 71, 0.5),
+                    0 0 12px rgba(255, 122, 71, 0.2);
     }
 
     50% {
-        box-shadow: 0 0 10px color-mix(in srgb, $accent 70%, transparent),
-            0 0 20px color-mix(in srgb, $accent 35%, transparent);
+        box-shadow: 0 0 10px rgba(255, 122, 71, 0.75),
+                    0 0 22px rgba(255, 122, 71, 0.35);
     }
 }
 
 .wc-progress-label {
-    font-size: $font-xs;
-    font-weight: 700;
-    color: $text-muted;
-    letter-spacing: 0.04em;
+    @include micro;
+    letter-spacing: 2px;
+    color: $dim;
+    font-variant-numeric: tabular-nums;
 }
 
 // ── Individual step ─────────────────────────────────────────────────────────
@@ -72,15 +73,15 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: $spacing-lg;
-    padding: $spacing-xl 0;
+    gap: $space-lg;
+    padding: $space-4xl 0 $space-3xl;
     animation: wc-step-in 0.35s $ease-out-expo both;
 }
 
 @keyframes wc-step-in {
     from {
         opacity: 0;
-        transform: translateX(24px);
+        transform: translateX(20px);
     }
 
     to {
@@ -93,28 +94,24 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.35rem;
+    gap: $space-sm;
     text-align: center;
 }
 
-// SVG icon badge — white shell + accent gradient
+// SVG icon badge — Arena obsidian card + ember border + glow
 .wc-step-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: $radius-sm;
-    background: $white;
-    background-image: linear-gradient(135deg,
-            color-mix(in srgb, $accent 12%, transparent) 0%,
-            color-mix(in srgb, $accent 4%, transparent) 100%);
-    border: 1.5px solid color-mix(in srgb, $accent 22%, transparent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 0.35rem;
-    color: $accent;
-    box-shadow: 0 4px 16px color-mix(in srgb, $accent 12%, transparent);
+    width: 64px;
+    height: 64px;
+    border-radius: $radius-lg;
+    background: $card;
+    border: 1.5px solid color-mix(in srgb, #{$ember} 35%, transparent);
+    @include flex-center;
+    margin-bottom: $space-xs;
+    color: $ember;
+    box-shadow: 0 4px 18px rgba(255, 122, 71, 0.18),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
     animation: wc-icon-breath 3s ease-in-out infinite;
-    transition: transform 0.2s $ease-default, box-shadow 0.2s $ease-default;
+    transition: transform 200ms $ease-arena, box-shadow 200ms $ease-arena;
 
     svg {
         width: 28px;
@@ -126,26 +123,27 @@
 
     0%,
     100% {
-        box-shadow: 0 4px 14px color-mix(in srgb, $accent 10%, transparent);
+        box-shadow: 0 4px 14px rgba(255, 122, 71, 0.15),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.05);
     }
 
     50% {
-        box-shadow: 0 4px 20px color-mix(in srgb, $accent 20%, transparent),
-            0 0 8px color-mix(in srgb, $accent 10%, transparent);
+        box-shadow: 0 4px 22px rgba(255, 122, 71, 0.32),
+                    0 0 10px rgba(255, 122, 71, 0.15),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.08);
     }
 }
 
 .wc-step-title {
-    font-size: $font-xl;
-    font-weight: 800;
-    color: $text;
-    letter-spacing: -0.02em;
+    @include title-l;
+    color: $ember;
+    margin: 0;
 }
 
 .wc-step-subtitle {
-    font-size: $font-sm;
-    color: $text-muted;
-    line-height: 1.4;
+    @include caption;
+    color: $dim;
+    margin: 0;
 }
 
 .wc-step-content {
@@ -153,46 +151,36 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
+    gap: $space-md;
 }
 
 // ── Footer ──────────────────────────────────────────────────────────────────
 .wc-footer {
     flex-shrink: 0;
-    padding: $spacing-sm $spacing-md $spacing-md;
+    padding: $space-sm $space-md $space-md;
     text-align: center;
-    border-top: 1px dashed color-mix(in srgb, $text 8%, transparent);
+    border-top: 1px dashed $line;
 }
 
 .wc-step-counter {
-    font-size: $font-xs;
-    color: $text-muted;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    @include micro;
+    letter-spacing: 2px;
+    color: $dim;
 }
 
 // ── Mobile adjustments ──────────────────────────────────────────────────────
 @media (max-width: 480px) {
     .wc-step {
-        padding: $spacing-lg 0;
+        padding: $space-3xl 0 $space-xl;
     }
 
     .wc-step-icon {
-        width: 52px;
-        height: 52px;
+        width: 56px;
+        height: 56px;
 
         svg {
             width: 24px;
             height: 24px;
         }
-    }
-
-    .wc-step-title {
-        font-size: 1.25rem;
-    }
-
-    .wc-step-subtitle {
-        font-size: 0.75rem;
     }
 }
