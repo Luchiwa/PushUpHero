@@ -6,13 +6,12 @@ import './KPIGrid.scss';
 
 type ExerciseFilter = 'all' | import('@exercises/types').ExerciseType;
 
-// Hex map for the per-tile gradient/border tint via `--kpi-color`.
-// Kept here (not in SCSS) so we can drop the per-color SCSS variant blocks.
+// CSS var refs for per-tile gradient/border tint via `--kpi-color`.
 const KPI_COLOR: Record<string, string> = {
-    accent: '#ff7f00',
-    amber: '#f59e0b',
-    indigo: '#6366f1',
-    orange: '#ea580c',
+    accent: 'var(--ember)',
+    amber: 'var(--gold)',
+    indigo: 'var(--purple)',
+    orange: 'var(--ice)',
 };
 
 function compactNum(n: number): string {
