@@ -1,13 +1,17 @@
-@use 'sass:color';
-@use 'variables' as *;
+@use 'tokens' as *;
 @use 'mixins' as *;
 
-// ── Feed wrapper ────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+// FriendsFeedPanel — Arena. Obsidian feed items, mono kicker header
+// with good LIVE pulse badge, ember hover glow, grade squares,
+// ember shimmer skeletons.
+// ══════════════════════════════════════════════════════════════════
+
 .friends-feed {
     display: flex;
     flex-direction: column;
-    gap: $spacing-sm;
-    padding-bottom: $spacing-lg;
+    gap: $space-sm;
+    padding-bottom: $space-lg;
 }
 
 // ── Header row ─────────────────────────────────────────────────
@@ -15,57 +19,79 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: $spacing-xs;
+    margin-bottom: $space-xs;
 }
 
 .feed-header-title {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
-    @include label($font-sm);
+    gap: 6px;
+    @include kicker;
     color: $text;
-    font-weight: 700;
+    letter-spacing: 2.5px;
 }
 
 // ── LIVE badge ─────────────────────────────────────────────────
 .feed-live-badge {
-    @include badge-outline($green);
-    padding: 2px 10px;
-    font-size: 0.62rem;
-    font-weight: 800;
-    color: $green-dark;
-    letter-spacing: 0.08em;
-    --pulse-rgb: #{color.channel($green, 'red', $space: rgb)},
-    #{color.channel($green, 'green', $space: rgb)},
-    #{color.channel($green, 'blue', $space: rgb)};
-    animation: badge-pulse 2s ease-in-out infinite;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    font-family: $font-mono;
+    font-size: 0.58rem;
+    font-weight: 700;
+    color: $good;
+    background: color-mix(in srgb, #{$good} 12%, transparent);
+    border: 1px solid color-mix(in srgb, #{$good} 38%, transparent);
+    border-radius: $radius-pill;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: feed-live-pulse 2s ease-in-out infinite;
+}
+
+@keyframes feed-live-pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, #{$good} 40%, transparent);
+    }
+    50% {
+        box-shadow: 0 0 0 6px color-mix(in srgb, #{$good} 0%, transparent);
+    }
 }
 
 .feed-live-dot {
-    @include notification-dot($green, 6px);
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: $good;
+    border-radius: 50%;
+    box-shadow: 0 0 6px color-mix(in srgb, #{$good} 70%, transparent);
+    animation: feed-live-dot-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes feed-live-dot-pulse {
+    0%, 100% { opacity: 0.6; }
+    50%      { opacity: 1; }
 }
 
 // ── Section divider (Today / Earlier) ──────────────────────────
 .feed-divider {
     display: flex;
     align-items: center;
-    gap: $spacing-sm;
-    margin: $spacing-sm 0 $spacing-xs;
+    gap: $space-sm;
+    margin: $space-md 0 $space-xs;
 
     &::before,
     &::after {
         content: '';
         flex: 1;
         height: 1px;
-        background: $border;
+        background: $line;
     }
 
     span {
-        @include label(0.68rem);
-        color: $text-muted;
-        white-space: nowrap;
-        text-transform: uppercase;
-        letter-spacing: 0.07em;
+        @include micro;
+        color: $dim;
+        letter-spacing: 2.5px;
         padding: 0 2px;
     }
 }
@@ -74,10 +100,9 @@
 .feed-section {
     display: flex;
     flex-direction: column;
-    gap: $spacing-xs;
+    gap: $space-xs;
 }
 
-// ── Feed list ───────────────────────────────────────────────────
 .feed-list {
     list-style: none;
     margin: 0;
@@ -89,33 +114,36 @@
 
 // ── Individual feed item ────────────────────────────────────────
 @keyframes feed-item-in {
-    from {
-        opacity: 0;
-        transform: translateX(-8px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
+    from { opacity: 0; transform: translateX(-8px); }
+    to   { opacity: 1; transform: translateX(0); }
 }
 
 .feed-item {
     display: flex;
     align-items: center;
-    gap: $spacing-sm;
-    padding: 10px $spacing-sm;
-    border-radius: $radius-sm;
-    background: $white;
-    border: 1px solid $border;
-    transition: background 0.2s, transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    gap: $space-sm;
+    padding: 10px $space-sm;
+    border-radius: $radius-md;
+    background: $obsidian-2;
+    border: 1px solid $line;
+    transition:
+        background 0.2s $ease-arena,
+        transform 0.2s $ease-arena,
+        box-shadow 0.25s $ease-arena,
+        border-color 0.2s $ease-arena;
     animation: feed-item-in 0.35s $ease-out-expo both;
 
     &:hover {
-        background: rgba($accent, 0.03);
-        border-color: rgba($accent, 0.15);
-        box-shadow: $shadow-md, 0 0 12px rgba($accent, 0.06);
-        transform: translateY(-2px) scale(1.005);
+        background-image: linear-gradient(
+            135deg,
+            color-mix(in srgb, #{$ember} 6%, transparent) 0%,
+            transparent 60%
+        );
+        border-color: color-mix(in srgb, #{$ember} 24%, transparent);
+        box-shadow:
+            0 6px 20px rgba(0, 0, 0, 0.45),
+            0 0 14px color-mix(in srgb, #{$ember} 14%, transparent);
+        transform: translateY(-2px);
     }
 }
 
@@ -134,17 +162,21 @@
 }
 
 .feed-item-name {
-    font-size: 0.88rem;
+    font-family: $font-display;
+    font-size: 0.9rem;
     font-weight: 700;
     color: $text;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
     @include text-truncate;
 }
 
 .feed-item-msg {
+    font-family: $font-sans;
     font-size: 0.76rem;
-    color: $text-muted;
-    @include text-truncate;
+    color: $dim;
     line-height: 1.4;
+    @include text-truncate;
 }
 
 .feed-item-right {
@@ -155,20 +187,46 @@
     flex-shrink: 0;
 }
 
-// ── Grade badge — game style ────────────────────────────────────
+// ── Grade badge — Arena grade square ───────────────────────────
 .feed-grade-badge {
-    @include grade-badge(28px, 0.82rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    font-family: $font-display;
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    border: 1.5px solid currentColor;
+    border-radius: $radius-sm;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    transition: box-shadow 0.2s $ease-arena, transform 0.2s $ease-arena;
+    flex-shrink: 0;
+
+    @each $letter, $color in $grades {
+        &.grade-#{$letter} {
+            color: $color;
+            background: color-mix(in srgb, #{$color} 14%, transparent);
+            border-color: color-mix(in srgb, #{$color} 50%, transparent);
+        }
+    }
 
     .feed-item:hover & {
         transform: scale(1.08);
-        box-shadow: 0 0 12px currentColor;
+        box-shadow: 0 0 14px currentColor;
     }
 }
 
 .feed-item-time {
-    font-size: 0.65rem;
-    color: $text-muted;
+    font-family: $font-mono;
+    font-size: 0.6rem;
+    font-weight: 500;
+    color: $dim;
+    letter-spacing: 0.5px;
     white-space: nowrap;
+    font-variant-numeric: tabular-nums;
 }
 
 
@@ -177,17 +235,19 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: $spacing-sm;
-    padding: $spacing-xl 0;
-    color: $text-muted;
+    gap: $space-sm;
+    padding: $space-3xl 0;
     text-align: center;
 
     .feed-empty-icon {
         font-size: 2.4rem;
+        filter: drop-shadow(0 0 12px color-mix(in srgb, #{$ember} 30%, transparent));
     }
 
     p {
-        font-size: 0.88rem;
+        font-family: $font-sans;
+        font-size: 0.84rem;
+        color: $dim;
         margin: 0;
         max-width: 220px;
         line-height: 1.5;
@@ -199,20 +259,27 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: $spacing-sm;
-    padding: $spacing-xl 0;
-    color: $red;
+    gap: $space-sm;
+    padding: $space-3xl 0;
+    color: $blood;
     text-align: center;
-    font-size: 0.85rem;
+    font-family: $font-sans;
+    font-size: 0.84rem;
 
     .btn-text {
         background: none;
         border: none;
-        color: $accent;
+        color: $ember;
         cursor: pointer;
+        font-family: $font-mono;
         font-weight: 700;
-        font-size: 0.85rem;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 1.8px;
         padding: 0;
+        transition: color 0.15s $ease-arena;
+
+        &:hover { color: $gold; }
     }
 }
 
@@ -220,18 +287,18 @@
 .feed-skeleton {
     display: flex;
     flex-direction: column;
-    gap: $spacing-sm;
-    padding-top: $spacing-sm;
+    gap: $space-sm;
+    padding-top: $space-sm;
 }
 
 .feed-skeleton-item {
     display: flex;
     align-items: center;
-    gap: $spacing-sm;
-    padding: 10px $spacing-sm;
-    border-radius: $radius-sm;
-    background: $white;
-    border: 1px solid $border;
+    gap: $space-sm;
+    padding: 10px $space-sm;
+    border-radius: $radius-md;
+    background: $obsidian-2;
+    border: 1px solid $line;
 }
 
 .feed-skeleton-avatar {
@@ -252,11 +319,6 @@
     @include shimmer;
     height: 10px;
 
-    &--name {
-        width: 35%;
-    }
-
-    &--msg {
-        width: 65%;
-    }
+    &--name { width: 35%; }
+    &--msg  { width: 65%; }
 }
