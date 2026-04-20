@@ -31,7 +31,7 @@ export const CATEGORY_META: Record<AchievementCategory, { label: string; emoji: 
     strength:    { label: 'Strength',    emoji: '🏋️', color: 'var(--blood)' },
     discipline:  { label: 'Discipline',  emoji: '📅',  color: 'var(--good)' },
     social:      { label: 'Social',      emoji: '👥',  color: 'var(--ice)' },
-    performance: { label: 'Performance', emoji: '⚡',  color: 'var(--gold)' },
+    performance: { label: 'Performance', emoji: '⚡',  color: 'var(--purple)' },
 };
 
 // ─── Achievement definition ──────────────────────────────────────────────────
