@@ -1,0 +1,28 @@
+// ── ARENA — A11Y MIXINS ──────────────────────────────────────
+@use 'tokens' as *;
+
+// Ensure minimum tap area per tokens.json layout.hitTarget.min.
+@mixin hit-target {
+    min-width: $hit-target-min;
+    min-height: $hit-target-min;
+}
+
+// Ember-ring focus state — visible on keyboard navigation only.
+@mixin focus-visible($offset: 2px) {
+    outline: 2px solid $ember;
+    outline-offset: $offset;
+    border-radius: inherit;
+}
+
+// Visually hidden (still in a11y tree).
+@mixin visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}

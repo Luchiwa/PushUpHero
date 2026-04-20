@@ -1,0 +1,35 @@
+// ── ARENA — MOTION MIXINS ────────────────────────────────────
+@use 'tokens' as *;
+
+@mixin screen-in($delay: 0ms) {
+    animation: arena-screen-in $dur-screen-transition $ease-arena both;
+    animation-delay: $delay;
+}
+
+@mixin modal-slide-up($delay: 0ms) {
+    animation: arena-modal-slide-up $dur-modal-slide-up $ease-arena both;
+    animation-delay: $delay;
+}
+
+@mixin skeleton-pulse {
+    animation: arena-skeleton-pulse $dur-skeleton-pulse ease-in-out infinite;
+}
+
+// Shimmer — skeleton loading bar.
+@mixin shimmer($radius: $radius-md) {
+    background: linear-gradient(
+        90deg,
+        rgba(255, 122, 71, 0.08) 0%,
+        rgba(255, 122, 71, 0.18) 50%,
+        rgba(255, 122, 71, 0.08) 100%
+    );
+    background-size: 200% 100%;
+    border-radius: $radius;
+    animation: arena-shimmer 1.4s linear infinite;
+}
+
+// Staggered entrance via CSS variable `--i` on each item.
+@mixin stagger-in($base-delay: 50ms) {
+    animation: arena-screen-in $dur-screen-transition $ease-arena both;
+    animation-delay: calc(var(--i, 0) * #{$base-delay});
+}

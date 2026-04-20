@@ -1,0 +1,42 @@
+// ── ARENA — HEX MIXINS ───────────────────────────────────────
+@use 'tokens' as *;
+
+// Flat-top hex clip-path (width > height).
+$hex-flat: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+// Pointy-top hex clip-path (height > width).
+$hex-pointy: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+
+@mixin hex-clip-pointy {
+    clip-path: $hex-pointy;
+}
+
+@mixin hex-clip-flat {
+    clip-path: $hex-flat;
+}
+
+// Hex badge — container with ember border effect via double-layer.
+// Outer wrapper = bigger hex with ember color; inner = smaller hex with content.
+@mixin hex-badge($size: 56px, $border: 2px, $border-color: $ember, $fill: $obsidian-2) {
+    width: $size;
+    height: $size;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $border-color;
+    clip-path: $hex-pointy;
+    position: relative;
+
+    &::before {
+        content: '';
+        position: absolute;
+        inset: $border;
+        background: $fill;
+        clip-path: $hex-pointy;
+        z-index: 0;
+    }
+
+    > * {
+        position: relative;
+        z-index: 1;
+    }
+}

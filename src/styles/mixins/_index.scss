@@ -1,0 +1,9 @@
+// ── ARENA — MIXINS ENTRY POINT ───────────────────────────────
+// Usage: `@use 'mixins' as *;` (forwards all Arena + legacy mixins)
+
+@forward 'text';
+@forward 'surface';
+@forward 'hex';
+@forward 'glow';
+@forward 'motion';
+@forward 'a11y';
