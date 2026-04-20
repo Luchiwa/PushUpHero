@@ -3,6 +3,7 @@ import { DragNumberPicker } from '@components/DragNumberPicker/DragNumberPicker'
 import { TimePicker } from '@components/TimePicker/TimePicker';
 import { ExercisePicker } from '@components/ExercisePicker/ExercisePicker';
 import { SegmentedToggle } from '@components/SegmentedToggle/SegmentedToggle';
+import { PrimaryCTA } from '@components/PrimaryCTA/PrimaryCTA';
 import { useWorkout } from '@app/WorkoutContext';
 import { useModalClose } from '@hooks/shared/useModalClose';
 import { useFocusTrap } from '@hooks/shared/useFocusTrap';
@@ -37,9 +38,12 @@ export function QuickSessionModal({ onClose, isReady }: QuickSessionModalProps) 
             aria-label="Quick Session"
         >
             <div className={`qs-card${closing ? ' qs-card--exit' : ''}`} onClick={e => e.stopPropagation()}>
-                <button type="button" className="qs-close-btn" onClick={handleClose}>×</button>
+                <button type="button" className="qs-close-btn" onClick={handleClose} aria-label="Close">×</button>
 
-                <h2 className="qs-title">⚡ Quick Session</h2>
+                <div className="qs-header">
+                    <span className="qs-kicker">Quick Session</span>
+                    <h2 className="qs-title">Ready, set, go</h2>
+                </div>
 
                 <ExercisePicker value={exerciseType} onChange={changeExerciseType} />
 
@@ -65,8 +69,8 @@ export function QuickSessionModal({ onClose, isReady }: QuickSessionModalProps) 
                     ]}
                 />
 
-                <div className="goal-section">
-                    <p className="goal-label">{sessionMode === 'reps' ? 'Set your goal' : 'Time limit'}</p>
+                <div className="qs-goal-section">
+                    <p className="qs-goal-label">{sessionMode === 'reps' ? 'Set your goal' : 'Time limit'}</p>
                     {sessionMode === 'reps' ? (
                         <DragNumberPicker
                             value={goalReps}
@@ -82,13 +86,20 @@ export function QuickSessionModal({ onClose, isReady }: QuickSessionModalProps) 
                     )}
                 </div>
 
-                <button type="button" className="btn-primary" onClick={() => { onClose(); handleStart(); }} disabled={!isReady || closing}>
+                <PrimaryCTA
+                    variant="solid"
+                    size="lg"
+                    block
+                    icon="⚡"
+                    onClick={() => { onClose(); handleStart(); }}
+                    disabled={!isReady || closing}
+                >
                     {isReady ? (
                         sessionMode === 'reps'
                             ? `Start — ${goalReps} rep${goalReps > 1 ? 's' : ''}`
                             : `Start — ${String(timeGoal.minutes).padStart(2, '0')}:${String(timeGoal.seconds).padStart(2, '0')}`
                     ) : 'Getting Ready…'}
-                </button>
+                </PrimaryCTA>
             </div>
         </div>
     );
