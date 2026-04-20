@@ -1,21 +1,31 @@
-@use 'variables' as *;
+@use 'tokens' as *;
 @use 'mixins' as *;
+
+// ══════════════════════════════════════════════════════════════════
+// SummaryScreen — post-workout result. Obsidian card w/ ember halo,
+// Oswald title ember, mono kickers, grade colors remapped Arena.
+// ══════════════════════════════════════════════════════════════════
 
 .summary-screen {
     @include fill;
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: radial-gradient(ellipse at 50% 0%, rgba($accent, 0.08) 0%, $bg 70%);
+    background:
+        radial-gradient(ellipse at 50% 0%, color-mix(in srgb, #{$ember} 12%, transparent) 0%, transparent 60%),
+        $obsidian;
     z-index: $z-overlay;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    // iOS PWA: push content below the status bar
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-top: max($space-md, env(safe-area-inset-top));
+    padding-bottom: max($space-md, env(safe-area-inset-bottom));
+    animation: screen-in 0.4s $ease-out-expo both;
 
     &--victory {
-        animation: screen-in 0.35s $ease-out-expo both;
+        background:
+            radial-gradient(ellipse at 50% 0%, color-mix(in srgb, #{$gold} 16%, transparent) 0%, transparent 55%),
+            radial-gradient(ellipse at 50% 100%, color-mix(in srgb, #{$ember} 10%, transparent) 0%, transparent 60%),
+            $obsidian;
     }
 
     &--exit {
@@ -29,72 +39,115 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.4rem;
-    animation: victory-pop 0.5s $ease-out-back both;
+    gap: $space-xs;
+    animation: victory-pop 0.55s $ease-out-back both;
 }
 
 .summary-victory-emoji {
-    font-size: 2rem;
+    font-size: 2.4rem;
     line-height: 1;
+    filter: drop-shadow(0 0 18px color-mix(in srgb, #{$gold} 55%, transparent));
     animation: victory-bounce 0.6s ease infinite alternate;
 }
 
 .summary-victory-title {
-    font-size: clamp(1.1rem, 4vw, 1.35rem);
-    font-weight: 900;
-    letter-spacing: -0.02em;
-    @include text-gradient($gradient-accent);
+    font-family: $font-display;
+    font-size: clamp(1.3rem, 5vw, 1.65rem);
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: $ember;
+    text-shadow:
+        0 0 18px color-mix(in srgb, #{$ember} 55%, transparent),
+        0 2px 10px rgba(0, 0, 0, 0.55);
 }
 
+// ── Card ─────────────────────────────────────────────────────────
 .summary-card {
-    @include modal-card($width: 380px, $padding: 1.5rem 1.5rem);
-    @include glass;
     position: relative;
     z-index: $z-content;
-    gap: 1rem;
+    width: min(95vw, 400px);
+    margin: auto 0;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    box-shadow: $shadow-card;
-    margin: auto 0; // vertically centre when content is short
-    flex-shrink: 0; // never shrink — let parent scroll
+    gap: $space-md;
+    padding: $space-xl $space-lg;
+    background: $card;
+    border: 1px solid color-mix(in srgb, #{$ember} 24%, transparent);
+    border-radius: $radius-xl;
+    box-shadow:
+        0 24px 64px rgba(0, 0, 0, 0.7),
+        0 0 0 1px rgba(0, 0, 0, 0.4) inset;
+    animation: modal-card-in 0.45s $ease-out-expo both;
+    animation-delay: 0.05s;
+
+    &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: radial-gradient(
+            ellipse at 50% -20%,
+            color-mix(in srgb, #{$ember} 18%, transparent) 0%,
+            transparent 55%
+        );
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    > * {
+        position: relative;
+        z-index: 1;
+    }
 
     @media (max-width: 480px) {
-        padding: 1.25rem 1rem;
-        border-radius: $radius-sm;
-        width: min(95vw, 360px);
+        padding: $space-lg $space-md;
+        border-radius: $radius-lg;
     }
 }
 
 .summary-title {
-    font-size: 1.2rem;
-    font-weight: 800;
-    color: $text;
-    letter-spacing: -0.02em;
+    font-family: $font-display;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: $ember;
+    text-align: center;
+    text-shadow: 0 0 14px color-mix(in srgb, #{$ember} 40%, transparent);
 }
 
 // ── Quest completion banner ──────────────────────────────────────
 .summary-quest-list {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: $space-xs;
     width: 100%;
 }
 
 .summary-quest-banner {
     display: flex;
     align-items: center;
-    gap: 0.625rem;
+    gap: $space-sm;
     width: 100%;
-    padding: 0.75rem 0.875rem;
-    background: linear-gradient(135deg, rgba($indigo, 0.14) 0%, rgba($purple, 0.10) 100%);
-    border: 1px solid rgba($indigo, 0.30);
-    border-radius: $radius-sm;
-    animation: quest-banner-pop 0.6s $ease-out-back both;
-    animation-delay: 0.4s;
+    padding: $space-sm $space-md;
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, #{$purple} 18%, transparent) 0%,
+        color-mix(in srgb, #{$purple} 8%, transparent) 100%
+    );
+    border: 1px solid color-mix(in srgb, #{$purple} 38%, transparent);
+    border-radius: $radius-md;
+    animation: quest-banner-pop 0.55s $ease-out-back both;
+    animation-delay: 0.35s;
 }
 
 .summary-quest-emoji {
-    font-size: 1.35rem;
+    font-size: 1.4rem;
     flex-shrink: 0;
+    filter: drop-shadow(0 0 10px color-mix(in srgb, #{$purple} 45%, transparent));
 }
 
 .summary-quest-info {
@@ -102,49 +155,52 @@
     flex-direction: column;
     flex: 1;
     min-width: 0;
+    gap: 2px;
 }
 
 .summary-quest-label {
-    font-size: $font-xs;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: $indigo;
+    @include micro;
+    letter-spacing: 2px;
+    color: $purple;
 }
 
 .summary-quest-title {
+    font-family: $font-sans;
     font-size: 0.9rem;
     font-weight: 700;
     color: $text;
 }
 
 .summary-quest-xp {
-    font-size: $font-sm;
+    font-family: $font-mono;
+    font-size: 0.78rem;
     font-weight: 700;
-    color: $purple;
+    color: $gold;
     white-space: nowrap;
-    background: rgba($purple, 0.12);
-    padding: 0.2rem 0.5rem;
+    background: color-mix(in srgb, #{$gold} 14%, transparent);
+    border: 1px solid color-mix(in srgb, #{$gold} 32%, transparent);
+    padding: 4px 10px;
     border-radius: $radius-pill;
+    letter-spacing: 0.5px;
+    font-variant-numeric: tabular-nums;
 }
 
 @keyframes quest-banner-pop {
     0% {
         opacity: 0;
-        transform: scale(0.9);
+        transform: translateY(6px) scale(0.96);
     }
-
     60% {
         opacity: 1;
-        transform: scale(1.03);
+        transform: translateY(0) scale(1.02);
     }
-
     100% {
         opacity: 1;
-        transform: scale(1);
+        transform: translateY(0) scale(1);
     }
 }
 
+// ── Stats ────────────────────────────────────────────────────────
 .summary-stats {
     display: flex;
     align-items: center;
@@ -152,15 +208,13 @@
     width: 100%;
     gap: 0;
 
-    // Time mode: stack duration above the 3-stat row
     &--time {
         flex-direction: column;
-        gap: 1rem;
+        gap: $space-md;
         align-items: stretch;
     }
 }
 
-// Row of 3 stats (reps mode, or bottom row of time mode)
 .summary-stats-row {
     display: flex;
     align-items: center;
@@ -169,24 +223,23 @@
     gap: 0;
 }
 
-// Full-width duration stat (time mode only)
 .summary-stat--wide {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.2rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid $border;
+    gap: $space-xs;
+    padding-bottom: $space-sm;
+    border-bottom: 1px solid $line;
 }
 
 .summary-value--duration {
-    font-size: 1.75rem;
+    font-size: 2rem !important;
 }
 
 .summary-divider {
     width: 1px;
-    height: 36px;
-    background: $border;
+    height: 40px;
+    background: $line;
     flex-shrink: 0;
 }
 
@@ -194,81 +247,98 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.35rem;
+    gap: 6px;
     flex: 1;
     min-width: 0;
 }
 
 .summary-value {
-    font-size: 1.75rem;
-    font-weight: 900;
+    font-family: $font-display;
+    font-size: 2rem;
+    font-weight: 700;
     line-height: 1;
-    @include text-gradient(linear-gradient(135deg, $accent-pale, $accent));
+    color: $text;
+    letter-spacing: 1px;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 12px color-mix(in srgb, #{$ember} 28%, transparent);
 
     @media (max-width: 480px) {
-        font-size: 1.5rem;
+        font-size: 1.75rem;
     }
 }
 
 .summary-label {
-    @include label(0.65rem);
+    @include micro;
+    letter-spacing: 2px;
+    color: $dim;
     text-align: center;
     white-space: nowrap;
 }
 
 // ── Grade ────────────────────────────────────────────────────────
 .grade {
-    font-size: 2rem;
-    font-weight: 900;
+    font-family: $font-display;
+    font-size: 2.2rem;
+    font-weight: 700;
     line-height: 1;
+    letter-spacing: 1px;
 }
 
+// Per-grade color + glow from :root custom props (S=purple, A=gold,
+// B=ice, C=ember, D=blood — Arena spec).
 @each $letter, $color in $grades {
     .grade-#{$letter} {
         color: $color;
-        @include neon-glow($color, 20px);
+        text-shadow:
+            0 0 18px color-mix(in srgb, #{$color} 60%, transparent),
+            0 2px 8px rgba(0, 0, 0, 0.6);
     }
 }
 
-// ── Achievements section ─────────────────────────────────────────
+// ── Section title (shared) ───────────────────────────────────────
 .summary-section-title {
-    @include label(0.75rem);
-    margin-bottom: 0.5rem;
+    @include micro;
+    letter-spacing: 2px;
+    color: $dim;
+    margin-bottom: $space-xs;
     text-align: left;
     width: 100%;
 }
 
+// ── Achievements ─────────────────────────────────────────────────
 .summary-achievements {
     width: 100%;
-    margin-top: 0.25rem;
+    margin-top: 2px;
 }
 
 .summary-achievements-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.4rem;
+    gap: $space-xs;
 }
 
 .summary-achievement-chip {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
-    padding: 0.3rem 0.6rem;
-    background: rgba($white, 0.06);
+    gap: 6px;
+    padding: 6px 12px;
+    background: $obsidian-2;
     border: 1.5px solid;
     border-radius: $radius-pill;
-    font-size: 0.72rem;
+    font-family: $font-sans;
+    font-size: 0.75rem;
     font-weight: 600;
-    animation: chip-pop 0.4s ease-out both;
+    animation: chip-pop 0.4s $ease-out-back both;
 }
 
 .summary-achievement-tier {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
 }
 
 .summary-achievement-title {
     color: $text;
     white-space: nowrap;
+    letter-spacing: 0.3px;
 }
 
 @keyframes chip-pop {
@@ -276,76 +346,123 @@
         opacity: 0;
         transform: scale(0.7);
     }
-
     60% {
-        transform: scale(1.05);
+        transform: scale(1.08);
     }
-
     100% {
         opacity: 1;
         transform: scale(1);
     }
 }
 
-// ── Records section ──────────────────────────────────────────────
+// ── Records ──────────────────────────────────────────────────────
 .summary-records {
     width: 100%;
-    margin-top: 0.25rem;
+    margin-top: 2px;
 }
 
 .summary-records-list {
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    gap: 6px;
 }
 
 .summary-record-chip {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
-    padding: 0.35rem 0.6rem;
-    background: rgba($tier-gold, 0.08);
-    border: 1px solid rgba($tier-gold, 0.2);
-    border-radius: $radius-sm;
-    font-size: 0.72rem;
-    animation: chip-pop 0.4s ease-out both;
+    gap: $space-xs;
+    padding: 8px 12px;
+    background: color-mix(in srgb, #{$gold} 10%, transparent);
+    border: 1px solid color-mix(in srgb, #{$gold} 30%, transparent);
+    border-radius: $radius-md;
+    font-family: $font-sans;
+    font-size: 0.78rem;
+    animation: chip-pop 0.4s $ease-out-back both;
 }
 
 .summary-record-emoji {
     font-size: 1rem;
+    filter: drop-shadow(0 0 8px color-mix(in srgb, #{$gold} 40%, transparent));
 }
 
 .summary-record-label {
     flex: 1;
     font-weight: 600;
     color: $text;
+    letter-spacing: 0.3px;
 }
 
 .summary-record-value {
+    font-family: $font-mono;
     font-weight: 700;
-    color: $tier-gold;
+    color: $gold;
+    font-variant-numeric: tabular-nums;
 }
 
 .summary-record-old {
-    color: $text-muted;
+    color: $dim;
     font-weight: 500;
-    font-size: 0.65rem;
+    font-size: 0.7rem;
 }
 
 // ── Actions ──────────────────────────────────────────────────────
 .summary-actions {
     display: flex;
-    gap: $spacing-sm;
+    gap: $space-sm;
     width: 100%;
     align-items: center;
     justify-content: center;
-    padding-top: 0.25rem;
+    padding-top: $space-xs;
 }
 
-// ── Multi-set badge ──────────────────────────────────────────────
+// ── Sets badge ───────────────────────────────────────────────────
 .summary-sets-badge {
-    @include badge-outline($accent);
-    padding: 0.2rem 0.7rem;
-    margin-top: -0.35rem;
+    @include micro;
+    letter-spacing: 2px;
+    color: $ember;
+    padding: 4px 12px;
+    background: color-mix(in srgb, #{$ember} 10%, transparent);
+    border: 1px solid color-mix(in srgb, #{$ember} 30%, transparent);
+    border-radius: $radius-pill;
+    margin-top: -$space-xs;
+    font-variant-numeric: tabular-nums;
 }
 
+// ── Victory keyframes ────────────────────────────────────────────
+@keyframes victory-pop {
+    0% {
+        opacity: 0;
+        transform: scale(0.6);
+    }
+    60% {
+        opacity: 1;
+        transform: scale(1.08);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes victory-bounce {
+    from { transform: translateY(0) rotate(-3deg); }
+    to   { transform: translateY(-4px) rotate(3deg); }
+}
+
+@keyframes modal-card-in {
+    0% {
+        opacity: 0;
+        transform: translateY(18px) scale(0.96);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes screen-fade-out {
+    to {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+}
