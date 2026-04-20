@@ -152,6 +152,7 @@
 }
 
 .chart-line {
+    stroke: $ember;
     stroke-dasharray: 1000;
     stroke-dashoffset: 1000;
     animation: chart-draw 0.9s $ease-out-expo 0.1s forwards;
@@ -163,6 +164,16 @@
     animation: chart-fill-fade 0.6s ease 0.4s forwards;
 }
 
+.chart-fill-stop-start {
+    stop-color: $ember;
+    stop-opacity: 0.28;
+}
+
+.chart-fill-stop-end {
+    stop-color: $ember;
+    stop-opacity: 0;
+}
+
 // ── Today pulsing halo ────────────────────────────────────────────
 @keyframes chart-halo-pulse {
     0%, 100% { r: 6; opacity: 0.75; }
@@ -170,13 +181,20 @@
 }
 
 .chart-today-halo {
+    stroke: $ember;
     animation: chart-halo-pulse 2s $ease-default infinite;
     transform-origin: center;
 }
 
 // ── Data dots ─────────────────────────────────────────────────────
 .chart-dot {
+    fill: $text;
+    stroke: $ember;
     transition: r 0.2s $ease-out-back;
+
+    &--today {
+        fill: $ember;
+    }
 }
 
 // ── Tooltip ───────────────────────────────────────────────────────

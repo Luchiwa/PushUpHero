@@ -77,6 +77,14 @@
     color: $text;
 }
 
+.quests-ring-stop-start {
+    stop-color: $ember;
+}
+
+.quests-ring-stop-end {
+    stop-color: $gold;
+}
+
 .quests-ring-text {
     position: absolute;
     inset: 0;
