@@ -190,6 +190,11 @@ $gradient-green: linear-gradient(135deg, arena.$good, #2fb57a);
         --grade-#{$letter}: #{$color};
     }
 
+    // ── Tier colors — Arena-coherent (JS reads via var(--tier-*)) ──
+    @each $name, $color in $tiers {
+        --tier-#{$name}: #{$color};
+    }
+
     // ── Fonts ────────────────────────────────────────────────
     --font-display: #{arena.$font-display};
     --font-sans: #{arena.$font-sans};

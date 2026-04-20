@@ -14,24 +14,24 @@ import { getExerciseLabel, getExerciseEmoji, EXERCISE_TYPES } from '@exercises/t
 
 export type AchievementTier = 'bronze' | 'silver' | 'gold' | 'platinum';
 
-// Keep in sync with $tier-* in _variables.scss
+// Keep in sync with $tier-* in _variables.scss (Arena palette)
 export const TIER_COLORS: Record<AchievementTier, string> = {
-    bronze: '#cd7f32',
-    silver: '#c0c0c0',
-    gold: '#ffd700',
-    platinum: '#00e5ff',
+    bronze: 'var(--tier-bronze)',
+    silver: 'var(--tier-silver)',
+    gold: 'var(--tier-gold)',
+    platinum: 'var(--tier-platinum)',
 };
 
 // ─── Categories ──────────────────────────────────────────────────────────────
 
 export type AchievementCategory = 'strength' | 'discipline' | 'social' | 'performance';
 
-// Keep in sync with semantic colors in _variables.scss
+// Keep in sync with Arena semantic tokens on :root.
 export const CATEGORY_META: Record<AchievementCategory, { label: string; emoji: string; color: string }> = {
-    strength:    { label: 'Strength',    emoji: '🏋️', color: '#ef4444' },  // $red
-    discipline:  { label: 'Discipline',  emoji: '📅',  color: '#3b82f6' },  // $blue
-    social:      { label: 'Social',      emoji: '👥',  color: '#f59e0b' },  // $amber
-    performance: { label: 'Performance', emoji: '⚡',  color: '#a855f7' },  // $purple
+    strength:    { label: 'Strength',    emoji: '🏋️', color: 'var(--blood)' },
+    discipline:  { label: 'Discipline',  emoji: '📅',  color: 'var(--good)' },
+    social:      { label: 'Social',      emoji: '👥',  color: 'var(--ice)' },
+    performance: { label: 'Performance', emoji: '⚡',  color: 'var(--gold)' },
 };
 
 // ─── Achievement definition ──────────────────────────────────────────────────
