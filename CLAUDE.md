@@ -16,7 +16,7 @@ There is no test framework configured in this project.
 
 ## Git workflow
 
-See `CONTRIBUTING.md`. Tickets live in Linear (team `PUS`, workspace `pushuphero.linear.app`). One branch per ticket, named `<issueIdentifier>/<issueSlug>` (e.g. `pus-9/resume-interrupted-workout-via-localstorage-checkpoint`). PR title: `[PUS-N] …`. PR body includes `Resolves [PUS-N](linear-url)` so the Linear integration can auto-close the ticket on merge. Conventional commits (`feat:`, `fix:`, `chore:`, `refactor:`, `docs:`); don't tag `PUS-N` in commit messages — the PR handles it.
+See `CONTRIBUTING.md`. Tickets live in Linear (team `PUS`, workspace `pushuphero.linear.app`). One branch per ticket, using Linear's "Copy git branch name" (format `feature/<issueIdentifier>-<issueSlug>`, e.g. `feature/pus-9-resume-interrupted-workout-via-localstorage-checkpoint`). PR title: `[PUS-N] …`. PR body includes `Resolves [PUS-N](linear-url)` so the Linear integration can auto-close the ticket on merge. Conventional commits (`feat:`, `fix:`, `chore:`, `refactor:`, `docs:`); don't tag `PUS-N` in commit messages — the PR handles it.
 
 ## Architecture
 

@@ -13,16 +13,16 @@ When you pick something up, move the ticket to **In Progress** so the team knows
 Every branch maps to exactly one Linear ticket. Use the Linear-suggested branch name verbatim:
 
 ```
-<issueIdentifier>/<issueSlug>
+feature/<issueIdentifier>-<issueSlug>
 ```
 
 Example — ticket `PUS-9 Resume interrupted workout via localStorage checkpoint`:
 
 ```
-pus-9/resume-interrupted-workout-via-localstorage-checkpoint
+feature/pus-9-resume-interrupted-workout-via-localstorage-checkpoint
 ```
 
-Linear exposes this as the "Copy git branch name" button on every issue. Don't invent your own format.
+Linear exposes this as the "Copy git branch name" button on every issue. Don't invent your own format — the prefix/format is configured workspace-wide in Linear settings so every branch is consistent.
 
 ## Commit convention
 
