@@ -1,0 +1,141 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+// ── ExerciseCard — workout-setup exercise block ──────────────
+.exercise-card {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    gap: $space-md;
+    width: 100%;
+    padding: $space-xl;
+    background: $card;
+    border: 1px solid color-mix(in srgb, #{$ember} 40%, transparent);
+    border-radius: $radius-2xl;
+    color: $text;
+    text-align: left;
+
+    &--clickable {
+        cursor: pointer;
+        transition: transform 180ms $ease-arena, border-color 200ms ease;
+
+        &:hover,
+        &:focus-visible {
+            transform: translateY(-2px);
+            border-color: $ember;
+        }
+
+        &:active {
+            transform: translateY(0);
+        }
+    }
+
+    &--selected {
+        border-color: $ember;
+        box-shadow: 0 0 0 1px $ember inset,
+                    0 12px 28px rgba(255, 122, 71, 0.25);
+    }
+
+    &:focus-visible {
+        outline: 2px solid $ember;
+        outline-offset: 2px;
+    }
+}
+
+.exercise-card-index {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: $ember;
+    color: #fff;
+    font-family: $font-display;
+    font-weight: 700;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 10px rgba(255, 122, 71, 0.55);
+}
+
+.exercise-card-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: $space-md;
+}
+
+.exercise-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: $space-md;
+}
+
+.exercise-card-titles {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.exercise-card-title {
+    font-family: $font-display;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    line-height: 1.1;
+    margin: 0;
+    color: $text;
+    @include text-truncate;
+}
+
+.exercise-card-subtitle {
+    @include kicker;
+    letter-spacing: 1.8px;
+    color: $dim;
+}
+
+.exercise-card-actions {
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+    flex-shrink: 0;
+}
+
+.exercise-card-stats {
+    display: flex;
+    gap: $space-lg;
+    margin: 0;
+    flex-wrap: wrap;
+}
+
+.exercise-card-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.exercise-card-stat-label {
+    @include micro;
+    letter-spacing: 1.5px;
+    color: $dim;
+    margin: 0;
+}
+
+.exercise-card-stat-value {
+    font-family: $font-display;
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1;
+    color: $text;
+    margin: 0;
+
+    &--hi {
+        color: $ember;
+    }
+}
