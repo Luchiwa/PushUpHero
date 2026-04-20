@@ -55,6 +55,11 @@
     &:disabled {
         filter: grayscale(0.4) brightness(0.75);
     }
+
+    // Active — call-attention ember pulse for primary flow CTAs.
+    &.is-active:not(:disabled) {
+        animation: arena-ember-pulse 2s ease-in-out infinite;
+    }
 }
 
 .btn-primary-sm {
