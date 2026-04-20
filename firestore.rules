@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Usernames (public lookup) ──────────────────────────────────
+    match /usernames/{username} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // ── User profiles ──────────────────────────────────────────────
+    match /users/{uid} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.uid == uid;
+
+      // ── Sessions ────────────────────────────────────────────────
+      match /sessions/{sessionId} {
+        allow read, write: if request.auth.uid == uid;
+      }
+
+      // ── Friends ─────────────────────────────────────────────────
+      match /friends/{friendUid} {
+        allow read: if request.auth.uid == uid;
+        allow write: if request.auth.uid == uid || request.auth.uid == friendUid;
+      }
+
+      // ── Incoming friend requests ─────────────────────────────────
+      match /friendRequests/{fromUid} {
+        allow read: if request.auth.uid == uid;
+        allow create, update: if request.auth.uid == fromUid;
+        allow delete: if request.auth.uid == uid || request.auth.uid == fromUid;
+      }
+
+      // ── Outgoing request tracker ─────────────────────────────────
+      match /friendRequestsSent/{toUid} {
+        allow read, write: if request.auth.uid == uid;
+        allow delete: if request.auth.uid == toUid;
+      }
+
+      // ── Notifications ────────────────────────────────────────────
+      match /notifications/{notifId} {
+        allow read, update, delete: if request.auth.uid == uid;
+        allow create: if request.auth != null;
+      }
+
+      // ── Activity Feed ────────────────────────────────────────────
+      match /activityFeed/{eventId} {
+        allow read: if request.auth != null;
+        allow write: if request.auth.uid == uid;
+      }
+    }
+  }
+}
