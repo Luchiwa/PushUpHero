@@ -17,6 +17,7 @@
     text-align: left;
     font-family: inherit;
     color: $text;
+    min-width: 0;
     transition: border-color 200ms ease, transform 180ms $ease-arena,
                 box-shadow 200ms ease;
 
@@ -113,15 +114,17 @@
     display: flex;
     gap: $space-md;
     justify-content: center;
+    min-width: 0;
+    position: relative;
 }
 
 .stats-widget-stat {
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 2px;
-    max-width: 120px;
 }
 
 .stats-widget-icon {
@@ -143,6 +146,10 @@
 .stats-widget-lbl {
     @include micro;
     color: $dim;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 // ── CTA badge ────────────────────────────────────────────────────
@@ -195,7 +202,59 @@
         height: 13px;
     }
 
+    // Drop the emoji to free up CTA width — chevron + label still read as "stats link".
     .stats-widget-cta {
         padding: 3px 7px;
+
+        span:first-child { display: none; }
+    }
+}
+
+// ── Very narrow (≤430px): strip CTA to chevron, hide stat icons ──
+@media (max-width: 430px) {
+    .stats-widget {
+        gap: $space-xs;
+        padding: $space-sm $space-md;
+    }
+
+    .stats-widget-row {
+        gap: $space-sm;
+    }
+
+    // Ember-tinted vertical rule between the two stat columns.
+    .stats-widget-stat + .stats-widget-stat {
+        border-left: 1px solid color-mix(in srgb, #{$ember} 18%, transparent);
+        padding-left: $space-sm;
+    }
+
+    // Numbers carry the meaning; the tiny icon is noise at this width.
+    .stats-widget-icon {
+        display: none;
+    }
+
+    // Keep the CTA semantic (link-shaped) but strip to a bare chevron.
+    .stats-widget-cta {
+        padding: 0;
+        background: transparent;
+        border: none;
+        color: color-mix(in srgb, #{$ember} 75%, transparent);
+
+        span { display: none; }
+
+        svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .stats-widget:hover & {
+            background: transparent;
+            border: none;
+            color: $ember;
+        }
+    }
+
+    // Kill the shimmer at tight widths.
+    .stats-widget-shine {
+        display: none;
     }
 }

@@ -17,6 +17,7 @@
     text-align: left;
     font-family: inherit;
     color: $text;
+    min-width: 0;
     transition: border-color 200ms ease, transform 180ms $ease-arena,
                 box-shadow 200ms ease;
 
@@ -37,7 +38,7 @@
     }
 }
 
-// ── Icon container (no more hexfill — keep subtle bg) ────────────
+// ── Icon container ───────────────────────────────────────────────
 .quest-widget-icon-wrap {
     position: relative;
     flex-shrink: 0;
@@ -82,7 +83,7 @@
     animation: arena-ember-pulse 2s ease-in-out infinite;
 }
 
-// ── Shine sweep kept but tuned to ember ──────────────────────────
+// ── Shine sweep ──────────────────────────────────────────────────
 .quest-widget-shine {
     position: absolute;
     top: 0;
@@ -108,12 +109,14 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+    overflow: hidden;
 }
 
 .quest-widget-top {
     display: flex;
     align-items: center;
     gap: $space-sm;
+    min-width: 0;
 }
 
 .quest-widget-title {
@@ -123,6 +126,8 @@
     letter-spacing: 1.2px;
     text-transform: uppercase;
     color: $text;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .quest-widget-badge {
@@ -133,6 +138,9 @@
     border: 1px solid color-mix(in srgb, #{$ember} 30%, transparent);
     color: $ember;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
 
     &--done {
         background: color-mix(in srgb, #{$good} 12%, transparent);
@@ -147,6 +155,7 @@
     align-items: center;
     gap: $space-xs;
     min-width: 0;
+    overflow: hidden;
 }
 
 .quest-widget-quest-emoji {
@@ -164,6 +173,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     min-width: 0;
+    flex: 1;
 }
 
 .quest-widget-quest-more {
@@ -235,5 +245,43 @@
 
     .quest-widget-quest-name {
         font-size: 12px;
+    }
+
+    // Drop "+N more" and the status pill — the ember dot + name convey status.
+    .quest-widget-quest-more,
+    .quest-widget-quest-status {
+        display: none;
+    }
+}
+
+// ── Very narrow (≤430px): collapse to single line, kill preview ──
+@media (max-width: 430px) {
+    .quest-widget {
+        gap: $space-xs;
+        padding: $space-sm $space-md;
+    }
+
+    .quest-widget-info {
+        gap: 2px;
+    }
+
+    .quest-widget-top {
+        gap: $space-xs;
+    }
+
+    // Hide preview entirely at this width — title + badge carry the message.
+    .quest-widget-preview {
+        display: none;
+    }
+
+    // Let the badge shrink to fit (counts stay readable via ellipsis).
+    .quest-widget-badge {
+        padding: 1px 6px;
+        font-size: 10px;
+    }
+
+    // Kill the shimmer on narrow screens — too much motion in a tight row.
+    .quest-widget-shine {
+        display: none;
     }
 }
