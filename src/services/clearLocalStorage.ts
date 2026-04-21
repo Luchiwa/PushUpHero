@@ -16,6 +16,7 @@ const APP_STORAGE_KEYS = [
     'pushup_game_total_sessions',
     'pushup_game_total_reps',
     'pushup_merge_in_progress',
+    'pushup_hero_workout_checkpoint',
     ...GUEST_STATS_KEYS,
 ];
 

@@ -14,10 +14,12 @@ import { useWorkout } from '@app/WorkoutContext';
 import { getTier } from '@domain/xpSystem';
 import type { QuestDef, QuestProgress } from '@domain/quests';
 import { isQuestAccepted, QUEST_CATEGORY_META, getAvailableQuests, getAcceptedQuests } from '@domain/quests';
+import { getWorkoutCheckpoint } from '@services/workoutCheckpointStore';
 import { PlayerHUD } from './PlayerHUD/PlayerHUD';
 import { QuestCard } from './QuestCard/QuestCard';
 import { QuestWidget } from './QuestWidget/QuestWidget';
 import { StatsWidget } from './StatsWidget/StatsWidget';
+import { ResumeBanner } from './ResumeBanner/ResumeBanner';
 import './StartScreen.scss';
 
 interface StartScreenProps {
@@ -52,6 +54,7 @@ export function StartScreen({
         exerciseType, changeExerciseType,
         setGoalReps, setSessionMode,
         handleStart, handleOpenConfig,
+        handleResumeWorkout, handleDiscardCheckpoint,
     } = useWorkout();
     const { user, dbUser } = useAuthCore();
     const { level, totalXp, xpIntoCurrentLevel, xpNeededForNextLevel, levelProgressPct } = useLevel();
@@ -101,6 +104,19 @@ export function StartScreen({
     }
 
     const isReady = isModelReady;
+
+    // ── Resume interrupted workout ─────────────────────────────────
+    const [checkpoint, setCheckpoint] = useState(() => getWorkoutCheckpoint());
+
+    const onResume = useCallback(() => {
+        handleResumeWorkout();
+        setCheckpoint(null);
+    }, [handleResumeWorkout]);
+
+    const onDiscard = useCallback(() => {
+        handleDiscardCheckpoint();
+        setCheckpoint(null);
+    }, [handleDiscardCheckpoint]);
 
     // Quest state helpers
     const featuredAccepted = featuredQuest && questProgress ? isQuestAccepted(featuredQuest, questProgress) : false;
@@ -212,6 +228,16 @@ export function StartScreen({
                         <div className="status-dot loading" />
                         <span>Loading AI model…</span>
                     </div>
+                )}
+
+                {/* ── Resume interrupted workout ── */}
+                {checkpoint && (
+                    <ResumeBanner
+                        checkpoint={checkpoint}
+                        isReady={isReady}
+                        onResume={onResume}
+                        onDiscard={onDiscard}
+                    />
                 )}
 
                 {/* ── Quick Session button ── */}

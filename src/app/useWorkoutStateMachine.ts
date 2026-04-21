@@ -16,6 +16,7 @@ import { warmUpSpeech } from '@infra/speechEngine';
 import type { QuestDef, QuestProgress } from '@domain/quests';
 import type { BodyProfile } from '@domain/bodyProfile';
 import type { CapturedRatios } from '@exercises/BaseExerciseDetector';
+import { saveWorkoutCheckpoint, clearWorkoutCheckpoint, getWorkoutCheckpoint, deriveResumePosition } from '@services/workoutCheckpointStore';
 import { workoutReducer, INITIAL_WORKOUT_STATE } from './workoutReducer';
 import { useWorkoutPlan } from './useWorkoutPlan';
 import { useWorkoutSession } from './useWorkoutSession';
@@ -148,6 +149,7 @@ export function useWorkoutStateMachine({
 
   const handleStart = useCallback((exerciseTypeOverride?: ExerciseType) => {
     if (state.isSaving) return;
+    clearWorkoutCheckpoint();
     session.resetSessionState();
     plan.resetTimingRefs();
     warmUpSpeech();
@@ -171,6 +173,7 @@ export function useWorkoutStateMachine({
 
   const handleWorkoutStart = useCallback(() => {
     if (state.isSaving) return;
+    clearWorkoutCheckpoint();
     session.resetSessionState();
     plan.resetTimingRefs();
     warmUpSpeech();
@@ -198,6 +201,7 @@ export function useWorkoutStateMachine({
 
     if (isLastSetInBlock && isLastBlock && totalReps > 0) {
       session.saveWorkoutSession([...state.completedSets, setRecord]);
+      clearWorkoutCheckpoint();
     }
 
     if (!isLastSetInBlock || !isLastBlock) {
@@ -213,6 +217,17 @@ export function useWorkoutStateMachine({
       elapsedTime,
       totalReps,
     });
+
+    // Save checkpoint when workout continues (not final set)
+    if (!(isLastSetInBlock && isLastBlock)) {
+      saveWorkoutCheckpoint({
+        version: 1,
+        plan: plan.workoutPlan,
+        completedSets: [...state.completedSets, setRecord],
+        elapsedMs: elapsedTime * 1000,
+        savedAt: Date.now(),
+      });
+    }
   }, [plan, state.completedSets, state.currentSetIndex, state.currentBlockIndex, exerciseState.repCount, session, resetDetector]);
 
   const handleSetCompleteRef = useRefSync(handleSetComplete);
@@ -226,6 +241,7 @@ export function useWorkoutStateMachine({
     if (totalReps > 0) {
       session.saveWorkoutSession(allSets);
     }
+    clearWorkoutCheckpoint();
 
     dispatch({ type: 'MANUAL_STOP', setRecord, elapsedTime, totalReps });
   }, [plan, state.completedSets, session]);
@@ -273,6 +289,7 @@ export function useWorkoutStateMachine({
 
     if (isLastBlock && totalReps > 0) {
       session.saveWorkoutSession(allSets);
+      clearWorkoutCheckpoint();
     }
 
     if (!isLastBlock) {
@@ -280,7 +297,18 @@ export function useWorkoutStateMachine({
     }
 
     dispatch({ type: 'SKIP_BLOCK', skippedSets, isLastBlock, elapsedTime, totalReps });
-  }, [plan.totalSetsInBlock, plan.currentBlock, plan.totalBlocks, workoutStartTimeRef, state.completedSets, state.currentSetIndex, state.currentBlockIndex, session, resetDetector]);
+
+    // Save checkpoint when workout continues (not last block)
+    if (!isLastBlock) {
+      saveWorkoutCheckpoint({
+        version: 1,
+        plan: plan.workoutPlan,
+        completedSets: allSets,
+        elapsedMs: elapsedTime * 1000,
+        savedAt: Date.now(),
+      });
+    }
+  }, [plan.totalSetsInBlock, plan.currentBlock, plan.totalBlocks, plan.workoutPlan, workoutStartTimeRef, state.completedSets, state.currentSetIndex, state.currentBlockIndex, session, resetDetector]);
 
   const handleReset = useCallback(() => {
     const effectiveLevel = session.savedLevel ?? session.liveLevel;
@@ -296,6 +324,65 @@ export function useWorkoutStateMachine({
     resetDetector();
     dispatch({ type: 'RESET_TO_IDLE' });
   }, [resetDetector]);
+
+  // ── Resume / Discard interrupted workout ────────────────────
+
+  const handleResumeWorkout = useCallback(() => {
+    if (state.isSaving) return;
+    const checkpoint = getWorkoutCheckpoint();
+    if (!checkpoint) return;
+
+    const { blockIndex, setIndex } = deriveResumePosition(
+      checkpoint.plan,
+      checkpoint.completedSets.length,
+    );
+
+    session.resetSessionState();
+    plan.setWorkoutPlan(checkpoint.plan);
+
+    const resumeBlock = checkpoint.plan.blocks[blockIndex];
+    syncConfigFromBlock(resumeBlock);
+    onExerciseTypeChange(resumeBlock.exerciseType);
+
+    // Backdate timing so elapsed time display continues seamlessly
+    workoutStartTimeRef.current = Date.now() - checkpoint.elapsedMs;
+    stampSetStartTime();
+
+    warmUpSpeech();
+    startCamera();
+
+    const elapsedTimeSec = Math.round(checkpoint.elapsedMs / 1000);
+    dispatch({
+      type: 'RESUME_WORKOUT',
+      completedSets: checkpoint.completedSets,
+      blockIndex,
+      setIndex,
+      elapsedTime: elapsedTimeSec,
+    });
+  }, [state.isSaving, session, plan, syncConfigFromBlock, onExerciseTypeChange, workoutStartTimeRef, stampSetStartTime, startCamera]);
+
+  const handleDiscardCheckpoint = useCallback(() => {
+    const checkpoint = getWorkoutCheckpoint();
+    if (!checkpoint) return;
+
+    const totalReps = checkpoint.completedSets.reduce((sum, s) => sum + s.reps, 0);
+
+    if (totalReps > 0) {
+      session.resetSessionState();
+      plan.setWorkoutPlan(checkpoint.plan);
+      workoutStartTimeRef.current = Date.now() - checkpoint.elapsedMs;
+      session.saveWorkoutSession(checkpoint.completedSets);
+
+      const elapsedTimeSec = Math.round(checkpoint.elapsedMs / 1000);
+      dispatch({
+        type: 'DISCARD_CHECKPOINT',
+        completedSets: checkpoint.completedSets,
+        elapsedTime: elapsedTimeSec,
+      });
+    }
+
+    clearWorkoutCheckpoint();
+  }, [session, plan, workoutStartTimeRef]);
 
   // ── Side effects ───────────────────────────────────────────
 
@@ -354,6 +441,7 @@ export function useWorkoutStateMachine({
     handleRestComplete, handleExerciseRestComplete,
     handleSkipBlock,
     handleReset, handleLevelUpContinue,
+    handleResumeWorkout, handleDiscardCheckpoint,
   };
 }
 

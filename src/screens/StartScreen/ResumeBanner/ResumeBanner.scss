@@ -1,0 +1,281 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+// ── Resume Banner — interrupted workout prompt (Arena) ──────────
+// High-priority CTA: the user has unfinished work waiting.
+// Ember-dominant with a slow glow pulse to draw the eye without nagging.
+.resume-banner {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: $space-md;
+    padding: $space-md $space-lg;
+    border: 1px solid color-mix(in srgb, #{$ember} 32%, transparent);
+    border-radius: $radius-2xl;
+    background: $card;
+    background-image: linear-gradient(
+        135deg,
+        color-mix(in srgb, #{$ember} 14%, transparent) 0%,
+        color-mix(in srgb, #{$ember} 4%, transparent) 55%,
+        transparent 100%
+    );
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35),
+                0 0 18px rgba(255, 122, 71, 0.12);
+    overflow: hidden;
+    flex-shrink: 0;
+    animation: resume-banner-in 0.55s $ease-arena both;
+
+    // Subtle shine sweep — echoes QuestWidget / StatsWidget rhythm.
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 55%;
+        height: 100%;
+        background: linear-gradient(
+            105deg,
+            transparent 0%,
+            transparent 40%,
+            rgba(255, 122, 71, 0.18) 50%,
+            transparent 60%,
+            transparent 100%
+        );
+        pointer-events: none;
+        animation: arena-shimmer 5s ease-in-out 1s infinite;
+    }
+
+    > * {
+        position: relative;
+    }
+}
+
+@keyframes resume-banner-in {
+    0% {
+        opacity: 0;
+        transform: translateY(10px) scale(0.97);
+        filter: blur(2px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+// ── Play icon ───────────────────────────────────────────────────
+.resume-banner-icon-wrap {
+    position: relative;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    @include flex-center;
+    background: color-mix(in srgb, #{$ember} 18%, transparent);
+    border: 1px solid color-mix(in srgb, #{$ember} 40%, transparent);
+    border-radius: $radius-md;
+    animation: resume-icon-pulse 2.6s ease-in-out infinite;
+}
+
+@keyframes resume-icon-pulse {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, #{$ember} 35%, transparent),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    50% {
+        box-shadow: 0 0 0 6px color-mix(in srgb, #{$ember} 0%, transparent),
+                    0 0 14px rgba(255, 122, 71, 0.35),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+}
+
+.resume-banner-icon {
+    color: $ember;
+    filter: drop-shadow(0 0 4px rgba(255, 122, 71, 0.45));
+}
+
+// ── Info section ────────────────────────────────────────────────
+.resume-banner-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    overflow: hidden;
+}
+
+.resume-banner-title {
+    font-family: $font-display;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: $ember;
+    line-height: 1.2;
+    @include ember-text-glow(0.3);
+}
+
+.resume-banner-detail {
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    color: $dim;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.resume-banner-next {
+    @include micro;
+    color: $gold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+// ── Action buttons ──────────────────────────────────────────────
+.resume-banner-actions {
+    display: flex;
+    align-items: center;
+    gap: $space-sm;
+    flex-shrink: 0;
+}
+
+.resume-banner-btn {
+    border: none;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 200ms ease, transform 180ms $ease-arena,
+                box-shadow 200ms ease, opacity 200ms ease, color 200ms ease;
+
+    &--resume {
+        padding: $space-sm $space-md;
+        border-radius: $radius-pill;
+        background: linear-gradient(180deg, $ember 0%, $ember-deep 100%);
+        color: #fff;
+        font-family: $font-display;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        box-shadow: $shadow-ember-glow;
+
+        &:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: $shadow-ember-glow-lg;
+        }
+
+        &:active:not(:disabled) {
+            transform: translateY(0) scale(0.97);
+        }
+
+        &:focus-visible {
+            outline: 2px solid $ember;
+            outline-offset: 3px;
+        }
+
+        &:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+    }
+
+    &--discard {
+        width: 30px;
+        height: 30px;
+        @include flex-center;
+        border-radius: $radius-pill;
+        background: color-mix(in srgb, #{$text} 4%, transparent);
+        border: 1px solid $line;
+        color: $dim;
+
+        &:hover {
+            background: color-mix(in srgb, #{$blood} 15%, transparent);
+            border-color: color-mix(in srgb, #{$blood} 40%, transparent);
+            color: $blood;
+        }
+
+        &:focus-visible {
+            outline: 2px solid $blood;
+            outline-offset: 2px;
+        }
+
+        &:active {
+            transform: scale(0.94);
+        }
+    }
+}
+
+// ── Mobile responsive (≤480px) ──────────────────────────────────
+@media (max-width: 480px) {
+    .resume-banner {
+        padding: $space-sm $space-md;
+        gap: $space-sm;
+    }
+
+    .resume-banner-icon-wrap {
+        width: 40px;
+        height: 40px;
+    }
+
+    .resume-banner-icon {
+        width: 22px;
+        height: 22px;
+    }
+
+    .resume-banner-title {
+        font-size: 13px;
+        letter-spacing: 1.2px;
+    }
+
+    .resume-banner-detail {
+        font-size: 10px;
+    }
+
+    .resume-banner-btn--resume {
+        padding: $space-xs $space-md;
+        font-size: 11px;
+    }
+}
+
+// ── Very narrow (≤430px): tighter spacing, drop shimmer ────────
+@media (max-width: 430px) {
+    .resume-banner {
+        gap: $space-xs;
+        padding: $space-sm $space-md;
+    }
+
+    .resume-banner-info {
+        gap: 2px;
+    }
+
+    .resume-banner::before {
+        display: none;
+    }
+}
+
+// ── Small phones (≤360px): collapse "Next:" line to save height ─
+@media (max-width: 360px) {
+    .resume-banner-next {
+        display: none;
+    }
+}
+
+// ── iPhone SE (≤320px): resume button shrinks to just the label ─
+@media (max-width: 320px) {
+    .resume-banner-btn--resume {
+        padding: $space-xs $space-sm;
+        letter-spacing: 1px;
+    }
+
+    .resume-banner-btn--discard {
+        width: 26px;
+        height: 26px;
+    }
+}
