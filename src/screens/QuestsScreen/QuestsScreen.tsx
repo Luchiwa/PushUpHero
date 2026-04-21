@@ -56,7 +56,7 @@ export function QuestsScreen({
             <div className="quests-header">
                 <div className="quests-header-ring">
                     <svg viewBox="0 0 40 40" className="quests-ring-svg">
-                        <circle cx="20" cy="20" r="17" fill="none" stroke="currentColor" strokeWidth="3" opacity="0.1" />
+                        <circle cx="20" cy="20" r="17" fill="none" strokeWidth="3" className="quests-ring-track" />
                         <circle
                             cx="20" cy="20" r="17"
                             fill="none"

@@ -67,14 +67,19 @@
     width: 64px;
     height: 64px;
     flex-shrink: 0;
-    background: color-mix(in srgb, #{$ember} 8%, transparent);
+    background: color-mix(in srgb, #{$obsidian} 60%, transparent);
+    border: 1.5px solid color-mix(in srgb, #{$ember} 32%, transparent);
     border-radius: 50%;
+    box-shadow: 0 0 12px color-mix(in srgb, #{$ember} 18%, transparent);
 }
 
 .quests-ring-svg {
     width: 100%;
     height: 100%;
-    color: $text;
+}
+
+.quests-ring-track {
+    stroke: color-mix(in srgb, #{$ember} 22%, transparent);
 }
 
 .quests-ring-stop-start {
