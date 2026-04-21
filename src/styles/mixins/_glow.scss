@@ -1,0 +1,20 @@
+// ── ARENA — GLOW MIXINS ──────────────────────────────────────
+@use 'tokens' as *;
+
+@mixin ember-glow {
+    box-shadow: $shadow-ember-glow;
+}
+
+@mixin ember-glow-lg {
+    box-shadow: $shadow-ember-glow-lg;
+}
+
+// Text glow used for ember titles on dark.
+@mixin ember-text-glow($intensity: 0.3) {
+    text-shadow: 0 0 12px rgba(255, 122, 71, $intensity);
+}
+
+// Inset top highlight (top-edge shine on CTAs).
+@mixin top-highlight {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}

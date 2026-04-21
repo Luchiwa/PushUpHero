@@ -1,117 +1,120 @@
-@use 'sass:color';
-@use 'variables' as *;
+@use 'tokens' as *;
 @use 'mixins' as *;
 
-// ── Weekly Summary KPI Grid ──────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+// KPI Grid — 4 tiles, per-tile tint via --kpi-color (ember/gold/purple/ice).
+// Obsidian card surface + colored gradient wash + glow on hover.
+// ══════════════════════════════════════════════════════════════════
+
 .stats-summary-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: $spacing-xs;
+    gap: $space-xs;
     margin-bottom: 4px;
 }
 
 @keyframes stats-kpi-in {
-    from {
-        opacity: 0;
-        transform: translateY(8px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
-// ── Single tile rule reading `--kpi-color` (set inline by JSX) ───────────────
-// Replaces the four duplicated `.stats-kpi--accent/amber/indigo/orange` blocks.
-// The tinted border + 135° gradient read as the variant marker without an
-// extra ::before stripe.
 .stats-kpi {
-    --kpi-color: #{$accent}; // fallback; overridden inline
+    --kpi-color: #{$ember};
     position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2px;
-    padding: 10px $spacing-xs 8px;
-    background: $white;
-    background-image: linear-gradient(135deg,
-            color-mix(in srgb, var(--kpi-color) 8%, transparent) 0%,
-            color-mix(in srgb, var(--kpi-color) 2%, transparent) 50%,
-            transparent 100%);
-    border: 1px solid color-mix(in srgb, var(--kpi-color) 22%, transparent);
-    border-radius: $radius-sm;
+    gap: 3px;
+    padding: 11px $space-xs 9px;
+    background: $card;
+    background-image: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--kpi-color) 10%, transparent) 0%,
+        color-mix(in srgb, var(--kpi-color) 3%, transparent) 55%,
+        transparent 100%
+    );
+    border: 1px solid color-mix(in srgb, var(--kpi-color) 28%, transparent);
+    border-radius: $radius-md;
     overflow: hidden;
-    animation: stats-kpi-in 0.4s $ease-out-expo both;
-    transition: transform 0.2s $ease-default,
-        box-shadow 0.25s $ease-default,
-        border-color 0.25s $ease-default,
-        background-image 0.25s $ease-default;
-    box-shadow: 0 1px 4px rgba($black, 0.03);
+    animation: stats-kpi-in 0.42s $ease-out-expo both;
+    transition:
+        transform 0.2s $ease-arena,
+        box-shadow 0.25s $ease-arena,
+        border-color 0.25s $ease-arena,
+        background-image 0.25s $ease-arena;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 
     &:hover {
         transform: translateY(-2px);
-        border-color: color-mix(in srgb, var(--kpi-color) 38%, transparent);
-        background-image: linear-gradient(135deg,
-                color-mix(in srgb, var(--kpi-color) 14%, transparent) 0%,
-                color-mix(in srgb, var(--kpi-color) 4%, transparent) 50%,
-                transparent 100%);
-        box-shadow: 0 6px 18px color-mix(in srgb, var(--kpi-color) 16%, transparent),
-            0 0 8px color-mix(in srgb, var(--kpi-color) 8%, transparent);
+        border-color: color-mix(in srgb, var(--kpi-color) 48%, transparent);
+        background-image: linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--kpi-color) 16%, transparent) 0%,
+            color-mix(in srgb, var(--kpi-color) 5%, transparent) 55%,
+            transparent 100%
+        );
+        box-shadow:
+            0 6px 20px color-mix(in srgb, var(--kpi-color) 22%, transparent),
+            0 0 10px color-mix(in srgb, var(--kpi-color) 12%, transparent);
     }
 
-    // ── Skeleton state ─────────────────────────────────────────
     &--skeleton {
         animation: none;
-        background: none;
+        background: $obsidian-2;
         background-image: none;
-        border-color: $border;
-        height: 56px;
-        @include shimmer($radius-sm);
+        border-color: $line;
+        height: 58px;
+        @include shimmer($radius-md);
     }
 }
 
 .stats-kpi-icon {
-    font-size: 1.05rem;
+    font-size: 1.1rem;
     line-height: 1;
     margin-bottom: 1px;
+    filter: drop-shadow(0 0 8px color-mix(in srgb, var(--kpi-color) 45%, transparent));
 }
 
 .stats-kpi-value {
-    font-size: 0.95rem;
-    font-weight: 800;
+    font-family: $font-display;
+    font-size: 1rem;
+    font-weight: 700;
     color: $text;
     display: flex;
     align-items: baseline;
     gap: 3px;
     line-height: 1.2;
+    letter-spacing: 0.5px;
     font-variant-numeric: tabular-nums;
-    letter-spacing: -0.01em;
+    text-shadow: 0 0 8px color-mix(in srgb, var(--kpi-color) 25%, transparent);
 }
 
 .stats-kpi-change {
-    font-size: 0.5rem;
+    font-family: $font-mono;
+    font-size: 0.52rem;
     font-weight: 800;
     border-radius: $radius-pill;
-    padding: 1px 4px;
+    padding: 1px 5px;
     white-space: nowrap;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.5px;
+    font-variant-numeric: tabular-nums;
 
     &.up {
-        color: $green-dark;
-        background: rgba($green, 0.14);
+        color: $good;
+        background: color-mix(in srgb, #{$good} 14%, transparent);
     }
 
     &.down {
-        color: $red;
-        background: rgba($red, 0.1);
+        color: $blood;
+        background: color-mix(in srgb, #{$blood} 12%, transparent);
     }
 }
 
 .stats-kpi-label {
+    font-family: $font-mono;
     font-size: 0.56rem;
     font-weight: 700;
-    color: $text-muted;
+    color: $dim;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 2px;
 }

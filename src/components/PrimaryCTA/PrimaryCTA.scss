@@ -1,0 +1,104 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+// ── Primary CTA — ember gradient + top highlight + ember glow ─
+.primary-cta {
+    @include hit-target;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-sm;
+
+    padding: 14px $space-xl;
+    border: 0;
+    border-radius: $radius-lg;
+    cursor: pointer;
+
+    font-family: $font-display;
+    font-weight: 600;
+    font-size: 17px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #fff;
+
+    transition: transform 160ms $ease-arena,
+                box-shadow 200ms ease,
+                filter 160ms ease;
+
+    // ── Solid (default) ──────────────────────────────────────
+    &--solid {
+        background: $gradient-ember-cta;
+        box-shadow: $shadow-ember-glow;
+
+        &:hover,
+        &:focus-visible {
+            box-shadow: $shadow-ember-glow-lg;
+            filter: brightness(1.06);
+        }
+
+        &:active {
+            transform: translateY(1px);
+            box-shadow: $shadow-ember-glow;
+        }
+    }
+
+    // ── Ghost (outlined ember on dark) ───────────────────────
+    &--ghost {
+        background: rgba(255, 122, 71, 0.08);
+        border: 1px solid rgba(255, 122, 71, 0.55);
+        color: $ember;
+        letter-spacing: 1.5px;
+
+        &:hover,
+        &:focus-visible {
+            background: rgba(255, 122, 71, 0.14);
+            border-color: $ember;
+            color: #fff;
+        }
+
+        &:active {
+            transform: translateY(1px);
+        }
+    }
+
+    // ── Sizes ────────────────────────────────────────────────
+    &--md {
+        font-size: 16px;
+        padding: 12px $space-lg;
+    }
+
+    &--lg {
+        font-size: 18px;
+        padding: 18px $space-2xl;
+        border-radius: $radius-lg;
+    }
+
+    // ── Block ────────────────────────────────────────────────
+    &--block {
+        display: flex;
+        width: 100%;
+    }
+
+    // ── Disabled ─────────────────────────────────────────────
+    &:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        filter: grayscale(0.5);
+        box-shadow: none;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $ember;
+        outline-offset: 3px;
+    }
+}
+
+.primary-cta-icon {
+    display: inline-flex;
+    font-size: 1.15em;
+    line-height: 0;
+}
+
+.primary-cta-label {
+    white-space: nowrap;
+}

@@ -1,0 +1,29 @@
+// ── ARENA — LAYOUT TOKENS ────────────────────────────────────
+// Source: tokens.json `layout` block.
+
+$mobile-width:     390px;
+$mobile-min-width: 375px;
+$mobile-max-width: 430px;
+
+$hit-target-min:   44px;
+
+$screen-pad-top:        54px;
+$screen-pad-horizontal: 18px;
+
+// ── Z-INDEX SCALE ────────────────────────────────────────────
+// Unchanged from legacy — stable across app.
+$z-base:             1;
+$z-content:          2;
+$z-raised:           5;
+$z-overlay:          10;
+$z-sticky:           40;
+$z-modal-backdrop:   100;
+$z-modal:            200;
+$z-notification:     300;
+$z-toast:            1000;
+$z-maximum:          9999;
+
+// ── Blur ─────────────────────────────────────────────────────
+$blur:     20px;
+$blur-sm:  10px;
+$blur-xs:  6px;

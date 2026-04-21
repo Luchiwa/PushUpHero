@@ -1,6 +1,8 @@
 @use 'variables' as *;
+@use 'tokens' as arena;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+// Arena fonts are preloaded in index.html (<link rel="stylesheet">) to
+// ensure Oswald ships before first paint of screen titles.
 
 *,
 *::before,
@@ -19,8 +21,10 @@ body,
 }
 
 body {
-    font-family: 'Inter', -apple-system, sans-serif;
+    font-family: arena.$font-sans;
     background: $bg;
     color: $text;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }

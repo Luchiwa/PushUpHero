@@ -1,5 +1,8 @@
+import type { CSSProperties } from 'react';
+import { QuestCard as ArenaQuestCard } from '@components/QuestCard/QuestCard';
+import { PrimaryCTA } from '@components/PrimaryCTA/PrimaryCTA';
 import { ExercisePicker } from '@components/ExercisePicker/ExercisePicker';
-import type { QuestDef, QuestProgress } from '@domain/quests';
+import type { QuestDef, QuestProgress, QuestCategory } from '@domain/quests';
 import { isSingleSessionQuest, getQuestProgressCount } from '@domain/quests';
 import { getExerciseLabel } from '@exercises/types';
 import type { ExerciseType } from '@exercises/types';
@@ -17,6 +20,17 @@ interface QuestCardProps {
     onQuestStart: () => void;
 }
 
+type Tone = 'ember' | 'gold' | 'purple' | 'ice' | 'good';
+
+// Map category → Arena semantic tone. Tone is a hint only — ember stays primary.
+const CATEGORY_TONE: Record<QuestCategory, Tone> = {
+    onboarding: 'ember',
+    exercise:   'good',
+    mastery:    'gold',
+    endurance:  'ember',
+    variety:    'ice',
+};
+
 export function QuestCard({
     activeQuest,
     questAccepted,
@@ -28,28 +42,40 @@ export function QuestCard({
     onAcceptQuest,
     onQuestStart,
 }: QuestCardProps) {
+    const tone: Tone = CATEGORY_TONE[activeQuest.category] ?? 'ember';
+    const rewardNode = (
+        <span className="home-quest-reward">
+            <span className="home-quest-reward-plus">+</span>
+            {activeQuest.xpReward}
+            <span className="home-quest-reward-unit">XP</span>
+        </span>
+    );
+    const kicker = catMeta?.label?.toUpperCase();
+
     if (!questAccepted) {
         return (
-            <div className="quest-card" style={{ '--quest-color': catMeta?.color ?? '#6366f1' } as React.CSSProperties}>
-                <div className="quest-card-header">
-                    <span className="quest-card-badge" style={{ background: catMeta?.color }}>{catMeta?.label}</span>
-                    <span className="quest-card-xp">+{activeQuest.xpReward} XP</span>
-                </div>
-                <div className="quest-card-main">
-                    <span className="quest-card-emoji">{activeQuest.emoji}</span>
-                    <div className="quest-card-text">
-                        <h3 className="quest-card-title">{activeQuest.title}</h3>
-                        <p className="quest-card-desc">{activeQuest.description}</p>
-                    </div>
-                </div>
-                <button type="button" className="quest-card-accept" onClick={onAcceptQuest} disabled={!isReady}>
-                    ✨ Accept Quest
-                </button>
-            </div>
+            <ArenaQuestCard
+                kicker={kicker}
+                title={<><span className="home-quest-emoji" aria-hidden="true">{activeQuest.emoji}</span>{activeQuest.title}</>}
+                description={activeQuest.description}
+                reward={rewardNode}
+                tone={tone}
+                footer={
+                    <PrimaryCTA
+                        variant="solid"
+                        size="md"
+                        block
+                        icon="✨"
+                        onClick={onAcceptQuest}
+                        disabled={!isReady}
+                    >
+                        Accept Quest
+                    </PrimaryCTA>
+                }
+            />
         );
     }
 
-    // Accepted + quick-startable → show Start button
     const hasSpecificExercise = !!activeQuest.goal.exerciseType;
     const isCrossSession = !isSingleSessionQuest(activeQuest);
     const currentReps = isCrossSession ? getQuestProgressCount(activeQuest, questProgress) : 0;
@@ -60,43 +86,50 @@ export function QuestCard({
         ? getExerciseLabel(activeQuest.goal.exerciseType!)
         : 'reps';
     const startLabel = isCrossSession && currentReps > 0
-        ? `🚀 Start — ${remaining} ${repsLabel} left`
-        : `🚀 Start — ${goalReps} ${repsLabel}`;
+        ? `Start — ${remaining} ${repsLabel} left`
+        : `Start — ${goalReps} ${repsLabel}`;
 
     const progressPct = isCrossSession ? Math.min(100, Math.round((currentReps / goalReps) * 100)) : 0;
 
     return (
-        <div className="quest-card quest-card--active" style={{ '--quest-color': catMeta?.color ?? '#6366f1' } as React.CSSProperties}>
-            <div className="quest-card-header">
-                <span className="quest-card-badge" style={{ background: catMeta?.color }}>{catMeta?.label}</span>
-                <span className="quest-card-xp">+{activeQuest.xpReward} XP</span>
-            </div>
-            <div className="quest-card-main">
-                <span className="quest-card-emoji">{activeQuest.emoji}</span>
-                <div className="quest-card-text">
-                    <h3 className="quest-card-title">{activeQuest.title}</h3>
-                    <p className="quest-card-desc">{activeQuest.description}</p>
-                </div>
-            </div>
-
+        <ArenaQuestCard
+            kicker={kicker}
+            title={<><span className="home-quest-emoji" aria-hidden="true">{activeQuest.emoji}</span>{activeQuest.title}</>}
+            description={activeQuest.description}
+            reward={rewardNode}
+            tone={tone}
+            footer={
+                <PrimaryCTA
+                    variant="solid"
+                    size="md"
+                    block
+                    icon="🚀"
+                    onClick={onQuestStart}
+                    disabled={!isReady}
+                >
+                    {isReady ? startLabel : 'Getting Ready…'}
+                </PrimaryCTA>
+            }
+        >
             {isCrossSession && currentReps > 0 && (
-                <div className="quest-card-progress">
-                    <div className="quest-card-progress-bar">
-                        <div className="quest-card-progress-fill" style={{ width: `${progressPct}%` }} />
+                <div
+                    className="home-quest-progress"
+                    style={{ '--home-quest-progress': `${progressPct}%` } as CSSProperties}
+                >
+                    <div className="home-quest-progress-track">
+                        <span className="home-quest-progress-fill" />
                     </div>
-                    <span className="quest-card-progress-label">{currentReps}/{goalReps} {repsLabel}</span>
+                    <span className="home-quest-progress-label">
+                        {currentReps}/{goalReps} {repsLabel}
+                    </span>
                 </div>
             )}
 
             {!hasSpecificExercise && (
-                <div className="quest-card-config">
+                <div className="home-quest-picker">
                     <ExercisePicker value={exerciseType} onChange={changeExerciseType} />
                 </div>
             )}
-
-            <button type="button" className="quest-card-start" onClick={onQuestStart} disabled={!isReady}>
-                {isReady ? startLabel : 'Getting Ready…'}
-            </button>
-        </div>
+        </ArenaQuestCard>
     );
 }

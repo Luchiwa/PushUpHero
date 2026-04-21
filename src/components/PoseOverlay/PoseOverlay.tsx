@@ -26,6 +26,21 @@ function buildKeyJointsPayload(): Record<string, number[]> {
     return result;
 }
 
+/** Read Arena skeleton palette from CSS custom properties on :root. */
+function readArenaPalette() {
+    const root = getComputedStyle(document.documentElement);
+    const read = (name: string, fallback: string) => {
+        const v = root.getPropertyValue(name).trim();
+        return v || fallback;
+    };
+    return {
+        invalid: read('--blood', '#ff5577'),
+        down: read('--good', '#4ae8a0'),
+        up: read('--ice', '#7fc5ff'),
+        neutral: read('--ember', '#ff7a47'),
+    };
+}
+
 export interface PoseOverlayHandle {
     drawResult: (result: PoseLandmarkerResult, phase: string, isValidPosition: boolean) => void;
 }
@@ -66,6 +81,7 @@ export const PoseOverlay = memo(forwardRef<PoseOverlayHandle, PoseOverlayProps>(
                 );
                 worker.postMessage({ type: 'init', canvas: offscreen }, [offscreen]);
                 worker.postMessage({ type: 'set-key-joints', keyJoints: buildKeyJointsPayload() });
+                worker.postMessage({ type: 'set-palette', palette: readArenaPalette() });
                 workerRef.current = worker;
                 offscreenTransferred.current = true;
             } catch {
@@ -139,11 +155,12 @@ export const PoseOverlay = memo(forwardRef<PoseOverlayHandle, PoseOverlayProps>(
                 }
                 prevCoreCenterRef.current = { x: coreCX, y: coreCY };
 
+                const pal = readArenaPalette();
                 const phaseColor = !isValidPosition
-                    ? '#ef4444'
-                    : phase === 'down' ? '#22c55e'
-                    : phase === 'up' ? '#3b82f6'
-                    : '#f59e0b';
+                    ? pal.invalid
+                    : phase === 'down' ? pal.down
+                    : phase === 'up' ? pal.up
+                    : pal.neutral;
 
                 ctx.lineWidth = 3;
                 ctx.strokeStyle = `${phaseColor}cc`;

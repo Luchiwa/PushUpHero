@@ -1,0 +1,17 @@
+// ── ARENA — GRADIENT TOKENS ──────────────────────────────────
+// Source: tokens.json `gradient` block.
+
+$gradient-ember-cta:       linear-gradient(180deg, #ff7a47, #c43b0e);
+$gradient-ember-gold-xp:   linear-gradient(90deg, #ff7a47, #f5c871);
+$gradient-progression-bg:  linear-gradient(135deg, #2a1f10, #15121c);
+$gradient-quest-card-bg:   linear-gradient(135deg, #2a1a12 0%, #1a1018 70%);
+$gradient-hero-purple-glow:radial-gradient(ellipse at 0% 110%, rgba(165, 107, 255, 0.15), transparent 50%);
+$gradient-hero-ember-glow: radial-gradient(ellipse at 80% -10%, rgba(255, 90, 31, 0.18), transparent 55%);
+$gradient-trophy-gold:     linear-gradient(160deg, #ffe599 0%, #f5c871 50%, #8a4e14 100%);
+$gradient-trophy-bronze:   linear-gradient(160deg, #e4b289 0%, #b87a3e 50%, #6a3d18 100%);
+
+// ── Legacy aliases (still referenced by older components) ────
+$gradient-accent:      $gradient-ember-cta;
+$gradient-accent-rich: linear-gradient(135deg, #ffb366, #ff9c35, #ff7a47);
+$gradient-danger:      linear-gradient(135deg, rgba(255, 85, 119, 0.85), rgba(255, 85, 119, 0.95));
+$gradient-green:       linear-gradient(135deg, #4ae8a0, #2fb57a);

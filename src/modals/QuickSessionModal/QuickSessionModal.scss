@@ -1,48 +1,123 @@
-@use 'variables' as *;
+@use 'tokens' as *;
 @use 'mixins' as *;
 
+// ── Overlay ─────────────────────────────────────────────────────────────────
 .qs-overlay {
-  @include modal-overlay($z: $z-modal-backdrop);
-  animation: overlay-fade-in 0.2s ease both;
+    position: fixed;
+    inset: 0;
+    z-index: $z-modal-backdrop;
+    @include flex-center;
+    background: $overlay-strong;
+    backdrop-filter: blur($blur-sm);
+    -webkit-backdrop-filter: blur($blur-sm);
+    animation: arena-screen-in 0.2s ease both;
 
-  &--exit {
-    animation: overlay-fade-out 0.2s ease both;
-  }
+    &--exit {
+        animation: overlay-fade-out 0.2s ease both;
+    }
 }
 
+// ── Card ────────────────────────────────────────────────────────────────────
 .qs-card {
-  @include modal-card($width: 420px, $padding: 2rem 1.5rem);
-  gap: 1.1rem;
-  align-items: center;
-  position: relative;
-  animation: modal-scale-in 0.25s $ease-out-back both;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: $space-lg;
+    width: min(92vw, 420px);
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: $space-4xl $space-lg $space-lg;
+    background: $card;
+    border: 1px solid color-mix(in srgb, #{$ember} 24%, transparent);
+    border-radius: $radius-2xl;
+    box-shadow: $shadow-modal-sheet,
+                0 0 24px rgba(255, 122, 71, 0.15);
+    @include modal-slide-up;
 
-  &--exit {
-    animation: modal-scale-out 0.2s $ease-default both;
-  }
+    // Subtle ember glow on top
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 120px;
+        background: radial-gradient(ellipse at 50% 0%, rgba(255, 122, 71, 0.18), transparent 70%);
+        pointer-events: none;
+        border-radius: $radius-2xl $radius-2xl 0 0;
+    }
+
+    &--exit {
+        animation: sheet-slide-down 0.2s $ease-default both;
+    }
+
+    > * {
+        position: relative;
+    }
 }
 
+// ── Close button ────────────────────────────────────────────────────────────
 .qs-close-btn {
-  position: absolute;
-  top: 1rem;
-  right: 1.25rem;
-  background: transparent;
-  border: none;
-  color: $text-muted;
-  font-size: 1.5rem;
-  cursor: pointer;
-  transition: $transition;
+    position: absolute;
+    top: $space-sm;
+    right: $space-sm;
+    width: 36px;
+    height: 36px;
+    @include flex-center;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: $radius-sm;
+    color: $dim;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 180ms $ease-arena,
+                color 180ms $ease-arena,
+                border-color 180ms $ease-arena;
+    z-index: 2;
 
-  &:hover {
-    color: $text;
-    transform: scale(1.1);
-  }
+    &:hover,
+    &:focus-visible {
+        background: color-mix(in srgb, #{$ember} 10%, transparent);
+        border-color: color-mix(in srgb, #{$ember} 28%, transparent);
+        color: $ember;
+        outline: none;
+    }
+}
+
+// ── Header ──────────────────────────────────────────────────────────────────
+.qs-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-xs;
+    text-align: center;
+}
+
+.qs-kicker {
+    @include kicker;
+    color: $ember;
+    letter-spacing: 3px;
 }
 
 .qs-title {
-  font-size: 1.2rem;
-  font-weight: 800;
-  color: $text;
-  text-align: center;
-  margin: 0;
+    @include title-l;
+    color: $ember;
+    margin: 0;
+}
+
+// ── Goal section ────────────────────────────────────────────────────────────
+.qs-goal-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-sm;
+}
+
+.qs-goal-label {
+    @include micro;
+    letter-spacing: 2px;
+    color: $dim;
+    margin: 0;
 }

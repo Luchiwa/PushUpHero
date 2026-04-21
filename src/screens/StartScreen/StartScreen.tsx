@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react
 import { useAuthCore, useLevel } from '@hooks/useAuth';
 import { useSessions } from '@hooks/useAuth';
 import { InstallBanner } from '@overlays/InstallBanner/InstallBanner';
+import { PrimaryCTA } from '@components/PrimaryCTA/PrimaryCTA';
 
 // Lazy-loaded modals/screens (only parsed when opened)
 const AuthModal = lazy(() => import('@modals/AuthModal/AuthModal').then(m => ({ default: m.AuthModal })));
@@ -153,7 +154,6 @@ export function StartScreen({
                     user={user}
                     dbUser={dbUser}
                     tier={tier}
-                    streak={streak}
                     level={level}
                     totalXp={totalXp}
                     xpIntoCurrentLevel={xpIntoCurrentLevel}
@@ -216,16 +216,30 @@ export function StartScreen({
 
                 {/* ── Quick Session button ── */}
                 {onboardingDone && (
-                    <button type="button" className="btn-quick-session" onClick={() => setActiveModal({ type: 'quickSession' })} disabled={!isReady}>
-                        ⚡ Quick Session
-                    </button>
+                    <PrimaryCTA
+                        variant="solid"
+                        size="lg"
+                        block
+                        icon="⚡"
+                        onClick={() => setActiveModal({ type: 'quickSession' })}
+                        disabled={!isReady}
+                    >
+                        Quick Session
+                    </PrimaryCTA>
                 )}
 
                 {/* ── Multi-Set Workout ── */}
                 {onboardingDone && (
-                    <button type="button" className="btn-secondary" onClick={handleOpenConfig} disabled={!isReady}>
-                        🏋️ Multi-Set Workout
-                    </button>
+                    <PrimaryCTA
+                        variant="ghost"
+                        size="lg"
+                        block
+                        icon="🏋️"
+                        onClick={handleOpenConfig}
+                        disabled={!isReady}
+                    >
+                        Multi-Set Workout
+                    </PrimaryCTA>
                 )}
             </div>
 

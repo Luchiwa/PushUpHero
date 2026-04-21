@@ -189,8 +189,8 @@ export function WeeklyChart({ sessions, weekOffset, exerciseFilter = 'all', metr
             >
                 <defs>
                     <linearGradient id="chart-fill-gradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#ff7f00" stopOpacity="0.22" />
-                        <stop offset="100%" stopColor="#ff7f00" stopOpacity="0" />
+                        <stop offset="0%" className="chart-fill-stop-start" />
+                        <stop offset="100%" className="chart-fill-stop-end" />
                     </linearGradient>
                 </defs>
 
@@ -223,7 +223,6 @@ export function WeeklyChart({ sessions, weekOffset, exerciseFilter = 'all', metr
                     className="chart-line"
                     d={linePath}
                     fill="none"
-                    stroke="#ff7f00"
                     strokeWidth="2.5"
                     strokeLinejoin="round"
                     strokeLinecap="round"
@@ -255,7 +254,6 @@ export function WeeklyChart({ sessions, weekOffset, exerciseFilter = 'all', metr
                         cy={yFor(totals[todayIndex])}
                         r="6"
                         fill="none"
-                        stroke="#ff7f00"
                         strokeWidth="2"
                     />
                 )}
@@ -269,10 +267,8 @@ export function WeeklyChart({ sessions, weekOffset, exerciseFilter = 'all', metr
                         <circle
                             key={i}
                             cx={p.x} cy={p.y} r={isToday ? 5 : 3.5}
-                            fill={isToday ? '#ff7f00' : '#fff'}
-                            stroke="#ff7f00"
                             strokeWidth="2"
-                            className="chart-dot"
+                            className={`chart-dot${isToday ? ' chart-dot--today' : ''}`}
                         />
                     );
                 })}

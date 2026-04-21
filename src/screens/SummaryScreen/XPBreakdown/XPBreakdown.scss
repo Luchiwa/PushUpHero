@@ -1,4 +1,4 @@
-@use 'variables' as *;
+@use 'tokens' as *;
 @use 'mixins' as *;
 
 .xp-breakdown {
@@ -6,90 +6,115 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.35rem;
-    padding: 0.65rem 0.85rem;
-    border-radius: $radius-sm;
-    background: linear-gradient(135deg, rgba($accent, 0.08) 0%, rgba($accent, 0.03) 100%);
-    border: 1px solid rgba($accent, 0.18);
+    gap: $space-xs;
+    padding: $space-sm $space-md;
+    border-radius: $radius-md;
+    background:
+        linear-gradient(135deg,
+            color-mix(in srgb, #{$ember} 12%, transparent) 0%,
+            color-mix(in srgb, #{$gold} 8%, transparent) 100%),
+        $obsidian-2;
+    border: 1px solid color-mix(in srgb, #{$ember} 26%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, #{$gold} 12%, transparent);
 }
 
 .xp-breakdown-header {
     display: flex;
     align-items: baseline;
-    gap: 0.4rem;
+    gap: $space-xs;
 }
 
 .xp-breakdown-total {
-    font-size: 1.15rem;
-    font-weight: 900;
-    letter-spacing: -0.02em;
-    @include text-gradient(linear-gradient(135deg, $accent-pale, $accent));
+    font-family: $font-display;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: $gold;
+    text-shadow: 0 0 16px color-mix(in srgb, #{$gold} 55%, transparent);
+    font-variant-numeric: tabular-nums;
 }
 
 .xp-breakdown-multiplier {
-    font-size: 0.85rem;
+    font-family: $font-mono;
+    font-size: 0.78rem;
     font-weight: 700;
-    color: $accent;
-    background: rgba($accent, 0.12);
-    padding: 0.15rem 0.5rem;
+    color: $ember;
+    background: color-mix(in srgb, #{$ember} 14%, transparent);
+    border: 1px solid color-mix(in srgb, #{$ember} 32%, transparent);
+    padding: 3px 8px;
     border-radius: $radius-pill;
+    letter-spacing: 0.5px;
+    font-variant-numeric: tabular-nums;
 }
 
 .xp-breakdown-exercises {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.35rem;
+    gap: 6px;
     justify-content: center;
 }
 
 .xp-exercise-pill {
+    font-family: $font-mono;
     font-size: 0.72rem;
     font-weight: 700;
     color: $text;
-    background: rgba($accent, 0.08);
-    border: 1px solid rgba($accent, 0.15);
-    padding: 0.2rem 0.6rem;
+    background: color-mix(in srgb, #{$obsidian} 75%, transparent);
+    border: 1px solid color-mix(in srgb, #{$ember} 22%, transparent);
+    padding: 4px 10px;
     border-radius: $radius-pill;
     white-space: nowrap;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
+    letter-spacing: 0.3px;
+    font-variant-numeric: tabular-nums;
 }
 
 .xp-difficulty-badge {
+    font-family: $font-mono;
     font-size: 0.62rem;
     font-weight: 800;
-    color: $accent;
-    background: rgba($accent, 0.15);
+    color: $ember;
+    background: color-mix(in srgb, #{$ember} 18%, transparent);
     border-radius: $radius-pill;
-    padding: 1px 5px;
-    letter-spacing: 0.01em;
+    padding: 1px 6px;
+    letter-spacing: 0.5px;
+    font-variant-numeric: tabular-nums;
 }
 
 .xp-breakdown-bonuses {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.3rem;
+    gap: 5px;
     justify-content: center;
 }
 
 .xp-bonus-tag {
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: $text-muted;
-    background: $surface;
-    padding: 0.2rem 0.55rem;
+    font-family: $font-sans;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: $dim;
+    background: $obsidian;
+    border: 1px solid $line;
+    padding: 3px 9px;
     border-radius: $radius-pill;
     white-space: nowrap;
+    letter-spacing: 0.2px;
 
     strong {
-        color: $accent;
+        color: $gold;
         font-weight: 800;
+        font-family: $font-mono;
+        font-variant-numeric: tabular-nums;
     }
 }
 
 .xp-breakdown-raw {
+    font-family: $font-mono;
     font-size: 0.7rem;
-    color: $text-muted;
+    color: $dim;
     font-weight: 500;
+    letter-spacing: 0.3px;
+    font-variant-numeric: tabular-nums;
 }

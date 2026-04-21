@@ -6,6 +6,7 @@ import { MIN_SETS, MAX_SETS, MAX_REST_SECONDS, MAX_EXERCISE_REST_SECONDS } from 
 import { getExerciseLabel } from '@exercises/types';
 import type { WorkoutBlock } from '@exercises/types';
 import { PageLayout } from '@components/PageLayout/PageLayout';
+import { PrimaryCTA } from '@components/PrimaryCTA/PrimaryCTA';
 import './BlockEditor.scss';
 
 type BlockStep = 'exercise' | 'sets' | 'goal' | 'rest-sets' | 'rest-exercise';
@@ -200,11 +201,17 @@ export function BlockEditor({
             </div>
 
             <div className="wc-bottom-bar">
-                <button type="button" className="btn-primary wc-next-btn" onClick={onNext}>
-                    {blockStepIndex >= blockSteps.length - 1
-                        ? <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg> Done</>
-                        : <>Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg></>}
-                </button>
+                <PrimaryCTA
+                    variant="solid"
+                    size="lg"
+                    block
+                    icon={blockStepIndex >= blockSteps.length - 1
+                        ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                        : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>}
+                    onClick={onNext}
+                >
+                    {blockStepIndex >= blockSteps.length - 1 ? 'Done' : 'Next'}
+                </PrimaryCTA>
             </div>
 
             <div className="wc-footer">

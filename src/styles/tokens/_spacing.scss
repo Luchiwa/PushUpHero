@@ -1,0 +1,18 @@
+// ── ARENA — SPACING TOKENS ───────────────────────────────────
+// Source: tokens.json `spacing` block.
+
+$space-xs:  4px;
+$space-sm:  8px;
+$space-md:  12px;
+$space-lg:  16px;
+$space-xl:  18px;
+$space-2xl: 22px;
+$space-3xl: 26px;
+$space-4xl: 32px;
+
+// ── Legacy aliases during migration ──────────────────────────
+$spacing-xs: $space-xs;
+$spacing-sm: $space-sm;
+$spacing-md: $space-lg;   // 16px
+$spacing-lg: 24px;        // mid value, kept for legacy 24px usage
+$spacing-xl: $space-4xl;  // 32px

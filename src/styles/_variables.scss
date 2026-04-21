@@ -1,47 +1,56 @@
 // ── DESIGN TOKENS ──────────────────────────────────────────────
-// Single source of truth for every visual primitive.
-// Rule: if a value appears in more than one file, it belongs here.
+// Legacy token layer — now aliased to Arena dark-mode tokens so the
+// whole app inverts to obsidian + ember without component churn.
+// New code SHOULD import `@use 'tokens' as *;` directly.
+// This file will be removed at the end of M5.
+
+@forward 'tokens';
+
+@use 'tokens' as arena;
 
 // ── COLORS — Core ────────────────────────────────────────────
 $white: #ffffff;
 $black: #000000;
-$bg: $white;
-$text: #1a1a1a;
-$text-muted: rgba($text, 0.6);
+$bg: arena.$obsidian;        // was #ffffff → now #0c0a10
+$text: arena.$text;          // was #1a1a1a → now #f5f2ff
+$text-muted: arena.$dim;     // was rgba(#1a1a1a, 0.6) → now #a8a2bc
 
-// ── COLORS — Brand / Accent (Orange) ────────────────────────
-$accent: #ff7f00;
-$accent-light: #ff9c35;
-$accent-pale: #ffb366;
-$accent-glow: rgba($accent, 0.3);
-$accent-dark: #e67300;
+// ── COLORS — Brand / Accent (EMBER) ─────────────────────────
+$accent: arena.$ember;            // #ff7a47 (was #ff7f00)
+$accent-light: #ffb07a;           // mid ember tint
+$accent-pale: #ffcba0;            // pale ember tint
+$accent-glow: rgba(arena.$ember, 0.3);
+$accent-dark: arena.$ember-deep;  // #c43b0e (was #e67300)
 
-// ── COLORS — Semantic ────────────────────────────────────────
-$green: #22c55e;
-$green-dark: #16a34a;
-$amber: #f59e0b;
-$amber-light: #fbbf24;
-$amber-dark: #d97706;
-$red: #ef4444;
-$blue: #3b82f6;
-$purple: #a855f7;
-$indigo: #6366f1;
-$magenta: #e040fb;
-// ── COLORS — Tier palette ────────────────────────────────────
-// Must stay in sync with TIER_COLORS in lib/achievements.ts
-$tier-bronze: #cd7f32;
-$tier-silver: #c0c0c0;
-$tier-gold: #ffd700;
-$tier-platinum: #00e5ff;
+// ── COLORS — Semantic (Arena mapping) ────────────────────────
+// Greens → Arena good. Reds → Arena blood. Blues → Arena ice.
+// Ambers → Arena gold (rewards-only). Purples → Arena purple.
+$green: arena.$good;
+$green-dark: #2fb57a;
+$amber: arena.$gold;
+$amber-light: #ffe0a0;
+$amber-dark: #c89c42;
+$red: arena.$blood;
+$blue: arena.$ice;
+$purple: arena.$purple;
+$indigo: #a48cff;
+$magenta: #ff8cd0;
 
-// Tier text colors (for readable text on tier backgrounds)
+// ── COLORS — Tier palette (dark-mode readable) ──────────────
+// Keep Arena-coherent while respecting achievement tier semantics.
+$tier-bronze: #b87a3e;
+$tier-silver: #c0c6d8;
+$tier-gold: arena.$gold;
+$tier-platinum: arena.$ice;
+
+// Tier text colors — text ON tier backgrounds (kept dark for contrast on
+// light tier metallics; the tier BG itself is the metallic gradient).
 $tier-bronze-text: $white;
-$tier-silver-text: #333;
-$tier-gold-text: #5a4000;
-$tier-platinum-text: #1a6a7a;
+$tier-silver-text: #15121c;
+$tier-gold-text: #3a1f0a;
+$tier-platinum-text: #0c2a40;
 
-// ── TIER MAP (for @each loops) ──────────────────────────────
-// Usage: @each $name, $color in $tiers { .tier-#{$name} { ... } }
+// ── TIER MAP ────────────────────────────────────────────────
 $tiers: (
     'bronze': $tier-bronze,
     'silver': $tier-silver,
@@ -56,13 +65,13 @@ $tier-texts: (
     'platinum': $tier-platinum-text,
 );
 
-// ── GRADE COLORS MAP ────────────────────────────────────────
-// Darkened for WCAG AA contrast (≥ 4.5:1) on white backgrounds.
-$grade-s: #7c3aed;   // purple-600  (~5.3:1)
-$grade-a: #16a34a;   // green-600   (~4.5:1)
-$grade-b: #1d4ed8;   // blue-700    (~5.4:1)
-$grade-c: #b45309;   // amber-700   (~4.8:1)
-$grade-d: #dc2626;   // red-600     (~4.0:1)
+// ── GRADE COLORS MAP (Arena spec) ───────────────────────────
+// S = purple, A = gold, B = ice, C = ember, D = blood.
+$grade-s: arena.$purple;
+$grade-a: arena.$gold;
+$grade-b: arena.$ice;
+$grade-c: arena.$ember;
+$grade-d: arena.$blood;
 
 $grades: (
     's': $grade-s,
@@ -72,82 +81,96 @@ $grades: (
     'd': $grade-d,
 );
 
-// ── COLORS — Surfaces & borders ─────────────────────────────
-$surface: rgba($accent, 0.08);
-$surface-hover: rgba($accent, 0.12);
-$surface-dark: rgba($white, 0.8);
-$border: rgba($text, 0.1);
+// ── COLORS — Surfaces & borders (dark) ──────────────────────
+$surface: rgba(arena.$ember, 0.08);
+$surface-hover: rgba(arena.$ember, 0.14);
+$surface-dark: arena.$card;
+$border: arena.$line;
 
 // ── COLORS — Overlays ───────────────────────────────────────
-$modal-overlay: rgba($text, 0.5);
-$modal-overlay-strong: rgba($text, 0.65);
+$modal-overlay: rgba($black, 0.6);
+$modal-overlay-strong: rgba($black, 0.8);
 
-// ── SPACING ──────────────────────────────────────────────────
-$spacing-xs: 4px;
-$spacing-sm: 8px;
-$spacing-md: 16px;
+// ── SPACING (legacy names → Arena spacing) ──────────────────
+$spacing-xs: arena.$space-xs;
+$spacing-sm: arena.$space-sm;
+$spacing-md: arena.$space-lg;
 $spacing-lg: 24px;
-$spacing-xl: 32px;
+$spacing-xl: arena.$space-4xl;
 
 // ── BORDER RADIUS ────────────────────────────────────────────
 $radius-xs: 6px;
-$radius-sm: 12px;
-$radius: 20px;
+$radius-sm: arena.$radius-md;    // 12px
+$radius: arena.$radius-2xl;      // 22px (was 20px)
 $radius-lg: 32px;
-$radius-pill: 100px;
+$radius-pill: arena.$radius-pill;
 
 // ── Z-INDEX SCALE ────────────────────────────────────────────
-// Ordered layering — always use a token, never a magic number.
-$z-base: 1;
-$z-content: 2;
-$z-raised: 5;
-$z-overlay: 10;
-$z-sticky: 40;
-$z-modal-backdrop: 100;
-$z-modal: 200;
-$z-notification: 300;
-$z-toast: 1000;
-$z-maximum: 9999;
+$z-base: arena.$z-base;
+$z-content: arena.$z-content;
+$z-raised: arena.$z-raised;
+$z-overlay: arena.$z-overlay;
+$z-sticky: arena.$z-sticky;
+$z-modal-backdrop: arena.$z-modal-backdrop;
+$z-modal: arena.$z-modal;
+$z-notification: arena.$z-notification;
+$z-toast: arena.$z-toast;
+$z-maximum: arena.$z-maximum;
 
 // ── EASING CURVES ────────────────────────────────────────────
-$ease-default: cubic-bezier(0.4, 0, 0.2, 1);   // standard material
-$ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);  // screen entrances, slides
-$ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1); // bouncy pops
+$ease-default: arena.$ease-default;
+$ease-out-expo: arena.$ease-out-expo;
+$ease-out-back: arena.$ease-out-back;
 
 // ── EFFECTS ──────────────────────────────────────────────────
-$blur: 20px;
-$blur-sm: 10px;
-$blur-xs: 6px;
-$transition: 0.3s $ease-default;
-$transition-fast: 0.15s ease;
+$blur: arena.$blur;
+$blur-sm: arena.$blur-sm;
+$blur-xs: arena.$blur-xs;
+$transition: arena.$transition;
+$transition-fast: arena.$transition-fast;
 
 // ── SHADOW TOKENS ────────────────────────────────────────────
-$shadow-md: 0 8px 24px rgba($black, 0.12);
-$shadow-card: 0 12px 40px rgba($black, 0.08);
-$shadow-modal: 0 20px 48px rgba($black, 0.18);
-$shadow-accent-sm: 0 2px 8px rgba($accent, 0.35);
-$shadow-accent-glow: 0 0 6px rgba($accent, 0.8), 0 0 12px rgba($accent, 0.4);
+$shadow-md: 0 8px 24px rgba($black, 0.55);
+$shadow-card: arena.$shadow-card-raise;
+$shadow-modal: 0 20px 48px rgba($black, 0.6);
+$shadow-accent-sm: 0 2px 8px rgba(arena.$ember, 0.45);
+$shadow-accent-glow: arena.$shadow-ember-glow;
 
 // ── FONT SIZE SCALE ──────────────────────────────────────────
-$font-xs: 0.72rem;   // labels, captions
-$font-sm: 0.8rem;    // small text
-$font-md: 0.9rem;    // body, inputs
-$font-base: 0.95rem; // form inputs, names
-$font-lg: 1.15rem;   // section titles
-$font-xl: 1.5rem;    // modal titles
-$font-2xl: 2.5rem;   // hero numbers
-$font-3xl: 3rem;     // big counters
+$font-xs: 0.72rem;
+$font-sm: 0.8rem;
+$font-md: 0.9rem;
+$font-base: 0.95rem;
+$font-lg: 1.15rem;
+$font-xl: 1.5rem;
+$font-2xl: 2.5rem;
+$font-3xl: 3rem;
 
 // ── GRADIENT HELPERS ─────────────────────────────────────────
-$gradient-accent: linear-gradient(135deg, $accent, $accent-light);
-$gradient-accent-rich: linear-gradient(135deg, $accent-pale, $accent-light, $accent);
-$gradient-danger: linear-gradient(135deg, rgba($red, 0.85), rgba($red, 0.95));
-$gradient-green: linear-gradient(135deg, $green, $green-dark);
+$gradient-accent: arena.$gradient-ember-cta;
+$gradient-accent-rich: linear-gradient(135deg, #ffcba0, #ffb07a, arena.$ember);
+$gradient-danger: linear-gradient(135deg, rgba(arena.$blood, 0.85), rgba(arena.$blood, 0.95));
+$gradient-green: linear-gradient(135deg, arena.$good, #2fb57a);
 
 // ── CSS CUSTOM PROPERTIES ────────────────────────────────────
 // Exported to :root for use in plain CSS / inline styles / SVG.
-// For future dark-mode: override these values under [data-theme="dark"].
 :root {
+    // ── Arena core palette ───────────────────────────────────
+    --obsidian: #{arena.$obsidian};
+    --obsidian-2: #{arena.$obsidian-2};
+    --card: #{arena.$card};
+    --line: #{arena.$line};
+    --ember: #{arena.$ember};
+    --ember-solid: #{arena.$ember-solid};
+    --ember-deep: #{arena.$ember-deep};
+    --gold: #{arena.$gold};
+    --good: #{arena.$good};
+    --purple: #{arena.$purple};
+    --blood: #{arena.$blood};
+    --ice: #{arena.$ice};
+    --dim: #{arena.$dim};
+
+    // ── Legacy aliases (back-compat for JS/inline styles) ────
     --bg: #{$bg};
     --surface: #{$surface};
     --surface-hover: #{$surface-hover};
@@ -160,14 +183,24 @@ $gradient-green: linear-gradient(135deg, $green, $green-dark);
     --amber: #{$amber};
     --red: #{$red};
     --blue: #{$blue};
-    --purple: #{$purple};
     --indigo: #{$indigo};
 
-    // Grade colors (single source of truth — also consumed by JS via var())
+    // ── Grade colors — single source of truth ────────────────
     @each $letter, $color in $grades {
         --grade-#{$letter}: #{$color};
     }
 
+    // ── Tier colors — Arena-coherent (JS reads via var(--tier-*)) ──
+    @each $name, $color in $tiers {
+        --tier-#{$name}: #{$color};
+    }
+
+    // ── Fonts ────────────────────────────────────────────────
+    --font-display: #{arena.$font-display};
+    --font-sans: #{arena.$font-sans};
+    --font-mono: #{arena.$font-mono};
+
+    // ── Radius + misc ────────────────────────────────────────
     --radius: #{$radius};
     --radius-sm: #{$radius-sm};
     --blur: #{$blur};

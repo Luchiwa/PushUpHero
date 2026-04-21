@@ -1,17 +1,17 @@
-@use 'variables' as *;
+@use 'tokens' as *;
 @use 'mixins' as *;
 
-// ── Segmented Toggle ───────────────────────────────────────────
-// A track holding 2–4 button options with a sliding white pill
-// indicator behind the active one. Active label + icon flip to
-// $accent. Indicator runs an infinite shine sweep for polish.
+// ── Segmented Toggle — Arena ────────────────────────────────────
+// Obsidian track with an ember-glass sliding pill indicator. Active
+// label/icon flip to ember with a mono-kicker weight. Indicator runs
+// a shimmering shine sweep for polish.
 
 .segmented-toggle {
     position: relative;
     display: flex;
-    background: rgba($text, 0.05);
-    border: 1px solid rgba($text, 0.06);
-    border-radius: $radius-sm;
+    background: $obsidian-2;
+    border: 1px solid $line;
+    border-radius: $radius-md;
     padding: 4px;
     width: 100%;
     isolation: isolate;
@@ -21,11 +21,12 @@
     position: absolute;
     top: 4px;
     bottom: 4px;
-    background: $white;
-    border-radius: calc($radius-sm - 2px);
+    background: color-mix(in srgb, #{$ember} 18%, #{$obsidian-2});
+    border: 1px solid color-mix(in srgb, #{$ember} 45%, transparent);
+    border-radius: calc($radius-md - 2px);
     box-shadow:
-        0 4px 14px rgba($accent, 0.18),
-        0 1px 4px rgba($black, 0.08);
+        0 0 14px color-mix(in srgb, #{$ember} 28%, transparent),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
     transition:
         left 0.35s $ease-out-back,
         width 0.35s $ease-out-back;
@@ -49,28 +50,30 @@
     padding: 10px 12px;
     background: transparent;
     border: none;
-    border-radius: calc($radius-sm - 2px);
-    font-size: 0.78rem;
+    border-radius: calc($radius-md - 2px);
+    font-family: $font-mono;
+    font-size: 0.7rem;
     font-weight: 700;
-    letter-spacing: 0.04em;
-    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: 1.8px;
+    color: $dim;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     transition:
         color 0.25s ease,
-        font-weight 0.25s ease;
+        text-shadow 0.25s ease;
 
     &:focus-visible {
-        outline: 2px solid rgba($accent, 0.5);
+        outline: 2px solid color-mix(in srgb, #{$ember} 60%, transparent);
         outline-offset: 2px;
     }
 
     &.is-active {
-        color: $accent;
-        font-weight: 800;
+        color: $ember;
+        text-shadow: 0 0 10px color-mix(in srgb, #{$ember} 40%, transparent);
 
         .segmented-toggle__icon {
-            color: $accent;
+            color: $ember;
             transform: scale(1.05);
         }
     }
@@ -80,7 +83,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: $text-muted;
+    color: $dim;
     transition:
         color 0.25s ease,
         transform 0.25s $ease-out-back;

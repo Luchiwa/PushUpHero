@@ -1,0 +1,59 @@
+// ── ARENA — SURFACE MIXINS ───────────────────────────────────
+@use 'tokens' as *;
+
+// Base card — obsidian card surface with hairline border + raise shadow.
+@mixin card-surface($radius: $radius-2xl) {
+    background: $card;
+    border: 1px solid $line;
+    border-radius: $radius;
+    box-shadow: $shadow-card-raise;
+}
+
+// Softer divider surface (bg2).
+@mixin surface-subtle($radius: $radius-lg) {
+    background: $obsidian-2;
+    border: 1px solid $line;
+    border-radius: $radius;
+}
+
+// Glass / blurred overlay.
+@mixin glass($bg: rgba(28, 24, 41, 0.55), $blur-amount: $blur) {
+    background: $bg;
+    backdrop-filter: blur($blur-amount);
+    -webkit-backdrop-filter: blur($blur-amount);
+    border: 1px solid $line;
+}
+
+// Full-bleed fill.
+@mixin fill {
+    position: absolute;
+    inset: 0;
+}
+
+// Corner frame — 4 L-shape corners (ember by default).
+// Usage: @include corner-frame(); wrap target element with position: relative.
+@mixin corner-frame($color: $ember, $size: 14px, $thickness: 2px, $inset: 0) {
+    &::before,
+    &::after {
+        content: '';
+        position: absolute;
+        width: $size;
+        height: $size;
+        border: $thickness solid $color;
+        pointer-events: none;
+    }
+
+    &::before {
+        top: $inset;
+        left: $inset;
+        border-right: 0;
+        border-bottom: 0;
+    }
+
+    &::after {
+        bottom: $inset;
+        right: $inset;
+        border-left: 0;
+        border-top: 0;
+    }
+}

@@ -1,13 +1,21 @@
-@use 'variables' as *;
+@use 'tokens' as *;
 @use 'mixins' as *;
 
+// DeleteAccountSection — Arena. Destructive flow styled in blood
+// semantic. Description + inputs + danger button (the last two are
+// defined in SettingsModal.scss under .settings-accordion-body).
+//
+// Intentionally thin: layout + intro paragraph only.
+
 .settings-danger-desc {
+    font-family: $font-sans;
     font-size: 0.85rem;
-    color: $text-muted;
-    line-height: 1.5;
+    color: $dim;
+    line-height: 1.55;
     margin: 0;
 
     strong {
-        color: $text;
+        color: $blood;
+        font-weight: 700;
     }
 }

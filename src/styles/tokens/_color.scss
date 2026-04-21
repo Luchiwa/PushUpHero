@@ -1,0 +1,46 @@
+// ── ARENA — COLOR TOKENS ─────────────────────────────────────
+// Source: tokens.json `color` block. Dark-mode obsidian + ember.
+// Sémantique stricte : ember=primaire, gold=récompenses, good=complétion,
+// purple/ice/blood=sémantique (grades/erreurs) — jamais décoratif.
+
+// ── Surfaces (obsidian family) ────────────────────────────────
+$obsidian:       #0c0a10; // App background
+$obsidian-2:     #15121c; // Secondary surface / subtle divider
+$card:           #1c1829; // Elevated card surface
+$line:           rgba(255, 255, 255, 0.08); // 1px hairline border
+
+// ── Foreground ────────────────────────────────────────────────
+$text:           #f5f2ff; // Primary foreground
+$dim:            #a8a2bc; // Muted text — meets WCAG AA on obsidian
+
+// ── Ember (primary) ───────────────────────────────────────────
+$ember:          #ff7a47; // Titles, active accents, CTAs, skeleton
+$ember-solid:    #ff5a1f; // Saturated ember — solid fills behind white text
+$ember-deep:     #c43b0e; // Bottom of emberCTA gradient
+
+// ── Reward / success / semantic ───────────────────────────────
+$gold:           #f5c871; // Rewards only: XP, levels, achievements, ranks
+$good:           #4ae8a0; // Success only: completed quests, validations
+$purple:         #bb8cff; // Tertiary accent (sparingly). Grade S, Quests details
+$blood:          #ff5577; // SEMANTIC ONLY — grade D, error states
+$ice:            #7fc5ff; // SEMANTIC ONLY — grade B
+
+// ── Grade mapping (Arena spec) ────────────────────────────────
+// S=purple (best), A=gold, B=ice, C=ember, D=blood
+$grade-s: $purple;
+$grade-a: $gold;
+$grade-b: $ice;
+$grade-c: $ember;
+$grade-d: $blood;
+
+$grades: (
+    's': $grade-s,
+    'a': $grade-a,
+    'b': $grade-b,
+    'c': $grade-c,
+    'd': $grade-d,
+);
+
+// ── Overlays ──────────────────────────────────────────────────
+$overlay:        rgba(0, 0, 0, 0.6);
+$overlay-strong: rgba(0, 0, 0, 0.8);

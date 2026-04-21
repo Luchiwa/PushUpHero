@@ -1,23 +1,50 @@
-@use 'variables' as *;
+@use 'tokens' as *;
 @use 'mixins' as *;
 
-// ── INPUT GROUP ─────────────────────────────────────────────────
-// Label + input field — used in AuthModal, SettingsModal, FriendsTab search
+// ══════════════════════════════════════════════════════════════════
+// Arena form inputs. Obsidian well, ember focus ring, mono kicker
+// labels, blood danger state.
+// ══════════════════════════════════════════════════════════════════
+
 .input-group {
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
+    gap: 6px;
 
     label {
-        @include label;
+        font-family: $font-mono;
+        font-size: 0.62rem;
+        font-weight: 700;
+        color: $dim;
+        text-transform: uppercase;
+        letter-spacing: 2px;
     }
 
     input {
-        @include form-input;
+        background: $obsidian-2;
+        border: 1px solid $line;
+        border-radius: $radius-md;
+        padding: 12px 14px;
+        color: $text;
+        font-size: 0.94rem;
+        font-family: $font-sans;
+        transition:
+            border-color 0.2s $ease-arena,
+            box-shadow 0.2s $ease-arena,
+            background 0.2s $ease-arena;
+
+        &:focus {
+            outline: none;
+            border-color: color-mix(in srgb, #{$ember} 55%, transparent);
+            box-shadow: 0 0 0 3px color-mix(in srgb, #{$ember} 20%, transparent);
+            background: color-mix(in srgb, #{$ember} 3%, #{$obsidian-2});
+        }
+
+        &::placeholder { color: color-mix(in srgb, #{$dim} 65%, transparent); }
 
         &.input--danger-ready {
-            border-color: $red;
-            box-shadow: 0 0 0 2px rgba($red, 0.15);
+            border-color: color-mix(in srgb, #{$blood} 55%, transparent);
+            box-shadow: 0 0 0 3px color-mix(in srgb, #{$blood} 18%, transparent);
         }
     }
 }

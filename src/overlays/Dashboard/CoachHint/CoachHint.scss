@@ -1,27 +1,27 @@
-@use 'variables' as *;
+@use 'tokens' as *;
 @use 'mixins' as *;
 
 .coach-hint {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
-    background: rgba($black, 0.5);
+    gap: $space-xs;
+    background: rgba(12, 10, 16, 0.72);
     backdrop-filter: blur($blur-sm);
     -webkit-backdrop-filter: blur($blur-sm);
-    border: 1px solid rgba($white, 0.12);
+    border: 1px solid color-mix(in srgb, #{$ember} 28%, transparent);
     border-radius: $radius-pill;
-    padding: 0.3rem 0.75rem;
+    padding: 6px 14px;
     animation: slide-up 0.3s ease both;
     pointer-events: none;
 }
 
 .coach-icon {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
+    color: $ember;
 }
 
 .coach-text {
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: $white;
-    letter-spacing: 0.02em;
+    @include caption;
+    color: $text;
+    letter-spacing: 0.3px;
 }

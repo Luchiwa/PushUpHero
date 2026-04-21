@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useModalClose } from '@hooks/shared/useModalClose';
+import { ConfettiCanvas } from '@screens/SummaryScreen/ConfettiCanvas/ConfettiCanvas';
 import './LevelUpScreen.scss';
 
 interface LevelUpScreenProps {
@@ -44,6 +45,9 @@ export function LevelUpScreen({ previousLevel, newLevel, onContinue, xpEarned, x
 
     return (
         <div className={`levelup-screen${closing ? ' levelup-screen--exit' : ''}`} onAnimationEnd={handleAnimationEnd}>
+            {/* Confetti burst on landing — arena-tinted */}
+            <ConfettiCanvas goalReached={phase === 'land' || phase === 'show'} />
+
             {/* Burst particles — rendered when landing */}
             {phase !== 'enter' && phase !== 'roll' && (
                 <div className="levelup-particles" aria-hidden="true">

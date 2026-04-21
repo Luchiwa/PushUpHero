@@ -1,17 +1,21 @@
-@use 'variables' as *;
+@use 'tokens' as *;
 @use 'mixins' as *;
 
-// ── Friends Tab ───────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+// FriendsTab — Arena. Dark search bar, mono section kickers with
+// ember count badges, obsidian modal for friend removal.
+// ══════════════════════════════════════════════════════════════════
+
 .friends-tab {
     display: flex;
     flex-direction: column;
-    gap: $spacing-md;
+    gap: $space-md;
 }
 
 // ── Search bar ────────────────────────────────────────────────────
 .friends-search-form {
     display: flex;
-    gap: 0.5rem;
+    gap: $space-sm;
     align-items: center;
     width: 100%;
 }
@@ -26,50 +30,68 @@
 
 .friends-search-icon {
     position: absolute;
-    left: 0.75rem;
-    color: $text-muted;
+    left: 12px;
+    color: $dim;
     pointer-events: none;
     flex-shrink: 0;
-    transition: color 0.2s;
+    transition: color 0.2s $ease-arena;
 }
 
 .friends-search-input {
     width: 100%;
-    padding: 0.7rem 2.2rem 0.7rem 2.4rem;
-    background: rgba($accent, 0.04);
-    border: 1.5px solid rgba($accent, 0.15);
-    border-radius: $radius-sm;
-    font-size: 0.95rem;
+    padding: 10px 34px 10px 36px;
+    min-height: 44px;
+    font-family: $font-sans;
+    font-size: 0.92rem;
     color: $text;
-    font-family: inherit;
-    transition: $transition;
+    background: $obsidian-2;
+    border: 1px solid $line;
+    border-radius: $radius-md;
     box-sizing: border-box;
+    transition:
+        border-color 0.2s $ease-arena,
+        box-shadow 0.2s $ease-arena,
+        background 0.2s $ease-arena;
+
+    &::placeholder {
+        color: color-mix(in srgb, #{$dim} 70%, transparent);
+    }
 
     &:focus {
         outline: none;
-        border-color: $accent;
-        box-shadow: 0 0 0 3px rgba($accent, 0.15), 0 0 12px rgba($accent, 0.08);
-        background: rgba($accent, 0.06);
-    }
+        border-color: $ember;
+        background: color-mix(in srgb, #{$ember} 5%, #{$obsidian-2});
+        box-shadow:
+            0 0 0 3px color-mix(in srgb, #{$ember} 18%, transparent),
+            0 0 16px color-mix(in srgb, #{$ember} 12%, transparent);
 
-    &::placeholder {
-        color: $text-muted;
+        & ~ .friends-search-icon {
+            color: $ember;
+        }
     }
 }
 
 .friends-search-clear {
     position: absolute;
-    right: 0.6rem;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
     background: none;
     border: none;
-    color: $text-muted;
-    font-size: 0.75rem;
+    color: $dim;
+    font-size: 0.8rem;
     cursor: pointer;
-    padding: 0.25rem;
+    padding: 0;
     line-height: 1;
+    border-radius: 50%;
+    transition: color 0.2s $ease-arena, background 0.2s $ease-arena;
 
     &:hover {
-        color: $text;
+        color: $ember;
+        background: color-mix(in srgb, #{$ember} 12%, transparent);
     }
 }
 
@@ -77,26 +99,25 @@
 .friends-section {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: $space-sm;
 }
 
 .friends-section-title {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
-    margin: 0 0 0.25rem;
-    @include label(0.72rem);
-    color: $text-muted;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
+    gap: $space-xs;
+    margin: 0 0 2px;
+    @include kicker;
+    letter-spacing: 2.5px;
 
     svg {
-        opacity: 0.6;
+        opacity: 0.7;
         flex-shrink: 0;
     }
 
     &--accent {
-        color: $accent;
+        color: $ember;
+        text-shadow: 0 0 10px color-mix(in srgb, #{$ember} 35%, transparent);
 
         svg {
             opacity: 1;
@@ -105,22 +126,42 @@
 }
 
 .friends-section-title-dot {
-    @include notification-dot($accent, 6px);
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: $ember;
+    border-radius: 50%;
+    box-shadow: 0 0 8px color-mix(in srgb, #{$ember} 65%, transparent);
+    animation: friends-dot-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes friends-dot-pulse {
+    0%, 100% { opacity: 0.6; }
+    50%      { opacity: 1; }
 }
 
 .friends-badge {
-    @include count-badge;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    font-family: $font-mono;
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: $ember;
+    background: color-mix(in srgb, #{$ember} 14%, transparent);
+    border: 1px solid color-mix(in srgb, #{$ember} 36%, transparent);
+    border-radius: $radius-pill;
+    letter-spacing: 0.5px;
+    font-variant-numeric: tabular-nums;
     animation: friends-badge-pop 0.3s $ease-out-back;
 }
 
 @keyframes friends-badge-pop {
-    0% {
-        transform: scale(0);
-    }
-
-    100% {
-        transform: scale(1);
-    }
+    0%   { transform: scale(0); }
+    100% { transform: scale(1); }
 }
 
 // ── Empty state ───────────────────────────────────────────────────
@@ -128,53 +169,80 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.4rem;
-    padding: $spacing-xl $spacing-md;
+    gap: 6px;
+    padding: $space-3xl $space-md;
     text-align: center;
 }
 
 .friends-empty-icon {
     font-size: 2.4rem;
-    margin-bottom: 0.25rem;
-    filter: grayscale(0.2);
+    margin-bottom: 4px;
+    filter:
+        grayscale(0.2)
+        drop-shadow(0 0 12px color-mix(in srgb, #{$ember} 30%, transparent));
 }
 
 .friends-empty-title {
     margin: 0;
+    font-family: $font-display;
     font-size: 1rem;
-    font-weight: 800;
+    font-weight: 700;
     color: $text;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
 }
 
 .friends-empty-msg {
+    font-family: $font-sans;
     font-size: 0.82rem;
-    color: $text-muted;
+    color: $dim;
     margin: 0;
-    max-width: 240px;
+    max-width: 260px;
     line-height: 1.5;
 }
 
 // ── Confirm remove modal ──────────────────────────────────────────
 .friend-confirm-overlay {
-    @include modal-overlay($z: $z-toast, $blur: 6px);
+    position: fixed;
+    inset: 0;
+    z-index: $z-toast;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: $space-lg;
+    background: $overlay-strong;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    animation: overlay-fade-in 0.22s ease both;
 }
 
 .friend-confirm-card {
-    @include modal-card($width: 340px, $padding: 1.75rem 1.5rem 1.5rem);
-    gap: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: min(92vw, 340px);
+    padding: $space-2xl $space-xl $space-xl;
+    background: $card;
+    border: 1px solid color-mix(in srgb, #{$blood} 28%, transparent);
+    border-radius: $radius-2xl;
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.65),
+        0 0 30px color-mix(in srgb, #{$blood} 15%, transparent);
+    animation: modal-scale-in 0.28s $ease-out-back both;
 }
 
 .friend-confirm-title {
     margin: 0;
-    font-size: 1.1rem;
-    font-weight: 800;
-    color: $text;
+    @include title-m;
+    color: $blood;
+    text-shadow: 0 0 12px color-mix(in srgb, #{$blood} 35%, transparent);
 }
 
 .friend-confirm-body {
     margin: 0;
-    font-size: 0.9rem;
-    color: $text-muted;
+    font-family: $font-sans;
+    font-size: 0.88rem;
+    color: $dim;
     line-height: 1.5;
 
     strong {
@@ -185,26 +253,31 @@
 
 .friend-confirm-actions {
     display: flex;
-    gap: 0.6rem;
+    gap: $space-sm;
     justify-content: flex-end;
-    margin-top: 0.25rem;
+    margin-top: 6px;
 }
 
 .friend-confirm-cancel {
-    padding: 0.55rem 1rem;
-    background: none;
-    border: 1px solid $border;
-    border-radius: $radius-sm;
-    font-size: 0.9rem;
-    font-weight: 600;
-    font-family: inherit;
-    color: $text-muted;
+    padding: 8px $space-md;
+    min-height: 38px;
+    font-family: $font-mono;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: $dim;
+    background: $obsidian-2;
+    border: 1px solid $line;
+    border-radius: $radius-md;
     cursor: pointer;
-    transition: $transition;
+    transition:
+        color 0.2s $ease-arena,
+        border-color 0.2s $ease-arena;
 
     &:hover:not(:disabled) {
-        border-color: $text-muted;
         color: $text;
+        border-color: color-mix(in srgb, #{$dim} 50%, transparent);
     }
 
     &:disabled {
@@ -214,26 +287,35 @@
 }
 
 .friend-confirm-remove {
-    padding: 0.55rem 1rem;
-    background: $gradient-danger;
-    border: none;
-    border-radius: $radius-sm;
-    font-size: 0.9rem;
+    padding: 8px $space-md;
+    min-height: 38px;
+    font-family: $font-mono;
+    font-size: 0.72rem;
     font-weight: 700;
-    font-family: inherit;
-    color: $white;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: $text;
+    background: linear-gradient(180deg, #{$blood}, #c6324b);
+    border: none;
+    border-radius: $radius-md;
     cursor: pointer;
-    transition: $transition;
-    box-shadow: 0 4px 12px rgba($red, 0.2);
+    box-shadow:
+        0 4px 14px color-mix(in srgb, #{$blood} 40%, transparent),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transition:
+        transform 0.2s $ease-arena,
+        box-shadow 0.25s $ease-arena,
+        filter 0.2s $ease-arena;
 
     &:hover:not(:disabled) {
         transform: translateY(-1px);
-        box-shadow: 0 6px 18px rgba($red, 0.35);
+        box-shadow:
+            0 8px 22px color-mix(in srgb, #{$blood} 50%, transparent),
+            inset 0 1px 0 rgba(255, 255, 255, 0.25);
     }
 
     &:disabled {
-        opacity: 0.5;
+        filter: grayscale(0.4) brightness(0.7);
         cursor: not-allowed;
-        transform: none;
     }
 }

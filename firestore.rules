@@ -1,0 +1,63 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Public read so the signup flow can check availability before
+    // the account exists. Immutable once claimed.
+    match /usernames/{username} {
+      allow read: if true;
+      allow create: if request.auth != null
+                    && request.resource.data.uid == request.auth.uid;
+      allow delete: if request.auth != null
+                    && resource.data.uid == request.auth.uid;
+    }
+
+    // Wide read (needed for friend search + activity feed); owner-only
+    // write with createdAt / uid frozen after create.
+    match /users/{uid} {
+      allow read: if request.auth != null;
+      allow create: if request.auth.uid == uid;
+      allow update: if request.auth.uid == uid
+                    && !request.resource.data.diff(resource.data).affectedKeys()
+                         .hasAny(['createdAt', 'uid']);
+      allow delete: if request.auth.uid == uid;
+
+      // Append-only history; deletable only via account purge.
+      match /sessions/{sessionId} {
+        allow read: if request.auth.uid == uid;
+        allow create, delete: if request.auth.uid == uid;
+      }
+
+      // Denormalized friendship — either side can write their entry
+      // to keep both docs in sync on accept/remove.
+      match /friends/{friendUid} {
+        allow read: if request.auth.uid == uid;
+        allow write: if request.auth.uid == uid || request.auth.uid == friendUid;
+      }
+
+      match /friendRequests/{fromUid} {
+        allow read: if request.auth.uid == uid;
+        allow create, update: if request.auth.uid == fromUid;
+        allow delete: if request.auth.uid == uid || request.auth.uid == fromUid;
+      }
+
+      // Mirror of incoming requests on the sender side.
+      match /friendRequestsSent/{toUid} {
+        allow read, write: if request.auth.uid == uid;
+        allow delete: if request.auth.uid == toUid;
+      }
+
+      // Create is open to any auth user so friends can send encouragements.
+      match /notifications/{notifId} {
+        allow read, update, delete: if request.auth.uid == uid;
+        allow create: if request.auth != null;
+      }
+
+      // Wide read so friends see each other's activity; append + prune only.
+      match /activityFeed/{eventId} {
+        allow read: if request.auth != null;
+        allow create, delete: if request.auth.uid == uid;
+      }
+    }
+  }
+}

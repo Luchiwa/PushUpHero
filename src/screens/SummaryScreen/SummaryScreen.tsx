@@ -9,6 +9,7 @@ import type { AchievementDef } from '@domain/achievements';
 import { TIER_COLORS } from '@domain/achievements';
 import { RECORDS } from '@domain/achievements';
 import { AchievementToastQueue } from '@components/AchievementToastQueue/AchievementToastQueue';
+import { PrimaryCTA } from '@components/PrimaryCTA/PrimaryCTA';
 import { ConfettiCanvas } from './ConfettiCanvas/ConfettiCanvas';
 import { XPBreakdown } from './XPBreakdown/XPBreakdown';
 import { SetsBreakdown } from './SetsBreakdown/SetsBreakdown';
@@ -233,14 +234,16 @@ export function SummaryScreen({ newAchievements }: SummaryProps) {
                 />
 
                 <div className="summary-actions">
-                    <button
-                        type="button"
-                        className="btn-primary"
+                    <PrimaryCTA
+                        variant="solid"
+                        size="lg"
+                        block
                         onClick={handleContinue}
                         disabled={closing}
+                        icon={<span aria-hidden="true">🔁</span>}
                     >
-                        🔁 Continue
-                    </button>
+                        Continue
+                    </PrimaryCTA>
                 </div>
             </div>
 

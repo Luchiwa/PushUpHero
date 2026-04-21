@@ -10,6 +10,7 @@ import type { CSSProperties } from 'react';
 import type { WorkoutPlan, WorkoutBlock } from '@exercises/types';
 import { createDefaultBlock } from '@exercises/types';
 import { PageLayout } from '@components/PageLayout/PageLayout';
+import { PrimaryCTA } from '@components/PrimaryCTA/PrimaryCTA';
 import { BlockCard } from './BlockCard/BlockCard';
 import { BlockEditor } from './BlockEditor/BlockEditor';
 import './WorkoutConfigScreen.scss';
@@ -35,7 +36,11 @@ function getBlockSteps(block: WorkoutBlock): BlockStep[] {
     return steps;
 }
 
-const KPI_COLOR = { accent: '#ff7f00', indigo: '#6366f1', amber: '#f59e0b' };
+const KPI_COLOR = {
+    ember: 'var(--ember)',
+    ice: 'var(--ice)',
+    gold: 'var(--gold)',
+};
 
 // ── Component ────────────────────────────────────────────────────
 
@@ -207,16 +212,16 @@ export function WorkoutConfigScreen({
                 )}
                 {blocks.length > 0 && (
                     <div className="wc-summary-grid">
-                        <div className="wc-summary-kpi" style={{ '--kpi-color': KPI_COLOR.accent } as CSSProperties}>
+                        <div className="wc-summary-kpi" style={{ '--kpi-color': KPI_COLOR.ember } as CSSProperties}>
                             <span className="wc-summary-kpi-value">{blocks.length}</span>
                             <span className="wc-summary-kpi-label">Exercises</span>
                         </div>
-                        <div className="wc-summary-kpi" style={{ '--kpi-color': KPI_COLOR.indigo } as CSSProperties}>
+                        <div className="wc-summary-kpi" style={{ '--kpi-color': KPI_COLOR.ice } as CSSProperties}>
                             <span className="wc-summary-kpi-value">{totalSets}</span>
                             <span className="wc-summary-kpi-label">Total sets</span>
                         </div>
                         {allReps && totalRepsEstimate > 0 && (
-                            <div className="wc-summary-kpi" style={{ '--kpi-color': KPI_COLOR.amber } as CSSProperties}>
+                            <div className="wc-summary-kpi" style={{ '--kpi-color': KPI_COLOR.gold } as CSSProperties}>
                                 <span className="wc-summary-kpi-value">{totalRepsEstimate}</span>
                                 <span className="wc-summary-kpi-label">Est. reps</span>
                             </div>
@@ -226,17 +231,18 @@ export function WorkoutConfigScreen({
             </div>
 
             <div className="wc-bottom-bar">
-                <button
-                    type="button"
-                    className={`btn-primary wc-next-btn${!isReady ? ' wc-next-btn--loading' : ''}`}
+                <PrimaryCTA
+                    variant="solid"
+                    size="lg"
+                    block
+                    icon={!isReady
+                        ? <span className="wc-start-spinner" />
+                        : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13" /><path d="M22 2L15 22l-4-9-9-4 20-7z" /></svg>}
                     onClick={onStart}
                     disabled={!isReady || blocks.length === 0}
                 >
-                    {!isReady
-                        ? <><span className="wc-start-spinner" />Getting Ready…</>
-                        : <><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13" /><path d="M22 2L15 22l-4-9-9-4 20-7z" /></svg> Start Workout</>
-                    }
-                </button>
+                    {!isReady ? 'Getting Ready…' : 'Start Workout'}
+                </PrimaryCTA>
             </div>
         </PageLayout>
     );

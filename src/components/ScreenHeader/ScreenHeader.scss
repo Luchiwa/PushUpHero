@@ -1,0 +1,83 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+// ── Screen header — kicker (mono) + ember title (Oswald) ─────
+.screen-header {
+    display: grid;
+    grid-template-columns: $hit-target-min 1fr $hit-target-min;
+    align-items: center;
+    padding: calc(env(safe-area-inset-top, 0px) + #{$space-md}) $screen-pad-horizontal $space-md;
+    position: relative;
+
+    &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: $screen-pad-horizontal;
+        right: $screen-pad-horizontal;
+        height: 1px;
+        background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 122, 71, 0.25) 20%,
+            rgba(255, 122, 71, 0.25) 80%,
+            transparent
+        );
+    }
+
+    &--left {
+        .screen-header-text {
+            text-align: left;
+            align-items: flex-start;
+        }
+    }
+}
+
+.screen-header-back {
+    @include hit-target;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 0;
+    color: $ember;
+    cursor: pointer;
+    border-radius: $radius-md;
+    padding: 0;
+    transition: background-color 160ms ease, color 160ms ease;
+
+    &:hover,
+    &:focus-visible {
+        background: rgba(255, 122, 71, 0.08);
+    }
+
+    &:focus-visible {
+        @include focus-visible(1px);
+    }
+}
+
+.screen-header-slot {
+    @include hit-target;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.screen-header-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+}
+
+.screen-header-kicker {
+    @include kicker;
+}
+
+.screen-header-title {
+    @include title-screen;
+    margin: 0;
+    @include text-truncate;
+    max-width: 100%;
+}

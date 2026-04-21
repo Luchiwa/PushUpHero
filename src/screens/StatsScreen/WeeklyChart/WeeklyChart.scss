@@ -1,157 +1,162 @@
-@use 'sass:color';
-@use 'variables' as *;
+@use 'tokens' as *;
 @use 'mixins' as *;
 
-// ═══════════════════════════════════════════════════════════════════════════
-// CHART CARD SHELL — white card with subtle accent gradient
-// Wraps the SVG chart, header strip, and any loading/empty overlays.
-// Replaces the old `.stats-chart-wrap` rule that lived in StatsScreen.scss.
-// ═══════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
+// WeeklyChart — SVG chart card. Obsidian shell, ember line/fill/dot,
+// today halo pulse, floating tooltip.
+// ══════════════════════════════════════════════════════════════════
+
 .stats-chart-card {
     position: relative;
-    background: $white;
-    background-image: linear-gradient(135deg,
-            color-mix(in srgb, $accent 7%, transparent) 0%,
-            color-mix(in srgb, $accent 2%, transparent) 50%,
-            transparent 100%);
-    border: 1px solid color-mix(in srgb, $accent 18%, transparent);
-    border-radius: 16px;
+    background: $card;
+    background-image: linear-gradient(
+        135deg,
+        color-mix(in srgb, #{$ember} 10%, transparent) 0%,
+        color-mix(in srgb, #{$ember} 3%, transparent) 55%,
+        transparent 100%
+    );
+    border: 1px solid color-mix(in srgb, #{$ember} 26%, transparent);
+    border-radius: $radius-lg;
     overflow: hidden;
-    box-shadow: 0 2px 12px rgba($accent, 0.06);
-    transition: box-shadow 0.25s $ease-default,
-        background-image 0.25s $ease-default,
-        border-color 0.25s $ease-default;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    transition:
+        box-shadow 0.25s $ease-arena,
+        background-image 0.25s $ease-arena,
+        border-color 0.25s $ease-arena;
 
     &:hover {
-        border-color: color-mix(in srgb, $accent 28%, transparent);
-        background-image: linear-gradient(135deg,
-                color-mix(in srgb, $accent 11%, transparent) 0%,
-                color-mix(in srgb, $accent 3%, transparent) 50%,
-                transparent 100%);
-        box-shadow: 0 6px 22px rgba($accent, 0.12), 0 0 8px rgba($accent, 0.06);
+        border-color: color-mix(in srgb, #{$ember} 40%, transparent);
+        background-image: linear-gradient(
+            135deg,
+            color-mix(in srgb, #{$ember} 14%, transparent) 0%,
+            color-mix(in srgb, #{$ember} 5%, transparent) 55%,
+            transparent 100%
+        );
+        box-shadow:
+            0 6px 24px color-mix(in srgb, #{$ember} 22%, transparent),
+            0 0 12px color-mix(in srgb, #{$ember} 12%, transparent);
     }
 }
 
-// ── Header strip (label + week total) ──────────────────────────
+// ── Header strip (label + week total) ─────────────────────────────
 .stats-chart-card__header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: $spacing-sm;
+    gap: $space-sm;
     padding: 10px 14px 8px;
-    border-bottom: 1px dashed rgba($text, 0.07);
+    border-bottom: 1px dashed $line;
 }
 
 .stats-chart-card__label {
-    @include label(0.6rem);
-    color: $text-muted;
-    letter-spacing: 0.1em;
+    @include micro;
+    letter-spacing: 2px;
+    color: $dim;
 }
 
 .stats-chart-card__total {
-    font-size: 0.7rem;
-    font-weight: 800;
-    color: $accent;
+    font-family: $font-mono;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: $gold;
+    letter-spacing: 0.5px;
     font-variant-numeric: tabular-nums;
-    letter-spacing: 0.01em;
+    text-shadow: 0 0 10px color-mix(in srgb, #{$gold} 40%, transparent);
 }
 
-// ── Empty state overlay (rendered alongside the SVG) ───────────
+// ── Empty state overlay ───────────────────────────────────────────
 .stats-chart-card__empty {
     position: absolute;
     left: 0;
     right: 0;
-    top: 38px; // below the header strip
+    top: 38px;
     bottom: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: 6px;
     text-align: center;
     pointer-events: none;
-    background: rgba($white, 0.35);
+    background: color-mix(in srgb, #{$obsidian} 55%, transparent);
+    backdrop-filter: blur($blur-xs);
+    -webkit-backdrop-filter: blur($blur-xs);
 }
 
 .stats-chart-card__empty-icon {
-    font-size: 1.6rem;
+    font-size: 1.7rem;
     line-height: 1;
+    filter: drop-shadow(0 0 12px color-mix(in srgb, #{$ember} 30%, transparent));
 }
 
 .stats-chart-card__empty-text {
-    font-size: $font-xs;
-    color: $text-muted;
+    font-family: $font-sans;
+    font-size: 0.8rem;
+    color: $dim;
     margin: 0;
-    font-weight: 600;
+    font-weight: 500;
+    letter-spacing: 0.3px;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 // SVG chart
-// ═══════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 .weekly-chart {
     width: 100%;
     height: auto;
     display: block;
     overflow: visible;
     padding: 4px 0;
-    filter: drop-shadow(0 2px 6px rgba($accent, 0.08));
+    filter: drop-shadow(0 2px 10px color-mix(in srgb, #{$ember} 20%, transparent));
 }
 
-// ── Gridlines (dashed) ─────────────────────────────────────────
+// ── Gridlines ─────────────────────────────────────────────────────
 .chart-gridline {
-    stroke: rgba($text, 0.1);
+    stroke: color-mix(in srgb, #{$text} 10%, transparent);
     stroke-width: 1;
     stroke-dasharray: 2 4;
 }
 
-// ── Axis & day labels ──────────────────────────────────────────
+// ── Axis & day labels ─────────────────────────────────────────────
 .chart-axis-label {
     font-size: 9px;
-    fill: $text-muted;
-    font-family: inherit;
+    fill: $dim;
+    font-family: $font-mono;
     font-variant-numeric: tabular-nums;
+    letter-spacing: 0.3px;
 }
 
 .chart-day-label {
     font-size: 10px;
-    fill: $text-muted;
-    font-family: inherit;
+    fill: $dim;
+    font-family: $font-mono;
     font-weight: 600;
-    letter-spacing: 0.04em;
+    letter-spacing: 1px;
+    text-transform: uppercase;
 
     &--today {
-        fill: $accent;
+        fill: $ember;
         font-weight: 800;
     }
 }
 
-// ── Animated line draw on mount / data change ──────────────────
-// `key` prop on the <path> re-mounts the element so the animation
-// re-runs whenever the week, metric, filter, or totals change.
+// ── Animated line draw ────────────────────────────────────────────
 @keyframes chart-draw {
-    from {
-        stroke-dashoffset: 1000;
-    }
-
-    to {
-        stroke-dashoffset: 0;
-    }
+    from { stroke-dashoffset: 1000; }
+    to   { stroke-dashoffset: 0; }
 }
 
 @keyframes chart-fill-fade {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
+    from { opacity: 0; }
+    to   { opacity: 1; }
 }
 
 .chart-line {
+    stroke: $ember;
     stroke-dasharray: 1000;
     stroke-dashoffset: 1000;
     animation: chart-draw 0.9s $ease-out-expo 0.1s forwards;
+    filter: drop-shadow(0 0 6px color-mix(in srgb, #{$ember} 50%, transparent));
 }
 
 .chart-fill {
@@ -159,64 +164,74 @@
     animation: chart-fill-fade 0.6s ease 0.4s forwards;
 }
 
-// ── Today pulsing halo ─────────────────────────────────────────
+.chart-fill-stop-start {
+    stop-color: $ember;
+    stop-opacity: 0.28;
+}
+
+.chart-fill-stop-end {
+    stop-color: $ember;
+    stop-opacity: 0;
+}
+
+// ── Today pulsing halo ────────────────────────────────────────────
 @keyframes chart-halo-pulse {
-
-    0%,
-    100% {
-        r: 6;
-        opacity: 0.7;
-    }
-
-    50% {
-        r: 11;
-        opacity: 0.05;
-    }
+    0%, 100% { r: 6; opacity: 0.75; }
+    50%      { r: 11; opacity: 0.05; }
 }
 
 .chart-today-halo {
+    stroke: $ember;
     animation: chart-halo-pulse 2s $ease-default infinite;
     transform-origin: center;
 }
 
-// ── Data dots ──────────────────────────────────────────────────
+// ── Data dots ─────────────────────────────────────────────────────
 .chart-dot {
+    fill: $text;
+    stroke: $ember;
     transition: r 0.2s $ease-out-back;
+
+    &--today {
+        fill: $ember;
+    }
 }
 
-// ── Tooltip ────────────────────────────────────────────────────
+// ── Tooltip ───────────────────────────────────────────────────────
 .chart-tooltip-bg {
-    fill: $white;
-    stroke: rgba($text, 0.1);
+    fill: $card;
+    stroke: color-mix(in srgb, #{$ember} 45%, transparent);
     stroke-width: 1;
-    filter: drop-shadow(0 4px 10px rgba($black, 0.12));
+    filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.6));
 }
 
 .chart-tooltip-caret {
-    fill: $white;
-    stroke: rgba($text, 0.1);
+    fill: $card;
+    stroke: color-mix(in srgb, #{$ember} 45%, transparent);
     stroke-width: 1;
 }
 
 .chart-tooltip-day {
     font-size: 8px;
-    fill: $text-muted;
-    font-family: inherit;
+    fill: $dim;
+    font-family: $font-mono;
     font-weight: 700;
-    letter-spacing: 0.06em;
+    letter-spacing: 1px;
+    text-transform: uppercase;
 }
 
 .chart-tooltip-value {
     font-size: 10px;
-    fill: $accent;
-    font-family: inherit;
+    fill: $ember;
+    font-family: $font-mono;
     font-weight: 800;
+    letter-spacing: 0.3px;
     font-variant-numeric: tabular-nums;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 // Loading skeleton
-// ═══════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 .stats-chart-card--loading {
     pointer-events: none;
 }

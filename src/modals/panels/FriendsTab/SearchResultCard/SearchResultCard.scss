@@ -1,47 +1,68 @@
-@use 'variables' as *;
+@use 'tokens' as *;
 @use 'mixins' as *;
 
-// ── Search result action area ─────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+// SearchResultCard — Arena. Ember-CTA add-friend pill + good/ember
+// outline badges for already-added / incoming states.
+// ══════════════════════════════════════════════════════════════════
+
 .friend-search-action {
     flex-shrink: 0;
 }
 
 .btn-add-friend {
-    padding: 0.38rem 0.8rem;
-    background: $gradient-accent;
-    color: $white;
+    padding: 8px 14px;
+    min-height: 32px;
+    background: $gradient-ember-cta;
+    color: $text;
     border: none;
-    border-radius: $radius-sm;
-    font-size: 0.78rem;
+    border-radius: $radius-pill;
+    font-family: $font-mono;
+    font-size: 0.68rem;
     font-weight: 700;
-    font-family: inherit;
+    text-transform: uppercase;
+    letter-spacing: 1.8px;
     cursor: pointer;
-    transition: $transition;
-    box-shadow: 0 2px 8px rgba($accent, 0.25);
+    box-shadow: $shadow-ember-glow;
+    transition:
+        transform 0.2s $ease-arena,
+        box-shadow 0.25s $ease-arena,
+        filter 0.2s $ease-arena;
 
     &:hover:not(:disabled) {
         transform: translateY(-1px);
-        box-shadow: 0 4px 14px rgba($accent, 0.4);
+        box-shadow: $shadow-ember-glow-lg;
     }
 
-    &:active:not(:disabled) {
-        transform: scale(0.96);
-    }
+    &:active:not(:disabled) { transform: scale(0.96); }
 
     &:disabled {
-        opacity: 0.5;
+        filter: grayscale(0.4) brightness(0.7);
         cursor: not-allowed;
     }
 }
 
 .friend-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    font-family: $font-mono;
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.6px;
+    border-radius: $radius-md;
+    white-space: nowrap;
+
     &--already {
-        @include badge($green, $green-dark, 'tag');
-        padding: 0.28rem 0.6rem;
+        color: $good;
+        background: color-mix(in srgb, #{$good} 12%, transparent);
+        border: 1px solid color-mix(in srgb, #{$good} 34%, transparent);
     }
 
     &--incoming {
-        @include badge($accent, $accent-dark, 'tag');
-        padding: 0.28rem 0.6rem;
+        color: $ember;
+        background: color-mix(in srgb, #{$ember} 14%, transparent);
+        border: 1px solid color-mix(in srgb, #{$ember} 36%, transparent);
     }
 }
