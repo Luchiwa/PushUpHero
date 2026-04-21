@@ -210,7 +210,7 @@
     }
 }
 
-// ── Very narrow (≤430px): strip CTA to chevron, hide stat icons ──
+// ── Very narrow (≤430px) — tighten spacing, kill shimmer only ──
 @media (max-width: 430px) {
     .stats-widget {
         gap: $space-xs;
@@ -221,40 +221,18 @@
         gap: $space-sm;
     }
 
-    // Ember-tinted vertical rule between the two stat columns.
-    .stats-widget-stat + .stats-widget-stat {
-        border-left: 1px solid color-mix(in srgb, #{$ember} 18%, transparent);
-        padding-left: $space-sm;
+    .stats-widget-shine {
+        display: none;
     }
+}
 
-    // Numbers carry the meaning; the tiny icon is noise at this width.
-    .stats-widget-icon {
+// ── iPhone SE (≤320px): drop fire emoji + CTA text; chevron + ring carry the cues ──
+@media (max-width: 320px) {
+    .stats-widget-ring-fire {
         display: none;
     }
 
-    // Keep the CTA semantic (link-shaped) but strip to a bare chevron.
-    .stats-widget-cta {
-        padding: 0;
-        background: transparent;
-        border: none;
-        color: color-mix(in srgb, #{$ember} 75%, transparent);
-
-        span { display: none; }
-
-        svg {
-            width: 18px;
-            height: 18px;
-        }
-
-        .stats-widget:hover & {
-            background: transparent;
-            border: none;
-            color: $ember;
-        }
-    }
-
-    // Kill the shimmer at tight widths.
-    .stats-widget-shine {
+    .stats-widget-cta span:nth-of-type(2) {
         display: none;
     }
 }

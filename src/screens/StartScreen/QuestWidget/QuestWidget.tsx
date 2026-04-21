@@ -42,7 +42,10 @@ export function QuestWidget({
                     {allQuestsCompleted ? (
                         <span className="quest-widget-badge quest-widget-badge--done">✓ All done</span>
                     ) : acceptedCount > 0 && availableCount > 0 ? (
-                        <span className="quest-widget-badge">{acceptedCount} active · {availableCount} available</span>
+                        <>
+                            <span className="quest-widget-badge quest-widget-badge--wide">{acceptedCount} active · {availableCount} available</span>
+                            <span className="quest-widget-badge quest-widget-badge--compact">{availableCount} new</span>
+                        </>
                     ) : acceptedCount > 0 ? (
                         <span className="quest-widget-badge">{acceptedCount} active</span>
                     ) : availableCount > 0 ? (

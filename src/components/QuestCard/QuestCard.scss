@@ -117,3 +117,33 @@
     align-items: center;
     gap: $space-sm;
 }
+
+// ── Mobile compaction (≤480px) — editorial compression ──────────
+@media (max-width: 480px) {
+    .quest-card {
+        padding: $space-lg $space-md;
+    }
+
+    .quest-card-head-text {
+        gap: 4px;
+    }
+
+    .quest-card-title {
+        font-size: 22px;
+    }
+
+    .quest-card-body {
+        margin-top: $space-sm;
+    }
+
+    .quest-card-footer {
+        margin-top: $space-md;
+    }
+}
+
+// ── Very narrow (≤430px): the CTA carries the "what" + "how many" ──
+@media (max-width: 430px) {
+    .quest-card-desc {
+        display: none;
+    }
+}

@@ -79,3 +79,10 @@
 .home-quest-picker {
     padding-top: $space-xs;
 }
+
+@media (max-width: 480px) {
+    .home-quest-emoji {
+        font-size: 20px;
+        margin-right: $space-xs;
+    }
+}

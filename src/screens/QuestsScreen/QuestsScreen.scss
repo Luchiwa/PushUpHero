@@ -43,7 +43,7 @@
     margin-bottom: $space-lg;
     box-shadow: $shadow-card-raise;
     position: relative;
-    overflow: hidden;
+    flex-shrink: 0;
 
     &::before {
         content: '';
@@ -115,6 +115,7 @@
     font-family: $font-display;
     font-size: 1.15rem;
     font-weight: 700;
+    line-height: 1.25;
     letter-spacing: 1.5px;
     text-transform: uppercase;
     color: $ember;
@@ -133,6 +134,7 @@
 .quests-category {
     --category-color: #{$ember};
     margin-bottom: $space-lg;
+    flex-shrink: 0;
 }
 
 .quests-category-header {
@@ -620,8 +622,9 @@
     }
 
     .quests-header {
-        padding: $space-sm;
+        padding: $space-md $space-sm $space-sm;
         gap: $space-sm;
+        margin-top: $space-sm;
     }
 
     .quests-header-ring {
@@ -633,8 +636,12 @@
         font-size: 0.7rem;
     }
 
+    .quests-header-info {
+        gap: 3px;
+    }
+
     .quests-header-title {
-        font-size: 1rem;
+        font-size: 0.95rem;
     }
 
     .quest-item {
