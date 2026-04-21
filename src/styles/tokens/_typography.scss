@@ -1,0 +1,57 @@
+// ── ARENA — TYPOGRAPHY TOKENS ────────────────────────────────
+// Three families per tokens.json. Display UPPERCASE only.
+
+$font-display: 'Oswald', 'Bebas Neue', Impact, sans-serif;
+$font-sans:    'Inter', system-ui, -apple-system, sans-serif;
+$font-mono:    'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+
+// ── Scale (tokens.json typography.scale) ─────────────────────
+// Hero numbers, grade letters — display family, UPPERCASE.
+$text-hero-size:       62px;
+$text-hero-weight:     700;
+$text-hero-line:       0.9;
+
+// Section title (screen-level large).
+$text-title-xl-size:   32px;
+$text-title-xl-weight: 600;
+
+// Section title (default).
+$text-title-l-size:    26px;
+$text-title-l-weight:  600;
+
+// Screen title — MUST be ember, Oswald UPPERCASE, letter-spacing 2px.
+$text-title-screen-size:    22px;
+$text-title-screen-weight:  600;
+$text-title-screen-ls:      2px;
+
+// Mid-title for cards/sections.
+$text-title-m-size:    18px;
+$text-title-m-weight:  600;
+
+// Body copy.
+$text-body-size:       14px;
+$text-body-weight:     400;
+
+// Caption (dim).
+$text-caption-size:    12px;
+$text-caption-weight:  400;
+
+// Kicker — mono UPPERCASE, letter-spacing 3px, dim.
+$text-kicker-size:     10px;
+$text-kicker-weight:   500;
+$text-kicker-ls:       3px;
+
+// Micro — mono UPPERCASE, letter-spacing 2px.
+$text-micro-size:      9px;
+$text-micro-weight:    500;
+$text-micro-ls:        2px;
+
+// ── Legacy aliases (kept during migration; remove at M5) ─────
+$font-xs:   0.72rem;
+$font-sm:   0.8rem;
+$font-md:   0.9rem;
+$font-base: 0.95rem;
+$font-lg:   1.15rem;
+$font-xl:   1.5rem;
+$font-2xl:  2.5rem;
+$font-3xl:  3rem;

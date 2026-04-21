@@ -3,6 +3,9 @@ import './ConfettiCanvas.scss';
 
 const PARTICLE_COUNT = 60;
 
+// Arena palette: ember, gold, good, ice, purple, blood, ember-solid
+const CONFETTI_COLORS = ['#ff7a47', '#f5c871', '#4ae8a0', '#7fc5ff', '#bb8cff', '#ff5577', '#ff5a1f'];
+
 function createParticles(canvas: HTMLCanvasElement) {
     const W = canvas.width;
     const H = canvas.height;
@@ -12,7 +15,7 @@ function createParticles(canvas: HTMLCanvasElement) {
         vx: (Math.random() - 0.5) * 14,
         vy: -Math.random() * 14 - 4,
         size: Math.random() * 8 + 4,
-        color: ['#f59e0b', '#6366f1', '#22c55e', '#ef4444', '#a5f3fc', '#fbbf24'][Math.floor(Math.random() * 6)],
+        color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
         gravity: 0.4,
         opacity: 1,
         rotation: Math.random() * 360,

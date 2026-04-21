@@ -1,27 +1,32 @@
-@use 'variables' as *;
+@use 'tokens' as *;
 @use 'mixins' as *;
 
 .grade-pop {
     display: flex;
     align-items: baseline;
-    gap: 0.2rem;
+    gap: 4px;
     animation: grade-burst 2.5s $ease-out-back forwards;
 }
 
 .grade-letter {
+    font-family: $font-display;
     font-size: 4rem;
-    font-weight: 900;
+    font-weight: 700;
     line-height: 1;
+    letter-spacing: 1px;
     text-shadow:
-        0 2px 10px rgba($black, 0.5),
-        0 0 30px currentColor;
+        0 2px 14px rgba(0, 0, 0, 0.65),
+        0 0 36px currentColor;
 }
 
 .grade-score {
-    font-size: 1.1rem;
-    font-weight: 800;
-    opacity: 0.65;
-    color: $white;
+    font-family: $font-mono;
+    font-size: 1rem;
+    font-weight: 700;
+    opacity: 0.7;
+    color: $text;
+    letter-spacing: 0.5px;
+    font-variant-numeric: tabular-nums;
 }
 
 @keyframes grade-burst {

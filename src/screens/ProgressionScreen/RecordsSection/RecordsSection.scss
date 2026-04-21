@@ -1,112 +1,121 @@
-@use 'sass:color';
-@use 'variables' as *;
+@use 'tokens' as *;
 @use 'mixins' as *;
 
-// ── Local entrance keyframe ──────────────────────────────────────
-@keyframes record-tile-in {
-    from {
-        opacity: 0;
-        transform: translateY(8px);
-    }
+// ══════════════════════════════════════════════════════════════════
+// RecordsSection — Arena. Obsidian cards w/ ember wash, Oswald values
+// with ember text-shadow, mono dim labels.
+// ══════════════════════════════════════════════════════════════════
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+@keyframes record-tile-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
-// ── Records grid ─────────────────────────────────────────────────
 .records-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: $spacing-sm;
+    gap: $space-sm;
 }
 
 .record-card {
-    --kpi-color: #{$accent};
+    --kpi-color: #{$ember};
     position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    padding: $spacing-md $spacing-sm;
+    padding: $space-md $space-sm;
     gap: 4px;
-    background: $white;
-    background-image: linear-gradient(135deg,
-            color-mix(in srgb, var(--kpi-color) 7%, transparent) 0%,
-            color-mix(in srgb, var(--kpi-color) 2%, transparent) 50%,
-            transparent 100%);
-    border: 1px solid color-mix(in srgb, var(--kpi-color) 22%, transparent);
-    border-radius: $radius-sm;
-    box-shadow: 0 1px 4px rgba($black, 0.04);
-    animation: record-tile-in 0.4s $ease-out-expo both;
+    background: $card;
+    background-image: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--kpi-color) 10%, transparent) 0%,
+        color-mix(in srgb, var(--kpi-color) 3%, transparent) 55%,
+        transparent 100%
+    );
+    border: 1px solid color-mix(in srgb, var(--kpi-color) 26%, transparent);
+    border-radius: $radius-md;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    animation: record-tile-in 0.42s $ease-out-expo both;
     animation-delay: calc(var(--i, 0) * 50ms);
-    transition: transform 0.2s $ease-default,
-        box-shadow 0.25s $ease-default,
-        border-color 0.25s $ease-default,
-        background-image 0.25s $ease-default;
+    transition:
+        transform 0.2s $ease-arena,
+        box-shadow 0.25s $ease-arena,
+        border-color 0.25s $ease-arena,
+        background-image 0.25s $ease-arena;
 
     &:hover {
         transform: translateY(-2px);
-        border-color: color-mix(in srgb, var(--kpi-color) 38%, transparent);
-        background-image: linear-gradient(135deg,
-                color-mix(in srgb, var(--kpi-color) 13%, transparent) 0%,
-                color-mix(in srgb, var(--kpi-color) 4%, transparent) 50%,
-                transparent 100%);
-        box-shadow: 0 6px 18px color-mix(in srgb, var(--kpi-color) 16%, transparent),
-            0 0 8px color-mix(in srgb, var(--kpi-color) 8%, transparent);
+        border-color: color-mix(in srgb, var(--kpi-color) 44%, transparent);
+        background-image: linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--kpi-color) 16%, transparent) 0%,
+            color-mix(in srgb, var(--kpi-color) 5%, transparent) 55%,
+            transparent 100%
+        );
+        box-shadow:
+            0 6px 20px color-mix(in srgb, var(--kpi-color) 22%, transparent),
+            0 0 10px color-mix(in srgb, var(--kpi-color) 12%, transparent);
     }
 }
 
-// Empty state — dashed muted look instead of harsh opacity
 .record-card--empty {
-    --kpi-color: #{rgba($text, 0.35)};
+    --kpi-color: #{$dim};
     background-image: none;
     border-style: dashed;
-    border-color: rgba($text, 0.16);
-    opacity: 0.7;
+    border-color: color-mix(in srgb, #{$dim} 26%, transparent);
+    opacity: 0.65;
 
     &:hover {
         transform: none;
-        box-shadow: 0 1px 4px rgba($black, 0.04);
-        border-color: rgba($text, 0.22);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        border-color: color-mix(in srgb, #{$dim} 32%, transparent);
         background-image: none;
     }
 
     .record-card-emoji {
-        opacity: 0.55;
+        opacity: 0.5;
+        filter: none;
     }
 
     .record-card-value {
-        color: $text-muted;
+        color: $dim;
+        text-shadow: none;
     }
 }
 
 .record-card-emoji {
     font-size: 1.7rem;
     line-height: 1;
+    filter: drop-shadow(0 0 10px color-mix(in srgb, var(--kpi-color) 45%, transparent));
 }
 
 .record-card-label {
-    font-size: $font-xs;
+    font-family: $font-mono;
+    font-size: 0.58rem;
     font-weight: 700;
-    color: $text-muted;
-    line-height: 1.2;
-    letter-spacing: 0.02em;
+    color: $dim;
     text-transform: uppercase;
+    letter-spacing: 2px;
+    line-height: 1.2;
 }
 
 .record-card-value {
-    font-size: $font-xl;
-    font-weight: 800;
-    color: $accent;
+    font-family: $font-display;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: $text;
     font-variant-numeric: tabular-nums;
-    letter-spacing: -0.02em;
+    letter-spacing: 1px;
     line-height: 1.1;
+    text-shadow: 0 0 10px color-mix(in srgb, var(--kpi-color) 30%, transparent);
 }
 
 .record-card-date {
-    font-size: 0.6rem;
-    color: $text-muted;
+    font-family: $font-mono;
+    font-size: 0.58rem;
+    color: $dim;
     font-variant-numeric: tabular-nums;
+    letter-spacing: 0.3px;
 }

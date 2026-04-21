@@ -1,0 +1,14 @@
+// ── ARENA — RADIUS TOKENS ────────────────────────────────────
+// Source: tokens.json `radius` block.
+
+$radius-sm:  8px;
+$radius-md:  12px;
+$radius-lg:  16px;
+$radius-xl:  18px;
+$radius-2xl: 22px;
+$radius-pill: 999px;
+
+// ── Legacy alias (gradual migration) ─────────────────────────
+// Old $radius (20px) ≈ new $radius-2xl (22px); $radius-sm was 12px.
+$radius-xs:     6px;
+$radius:        $radius-2xl;  // keep site-wide default ~22px

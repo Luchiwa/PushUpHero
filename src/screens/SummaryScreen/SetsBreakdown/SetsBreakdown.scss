@@ -1,4 +1,4 @@
-@use 'variables' as *;
+@use 'tokens' as *;
 @use 'mixins' as *;
 
 .sets-breakdown {
@@ -6,45 +6,62 @@
 }
 
 .sets-breakdown-title {
-    @include label(0.68rem);
-    margin-bottom: 0.4rem;
+    @include micro;
+    letter-spacing: 2px;
+    color: $dim;
+    margin-bottom: $space-xs;
 }
 
 .set-item {
-    border: 1px solid $border;
-    border-radius: $radius-sm;
-    margin-bottom: 0.35rem;
+    border: 1px solid $line;
+    border-radius: $radius-md;
+    margin-bottom: 6px;
     overflow: hidden;
-    transition: $transition-fast;
+    background: $obsidian-2;
+    transition: border-color 160ms $ease-default, background 160ms $ease-default;
+
+    &:hover {
+        border-color: color-mix(in srgb, #{$ember} 32%, transparent);
+        background: color-mix(in srgb, #{$ember} 6%, #{$obsidian-2});
+    }
 }
 
 .set-item-header {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: $space-sm;
     width: 100%;
-    padding: 0.5rem 0.75rem;
+    padding: $space-sm $space-md;
     background: none;
     border: none;
     font-family: inherit;
 }
 
 .set-item-num {
-    font-size: $font-sm;
-    font-weight: 800;
-    color: $accent;
+    font-family: $font-mono;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: $ember;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
     flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
 }
 
 .set-item-stats {
     flex: 1;
-    font-size: $font-sm;
-    font-weight: 600;
+    font-family: $font-sans;
+    font-size: 0.82rem;
+    font-weight: 500;
     color: $text;
-    text-align: left;
+    text-align: right;
+    letter-spacing: 0.3px;
+    font-variant-numeric: tabular-nums;
 
     .grade {
-        font-size: inherit;
+        font-size: 0.95rem;
+        font-family: $font-display;
+        letter-spacing: 1px;
         text-shadow: none;
     }
 }

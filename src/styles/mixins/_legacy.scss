@@ -1,13 +1,7 @@
 @use 'sass:map';
 @use 'variables' as *;
 
-// ── GLASSMORPHISM CARD ──────────────────────────────────────────
-@mixin glass($bg: $surface-dark, $blur: $blur) {
-    background: $bg;
-    backdrop-filter: blur($blur);
-    -webkit-backdrop-filter: blur($blur);
-    border: 1px solid $border;
-}
+// `glass` is provided by mixins/_surface.scss.
 
 // ── BLUR BACKGROUND ─────────────────────────────────────────────
 // Lightweight blur-only (no border). Use for overlays, HUD elements.
@@ -150,17 +144,7 @@
     }
 }
 
-// ── SHIMMER / SKELETON ──────────────────────────────────────────
-// Reusable skeleton loading placeholder.
-@mixin shimmer($radius: $radius-xs) {
-    background: linear-gradient(90deg,
-            rgba($indigo, 0.05) 25%,
-            rgba($indigo, 0.10) 50%,
-            rgba($indigo, 0.05) 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-    border-radius: $radius;
-}
+// `shimmer` is provided by mixins/_motion.scss.
 
 // ── NOTIFICATION DOT ────────────────────────────────────────────
 // Animated dot for unread indicators (feed, requests).
@@ -209,13 +193,8 @@
     animation: shine-sweep 5s ease-in-out 1s infinite;
 }
 
-// ── ABSOLUTE FILL ────────────────────────────────────────────────
-@mixin fill {
-    position: absolute;
-    inset: 0;
-}
-
 // ── FLEX CENTER ──────────────────────────────────────────────────
+// `fill` is provided by mixins/_surface.scss.
 @mixin flex-center($direction: row) {
     display: flex;
     flex-direction: $direction;
@@ -257,12 +236,7 @@
     animation: card-in 0.35s $ease-out-expo both;
 }
 
-// ── TEXT TRUNCATE ────────────────────────────────────────────────
-@mixin text-truncate {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
+// `text-truncate` is provided by mixins/_text.scss.
 
 // ── ALERT ────────────────────────────────────────────────────────
 @mixin alert($color: $red) {

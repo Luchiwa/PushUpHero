@@ -1,20 +1,21 @@
-@use 'variables' as *;
+@use 'tokens' as *;
 
-// ── Compact segmented toggle for the StatsScreen topbar ─────────
-// Lives in PageLayout's rightAction slot. Constrained to ≤ 130px so the
-// centered title in the topbar isn't crowded on narrow phones.
+// ══════════════════════════════════════════════════════════════════
+// MetricToggle — compact segmented pill (XP / Reps) for topbar slot.
+// ══════════════════════════════════════════════════════════════════
+
 .metric-toggle {
     position: relative;
     display: flex;
     align-items: center;
-    background: rgba($accent, 0.08);
-    border: 1px solid rgba($accent, 0.18);
+    background: $obsidian-2;
+    border: 1px solid color-mix(in srgb, #{$ember} 25%, transparent);
     border-radius: $radius-pill;
     padding: 3px;
     height: 30px;
     width: 124px;
     flex-shrink: 0;
-    box-shadow: 0 1px 4px rgba($accent, 0.08);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, #{$ember} 8%, transparent);
 }
 
 .metric-toggle__indicator {
@@ -22,9 +23,9 @@
     top: 3px;
     bottom: 3px;
     width: calc(50% - 4px);
-    background: linear-gradient(135deg, $accent, $accent-dark);
+    background: $gradient-ember-cta;
     border-radius: $radius-pill;
-    box-shadow: 0 2px 8px rgba($accent, 0.35);
+    box-shadow: $shadow-ember-glow;
     transition: left 0.28s $ease-out-expo;
     pointer-events: none;
     z-index: $z-base;
@@ -42,22 +43,23 @@
     background: transparent;
     border: none;
     border-radius: $radius-pill;
-    font-size: 0.7rem;
+    font-family: $font-mono;
+    font-size: 0.68rem;
     font-weight: 700;
-    color: $text-muted;
+    color: $dim;
     cursor: pointer;
-    transition: color 0.2s $ease-default;
+    transition: color 0.2s $ease-arena;
     z-index: $z-content;
-    letter-spacing: 0.02em;
-    font-family: inherit;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
 
     svg {
         opacity: 0.55;
-        transition: opacity 0.2s $ease-default;
+        transition: opacity 0.2s $ease-arena;
     }
 
     &.active {
-        color: $white;
+        color: $text;
 
         svg {
             opacity: 1;
@@ -80,6 +82,6 @@
     }
 
     .metric-toggle__btn {
-        font-size: 0.65rem;
+        font-size: 0.62rem;
     }
 }

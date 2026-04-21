@@ -1,7 +1,13 @@
-@use 'variables' as *;
+@use 'tokens' as *;
 @use 'mixins' as *;
 
-// ── Full-screen overlay ──────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+// LevelUpScreen — Arena. Celebratory obsidian + ember/gold burst.
+// Oswald rolling digits with ember→gold landing glow, mono kicker,
+// gold XP earned (reward semantic), ember→gold particle palette.
+// ══════════════════════════════════════════════════════════════════
+
+// ── Full-screen overlay ────────────────────────────────────────────
 .levelup-screen {
     position: fixed;
     inset: 0;
@@ -9,7 +15,18 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(160deg, #1a0a00 0%, #2d1200 40%, #1a0500 100%);
+    background:
+        radial-gradient(
+            ellipse at 50% 30%,
+            color-mix(in srgb, #{$ember} 22%, transparent) 0%,
+            transparent 55%
+        ),
+        radial-gradient(
+            ellipse at 50% 80%,
+            color-mix(in srgb, #{$gold} 12%, transparent) 0%,
+            transparent 60%
+        ),
+        $obsidian;
     cursor: pointer;
 
     &--exit {
@@ -18,7 +35,7 @@
     }
 }
 
-// ── Burst particles ──────────────────────────────────────────────────────────
+// ── Burst particles ────────────────────────────────────────────────
 .levelup-particles {
     position: absolute;
     inset: 0;
@@ -35,23 +52,13 @@
     border-radius: 50%;
     animation: particle-burst 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
     animation-delay: calc(var(--i) * 30ms);
+    box-shadow: 0 0 10px currentColor;
 
-    // 4 colour variants cycling orange palette
-    &--0 {
-        background: $accent;
-    }
-
-    &--1 {
-        background: $accent-light;
-    }
-
-    &--2 {
-        background: $accent-pale;
-    }
-
-    &--3 {
-        background: #fff7ed;
-    }
+    // Ember → gold palette, strict Arena (no random colours).
+    &--0 { background: $ember; color: $ember; }
+    &--1 { background: $ember-solid; color: $ember-solid; }
+    &--2 { background: $gold; color: $gold; }
+    &--3 { background: #ffe1b0; color: $gold; }
 }
 
 @keyframes particle-burst {
@@ -65,91 +72,92 @@
     }
 
     100% {
-        // Each particle flies off in a unique direction via --i
         transform:
-            translate(calc(-50% + cos(calc(var(--i) * 22.5deg)) * 160px),
-                calc(-50% + sin(calc(var(--i) * 22.5deg)) * 160px)) scale(0.3);
+            translate(
+                calc(-50% + cos(calc(var(--i) * 22.5deg)) * 180px),
+                calc(-50% + sin(calc(var(--i) * 22.5deg)) * 180px)
+            )
+            scale(0.3);
         opacity: 0;
     }
 }
 
-// ── Card ─────────────────────────────────────────────────────────────────────
+// ── Card ───────────────────────────────────────────────────────────
 .levelup-card {
     position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: $spacing-lg;
-    padding: $spacing-xl * 1.5 $spacing-xl;
-    border-radius: $radius-lg;
-    background: rgba($white, 0.04);
-    border: 1.5px solid rgba($accent, 0.3);
-    box-shadow: 0 0 60px rgba($accent, 0.15), inset 0 1px 0 rgba($white, 0.06);
-    min-width: 260px;
+    gap: $space-xl;
+    min-width: 280px;
+    padding: ($space-4xl + 4) $space-3xl;
+    background: $card;
+    background-image:
+        linear-gradient(
+            135deg,
+            color-mix(in srgb, #{$ember} 12%, transparent) 0%,
+            color-mix(in srgb, #{$gold} 4%, transparent) 60%,
+            transparent 100%
+        );
+    border: 1.5px solid color-mix(in srgb, #{$ember} 45%, transparent);
+    border-radius: $radius-2xl;
+    box-shadow:
+        0 30px 80px rgba(0, 0, 0, 0.65),
+        0 0 80px color-mix(in srgb, #{$ember} 22%, transparent),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
     cursor: default;
 
-    // Entry animation
-    &--enter {
-        animation: card-enter 0.4s $ease-out-expo both;
+    @include corner-frame($color: $ember, $size: 16px, $thickness: 2px, $inset: 10px);
+
+    > * {
+        position: relative;
     }
 
-    // Pulse on land
+    &--enter {
+        animation: levelup-card-enter 0.42s $ease-out-expo both;
+    }
+
     &--land {
-        animation: card-pulse 0.3s ease-out;
+        animation: levelup-card-pulse 0.3s ease-out;
     }
 }
 
-@keyframes card-enter {
+@keyframes levelup-card-enter {
     from {
         opacity: 0;
-        transform: scale(0.85) translateY(24px);
+        transform: scale(0.88) translateY(22px);
     }
-
     to {
         opacity: 1;
         transform: scale(1) translateY(0);
     }
 }
 
-@keyframes card-pulse {
-    0% {
-        transform: scale(1);
-    }
-
-    50% {
-        transform: scale(1.04);
-    }
-
-    100% {
-        transform: scale(1);
-    }
+@keyframes levelup-card-pulse {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.04); }
+    100% { transform: scale(1); }
 }
 
-// ── "LEVEL UP" label ─────────────────────────────────────────────────────────
+// ── "LEVEL UP" label ───────────────────────────────────────────────
 .levelup-label {
-    font-size: $font-sm;
-    font-weight: 800;
-    letter-spacing: 0.2em;
-    color: $accent-light;
-    text-transform: uppercase;
+    @include kicker;
+    font-size: 0.78rem;
+    letter-spacing: 6px;
+    color: $ember;
+    margin: 0;
+    text-shadow: 0 0 12px color-mix(in srgb, #{$ember} 55%, transparent);
     opacity: 0;
-    animation: fade-up 0.4s 0.15s ease both;
+    animation: levelup-fade-up 0.4s 0.15s ease both;
 }
 
-@keyframes fade-up {
-    from {
-        opacity: 0;
-        transform: translateY(8px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+@keyframes levelup-fade-up {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
-// ── Number slot ──────────────────────────────────────────────────────────────
-$slot-h: 120px; // height of one number in the slot
+// ── Number slot ────────────────────────────────────────────────────
+$slot-h: 120px;
 
 .levelup-slot-viewport {
     height: $slot-h;
@@ -159,9 +167,20 @@ $slot-h: 120px; // height of one number in the slot
     align-items: flex-start;
     justify-content: center;
     background: transparent;
-    // Fade top/bottom uniquement sur la couleur, sans créer de rectangle visible
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
-    mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
+    -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent 0%,
+        black 18%,
+        black 82%,
+        transparent 100%
+    );
+    mask-image: linear-gradient(
+        to bottom,
+        transparent 0%,
+        black 18%,
+        black 82%,
+        transparent 100%
+    );
 }
 
 .levelup-slot-track {
@@ -169,7 +188,6 @@ $slot-h: 120px; // height of one number in the slot
     flex-direction: column;
     align-items: center;
     width: 100%;
-    // Position initiale : premier chiffre visible
     transform: translateY(0);
 
     &--roll {
@@ -183,13 +201,8 @@ $slot-h: 120px; // height of one number in the slot
 }
 
 @keyframes slot-roll {
-    from {
-        transform: translateY(0);
-    }
-
-    to {
-        transform: translateY(calc((var(--level-count, 1) - 1) * -#{$slot-h}));
-    }
+    from { transform: translateY(0); }
+    to   { transform: translateY(calc((var(--level-count, 1) - 1) * -#{$slot-h})); }
 }
 
 .levelup-slot-number {
@@ -198,74 +211,108 @@ $slot-h: 120px; // height of one number in the slot
     justify-content: center;
     height: $slot-h;
     flex-shrink: 0;
-    font-size: 7rem;
-    font-weight: 900;
-    letter-spacing: -0.04em;
-    color: $white;
+    font-family: $font-display;
+    font-size: 6.4rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: $text;
     line-height: 1;
-    text-shadow: 0 0 40px rgba($accent, 0.7), 0 0 80px rgba($accent, 0.3);
     font-variant-numeric: tabular-nums;
+    text-shadow:
+        0 0 30px color-mix(in srgb, #{$ember} 60%, transparent),
+        0 0 60px color-mix(in srgb, #{$ember} 25%, transparent);
 
-    // Landed number gets an orange glow
+    // Landed number: ember→gold gradient clip + intense glow.
     .levelup-slot-track--land &:last-child,
     .levelup-slot-track--show &:last-child {
-        color: $accent-light;
-        text-shadow:
-            0 0 20px rgba($accent, 1),
-            0 0 60px rgba($accent, 0.6),
-            0 0 100px rgba($accent, 0.3);
+        background: $gradient-ember-gold-xp;
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+        filter: drop-shadow(0 0 18px color-mix(in srgb, #{$ember} 80%, transparent))
+                drop-shadow(0 0 40px color-mix(in srgb, #{$gold} 40%, transparent));
     }
 }
 
-// ── Motivational message ─────────────────────────────────────────────────────
+// ── Motivational message ───────────────────────────────────────────
 .levelup-message {
-    font-size: $font-lg;
-    font-weight: 700;
-    color: rgba($white, 0.75);
+    font-family: $font-sans;
+    font-size: 1rem;
+    font-weight: 600;
+    color: color-mix(in srgb, #{$text} 85%, transparent);
     text-align: center;
+    margin: 0;
+    letter-spacing: 0.2px;
     opacity: 0;
 
     &--land,
     &--show {
-        animation: fade-up 0.35s ease both;
+        animation: levelup-fade-up 0.35s ease both;
     }
 }
 
-// ── XP info ──────────────────────────────────────────────────────────────────
+// ── XP info ────────────────────────────────────────────────────────
 .levelup-xp-info {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.35rem;
+    gap: 6px;
     opacity: 0;
 
     &--land,
     &--show {
-        animation: fade-up 0.4s 0.08s ease both;
+        animation: levelup-fade-up 0.4s 0.08s ease both;
     }
 }
 
 .levelup-xp-earned {
-    font-size: 1.25rem;
-    font-weight: 800;
-    color: $accent-light;
-    letter-spacing: -0.02em;
+    font-family: $font-display;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: $gold;
+    letter-spacing: 1px;
+    font-variant-numeric: tabular-nums;
+    text-shadow:
+        0 0 16px color-mix(in srgb, #{$gold} 55%, transparent),
+        0 0 32px color-mix(in srgb, #{$gold} 25%, transparent);
 }
 
 .levelup-xp-next {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: rgba($white, 0.45);
-    letter-spacing: 0.02em;
+    font-family: $font-mono;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: $dim;
+    letter-spacing: 1px;
+    font-variant-numeric: tabular-nums;
 }
 
-// ── Continue button ───────────────────────────────────────────────────────────
+// ── Continue button — LevelUp variant of .btn-primary ─────────────
+// Display-font (Oswald) + md radius + pre-animation opacity.
 .levelup-btn {
     opacity: 0;
     transform: translateY(10px);
+    min-height: 48px;
+    padding: 12px $space-2xl;
+    border-radius: $radius-md;
+    font-family: $font-display;
+    font-size: 0.95rem;
+    letter-spacing: 2.5px;
 
     &--land,
     &--show {
-        animation: fade-up 0.4s 0.1s ease both;
+        animation: levelup-fade-up 0.4s 0.1s ease both;
+    }
+}
+
+@media (max-width: 480px) {
+    .levelup-card {
+        min-width: unset;
+        width: min(92vw, 340px);
+        padding: $space-3xl $space-2xl;
+    }
+
+    .levelup-slot-number {
+        font-size: 5.2rem;
     }
 }

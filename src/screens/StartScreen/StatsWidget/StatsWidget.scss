@@ -1,70 +1,62 @@
-@use 'variables' as *;
+@use 'tokens' as *;
 @use 'mixins' as *;
 
-// ── Stats Widget — Gaming Dashboard ──────────────────────────────
+// ── Stats Widget — Arena card, ember ring, mono digits ──────────
 .stats-widget {
     position: relative;
     width: 100%;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 0.875rem;
-    border: 1px solid rgba($accent, 0.18);
-    border-radius: $radius-sm;
-    background: linear-gradient(145deg,
-            rgba($accent, 0.06) 0%,
-            rgba($amber, 0.03) 40%,
-            rgba($indigo, 0.03) 100%);
+    gap: $space-md;
+    padding: $space-md $space-lg;
+    border: 1px solid color-mix(in srgb, #{$ember} 22%, transparent);
+    border-radius: $radius-2xl;
+    background: $card;
     cursor: pointer;
     overflow: hidden;
     text-align: left;
     font-family: inherit;
-    transition:
-        border-color 0.25s ease,
-        box-shadow 0.25s ease,
-        transform 0.2s $ease-out-back;
-    animation: stats-widget-in 0.55s $ease-out-expo 0.15s both;
+    color: $text;
+    min-width: 0;
+    transition: border-color 200ms ease, transform 180ms $ease-arena,
+                box-shadow 200ms ease;
 
-    &:hover {
-        border-color: rgba($accent, 0.38);
-        box-shadow:
-            0 6px 28px rgba($accent, 0.14),
-            inset 0 0 0 1px rgba($accent, 0.06);
+    &:hover,
+    &:focus-visible {
+        border-color: $ember;
         transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45),
+                    0 0 16px rgba(255, 122, 71, 0.15);
+        outline: none;
 
-        .stats-widget-cta svg {
-            transform: translateX(3px);
-        }
-
-        .stats-widget-ring-fill {
-            filter: drop-shadow(0 0 4px rgba($accent, 0.6));
-        }
+        .stats-widget-cta svg { transform: translateX(3px); }
+        .stats-widget-ring-fill { filter: drop-shadow(0 0 6px rgba(255, 122, 71, 0.7)); }
     }
 
     &:active {
-        transform: translateY(0) scale(0.98);
-        transition-duration: 0.08s;
+        transform: translateY(0);
     }
 }
 
-// ── Shine sweep effect ───────────────────────────────────────────
 .stats-widget-shine {
     position: absolute;
     top: 0;
     left: -100%;
-    width: 60%;
+    width: 55%;
     height: 100%;
-    background: linear-gradient(105deg,
-            transparent 0%,
-            rgba($white, 0) 40%,
-            rgba($white, 0.35) 50%,
-            rgba($white, 0) 60%,
-            transparent 100%);
+    background: linear-gradient(
+        105deg,
+        transparent 0%,
+        transparent 40%,
+        rgba(255, 122, 71, 0.18) 50%,
+        transparent 60%,
+        transparent 100%
+    );
     pointer-events: none;
-    animation: shine-sweep 4s ease-in-out 1.5s infinite;
+    animation: arena-shimmer 4s ease-in-out 1.5s infinite;
 }
 
-// ── Animated Streak Ring ─────────────────────────────────────────
+// ── Streak ring ──────────────────────────────────────────────────
 .stats-widget-ring-wrap {
     position: relative;
     flex-shrink: 0;
@@ -81,30 +73,24 @@
 
 .stats-widget-ring-track {
     fill: none;
-    stroke: rgba($text, 0.06);
+    stroke: rgba(255, 255, 255, 0.08);
     stroke-width: 4;
 }
 
 .stats-widget-ring-fill {
     fill: none;
-    stroke: $accent;
+    stroke: $ember;
     stroke-width: 4;
     stroke-linecap: round;
-    transition: stroke-dasharray 0.8s $ease-out-expo, filter 0.25s ease;
-    animation: ring-draw 1s $ease-out-expo 0.4s both;
-}
-
-@keyframes ring-draw {
-    from {
-        stroke-dasharray: 0 125.6;
-    }
+    transition: stroke-dasharray 0.8s $ease-arena, filter 200ms ease;
 }
 
 .stats-widget-ring-label {
     position: relative;
     z-index: 1;
-    font-size: 0.8rem;
-    font-weight: 900;
+    font-family: $font-mono;
+    font-size: 14px;
+    font-weight: 700;
     color: $text;
     line-height: 1;
     display: flex;
@@ -114,9 +100,8 @@
 }
 
 .stats-widget-ring-fire {
-    font-size: 0.6rem;
+    font-size: 10px;
     line-height: 1;
-    animation: flame-dance 0.6s ease-in-out infinite alternate;
 }
 
 // ── Stats columns ────────────────────────────────────────────────
@@ -127,89 +112,76 @@
 
 .stats-widget-row {
     display: flex;
-    gap: 1rem;
+    gap: $space-md;
     justify-content: center;
+    min-width: 0;
+    position: relative;
 }
 
 .stats-widget-stat {
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.05rem;
-    max-width: 120px;
+    gap: 2px;
 }
 
 .stats-widget-icon {
-    color: $accent;
-    opacity: 0.7;
-    margin-bottom: 0.1rem;
+    color: $ember;
+    opacity: 0.8;
     flex-shrink: 0;
 }
 
 .stats-widget-val {
-    font-size: 1.05rem;
-    font-weight: 900;
+    font-family: $font-display;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
     color: $text;
-    letter-spacing: -0.03em;
+    line-height: 1.1;
     font-variant-numeric: tabular-nums;
-    line-height: 1.2;
 }
 
 .stats-widget-lbl {
-    font-size: 0.6rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: $text-muted;
-    line-height: 1.3;
+    @include micro;
+    color: $dim;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 // ── CTA badge ────────────────────────────────────────────────────
 .stats-widget-cta {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 4px;
     flex-shrink: 0;
-    padding: 0.3rem 0.55rem;
-    background: linear-gradient(135deg, rgba($accent, 0.12), rgba($accent, 0.06));
-    border: 1px solid rgba($accent, 0.15);
+    padding: 4px 9px;
+    background: color-mix(in srgb, #{$ember} 12%, transparent);
+    border: 1px solid color-mix(in srgb, #{$ember} 30%, transparent);
     border-radius: $radius-pill;
-    font-size: 0.65rem;
-    font-weight: 800;
-    color: $accent-dark;
-    letter-spacing: 0.01em;
+    @include micro;
+    color: $ember;
     white-space: nowrap;
-    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    transition: background 200ms ease, border-color 200ms ease;
 
     svg {
-        transition: transform 0.2s ease;
+        transition: transform 200ms ease;
     }
 
     .stats-widget:hover & {
-        background: linear-gradient(135deg, rgba($accent, 0.20), rgba($accent, 0.12));
-        border-color: rgba($accent, 0.30);
-        color: $accent;
-    }
-}
-
-@keyframes stats-widget-in {
-    0% {
-        opacity: 0;
-        transform: translateY(10px) scale(0.96);
-    }
-
-    100% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
+        background: color-mix(in srgb, #{$ember} 20%, transparent);
+        border-color: color-mix(in srgb, #{$ember} 50%, transparent);
     }
 }
 
 // ── Mobile responsive ────────────────────────────────────────────
 @media (max-width: 480px) {
     .stats-widget {
-        padding: 0.6rem 0.7rem;
-        gap: 0.6rem;
+        padding: $space-sm $space-md;
+        gap: $space-sm;
     }
 
     .stats-widget-ring-wrap {
@@ -218,15 +190,11 @@
     }
 
     .stats-widget-ring-label {
-        font-size: 0.72rem;
+        font-size: 12px;
     }
 
     .stats-widget-val {
-        font-size: 0.92rem;
-    }
-
-    .stats-widget-lbl {
-        font-size: 0.55rem;
+        font-size: 17px;
     }
 
     .stats-widget-icon {
@@ -234,8 +202,37 @@
         height: 13px;
     }
 
+    // Drop the emoji to free up CTA width — chevron + label still read as "stats link".
     .stats-widget-cta {
-        padding: 0.25rem 0.45rem;
-        font-size: 0.6rem;
+        padding: 3px 7px;
+
+        span:first-child { display: none; }
+    }
+}
+
+// ── Very narrow (≤430px) — tighten spacing, kill shimmer only ──
+@media (max-width: 430px) {
+    .stats-widget {
+        gap: $space-xs;
+        padding: $space-sm $space-md;
+    }
+
+    .stats-widget-row {
+        gap: $space-sm;
+    }
+
+    .stats-widget-shine {
+        display: none;
+    }
+}
+
+// ── iPhone SE (≤320px): drop fire emoji + CTA text; chevron + ring carry the cues ──
+@media (max-width: 320px) {
+    .stats-widget-ring-fire {
+        display: none;
+    }
+
+    .stats-widget-cta span:nth-of-type(2) {
+        display: none;
     }
 }

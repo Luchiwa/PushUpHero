@@ -1,14 +1,16 @@
-@use 'sass:color';
-@use 'variables' as *;
+@use 'tokens' as *;
 @use 'mixins' as *;
 
-// ── Entrance keyframe ────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+// QuestsScreen — quest journal. Obsidian surfaces, ember/gold accents,
+// per-category ember/good/gold/blood/ice semantics via --category-color.
+// ══════════════════════════════════════════════════════════════════
+
 @keyframes quest-card-in {
     from {
         opacity: 0;
         transform: translateY(8px) scale(0.98);
     }
-
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
@@ -17,31 +19,46 @@
 
 // ── Body override ────────────────────────────────────────────────
 .quests-body {
-    padding: $spacing-md $spacing-md $spacing-xl;
+    padding: $space-md $space-md $space-xl;
     overflow-y: auto;
     gap: 0;
 }
 
-// ═══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 // HEADER — progress ring + stats
-// ═══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 .quests-header {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: $spacing-md;
-    background: $white;
-    background-image: linear-gradient(135deg,
-            color-mix(in srgb, $indigo 10%, transparent) 0%,
-            color-mix(in srgb, $purple 4%, transparent) 100%);
-    border: 1px solid color-mix(in srgb, $indigo 20%, transparent);
-    border-radius: $radius-sm;
-    margin-bottom: $spacing-lg;
-    box-shadow: 0 2px 10px rgba($indigo, 0.06);
-    transition: box-shadow 0.25s $ease-default;
+    gap: $space-md;
+    padding: $space-md;
+    background: $card;
+    background-image: linear-gradient(
+        135deg,
+        color-mix(in srgb, #{$ember} 12%, transparent) 0%,
+        color-mix(in srgb, #{$gold} 8%, transparent) 100%
+    );
+    border: 1px solid color-mix(in srgb, #{$ember} 28%, transparent);
+    border-radius: $radius-lg;
+    margin-bottom: $space-lg;
+    box-shadow: $shadow-card-raise;
+    position: relative;
+    flex-shrink: 0;
 
-    &:hover {
-        box-shadow: 0 4px 16px rgba($indigo, 0.10);
+    &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+            ellipse at 0% 0%,
+            color-mix(in srgb, #{$ember} 14%, transparent) 0%,
+            transparent 60%
+        );
+        pointer-events: none;
+    }
+
+    > * {
+        position: relative;
     }
 }
 
@@ -50,14 +67,27 @@
     width: 64px;
     height: 64px;
     flex-shrink: 0;
-    background: color-mix(in srgb, $indigo 4%, transparent);
+    background: color-mix(in srgb, #{$obsidian} 60%, transparent);
+    border: 1.5px solid color-mix(in srgb, #{$ember} 32%, transparent);
     border-radius: 50%;
+    box-shadow: 0 0 12px color-mix(in srgb, #{$ember} 18%, transparent);
 }
 
 .quests-ring-svg {
     width: 100%;
     height: 100%;
-    color: $text;
+}
+
+.quests-ring-track {
+    stroke: color-mix(in srgb, #{$ember} 22%, transparent);
+}
+
+.quests-ring-stop-start {
+    stop-color: $ember;
+}
+
+.quests-ring-stop-end {
+    stop-color: $gold;
 }
 
 .quests-ring-text {
@@ -66,202 +96,248 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    font-family: $font-mono;
     font-size: 0.82rem;
-    font-weight: 800;
-    color: $indigo;
-    letter-spacing: -0.02em;
+    font-weight: 700;
+    color: $gold;
+    letter-spacing: 0.5px;
     font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 10px color-mix(in srgb, #{$gold} 45%, transparent);
 }
 
 .quests-header-info {
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
+    gap: 4px;
 }
 
 .quests-header-title {
-    font-size: $font-lg;
-    font-weight: 800;
-    color: $text;
-    letter-spacing: 0.01em;
+    font-family: $font-display;
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: $ember;
+    text-shadow: 0 0 12px color-mix(in srgb, #{$ember} 35%, transparent);
 }
 
 .quests-header-sub {
-    font-size: $font-sm;
-    color: $text-muted;
+    @include caption;
+    color: $dim;
+    letter-spacing: 0.3px;
 }
 
-// ═══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 // CATEGORY SECTIONS
-// ═══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 .quests-category {
-    --category-color: #{$indigo}; // overridden inline
-    margin-bottom: $spacing-lg;
+    --category-color: #{$ember};
+    margin-bottom: $space-lg;
+    flex-shrink: 0;
 }
 
 .quests-category-header {
     display: flex;
     align-items: center;
-    gap: $spacing-sm;
-    margin-bottom: $spacing-sm;
-    padding: 4px 0 4px $spacing-sm;
-    border-left: 4px solid var(--category-color);
+    gap: $space-sm;
+    margin-bottom: $space-sm;
+    padding: 6px 0 6px $space-sm;
+    border-left: 3px solid var(--category-color);
     border-radius: 2px;
+    background: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--category-color) 10%, transparent) 0%,
+        transparent 100%
+    );
 }
 
 .quests-category-label {
-    font-size: $font-md;
+    @include micro;
+    font-size: 0.8rem;
     font-weight: 700;
     color: $text;
     flex: 1;
-    letter-spacing: 0.01em;
+    letter-spacing: 2px;
+    text-transform: uppercase;
 }
 
 .quests-category-count {
-    font-size: 0.6rem;
-    font-weight: 800;
+    font-family: $font-mono;
+    font-size: 0.68rem;
+    font-weight: 700;
     color: var(--category-color);
-    background: color-mix(in srgb, var(--category-color) 12%, transparent);
-    padding: 1px 7px;
+    background: color-mix(in srgb, var(--category-color) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--category-color) 30%, transparent);
+    padding: 3px 9px;
     border-radius: $radius-pill;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.5px;
+    font-variant-numeric: tabular-nums;
 }
 
 // ── Quest list ───────────────────────────────────────────────────
 .quests-list {
     display: flex;
     flex-direction: column;
-    gap: $spacing-sm;
+    gap: $space-sm;
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// QUEST CARD — white shell + category-tinted gradient
-// ═══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
+// QUEST CARD — obsidian shell + category-tinted gradient
+// ══════════════════════════════════════════════════════════════════
 .quest-item {
-    --category-color: #{$indigo}; // fallback, overridden inline
+    --category-color: #{$ember};
     display: flex;
     align-items: flex-start;
-    gap: 0.75rem;
-    padding: 0.75rem 0.875rem;
-    border-radius: $radius-sm;
-    background: $white;
-    background-image: linear-gradient(135deg,
-            color-mix(in srgb, var(--category-color) 6%, transparent) 0%,
-            color-mix(in srgb, var(--category-color) 2%, transparent) 50%,
-            transparent 100%);
-    border: 1px solid color-mix(in srgb, var(--category-color) 18%, transparent);
-    box-shadow: 0 1px 4px rgba($black, 0.04);
-    animation: quest-card-in 0.4s $ease-out-expo both;
+    gap: $space-sm;
+    padding: $space-sm $space-md;
+    border-radius: $radius-md;
+    background: $card;
+    background-image: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--category-color) 8%, transparent) 0%,
+        color-mix(in srgb, var(--category-color) 3%, transparent) 50%,
+        transparent 100%
+    );
+    border: 1px solid color-mix(in srgb, var(--category-color) 22%, transparent);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+    animation: quest-card-in 0.42s $ease-out-expo both;
     animation-delay: calc(var(--i, 0) * 50ms);
-    transition: transform 0.2s $ease-default,
-        box-shadow 0.25s $ease-default,
-        border-color 0.25s $ease-default,
-        background-image 0.25s $ease-default;
+    transition:
+        transform 0.2s $ease-arena,
+        box-shadow 0.25s $ease-arena,
+        border-color 0.25s $ease-arena,
+        background-image 0.25s $ease-arena;
 
     &:hover {
         transform: translateY(-2px);
-        border-color: color-mix(in srgb, var(--category-color) 35%, transparent);
-        background-image: linear-gradient(135deg,
-                color-mix(in srgb, var(--category-color) 12%, transparent) 0%,
-                color-mix(in srgb, var(--category-color) 4%, transparent) 50%,
-                transparent 100%);
-        box-shadow: 0 6px 18px color-mix(in srgb, var(--category-color) 14%, transparent),
-            0 0 6px color-mix(in srgb, var(--category-color) 8%, transparent);
+        border-color: color-mix(in srgb, var(--category-color) 42%, transparent);
+        background-image: linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--category-color) 14%, transparent) 0%,
+            color-mix(in srgb, var(--category-color) 5%, transparent) 50%,
+            transparent 100%
+        );
+        box-shadow:
+            0 6px 20px color-mix(in srgb, var(--category-color) 18%, transparent),
+            0 0 10px color-mix(in srgb, var(--category-color) 10%, transparent);
     }
 }
 
 // ── Status: completed ────────────────────────────────────────────
 .quest-item--completed {
-    background-image: linear-gradient(135deg,
-            color-mix(in srgb, $green 7%, transparent) 0%,
-            color-mix(in srgb, $green 2%, transparent) 50%,
-            transparent 100%);
-    border-color: color-mix(in srgb, $green 22%, transparent);
+    background-image: linear-gradient(
+        135deg,
+        color-mix(in srgb, #{$good} 10%, transparent) 0%,
+        color-mix(in srgb, #{$good} 3%, transparent) 60%,
+        transparent 100%
+    );
+    border-color: color-mix(in srgb, #{$good} 28%, transparent);
 
     &:hover {
-        border-color: color-mix(in srgb, $green 35%, transparent);
-        background-image: linear-gradient(135deg,
-                color-mix(in srgb, $green 12%, transparent) 0%,
-                color-mix(in srgb, $green 4%, transparent) 50%,
-                transparent 100%);
-        box-shadow: 0 6px 18px color-mix(in srgb, $green 14%, transparent),
-            0 0 6px color-mix(in srgb, $green 8%, transparent);
+        border-color: color-mix(in srgb, #{$good} 45%, transparent);
+        background-image: linear-gradient(
+            135deg,
+            color-mix(in srgb, #{$good} 15%, transparent) 0%,
+            color-mix(in srgb, #{$good} 5%, transparent) 60%,
+            transparent 100%
+        );
+        box-shadow:
+            0 6px 20px color-mix(in srgb, #{$good} 20%, transparent),
+            0 0 10px color-mix(in srgb, #{$good} 12%, transparent);
     }
 }
 
 // ── Status: available ────────────────────────────────────────────
 .quest-item--available {
-    background-image: linear-gradient(135deg,
-            color-mix(in srgb, $indigo 8%, transparent) 0%,
-            color-mix(in srgb, $purple 3%, transparent) 50%,
-            transparent 100%);
-    border-color: color-mix(in srgb, $indigo 25%, transparent);
-    box-shadow: 0 2px 8px color-mix(in srgb, $indigo 8%, transparent);
+    background-image: linear-gradient(
+        135deg,
+        color-mix(in srgb, #{$ember} 10%, transparent) 0%,
+        color-mix(in srgb, #{$gold} 4%, transparent) 60%,
+        transparent 100%
+    );
+    border-color: color-mix(in srgb, #{$ember} 32%, transparent);
+    box-shadow:
+        0 2px 10px color-mix(in srgb, #{$ember} 12%, transparent),
+        inset 0 1px 0 color-mix(in srgb, #{$ember} 14%, transparent);
 
     &:hover {
-        border-color: color-mix(in srgb, $indigo 40%, transparent);
-        background-image: linear-gradient(135deg,
-                color-mix(in srgb, $indigo 14%, transparent) 0%,
-                color-mix(in srgb, $purple 5%, transparent) 50%,
-                transparent 100%);
-        box-shadow: 0 6px 20px color-mix(in srgb, $indigo 18%, transparent),
-            0 0 8px color-mix(in srgb, $indigo 10%, transparent);
+        border-color: color-mix(in srgb, #{$ember} 50%, transparent);
+        background-image: linear-gradient(
+            135deg,
+            color-mix(in srgb, #{$ember} 16%, transparent) 0%,
+            color-mix(in srgb, #{$gold} 7%, transparent) 60%,
+            transparent 100%
+        );
+        box-shadow:
+            0 6px 22px color-mix(in srgb, #{$ember} 22%, transparent),
+            0 0 12px color-mix(in srgb, #{$ember} 14%, transparent);
     }
 }
 
 // ── Status: accepted (active quest) ──────────────────────────────
 .quest-item--accepted {
-    background-image: linear-gradient(135deg,
-            color-mix(in srgb, $indigo 10%, transparent) 0%,
-            color-mix(in srgb, $indigo 3%, transparent) 50%,
-            transparent 100%);
-    border-color: color-mix(in srgb, $indigo 28%, transparent);
+    background-image: linear-gradient(
+        135deg,
+        color-mix(in srgb, #{$purple} 12%, transparent) 0%,
+        color-mix(in srgb, #{$purple} 4%, transparent) 60%,
+        transparent 100%
+    );
+    border-color: color-mix(in srgb, #{$purple} 35%, transparent);
 
     &:hover {
-        border-color: color-mix(in srgb, $indigo 42%, transparent);
-        background-image: linear-gradient(135deg,
-                color-mix(in srgb, $indigo 16%, transparent) 0%,
-                color-mix(in srgb, $indigo 5%, transparent) 50%,
-                transparent 100%);
-        box-shadow: 0 6px 18px color-mix(in srgb, $indigo 16%, transparent),
-            0 0 8px color-mix(in srgb, $indigo 8%, transparent);
+        border-color: color-mix(in srgb, #{$purple} 52%, transparent);
+        background-image: linear-gradient(
+            135deg,
+            color-mix(in srgb, #{$purple} 18%, transparent) 0%,
+            color-mix(in srgb, #{$purple} 6%, transparent) 60%,
+            transparent 100%
+        );
+        box-shadow:
+            0 6px 20px color-mix(in srgb, #{$purple} 22%, transparent),
+            0 0 10px color-mix(in srgb, #{$purple} 12%, transparent);
     }
 }
 
-// ── Status: locked — soft dashed border (no harsh opacity) ───────
+// ── Status: locked — dashed muted border ─────────────────────────
 .quest-item--locked {
-    opacity: 0.7;
+    opacity: 0.65;
     border-style: dashed;
-    border-color: rgba($text, 0.16);
+    border-color: $line;
     background-image: none;
 
     &:hover {
         transform: none;
-        box-shadow: 0 1px 4px rgba($black, 0.04);
-        border-color: rgba($text, 0.22);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+        border-color: color-mix(in srgb, #{$dim} 30%, transparent);
         background-image: none;
     }
 
     .quest-item-emoji {
         opacity: 0.55;
+        filter: grayscale(1);
     }
 
     .quest-item-title {
-        color: $text-muted;
+        color: $dim;
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 // CARD INNER ELEMENTS
-// ═══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 .quest-item-left {
     flex-shrink: 0;
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.3rem;
+    font-size: 1.35rem;
+}
+
+.quest-item-emoji {
+    filter: drop-shadow(0 0 8px color-mix(in srgb, var(--category-color) 40%, transparent));
 }
 
 .quest-item-body {
@@ -269,127 +345,136 @@
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
+    gap: 3px;
 }
 
 .quest-item-top {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 6px;
 }
 
 .quest-item-title {
-    font-size: $font-md;
+    font-family: $font-sans;
+    font-size: 0.95rem;
     font-weight: 700;
     color: $text;
+    letter-spacing: 0.2px;
 }
 
 .quest-item-check {
     font-size: 0.9rem;
     flex-shrink: 0;
+    filter: drop-shadow(0 0 8px color-mix(in srgb, #{$good} 45%, transparent));
 }
 
 .quest-item-active-badge {
-    font-size: 0.6rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: $white;
-    background: $indigo;
-    padding: 2px 7px;
-    border-radius: 20px;
+    @include micro;
+    font-size: 0.58rem;
+    letter-spacing: 1.5px;
+    color: $text;
+    background: $purple;
+    padding: 3px 9px;
+    border-radius: $radius-pill;
     flex-shrink: 0;
     line-height: 1.4;
+    box-shadow: 0 0 10px color-mix(in srgb, #{$purple} 45%, transparent);
 }
 
 .quest-item-desc {
-    font-size: $font-sm;
-    color: $text-muted;
-    line-height: 1.35;
+    @include caption;
+    color: $dim;
     margin: 0;
+    letter-spacing: 0.2px;
 }
 
 // ── Progress bar (cross-session quests) ──────────────────────────
 .quest-item-progress {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    margin-top: 0.3rem;
+    gap: $space-xs;
+    margin-top: 6px;
 }
 
 .quest-item-progress-bar {
     flex: 1;
     height: 6px;
-    background: color-mix(in srgb, $indigo 10%, transparent);
+    background: color-mix(in srgb, #{$purple} 12%, transparent);
+    border: 1px solid color-mix(in srgb, #{$purple} 22%, transparent);
     border-radius: $radius-pill;
     overflow: hidden;
 }
 
 .quest-item-progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, $indigo, $purple);
+    background: linear-gradient(90deg, $purple, $ember);
     border-radius: $radius-pill;
-    transition: width 0.4s $ease-default;
+    transition: width 0.4s $ease-arena;
+    box-shadow: 0 0 8px color-mix(in srgb, #{$purple} 45%, transparent);
 }
 
 .quest-item-progress-label {
-    font-size: $font-xs;
+    font-family: $font-mono;
+    font-size: 0.7rem;
     font-weight: 700;
-    color: $indigo;
+    color: $purple;
     white-space: nowrap;
+    letter-spacing: 0.3px;
     font-variant-numeric: tabular-nums;
 }
 
 // ── Lock reason ──────────────────────────────────────────────────
 .quest-item-lock-reason {
-    font-size: $font-xs;
+    font-family: $font-mono;
+    font-size: 0.7rem;
     font-weight: 600;
-    color: $text-muted;
-    margin-top: 0.2rem;
+    color: $dim;
+    margin-top: 4px;
     display: flex;
     align-items: center;
-    gap: 0.25rem;
-
-    &::before {
-        content: '🔒';
-        font-size: 0.65rem;
-    }
+    gap: 4px;
+    letter-spacing: 0.3px;
 }
 
 // ── Completion date ──────────────────────────────────────────────
 .quest-item-date {
-    font-size: $font-xs;
-    color: $green;
+    font-family: $font-mono;
+    font-size: 0.7rem;
+    color: $good;
     font-weight: 600;
-    margin-top: 0.15rem;
+    margin-top: 3px;
+    letter-spacing: 0.3px;
 }
 
-// ═══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 // BUTTONS
-// ═══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 .quest-item-accept {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
-    margin-top: 0.35rem;
-    padding: 0.3rem 0.7rem;
+    gap: 4px;
+    margin-top: 6px;
+    padding: 6px 14px;
     border: none;
     border-radius: $radius-pill;
-    background: linear-gradient(135deg, $indigo, $purple);
-    color: $white;
-    font-size: $font-xs;
+    background: $gradient-ember-cta;
+    color: $text;
+    font-family: $font-mono;
+    font-size: 0.72rem;
     font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
     cursor: pointer;
-    transition: box-shadow 0.2s $ease-default, transform 0.15s $ease-out-back;
-    box-shadow: 0 2px 8px rgba($indigo, 0.25);
+    transition: box-shadow 0.2s $ease-arena, transform 0.15s $ease-out-back;
+    box-shadow: $shadow-ember-glow;
     align-self: flex-start;
 
     &:hover {
-        box-shadow: 0 3px 14px rgba($indigo, 0.4);
+        box-shadow: $shadow-ember-glow-lg;
     }
 
     &:active {
-        transform: scale(0.95);
+        transform: scale(0.96);
     }
 }
 
@@ -397,32 +482,35 @@
 .quest-item-actions {
     display: flex;
     align-items: center;
-    gap: $spacing-sm;
-    margin-top: 0.35rem;
+    gap: $space-sm;
+    margin-top: 6px;
     flex-wrap: wrap;
 }
 
 .quest-item-start {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
-    padding: 0.3rem 0.7rem;
+    gap: 4px;
+    padding: 6px 14px;
     border: none;
     border-radius: $radius-pill;
-    background: linear-gradient(135deg, $green, color.adjust($green, $lightness: -8%));
-    color: $white;
-    font-size: $font-xs;
+    background: linear-gradient(180deg, $good, #2fb57a);
+    color: #0c2a1a;
+    font-family: $font-mono;
+    font-size: 0.72rem;
     font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
     cursor: pointer;
-    transition: box-shadow 0.2s $ease-default, transform 0.15s $ease-out-back;
-    box-shadow: 0 2px 8px rgba($green, 0.25);
+    transition: box-shadow 0.2s $ease-arena, transform 0.15s $ease-out-back;
+    box-shadow: 0 0 14px color-mix(in srgb, #{$good} 40%, transparent);
 
     &:hover:not(:disabled) {
-        box-shadow: 0 3px 14px rgba($green, 0.4);
+        box-shadow: 0 0 22px color-mix(in srgb, #{$good} 55%, transparent);
     }
 
     &:active:not(:disabled) {
-        transform: scale(0.95);
+        transform: scale(0.96);
     }
 
     &:disabled {
@@ -432,90 +520,111 @@
 }
 
 .quest-item-hint {
-    font-size: $font-xs;
-    font-weight: 600;
-    color: $text-muted;
+    font-family: $font-sans;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: $dim;
     font-style: italic;
+    letter-spacing: 0.2px;
 }
 
 .quest-item-abandon {
     display: inline-flex;
     align-items: center;
-    padding: 0.25rem 0.5rem;
-    border: 1px solid rgba($red, 0.2);
+    padding: 5px 12px;
+    border: 1px solid color-mix(in srgb, #{$blood} 30%, transparent);
     border-radius: $radius-pill;
     background: transparent;
-    color: rgba($red, 0.6);
-    font-size: $font-xs;
-    font-weight: 600;
+    color: color-mix(in srgb, #{$blood} 80%, $dim);
+    font-family: $font-mono;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
     cursor: pointer;
-    transition: color 0.2s $ease-default, border-color 0.2s $ease-default, background 0.2s $ease-default;
+    transition:
+        color 0.2s $ease-arena,
+        border-color 0.2s $ease-arena,
+        background 0.2s $ease-arena;
 
     &:hover {
-        color: $red;
-        border-color: rgba($red, 0.4);
-        background: rgba($red, 0.05);
+        color: $blood;
+        border-color: $blood;
+        background: color-mix(in srgb, #{$blood} 8%, transparent);
     }
 
     &:active {
-        transform: scale(0.95);
+        transform: scale(0.96);
     }
 }
 
 .quest-item-slots-full {
-    font-size: $font-xs;
+    font-family: $font-mono;
+    font-size: 0.7rem;
     font-weight: 600;
-    color: $text-muted;
+    color: $dim;
     font-style: italic;
-    margin-top: 0.25rem;
+    letter-spacing: 0.3px;
+    margin-top: 4px;
 }
 
-// ═══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 // XP BADGE
-// ═══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 .quest-item-right {
     flex-shrink: 0;
     display: flex;
     align-items: flex-start;
-    padding-top: 0.15rem;
+    padding-top: 2px;
 }
 
 .quest-item-xp {
-    font-size: $font-xs;
+    font-family: $font-mono;
+    font-size: 0.7rem;
     font-weight: 700;
-    padding: 0.15rem 0.5rem;
+    padding: 3px 8px;
     border-radius: $radius-pill;
     white-space: nowrap;
+    letter-spacing: 0.3px;
     font-variant-numeric: tabular-nums;
 
     &--completed {
-        color: $green;
-        background: color-mix(in srgb, $green 12%, transparent);
+        color: $good;
+        background: color-mix(in srgb, #{$good} 14%, transparent);
+        border: 1px solid color-mix(in srgb, #{$good} 30%, transparent);
     }
 
-    &--available,
+    &--available {
+        color: $gold;
+        background: color-mix(in srgb, #{$gold} 14%, transparent);
+        border: 1px solid color-mix(in srgb, #{$gold} 30%, transparent);
+    }
+
     &--accepted {
         color: $purple;
-        background: color-mix(in srgb, $purple 12%, transparent);
+        background: color-mix(in srgb, #{$purple} 14%, transparent);
+        border: 1px solid color-mix(in srgb, #{$purple} 32%, transparent);
     }
 
     &--locked {
-        color: $text-muted;
-        background: color-mix(in srgb, $text 6%, transparent);
+        color: $dim;
+        background: $obsidian-2;
+        border: 1px solid $line;
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 // MOBILE RESPONSIVE
-// ═══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
 @media (max-width: 480px) {
     .quests-body {
-        padding: $spacing-sm $spacing-sm $spacing-lg;
+        padding: $space-sm $space-sm $space-lg;
     }
 
     .quests-header {
-        padding: $spacing-sm;
-        gap: 0.75rem;
+        padding: $space-md $space-sm $space-sm;
+        gap: $space-sm;
+        margin-top: $space-sm;
     }
 
     .quests-header-ring {
@@ -527,32 +636,36 @@
         font-size: 0.7rem;
     }
 
+    .quests-header-info {
+        gap: 3px;
+    }
+
     .quests-header-title {
-        font-size: $font-md;
+        font-size: 0.95rem;
     }
 
     .quest-item {
-        padding: 0.625rem 0.75rem;
-        gap: 0.6rem;
+        padding: 10px 12px;
+        gap: 10px;
         animation-delay: calc(var(--i, 0) * 35ms);
 
         &:hover {
             transform: none;
-            box-shadow: 0 1px 4px rgba($black, 0.04);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
         }
     }
 
     .quest-item-left {
-        width: 30px;
-        height: 30px;
-        font-size: 1.1rem;
+        width: 32px;
+        height: 32px;
+        font-size: 1.15rem;
     }
 
     .quest-item-title {
-        font-size: $font-sm;
+        font-size: 0.88rem;
     }
 
     .quest-item-desc {
-        font-size: $font-xs;
+        font-size: 0.75rem;
     }
 }

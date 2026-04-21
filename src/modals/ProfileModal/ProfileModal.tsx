@@ -29,8 +29,8 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
     const tier = getTier(level);
     const streak = dbUser?.streak ?? 0;
 
-    // XP bar: 12 segments (same as StartScreen HUD)
-    const XP_SEGS = useMemo(() => Array.from({ length: 12 }, (_, i) => i), []);
+    // XP bar: 14 segments (Arena spec)
+    const XP_SEGS = useMemo(() => Array.from({ length: 14 }, (_, i) => i), []);
     const filledSegments = Math.round((levelProgressPct / 100) * XP_SEGS.length);
 
     const [activeTab, setActiveTab] = useState<ProfileTab>(initialTab ?? 'friends');

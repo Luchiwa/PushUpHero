@@ -1,0 +1,95 @@
+// ── ARENA — TEXT MIXINS ──────────────────────────────────────
+@use 'tokens' as *;
+
+// Kicker: mono UPPERCASE letter-spacing 3px, dim color.
+@mixin kicker {
+    font-family: $font-mono;
+    font-size: $text-kicker-size;
+    font-weight: $text-kicker-weight;
+    letter-spacing: $text-kicker-ls;
+    text-transform: uppercase;
+    color: $dim;
+    line-height: 1;
+}
+
+// Micro: like kicker but smaller (9px, 2px ls).
+@mixin micro {
+    font-family: $font-mono;
+    font-size: $text-micro-size;
+    font-weight: $text-micro-weight;
+    letter-spacing: $text-micro-ls;
+    text-transform: uppercase;
+    line-height: 1;
+}
+
+// Screen title — MUST be ember, Oswald UPPERCASE.
+@mixin title-screen {
+    font-family: $font-display;
+    font-size: $text-title-screen-size;
+    font-weight: $text-title-screen-weight;
+    letter-spacing: $text-title-screen-ls;
+    text-transform: uppercase;
+    color: $ember;
+    line-height: 1.1;
+}
+
+// Hero number / grade letter — Oswald display 62px.
+@mixin hero-number {
+    font-family: $font-display;
+    font-size: $text-hero-size;
+    font-weight: $text-hero-weight;
+    line-height: $text-hero-line;
+    letter-spacing: 1px;
+}
+
+// Title sizes.
+@mixin title-xl {
+    font-family: $font-display;
+    font-size: $text-title-xl-size;
+    font-weight: $text-title-xl-weight;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    line-height: 1.05;
+}
+
+@mixin title-l {
+    font-family: $font-display;
+    font-size: $text-title-l-size;
+    font-weight: $text-title-l-weight;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    line-height: 1.1;
+}
+
+@mixin title-m {
+    font-family: $font-display;
+    font-size: $text-title-m-size;
+    font-weight: $text-title-m-weight;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    line-height: 1.15;
+}
+
+// Body + caption.
+@mixin body {
+    font-family: $font-sans;
+    font-size: $text-body-size;
+    font-weight: $text-body-weight;
+    line-height: 1.5;
+    color: $text;
+}
+
+@mixin caption {
+    font-family: $font-sans;
+    font-size: $text-caption-size;
+    font-weight: $text-caption-weight;
+    color: $dim;
+    line-height: 1.4;
+}
+
+// Text truncate single-line.
+@mixin text-truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

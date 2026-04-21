@@ -1,11 +1,23 @@
-@use 'sass:color';
-@use 'variables' as *;
+@use 'tokens' as *;
 @use 'mixins' as *;
 
+// ══════════════════════════════════════════════════════════════════
+// SettingsModal — Arena. Obsidian sheet with ember-tinted header,
+// accordion sections with mono labels, blood-themed danger zone.
+// ══════════════════════════════════════════════════════════════════
+
 .settings-overlay {
-    @include modal-overlay($z: $z-sticky);
-    padding: $spacing-md;
-    animation: overlay-fade-in 0.2s ease both;
+    position: fixed;
+    inset: 0;
+    z-index: $z-sticky;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: $space-lg;
+    background: $overlay-strong;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    animation: overlay-fade-in 0.22s ease both;
 
     &--exit {
         animation: overlay-fade-out 0.2s ease both;
@@ -13,10 +25,21 @@
 }
 
 .settings-card {
-    @include modal-card($width: 440px, $padding: 0);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: min(92vw, 440px);
     max-height: 90vh;
     overflow: hidden;
-    animation: modal-scale-in 0.25s $ease-out-back both;
+    background: $card;
+    background-image: $gradient-hero-ember-glow;
+    border: 1px solid color-mix(in srgb, #{$ember} 26%, transparent);
+    border-radius: $radius-2xl;
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.65),
+        0 0 40px color-mix(in srgb, #{$ember} 10%, transparent),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    animation: modal-scale-in 0.28s $ease-out-back both;
 
     &--exit {
         animation: modal-scale-out 0.2s $ease-default both;
@@ -25,26 +48,52 @@
 
 // ── Header ──────────────────────────────────────────────────────
 .settings-header {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid $border;
+    padding: $space-lg $space-2xl;
+    border-bottom: 1px solid $line;
+    background:
+        linear-gradient(
+            180deg,
+            color-mix(in srgb, #{$ember} 8%, transparent) 0%,
+            transparent 100%
+        );
     flex-shrink: 0;
 }
 
 .settings-title {
-    font-size: 1.15rem;
-    font-weight: 800;
-    color: $text;
-    letter-spacing: -0.01em;
+    @include title-l;
+    color: $ember;
     margin: 0;
+    letter-spacing: 2px;
+    text-shadow: 0 0 12px color-mix(in srgb, #{$ember} 35%, transparent);
 }
 
-// .settings-close-btn → use .btn-icon from design system
 .settings-close-btn {
-    width: 34px;
-    height: 34px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $obsidian-2;
+    border: 1px solid $line;
+    border-radius: 50%;
+    color: $dim;
+    cursor: pointer;
+    transition:
+        color 0.2s $ease-arena,
+        border-color 0.2s $ease-arena,
+        background 0.2s $ease-arena,
+        transform 0.2s $ease-arena;
+
+    &:hover {
+        color: $ember;
+        border-color: color-mix(in srgb, #{$ember} 50%, transparent);
+        background: color-mix(in srgb, #{$ember} 10%, #{$obsidian-2});
+        transform: scale(1.05);
+    }
 }
 
 // ── Body ─────────────────────────────────────────────────────────
@@ -53,20 +102,29 @@
     display: flex;
     flex-direction: column;
     -webkit-overflow-scrolling: touch;
+    padding-bottom: $space-sm;
 }
 
 // ── Accordion ────────────────────────────────────────────────────
 .settings-accordion {
-    border-bottom: 1px solid $border;
+    border-bottom: 1px solid $line;
 
-    &:last-child {
+    &:last-of-type {
         border-bottom: none;
     }
 
     &--danger {
         .settings-accordion-header:hover {
-            background: rgba($red, 0.04);
+            background: color-mix(in srgb, #{$blood} 6%, transparent);
         }
+
+        &.settings-accordion--open {
+            background: color-mix(in srgb, #{$blood} 4%, transparent);
+        }
+    }
+
+    &--open {
+        background: color-mix(in srgb, #{$ember} 4%, transparent);
     }
 }
 
@@ -75,32 +133,45 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1rem 1.5rem;
+    min-height: 52px;
+    padding: $space-md $space-2xl;
     background: none;
     border: none;
     cursor: pointer;
     text-align: left;
-    transition: background 0.2s;
+    transition: background 0.2s $ease-arena;
 
     &:hover {
-        background: $surface;
+        background: color-mix(in srgb, #{$ember} 5%, transparent);
     }
 }
 
 .settings-accordion-title {
-    font-size: 0.9rem;
-    font-weight: 700;
+    @include micro;
+    font-size: 0.72rem;
+    letter-spacing: 2.5px;
     color: $text;
 
     &--danger {
-        color: $red;
+        color: $blood;
+        text-shadow: 0 0 10px color-mix(in srgb, #{$blood} 30%, transparent);
     }
 }
 
 .settings-accordion-chevron {
-    color: $text-muted;
+    color: $dim;
     flex-shrink: 0;
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition:
+        transform 0.25s $ease-arena,
+        color 0.2s $ease-arena;
+
+    .settings-accordion-header:hover & {
+        color: $ember;
+    }
+
+    .settings-accordion--danger .settings-accordion-header:hover & {
+        color: $blood;
+    }
 
     &--open {
         transform: rotate(180deg);
@@ -108,11 +179,11 @@
 }
 
 .settings-accordion-body {
-    padding: 0 1.5rem 1.5rem;
+    padding: 0 $space-2xl $space-lg;
     display: flex;
     flex-direction: column;
-    gap: $spacing-md;
-    animation: accordion-open 0.2s $ease-out-expo both;
+    gap: $space-md;
+    animation: accordion-open 0.22s $ease-out-expo both;
 }
 
 @keyframes accordion-open {
@@ -120,25 +191,101 @@
     to   { opacity: 1; transform: translateY(0); }
 }
 
-// ── Feedback messages (shared by PasswordChangeSection & DeleteAccountSection) ─
-.settings-feedback {
-    @include alert;
+// ── Shared section inputs (password / delete) ─────────────────────
+.settings-accordion-body {
+    .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
 
-    &--error {
-        color: color.adjust($red, $lightness: -5%);
+        label {
+            @include micro;
+            color: $dim;
+            letter-spacing: 2px;
+        }
+
+        input {
+            font-family: $font-sans;
+            font-size: 0.95rem;
+            color: $text;
+            background: $obsidian-2;
+            border: 1px solid $line;
+            border-radius: $radius-md;
+            padding: 12px 14px;
+            min-height: 44px;
+            transition:
+                border-color 0.2s $ease-arena,
+                box-shadow 0.2s $ease-arena,
+                background 0.2s $ease-arena;
+
+            &::placeholder {
+                color: color-mix(in srgb, #{$dim} 60%, transparent);
+            }
+
+            &:focus {
+                outline: none;
+                border-color: $ember;
+                background: color-mix(in srgb, #{$ember} 4%, #{$obsidian-2});
+                box-shadow:
+                    0 0 0 3px color-mix(in srgb, #{$ember} 18%, transparent),
+                    inset 0 0 0 1px color-mix(in srgb, #{$ember} 20%, transparent);
+            }
+
+            &.input--danger-ready {
+                border-color: $blood;
+                color: $blood;
+                background: color-mix(in srgb, #{$blood} 6%, #{$obsidian-2});
+                box-shadow: 0 0 0 3px color-mix(in srgb, #{$blood} 16%, transparent);
+                letter-spacing: 2px;
+                font-weight: 700;
+            }
+        }
     }
 
-    &--success {
-        @include alert($green);
-        color: color.adjust($green, $lightness: -10%);
+    .btn-danger {
+        width: 100%;
+        align-self: stretch;
     }
 }
 
-// .btn-danger → defined in _buttons.scss design system
+// ── Feedback messages ─────────────────────────────────────────────
+.settings-feedback {
+    font-family: $font-sans;
+    font-size: 0.82rem;
+    line-height: 1.4;
+    padding: $space-sm $space-md;
+    border-radius: $radius-md;
+    margin: 0;
 
-// .btn-logout → defined in _buttons.scss design system
-// Local override: center it under the accordions
+    &--error {
+        color: $blood;
+        background: color-mix(in srgb, #{$blood} 10%, transparent);
+        border: 1px solid color-mix(in srgb, #{$blood} 30%, transparent);
+    }
+
+    &--success {
+        color: $good;
+        background: color-mix(in srgb, #{$good} 10%, transparent);
+        border: 1px solid color-mix(in srgb, #{$good} 30%, transparent);
+    }
+}
+
+// ── Danger description (delete section intro) ─────────────────────
+.settings-danger-desc {
+    font-family: $font-sans;
+    font-size: 0.85rem;
+    color: $dim;
+    line-height: 1.55;
+    margin: 0;
+
+    strong {
+        color: $blood;
+        font-weight: 700;
+    }
+}
+
+// ── Logout button — layout-only local overrides ──────────────────
 .btn-logout {
-    margin: $spacing-md 1.5rem 1.5rem;
     align-self: center;
+    margin: $space-md $space-2xl $space-2xl;
 }

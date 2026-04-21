@@ -1,0 +1,19 @@
+// ── ARENA — SHADOW TOKENS ────────────────────────────────────
+// Source: tokens.json `shadow` block.
+
+$shadow-ember-glow:    0 6px 20px rgba(255, 122, 71, 0.4),
+                       inset 0 1px 0 rgba(255, 255, 255, 0.25);
+
+$shadow-ember-glow-lg: 0 10px 30px rgba(255, 122, 71, 0.55),
+                       inset 0 1px 0 rgba(255, 255, 255, 0.3);
+
+$shadow-card-raise:    0 12px 32px rgba(255, 122, 71, 0.2);
+
+$shadow-modal-sheet:   0 -20px 60px rgba(0, 0, 0, 0.8);
+
+// ── Legacy aliases ───────────────────────────────────────────
+$shadow-md:          $shadow-card-raise;
+$shadow-card:        $shadow-card-raise;
+$shadow-modal:       $shadow-modal-sheet;
+$shadow-accent-sm:   0 2px 8px rgba(255, 122, 71, 0.35);
+$shadow-accent-glow: 0 0 6px rgba(255, 122, 71, 0.8), 0 0 12px rgba(255, 122, 71, 0.4);
