@@ -74,14 +74,20 @@ Screens and modals are lazy-loaded via `React.lazy()` + `<Suspense>`:
 
 Modal state uses TypeScript discriminated unions for type safety: `type ActiveModal = null | { type: 'auth'; ... } | { type: 'profile'; ... } | ...`
 
-### Styling
+### Styling — Arena dark-mode design system
 
-SCSS with design tokens in `src/styles/_variables.scss`. Tokens are exported as CSS custom properties on `:root`. Component styles are co-located (e.g., `MyComponent.tsx` + `MyComponent.scss`). The SCSS `loadPaths` includes `src/styles/` so partials can be imported by name (e.g., `@use 'variables'`).
+SCSS design tokens live in `src/styles/tokens/` (color, typography, spacing, radius, shadow, motion, layout, gradient). Mixins in `src/styles/mixins/` (surface, glow, text, motion, hex, a11y). Import via `@use 'tokens' as *; @use 'mixins' as *;`. Component styles are co-located (`MyComponent.tsx` + `MyComponent.scss`).
+
+**See `src/styles/CLAUDE.md` for the full Arena spec** — color semantics (ember=primary, gold=rewards, good=completion), typography mixins, card patterns, animations, and gotchas.
 
 Key conventions:
-- Use explicit color names (`$green`, `$red`, `$accent`) not generic names
-- Z-index uses the scale from `_variables.scss` (`$z-base` through `$z-maximum`) — no magic numbers
-- No dark mode yet, but the token architecture supports it
+- Arena IS the theme — the whole app is dark-mode obsidian + ember. No light-mode fork.
+- Screen titles MUST use `@include title-screen` (ember, Oswald UPPERCASE, letter-spacing 2px).
+- Gold only for rewards (XP, levels, achievements, ranks). `good` only for completion. `blood`/`ice` strictly semantic (grades/errors).
+- Use `color-mix(in srgb, $color X%, transparent)` for tinted surfaces. Never deprecated `lighten()`/`darken()`.
+- Cards inside `.page-body` (flex-column) need `flex-shrink: 0` or they compress on short viewports.
+- `overflow: hidden` on a card clips ember `text-shadow` glows — `::before { inset: 0 }` is already self-clamped, parent doesn't need it.
+- Z-index uses the scale in `tokens/_layout.scss` — no magic numbers.
 
 ### Data layer (Firestore reads)
 
