@@ -154,7 +154,6 @@ export function StartScreen({
                     user={user}
                     dbUser={dbUser}
                     tier={tier}
-                    streak={streak}
                     level={level}
                     totalXp={totalXp}
                     xpIntoCurrentLevel={xpIntoCurrentLevel}

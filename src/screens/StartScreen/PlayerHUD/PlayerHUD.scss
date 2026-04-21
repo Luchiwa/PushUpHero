@@ -1,67 +1,133 @@
 @use 'tokens' as *;
 @use 'mixins' as *;
 
-// ── Player HUD — Arena card, ember borders, hex level badge ──
+// ── Player HUD — blended row, ember level ring, hex level badge ──
 .player-hud {
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: $space-sm;
 }
 
-.player-hud-card {
+.hud-row {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: $space-md;
-    width: 100%;
-    padding: $space-lg $space-xl;
-    background: $card;
-    border: 1px solid color-mix(in srgb, #{$ember} 30%, transparent);
-    border-radius: $radius-2xl;
+    padding: $space-sm 0;
+}
+
+// ── Avatar button (only click target) ────────────────────────────
+.hud-avatar-button {
+    position: relative;
+    flex-shrink: 0;
+    width: 72px;
+    height: 72px;
+    padding: 0;
+    background: transparent;
+    border: none;
     cursor: pointer;
-    text-align: left;
-    transition: border-color 200ms ease, transform 180ms $ease-arena,
-                box-shadow 200ms ease;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+    border-radius: 50%;
+    transition: transform 180ms $ease-arena;
 
-    // ── Tier accents (subtle — primary Arena color stays ember) ──
-    &.tier-silver {
-        border-color: color-mix(in srgb, #{$ice} 25%, transparent);
-    }
-
-    &.tier-gold {
-        border-color: color-mix(in srgb, #{$gold} 35%, transparent);
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45),
-                    inset 0 0 0 1px color-mix(in srgb, #{$gold} 12%, transparent);
-    }
-
-    &.tier-platinum {
-        border-color: color-mix(in srgb, #{$ice} 45%, transparent);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45),
-                    inset 0 0 0 1px color-mix(in srgb, #{$ice} 18%, transparent);
+    &::after {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border-radius: 50%;
+        border: 2px solid transparent;
+        transition: border-color 180ms ease;
+        pointer-events: none;
     }
 
     &:hover,
     &:focus-visible {
-        border-color: $ember;
-        transform: translateY(-2px);
-        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5),
-                    $shadow-ember-glow;
+        transform: scale(1.03);
         outline: none;
     }
 
+    &:focus-visible::after {
+        border-color: color-mix(in srgb, #{$ember} 55%, transparent);
+    }
+
     &:active {
-        transform: translateY(0);
+        transform: scale(1);
     }
 }
 
-// ── Avatar + hex level badge ─────────────────────────────────────
+// ── Avatar wrap (holds ring + avatar + badge) ────────────────────
 .hud-avatar-wrap {
     position: relative;
-    flex-shrink: 0;
+    width: 72px;
+    height: 72px;
 }
 
+// ── Level ring ───────────────────────────────────────────────────
+.hud-level-ring {
+    position: absolute;
+    inset: 0;
+    transform: rotate(-90deg);
+    overflow: visible;
+    pointer-events: none;
+}
+
+.hud-level-ring-track {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.06);
+    stroke-width: 3.5;
+}
+
+.hud-level-ring-fill {
+    fill: none;
+    stroke: $ember;
+    stroke-width: 3.5;
+    stroke-linecap: round;
+    filter:
+        drop-shadow(0 0 4px color-mix(in srgb, #{$ember} 55%, transparent))
+        drop-shadow(0 0 10px color-mix(in srgb, #{$ember} 25%, transparent));
+    transition: stroke-dashoffset 420ms $ease-arena;
+    animation: hud-ring-draw-in 900ms $ease-arena both;
+
+    .tier-silver & {
+        stroke: $ice;
+        filter:
+            drop-shadow(0 0 4px color-mix(in srgb, #{$ice} 55%, transparent))
+            drop-shadow(0 0 10px color-mix(in srgb, #{$ice} 25%, transparent));
+    }
+
+    .tier-gold & {
+        stroke: $gold;
+        filter:
+            drop-shadow(0 0 4px color-mix(in srgb, #{$gold} 55%, transparent))
+            drop-shadow(0 0 10px color-mix(in srgb, #{$gold} 25%, transparent));
+    }
+
+    .tier-platinum & {
+        stroke: $ice;
+        filter:
+            drop-shadow(0 0 4px color-mix(in srgb, #{$ice} 60%, transparent))
+            drop-shadow(0 0 10px color-mix(in srgb, #{$ice} 30%, transparent));
+    }
+}
+
+@keyframes hud-ring-draw-in {
+    from { stroke-dashoffset: var(--ring-circumference); }
+    to   { stroke-dashoffset: var(--ring-offset); }
+}
+
+// ── Avatar nested inside ring ────────────────────────────────────
+.hud-avatar {
+    position: absolute;
+    inset: 8px;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, #{$ember} 35%, transparent);
+    border-radius: 50%;
+}
+
+// ── Hex level badge (bottom-center) ──────────────────────────────
 .hud-level-badge {
     position: absolute;
-    bottom: -6px;
-    right: -8px;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
     @include hex-clip-pointy;
     width: 26px;
     height: 30px;
@@ -75,11 +141,12 @@
     letter-spacing: 0.5px;
     color: #fff;
     pointer-events: none;
-    box-shadow: 0 2px 10px rgba(255, 122, 71, 0.6);
+    z-index: 2;
+    filter: drop-shadow(0 3px 10px rgba(255, 122, 71, 0.55));
 
-    &.tier-silver { background: $ice; color: $obsidian; }
-    &.tier-gold   { background: $gold; color: #3a1f0a; }
-    &.tier-platinum { background: $ice; color: $obsidian; }
+    &.tier-silver   { background: $ice;  color: $obsidian; }
+    &.tier-gold     { background: $gold; color: #3a1f0a; }
+    &.tier-platinum { background: $ice;  color: $obsidian; }
 }
 
 .hud-level-badge-num {
@@ -87,104 +154,75 @@
     line-height: 1;
 }
 
-// ── Info block ───────────────────────────────────────────────────
-.hud-info {
+// ── Main column (kicker + name) ──────────────────────────────────
+.hud-main {
     flex: 1;
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: $space-xs;
+    gap: 2px;
+    padding-top: 4px;
 }
 
-.hud-top-row {
-    display: flex;
-    align-items: center;
-    gap: $space-sm;
+.hud-kicker {
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2.4px;
+    text-transform: uppercase;
+    color: $ember;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-variant-numeric: tabular-nums;
 }
 
 .hud-name {
     font-family: $font-display;
-    font-size: 20px;
+    font-size: 24px;
     font-weight: 600;
-    color: $text;
+    letter-spacing: 1.4px;
     text-transform: uppercase;
-    letter-spacing: 1.2px;
+    color: $text;
+    line-height: 1.1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     min-width: 0;
 }
 
-.hud-kicker {
-    @include kicker;
-    letter-spacing: 2px;
-    color: $dim;
-}
-
-// ── Streak pill ──────────────────────────────────────────────────
-.hud-streak {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    padding: 2px 8px;
-    border-radius: $radius-pill;
-    background: color-mix(in srgb, #{$gold} 12%, transparent);
-    border: 1px solid color-mix(in srgb, #{$gold} 35%, transparent);
-    color: $gold;
-    font-family: $font-mono;
-    font-weight: 600;
-    font-size: 11px;
-    line-height: 1;
-    letter-spacing: 0.5px;
-    white-space: nowrap;
-    flex-shrink: 0;
-
-    &.on-fire {
-        box-shadow: 0 0 10px rgba(245, 200, 113, 0.35);
-    }
-}
-
-.hud-streak-icon {
-    font-size: 11px;
-    line-height: 1;
-}
-
-.hud-streak-val {
-    font-variant-numeric: tabular-nums;
-}
-
-// ── Total XP (mono, ember) ───────────────────────────────────────
+// ── Total XP (gold, right-aligned) ───────────────────────────────
 .hud-total-xp {
-    margin-left: auto;
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    font-family: $font-mono;
-    font-weight: 600;
-    font-size: 11px;
-    color: $ember;
-    letter-spacing: 0.5px;
-    white-space: nowrap;
-    font-variant-numeric: tabular-nums;
-}
-
-// ── Chevron ──────────────────────────────────────────────────────
-.hud-chevron {
-    font-family: $font-display;
-    font-size: 22px;
-    line-height: 1;
-    color: color-mix(in srgb, #{$ember} 60%, transparent);
     flex-shrink: 0;
-    transition: color 180ms ease, transform 180ms $ease-arena;
-
-    .player-hud-card:hover &,
-    .player-hud-card:focus-visible & {
-        color: $ember;
-        transform: translateX(3px);
-    }
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    padding-top: 6px;
 }
 
-// ── Guest state ──────────────────────────────────────────────────
+.hud-total-xp-val {
+    font-family: $font-display;
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: $gold;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 14px color-mix(in srgb, #{$gold} 35%, transparent);
+}
+
+.hud-total-xp-lbl {
+    font-family: $font-mono;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: $dim;
+    line-height: 1;
+}
+
+// ── Guest state (unchanged card) ─────────────────────────────────
 .player-hud-guest {
     display: flex;
     align-items: center;
@@ -217,12 +255,19 @@
 
 // ── Mobile responsive ────────────────────────────────────────────
 @media (max-width: 480px) {
-    .player-hud-card,
-    .player-hud-guest {
-        padding: $space-md $space-lg;
+    .hud-name {
+        font-size: 20px;
     }
 
-    .hud-name {
-        font-size: 18px;
+    .hud-total-xp-val {
+        font-size: 24px;
+    }
+
+    .hud-kicker {
+        letter-spacing: 1.8px;
+    }
+
+    .player-hud-guest {
+        padding: $space-md $space-lg;
     }
 }
