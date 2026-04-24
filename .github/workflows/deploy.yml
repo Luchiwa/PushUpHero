@@ -97,6 +97,11 @@ jobs:
       - if: steps.targets.outputs.hosting == 'true'
         run: npm ci
       - if: steps.targets.outputs.hosting == 'true'
+        name: Write .env from secret
+        env:
+          ENV_FILE: ${{ secrets.VITE_FIREBASE_ENV }}
+        run: printf '%s' "$ENV_FILE" > .env
+      - if: steps.targets.outputs.hosting == 'true'
         run: npm run build
 
       - if: steps.targets.outputs.functions == 'true'

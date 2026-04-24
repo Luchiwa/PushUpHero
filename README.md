@@ -197,6 +197,7 @@ Under **Settings → Secrets and variables → Actions**:
 |---|---|---|
 | `FIREBASE_SERVICE_ACCOUNT` | Secret | Full JSON of a Firebase service-account key |
 | `FIREBASE_PROJECT_ID` | Variable | Your Firebase project ID (the same one in `.firebaserc`) |
+| `VITE_FIREBASE_ENV` | Secret | Raw contents of the local `.env` file (all `VITE_FIREBASE_*` keys, one per line). The build step writes it to `.env` before `vite build` so the config is embedded in the shipped bundle. |
 
 ### 7.2 Initial setup
 
@@ -216,13 +217,19 @@ Post-setup:
 - Delete the starter workflow file the CLI created — this repo uses the hand-written `ci.yml` / `deploy.yml`.
 - Add the `FIREBASE_PROJECT_ID` **variable** (not a secret) under the same settings page.
 
-### 7.3 Rotating `FIREBASE_SERVICE_ACCOUNT`
+### 7.3 Rotating secrets
 
-If the service-account key leaks or you rotate periodically:
+**`FIREBASE_SERVICE_ACCOUNT`** — if the service-account key leaks or you rotate periodically:
 
 1. Firebase Console → **Project Settings → Service accounts → Generate new private key** → download the JSON.
 2. GitHub → **Settings → Secrets and variables → Actions → `FIREBASE_SERVICE_ACCOUNT`** → *Update secret* → paste the new JSON.
 3. Re-run the latest workflow via **Re-run jobs** to confirm the new key works, then revoke the old key in the Firebase Console.
+
+**`VITE_FIREBASE_ENV`** — after any change to a `VITE_FIREBASE_*` value in your local `.env` (new project, rotated web API key, etc.):
+
+```bash
+gh secret set VITE_FIREBASE_ENV --repo <owner>/<repo> < .env
+```
 
 ### 7.4 Branch protection (recommended)
 
