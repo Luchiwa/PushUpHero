@@ -13,6 +13,7 @@ import { EXERCISE_REGISTRY } from '@exercises/registry';
 import { useWorkoutStateMachine, durationToSeconds } from './useWorkoutStateMachine';
 import { WorkoutContext } from './WorkoutContext';
 import type { WorkoutContextType } from './WorkoutContext';
+import { ExerciseStateContext } from './ExerciseStateContext';
 import { totalXpForLevel } from '@domain/xpSystem';
 import { StartScreen } from '@screens/StartScreen/StartScreen';
 import { AppLoader } from '@components/AppLoader/AppLoader';
@@ -95,15 +96,13 @@ function App() {
   }, [setWorkoutPlan]);
 
   // ── WorkoutContext value ───────────────────────────────────────────
-  // Memoize to avoid unnecessary re-renders of consumers when unrelated App state changes.
-  // exerciseState IS a dep (changes per frame), but that's unavoidable — Dashboard needs it.
-  // The key win: other state changes in App won't cascade to context consumers.
+  // exerciseState is served via a separate ExerciseStateContext (30fps
+  // consumers), so this memo only changes on slow-path transitions.
   const workoutCtx: WorkoutContextType = useMemo(() => ({
     ...wm,
     exerciseType,
-    exerciseState,
     changeExerciseType,
-  }), [wm, exerciseType, exerciseState, changeExerciseType]);
+  }), [wm, exerciseType, changeExerciseType]);
 
   // Sync isActive from state machine screen (derived state during render)
   const [prevWmScreen, setPrevWmScreen] = useState(wm.screen);
@@ -153,6 +152,7 @@ function App() {
   // ── Render ───────────────────────────────────────────────────────
   return (
     <WorkoutContext.Provider value={workoutCtx}>
+    <ExerciseStateContext.Provider value={exerciseState}>
     <div className="app-container">
       <video
         ref={videoRef}
@@ -278,6 +278,7 @@ function App() {
 
       <ReloadPrompt />
     </div>
+    </ExerciseStateContext.Provider>
     </WorkoutContext.Provider>
   );
 }
