@@ -7,11 +7,15 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "preview": "vite preview",
     "deploy": "npm run build && firebase deploy --only hosting",
     "deploy:functions": "cd functions && npm run build && cd .. && firebase deploy --only functions",
     "deploy:rules": "firebase deploy --only firestore:rules,storage:rules",
     "emulators": "firebase emulators:start --only auth,firestore,storage"
+  },
+  "engines": {
+    "node": "20"
   },
   "overrides": {
     "serialize-javascript": ">=7.0.3"

@@ -8,15 +8,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm run dev              # Vite dev server on :5173
 npm run build            # tsc -b && vite build (output in dist/)
 npm run lint             # ESLint (flat config, ESLint 9+)
+npm run typecheck        # tsc --noEmit -p tsconfig.app.json (same command CI runs)
 npm run deploy           # build + firebase deploy --only hosting
 npm run deploy:functions # cd functions && npm run build && firebase deploy --only functions
 ```
 
 There is no test framework configured in this project.
 
+Node is pinned to **20** via `.nvmrc` + root `engines.node`. `functions/` declares the same version independently.
+
 ## Git workflow
 
 See `CONTRIBUTING.md`. Tickets live in Linear (team `PUS`, workspace `pushuphero.linear.app`). One branch per ticket, using Linear's "Copy git branch name" (format `feature/<issueIdentifier>-<issueSlug>`, e.g. `feature/pus-9-resume-interrupted-workout-via-localstorage-checkpoint`). PR title: `[PUS-N] …`. PR body includes `Resolves [PUS-N](linear-url)` so the Linear integration can auto-close the ticket on merge. Conventional commits (`feat:`, `fix:`, `chore:`, `refactor:`, `docs:`); don't tag `PUS-N` in commit messages — the PR handles it.
+
+## CI
+
+Two workflows in `.github/workflows/`:
+
+- **`ci.yml`** — runs on PR to `main`. Jobs: `frontend` (lint/typecheck/build + uploads `dist/` artifact), `functions` (conditional on `functions/**` changes via `dorny/paths-filter`), and `preview` (reuses the artifact and publishes a Firebase Hosting preview channel `pr-<number>` with a bot-comment URL that updates in place; 7-day auto-expiry).
+- **`deploy.yml`** — runs on push to `main` (also `workflow_dispatch` with a `force` input). Uses `dorny/paths-filter@v3` to scope `firebase deploy --only …` to whichever targets actually changed (hosting / functions / firestore:rules / storage:rules). Docs-only pushes skip the deploy entirely. Frontend build and functions build are each gated on their target being in the deploy list. `force: true` bypasses the filter and redeploys everything.
+
+Required GitHub settings: secret `FIREBASE_SERVICE_ACCOUNT` (service-account JSON) and variable `FIREBASE_PROJECT_ID`. See `README.md` → *Continuous Integration* for setup and rotation steps.
 
 ## Architecture
 
