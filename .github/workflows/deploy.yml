@@ -1,0 +1,120 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Force deploy all targets'
+        type: boolean
+        default: false
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            hosting:
+              - 'src/**'
+              - 'public/**'
+              - 'index.html'
+              - 'vite.config.ts'
+              - 'tsconfig*.json'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'firebase.json'
+              - '.firebaserc'
+            functions:
+              - 'functions/**'
+              - 'firebase.json'
+              - '.firebaserc'
+            firestoreRules:
+              - 'firestore.rules'
+              - 'firebase.json'
+              - '.firebaserc'
+            storageRules:
+              - 'storage.rules'
+              - 'firebase.json'
+              - '.firebaserc'
+
+      - id: targets
+        shell: bash
+        env:
+          FORCE: ${{ github.event.inputs.force }}
+          HOSTING: ${{ steps.filter.outputs.hosting }}
+          FUNCTIONS: ${{ steps.filter.outputs.functions }}
+          FIRESTORE_RULES: ${{ steps.filter.outputs.firestoreRules }}
+          STORAGE_RULES: ${{ steps.filter.outputs.storageRules }}
+        run: |
+          targets=()
+          if [[ "$FORCE" == "true" ]]; then
+            targets=(hosting functions firestore:rules storage:rules)
+          else
+            [[ "$HOSTING" == "true" ]] && targets+=("hosting")
+            [[ "$FUNCTIONS" == "true" ]] && targets+=("functions")
+            [[ "$FIRESTORE_RULES" == "true" ]] && targets+=("firestore:rules")
+            [[ "$STORAGE_RULES" == "true" ]] && targets+=("storage:rules")
+          fi
+          if [ ${#targets[@]} -eq 0 ]; then
+            echo "any=false" >> "$GITHUB_OUTPUT"
+            echo "hosting=false" >> "$GITHUB_OUTPUT"
+            echo "functions=false" >> "$GITHUB_OUTPUT"
+          else
+            only=$(IFS=,; echo "${targets[*]}")
+            echo "any=true" >> "$GITHUB_OUTPUT"
+            echo "only=$only" >> "$GITHUB_OUTPUT"
+            if [[ " ${targets[*]} " == *" hosting "* ]]; then
+              echo "hosting=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "hosting=false" >> "$GITHUB_OUTPUT"
+            fi
+            if [[ " ${targets[*]} " == *" functions "* ]]; then
+              echo "functions=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "functions=false" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+
+      - if: steps.targets.outputs.any != 'true'
+        run: echo "### No deployable changes — skipping deploy" >> $GITHUB_STEP_SUMMARY
+
+      - if: steps.targets.outputs.any == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - if: steps.targets.outputs.hosting == 'true'
+        run: npm ci
+      - if: steps.targets.outputs.hosting == 'true'
+        name: Write .env from secret
+        env:
+          ENV_FILE: ${{ secrets.VITE_FIREBASE_ENV }}
+        run: printf '%s' "$ENV_FILE" > .env
+      - if: steps.targets.outputs.hosting == 'true'
+        run: npm run build
+
+      - if: steps.targets.outputs.functions == 'true'
+        run: npm ci --prefix functions
+      - if: steps.targets.outputs.functions == 'true'
+        run: npm run build --prefix functions
+
+      - if: steps.targets.outputs.any == 'true'
+        uses: w9jds/firebase-action@v15.15.0
+        with:
+          args: deploy --only ${{ steps.targets.outputs.only }} --project ${{ vars.FIREBASE_PROJECT_ID }} --non-interactive
+        env:
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
+      - if: steps.targets.outputs.any == 'true'
+        run: echo "### Deployed [${{ steps.targets.outputs.only }}] to ${{ vars.FIREBASE_PROJECT_ID }}" >> $GITHUB_STEP_SUMMARY

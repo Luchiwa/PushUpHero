@@ -20,7 +20,7 @@ A real-time AI workout app. Your webcam analyzes your posture, counts your reps,
 
 ## Prerequisites
 
-- [Node.js 18+](https://nodejs.org/) — check with `node -v`
+- [Node.js 20](https://nodejs.org/) — pinned via `.nvmrc`; check with `node -v`
 - A [Firebase](https://firebase.google.com/) account (free, Spark plan is enough to get started)
 
 ---
@@ -173,6 +173,67 @@ npm run deploy
 ```
 
 Make sure you're logged in (`firebase login`) and that `.firebaserc` points to your project.
+
+---
+
+## 7. Continuous Integration
+
+Two GitHub Actions workflows live in `.github/workflows/`:
+
+- **`ci.yml`** — runs on every pull request to `main`:
+  - `frontend` job: `npm ci` → `npm run lint` → `npm run typecheck` → `npm run build`
+  - `functions` job: `npm ci` + `npm run build` inside `functions/`, skipped when no `functions/**` files changed
+  - `preview` job: publishes the built `dist/` to a Firebase Hosting preview channel named `pr-<number>` and posts the preview URL as a bot comment on the PR. The comment is updated in place on subsequent pushes and the channel auto-expires after 7 days.
+
+- **`deploy.yml`** — runs on every push to `main`, plus manually via *Actions → Deploy → Run workflow*:
+  - Only targets whose files changed in the push are deployed (hosting / functions / firestore rules / storage rules). A docs-only push skips the deploy entirely; a functions-only push skips the frontend build.
+  - Trigger manually with the *Force* checkbox to redeploy all four targets regardless of the diff (use this if rules drifted from a Firebase Console edit, or after a rollback).
+
+### 7.1 Required GitHub secrets and variables
+
+Under **Settings → Secrets and variables → Actions**:
+
+| Name | Kind | Value |
+|---|---|---|
+| `FIREBASE_SERVICE_ACCOUNT` | Secret | Full JSON of a Firebase service-account key |
+| `FIREBASE_PROJECT_ID` | Variable | Your Firebase project ID (the same one in `.firebaserc`) |
+| `VITE_FIREBASE_ENV` | Secret | Raw contents of the local `.env` file (all `VITE_FIREBASE_*` keys, one per line). The build step writes it to `.env` before `vite build` so the config is embedded in the shipped bundle. |
+
+### 7.2 Initial setup
+
+The easiest path is to let the Firebase CLI wire it up:
+
+```bash
+firebase init hosting:github
+```
+
+This:
+1. Creates a dedicated service account with the minimal Firebase roles.
+2. Uploads the JSON key as a GitHub secret (by default named `FIREBASE_SERVICE_ACCOUNT_<PROJECT_ID>`).
+3. Drops a starter workflow file.
+
+Post-setup:
+- Rename the generated secret to `FIREBASE_SERVICE_ACCOUNT` (or edit both workflows to match the generated name).
+- Delete the starter workflow file the CLI created — this repo uses the hand-written `ci.yml` / `deploy.yml`.
+- Add the `FIREBASE_PROJECT_ID` **variable** (not a secret) under the same settings page.
+
+### 7.3 Rotating secrets
+
+**`FIREBASE_SERVICE_ACCOUNT`** — if the service-account key leaks or you rotate periodically:
+
+1. Firebase Console → **Project Settings → Service accounts → Generate new private key** → download the JSON.
+2. GitHub → **Settings → Secrets and variables → Actions → `FIREBASE_SERVICE_ACCOUNT`** → *Update secret* → paste the new JSON.
+3. Re-run the latest workflow via **Re-run jobs** to confirm the new key works, then revoke the old key in the Firebase Console.
+
+**`VITE_FIREBASE_ENV`** — after any change to a `VITE_FIREBASE_*` value in your local `.env` (new project, rotated web API key, etc.):
+
+```bash
+gh secret set VITE_FIREBASE_ENV --repo <owner>/<repo> < .env
+```
+
+### 7.4 Branch protection (recommended)
+
+After the first run of each workflow, under **Settings → Branches → Branch protection rules** for `main`, require the `frontend` and `preview` checks to pass before merging.
 
 ---
 
