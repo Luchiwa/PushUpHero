@@ -5,7 +5,6 @@ import './ResumeBanner.scss';
 
 interface ResumeBannerProps {
     checkpoint: WorkoutCheckpoint;
-    isReady: boolean;
     onResume: () => void;
     onDiscard: () => void;
 }
@@ -21,7 +20,7 @@ function formatTimeAgo(timestamp: number): string {
     return `${days}d ago`;
 }
 
-export function ResumeBanner({ checkpoint, isReady, onResume, onDiscard }: ResumeBannerProps) {
+export function ResumeBanner({ checkpoint, onResume, onDiscard }: ResumeBannerProps) {
     const { blockIndex } = deriveResumePosition(checkpoint.plan, checkpoint.completedSets.length);
     const currentBlock = checkpoint.plan.blocks[blockIndex];
     const totalSets = checkpoint.plan.blocks.reduce((sum, b) => sum + b.numberOfSets, 0);
@@ -56,7 +55,6 @@ export function ResumeBanner({ checkpoint, isReady, onResume, onDiscard }: Resum
                     type="button"
                     className="resume-banner-btn resume-banner-btn--resume"
                     onClick={onResume}
-                    disabled={!isReady}
                 >
                     Resume
                 </button>

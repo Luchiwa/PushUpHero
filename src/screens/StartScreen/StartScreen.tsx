@@ -101,10 +101,6 @@ export function StartScreen({
         setPrevSignupPrompt(false);
     }
 
-    // The WASM model now loads on demand (idle → config/active transition),
-    // so Start actions are always clickable from the idle screen.
-    const isReady = true;
-
     // ── Resume interrupted workout ─────────────────────────────────
     const [checkpoint, setCheckpoint] = useState(() => getWorkoutCheckpoint());
 
@@ -186,7 +182,6 @@ export function StartScreen({
                         questAccepted={!!featuredAccepted}
                         questProgress={questProgress!}
                         catMeta={catMeta}
-                        isReady={isReady}
                         exerciseType={exerciseType}
                         changeExerciseType={changeExerciseType}
                         onAcceptQuest={handleAcceptQuest}
@@ -227,7 +222,6 @@ export function StartScreen({
                 {checkpoint && (
                     <ResumeBanner
                         checkpoint={checkpoint}
-                        isReady={isReady}
                         onResume={onResume}
                         onDiscard={onDiscard}
                     />
@@ -241,7 +235,6 @@ export function StartScreen({
                         block
                         icon="⚡"
                         onClick={() => setActiveModal({ type: 'quickSession' })}
-                        disabled={!isReady}
                     >
                         Quick Session
                     </PrimaryCTA>
@@ -255,7 +248,6 @@ export function StartScreen({
                         block
                         icon="🏋️"
                         onClick={handleOpenConfig}
-                        disabled={!isReady}
                     >
                         Multi-Set Workout
                     </PrimaryCTA>
@@ -264,7 +256,7 @@ export function StartScreen({
 
             <Suspense fallback={null}>
                 {activeModal?.type === 'quickSession' && (
-                    <QuickSessionModal onClose={closeModal} isReady={isReady} />
+                    <QuickSessionModal onClose={closeModal} />
                 )}
 
                 {activeModal?.type === 'stats' && (
@@ -315,7 +307,6 @@ export function StartScreen({
                         onAcceptQuest={onAcceptQuest}
                         onAbandonQuest={onAbandonQuest}
                         onQuestStart={handleQuestStartFromJournal}
-                        isReady={isReady}
                     />
                 )}
             </Suspense>
