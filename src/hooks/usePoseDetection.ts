@@ -95,6 +95,10 @@ export function usePoseDetection({
     // Detection loop — never causes React re-renders on its own
     const detectRef = useRef<() => void>(() => {});
 
+    // Empty deps: the closure only reads refs (videoRef, poseLandmarkerRef,
+    // *Ref.current) and module constants (DETECTION_INTERVAL_MS). Without [],
+    // this effect re-runs every render and reallocates the closure — 2-5 MB of
+    // heap churn on a 10-min workout.
     useEffect(() => {
         detectRef.current = () => {
             const video = videoRef.current;
@@ -126,7 +130,7 @@ export function usePoseDetection({
             }
             animFrameRef.current = requestAnimationFrame(() => detectRef.current());
         };
-    });
+    }, [videoRef]);
 
     useEffect(() => {
         if (!isModelReady || !isVideoReady || !isActive) {
