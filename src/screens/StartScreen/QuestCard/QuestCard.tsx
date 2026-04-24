@@ -13,7 +13,6 @@ interface QuestCardProps {
     questAccepted: boolean;
     questProgress: QuestProgress;
     catMeta: { label: string; color: string } | null;
-    isReady: boolean;
     exerciseType: ExerciseType;
     changeExerciseType: (type: ExerciseType) => void;
     onAcceptQuest: () => void;
@@ -36,7 +35,6 @@ export function QuestCard({
     questAccepted,
     questProgress,
     catMeta,
-    isReady,
     exerciseType,
     changeExerciseType,
     onAcceptQuest,
@@ -67,7 +65,6 @@ export function QuestCard({
                         block
                         icon="✨"
                         onClick={onAcceptQuest}
-                        disabled={!isReady}
                     >
                         Accept Quest
                     </PrimaryCTA>
@@ -105,9 +102,8 @@ export function QuestCard({
                     block
                     icon="🚀"
                     onClick={onQuestStart}
-                    disabled={!isReady}
                 >
-                    {isReady ? startLabel : 'Getting Ready…'}
+                    {startLabel}
                 </PrimaryCTA>
             }
         >

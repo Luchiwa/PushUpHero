@@ -30,7 +30,6 @@ interface QuestsScreenProps {
     onAcceptQuest?: (questId: string) => void;
     onAbandonQuest?: (questId: string) => void;
     onQuestStart?: (quest: QuestDef) => void;
-    isReady?: boolean;
 }
 
 export function QuestsScreen({
@@ -40,7 +39,6 @@ export function QuestsScreen({
     onAcceptQuest,
     onAbandonQuest,
     onQuestStart,
-    isReady,
 }: QuestsScreenProps) {
     const stats = useMemo(() => getQuestStats(questProgress), [questProgress]);
     const byCategory = useMemo(() => getQuestsByCategory(), []);
@@ -112,7 +110,6 @@ export function QuestsScreen({
                                     completedAt={questProgress.completed[quest.id] ?? null}
                                     userLevel={userLevel}
                                     slotsFull={slotsFull}
-                                    isReady={isReady}
                                     onAccept={onAcceptQuest}
                                     onAbandon={onAbandonQuest}
                                     onStart={onQuestStart}
@@ -137,7 +134,6 @@ function QuestCard({
     completedAt,
     userLevel,
     slotsFull,
-    isReady,
     onAccept,
     onAbandon,
     onStart,
@@ -150,7 +146,6 @@ function QuestCard({
     completedAt: number | null;
     userLevel: number;
     slotsFull: boolean;
-    isReady?: boolean;
     onAccept?: (questId: string) => void;
     onAbandon?: (questId: string) => void;
     onStart?: (quest: QuestDef) => void;
@@ -238,7 +233,6 @@ function QuestCard({
                                 type="button"
                                 className="quest-item-start"
                                 onClick={() => onStart(quest)}
-                                disabled={!isReady}
                             >
                                 {quest.goal.exerciseType
                                     ? `🚀 Start — ${quest.goal.reps} ${getExerciseLabel(quest.goal.exerciseType)}`

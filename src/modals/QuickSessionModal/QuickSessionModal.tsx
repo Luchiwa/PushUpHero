@@ -11,10 +11,9 @@ import './QuickSessionModal.scss';
 
 interface QuickSessionModalProps {
     onClose: () => void;
-    isReady: boolean;
 }
 
-export function QuickSessionModal({ onClose, isReady }: QuickSessionModalProps) {
+export function QuickSessionModal({ onClose }: QuickSessionModalProps) {
     const {
         exerciseType, changeExerciseType,
         sessionMode, setSessionMode,
@@ -92,13 +91,12 @@ export function QuickSessionModal({ onClose, isReady }: QuickSessionModalProps) 
                     block
                     icon="⚡"
                     onClick={() => { onClose(); handleStart(); }}
-                    disabled={!isReady || closing}
+                    disabled={closing}
                 >
-                    {isReady ? (
-                        sessionMode === 'reps'
-                            ? `Start — ${goalReps} rep${goalReps > 1 ? 's' : ''}`
-                            : `Start — ${String(timeGoal.minutes).padStart(2, '0')}:${String(timeGoal.seconds).padStart(2, '0')}`
-                    ) : 'Getting Ready…'}
+                    {sessionMode === 'reps'
+                        ? `Start — ${goalReps} rep${goalReps > 1 ? 's' : ''}`
+                        : `Start — ${String(timeGoal.minutes).padStart(2, '0')}:${String(timeGoal.seconds).padStart(2, '0')}`
+                    }
                 </PrimaryCTA>
             </div>
         </div>

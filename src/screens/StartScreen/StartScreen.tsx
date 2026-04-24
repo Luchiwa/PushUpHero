@@ -23,7 +23,6 @@ import { ResumeBanner } from './ResumeBanner/ResumeBanner';
 import './StartScreen.scss';
 
 interface StartScreenProps {
-    isModelReady: boolean;
     cameraError: string | null;
     /** Quest to feature as hero card (null = no hero card) */
     featuredQuest?: QuestDef | null;
@@ -39,7 +38,6 @@ interface StartScreenProps {
 }
 
 export function StartScreen({
-    isModelReady,
     cameraError,
     featuredQuest,
     activeQuest,
@@ -102,8 +100,6 @@ export function StartScreen({
     if (!pendingSignupPrompt && prevSignupPrompt) {
         setPrevSignupPrompt(false);
     }
-
-    const isReady = isModelReady;
 
     // ── Resume interrupted workout ─────────────────────────────────
     const [checkpoint, setCheckpoint] = useState(() => getWorkoutCheckpoint());
@@ -186,7 +182,6 @@ export function StartScreen({
                         questAccepted={!!featuredAccepted}
                         questProgress={questProgress!}
                         catMeta={catMeta}
-                        isReady={isReady}
                         exerciseType={exerciseType}
                         changeExerciseType={changeExerciseType}
                         onAcceptQuest={handleAcceptQuest}
@@ -223,18 +218,10 @@ export function StartScreen({
                     <div className="error-message">{cameraError}</div>
                 )}
 
-                {!isModelReady && (
-                    <div className="status-area">
-                        <div className="status-dot loading" />
-                        <span>Loading AI model…</span>
-                    </div>
-                )}
-
                 {/* ── Resume interrupted workout ── */}
                 {checkpoint && (
                     <ResumeBanner
                         checkpoint={checkpoint}
-                        isReady={isReady}
                         onResume={onResume}
                         onDiscard={onDiscard}
                     />
@@ -248,7 +235,6 @@ export function StartScreen({
                         block
                         icon="⚡"
                         onClick={() => setActiveModal({ type: 'quickSession' })}
-                        disabled={!isReady}
                     >
                         Quick Session
                     </PrimaryCTA>
@@ -262,7 +248,6 @@ export function StartScreen({
                         block
                         icon="🏋️"
                         onClick={handleOpenConfig}
-                        disabled={!isReady}
                     >
                         Multi-Set Workout
                     </PrimaryCTA>
@@ -271,7 +256,7 @@ export function StartScreen({
 
             <Suspense fallback={null}>
                 {activeModal?.type === 'quickSession' && (
-                    <QuickSessionModal onClose={closeModal} isReady={isReady} />
+                    <QuickSessionModal onClose={closeModal} />
                 )}
 
                 {activeModal?.type === 'stats' && (
@@ -322,7 +307,6 @@ export function StartScreen({
                         onAcceptQuest={onAcceptQuest}
                         onAbandonQuest={onAbandonQuest}
                         onQuestStart={handleQuestStartFromJournal}
-                        isReady={isReady}
                     />
                 )}
             </Suspense>

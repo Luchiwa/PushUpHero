@@ -3,6 +3,7 @@ import { getExerciseLabel } from '@exercises/types';
 import { useSoundEffect } from '@hooks/useSoundEffect';
 import { useModalClose } from '@hooks/shared/useModalClose';
 import { useWorkout } from '@app/WorkoutContext';
+import { useExerciseState } from '@app/ExerciseStateContext';
 import { getGradeLetter, getGradeClass, formatElapsedTime } from '@domain/constants';
 import { weightedAverageScore } from '@domain/scoring';
 import type { AchievementDef } from '@domain/achievements';
@@ -26,12 +27,13 @@ function ScoreGrade({ score }: { score: number }) {
 
 export function SummaryScreen({ newAchievements }: SummaryProps) {
     const {
-        exerciseType, exerciseState, completedSets,
+        exerciseType, completedSets,
         handleReset, sessionMode, elapsedTime,
         workoutPlan, isMultiExercise,
         lastSessionXp, soundEnabled, goalReached,
         questCompletedThisSession,
     } = useWorkout();
+    const { repCount: liveRepCount, averageScore: liveAverageScore } = useExerciseState();
 
     const sessionXp = lastSessionXp ?? undefined;
     const brokenRecords = lastSessionXp?.brokenRecords;
@@ -41,13 +43,13 @@ export function SummaryScreen({ newAchievements }: SummaryProps) {
 
     const isMultiSet = completedSets.length > 1;
 
-    // Aggregate stats across all sets (or use exerciseState for single-set)
+    // Aggregate stats across all sets (or use live exercise state for single-set)
     const totalReps = isMultiSet
         ? completedSets.reduce((sum, s) => sum + s.reps, 0)
-        : exerciseState.repCount;
+        : liveRepCount;
     const averageScore = isMultiSet
         ? weightedAverageScore(completedSets)
-        : exerciseState.averageScore;
+        : liveAverageScore;
 
     // ── Victory celebration: sound + confetti ────────────────────────
     useEffect(() => {
