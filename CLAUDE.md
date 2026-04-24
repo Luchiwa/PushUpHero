@@ -170,6 +170,14 @@ In `functions/src/index.ts`, deployed to `europe-west1`:
 - **Error boundaries**: Workout overlay and `StartScreen` are wrapped in `ErrorBoundary` with `SectionErrorFallback` — graceful degradation instead of white screen
 - **Shared hooks**: `src/hooks/shared/useModalClose.ts` extracts the close-animation pattern used across modals/screens
 
+## Refactor hygiene
+
+After any refactor that widens an invariant — a prop becomes constant, a conditional always evaluates one way, a type shrinks, a field is removed from an interface, a defaulted argument stops being overridden — invoke the `pr-review-toolkit:code-simplifier` agent on the changed files before reporting the work done. **Not optional on refactor commits.**
+
+The agent's job is to chase the downstream consumers and surface dead branches the refactor left behind (`disabled={!flag}` gates where `flag` is now always `true`, label toggles whose false branch can't fire, `?:` optional props that every caller still passes, etc.). Without this pass, dead code leaks into PRs and the reviewer has to catch it — which defeats the point of the refactor being "clean".
+
+Skip this only for pure additions (new file, new branch of a switch, new prop that nothing else touches) — those don't widen existing invariants.
+
 ## Skills (Claude Code)
 
 Custom skills in `.claude/skills/`:
