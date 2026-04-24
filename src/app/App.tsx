@@ -139,6 +139,7 @@ function App() {
     videoRef,
     isVideoReady: isCameraReady,
     isActive: wm.screen === 'active',
+    shouldLoadModel: wm.screen !== 'idle',
     onFrame: (landmarks, rawResult) => {
       processLandmarks(landmarks);
       poseOverlayRef.current?.drawResult(
@@ -194,7 +195,6 @@ function App() {
           : (
             <ErrorBoundary fallback="section">
               <StartScreen
-                isModelReady={isModelReady}
                 cameraError={modelError ?? cameraError}
                 featuredQuest={featuredQuest}
                 activeQuest={activeQuest}

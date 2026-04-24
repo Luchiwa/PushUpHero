@@ -23,7 +23,6 @@ import { ResumeBanner } from './ResumeBanner/ResumeBanner';
 import './StartScreen.scss';
 
 interface StartScreenProps {
-    isModelReady: boolean;
     cameraError: string | null;
     /** Quest to feature as hero card (null = no hero card) */
     featuredQuest?: QuestDef | null;
@@ -39,7 +38,6 @@ interface StartScreenProps {
 }
 
 export function StartScreen({
-    isModelReady,
     cameraError,
     featuredQuest,
     activeQuest,
@@ -103,7 +101,9 @@ export function StartScreen({
         setPrevSignupPrompt(false);
     }
 
-    const isReady = isModelReady;
+    // The WASM model now loads on demand (idle → config/active transition),
+    // so Start actions are always clickable from the idle screen.
+    const isReady = true;
 
     // ── Resume interrupted workout ─────────────────────────────────
     const [checkpoint, setCheckpoint] = useState(() => getWorkoutCheckpoint());
@@ -221,13 +221,6 @@ export function StartScreen({
                 {/* ── Status / errors ── */}
                 {cameraError && (
                     <div className="error-message">{cameraError}</div>
-                )}
-
-                {!isModelReady && (
-                    <div className="status-area">
-                        <div className="status-dot loading" />
-                        <span>Loading AI model…</span>
-                    </div>
                 )}
 
                 {/* ── Resume interrupted workout ── */}

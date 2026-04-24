@@ -15,6 +15,10 @@ interface UsePoseDetectionProps {
     videoRef: React.RefObject<HTMLVideoElement | null>;
     isVideoReady: boolean;
     isActive: boolean;
+    /** Gate for the WASM download. Flip to true when the user has signalled
+     *  intent to start a workout — load is one-shot and the model stays in
+     *  memory afterwards even if this flips back to false. */
+    shouldLoadModel: boolean;
     /** Called on every frame with fresh landmarks — use a ref-stable callback */
     onFrame: (landmarks: Landmark[], rawResult: PoseLandmarkerResult) => void;
 }
@@ -28,10 +32,12 @@ export function usePoseDetection({
     videoRef,
     isVideoReady,
     isActive,
+    shouldLoadModel,
     onFrame,
 }: UsePoseDetectionProps): UsePoseDetectionReturn {
     const [isModelReady, setIsModelReady] = useState(false);
     const [modelError, setModelError] = useState<string | null>(null);
+    const hasStartedLoadRef = useRef(false);
 
     const poseLandmarkerRef = useRef<PoseLandmarker | null>(null);
     const animFrameRef = useRef<number>(0);
@@ -43,8 +49,12 @@ export function usePoseDetection({
     // Keep callback ref fresh without re-triggering the detection loop
     useEffect(() => { onFrameRef.current = onFrame; }, [onFrame]);
 
-    // Load model (with GPU → CPU fallback)
+    // Load model (with GPU → CPU fallback) — gated on shouldLoadModel.
+    // One-shot: once the load begins we never tear it down until unmount, even
+    // if shouldLoadModel flips back to false (user returning to idle).
     useEffect(() => {
+        if (!shouldLoadModel || hasStartedLoadRef.current) return;
+        hasStartedLoadRef.current = true;
         let cancelled = false;
 
         async function createLandmarker(delegate: 'GPU' | 'CPU'): Promise<PoseLandmarker> {
@@ -68,14 +78,12 @@ export function usePoseDetection({
 
         async function loadModel() {
             try {
-                // First try with preferred delegate
                 const preferredDelegate = isMobile ? 'CPU' : 'GPU';
                 poseLandmarkerRef.current = await createLandmarker(preferredDelegate);
                 if (!cancelled) setIsModelReady(true);
             } catch (firstErr) {
                 console.warn('MediaPipe: primary delegate failed, trying fallback…', firstErr);
                 try {
-                    // Fallback: opposite delegate
                     const fallback = isMobile ? 'GPU' : 'CPU';
                     poseLandmarkerRef.current = await createLandmarker(fallback);
                     if (!cancelled) setIsModelReady(true);
@@ -86,10 +94,12 @@ export function usePoseDetection({
             }
         }
         loadModel();
-        return () => {
-            cancelled = true;
-            poseLandmarkerRef.current?.close();
-        };
+        return () => { cancelled = true; };
+    }, [shouldLoadModel]);
+
+    // Release the landmarker only on full unmount
+    useEffect(() => {
+        return () => { poseLandmarkerRef.current?.close(); };
     }, []);
 
     // Detection loop — never causes React re-renders on its own
