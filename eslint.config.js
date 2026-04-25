@@ -21,18 +21,14 @@ export default defineConfig([
     },
   },
   // Firebase isolation: only src/infra, src/services, src/data may import firebase/*.
-  // Every other layer goes through a service or repo. See root CLAUDE.md.
+  // Every other layer (including src/main.tsx, src/sw.ts at the root) goes through
+  // a service or repo. See root CLAUDE.md.
   {
-    files: [
-      'src/app/**/*.{ts,tsx}',
-      'src/hooks/**/*.{ts,tsx}',
-      'src/screens/**/*.{ts,tsx}',
-      'src/components/**/*.{ts,tsx}',
-      'src/modals/**/*.{ts,tsx}',
-      'src/overlays/**/*.{ts,tsx}',
-      'src/exercises/**/*.{ts,tsx}',
-      'src/workers/**/*.{ts,tsx}',
-      'src/domain/**/*.{ts,tsx}',
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: [
+      'src/infra/**',
+      'src/services/**',
+      'src/data/**',
     ],
     rules: {
       'no-restricted-imports': ['error', {

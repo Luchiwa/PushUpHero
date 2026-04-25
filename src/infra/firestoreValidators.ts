@@ -11,11 +11,15 @@
 
 import { Timestamp } from 'firebase/firestore';
 import type { DbUser } from '@domain/authTypes';
-import type { SessionRecord } from '@exercises/types';
+import type { SessionRecord, ExerciseType } from '@exercises/types';
+import { EXERCISE_TYPES } from '@exercises/types';
 import type { FriendRequest } from '@services/friendService';
 
 const isObj = (v: unknown): v is Record<string, unknown> =>
     typeof v === 'object' && v !== null;
+
+const isKnownExerciseType = (v: unknown): v is ExerciseType =>
+    typeof v === 'string' && (EXERCISE_TYPES as readonly string[]).includes(v);
 
 // ── Timestamp coercion ───────────────────────────────────────────────────────
 
@@ -98,7 +102,7 @@ export interface ActivityFeedDoc {
     goalReps: number;
     elapsedTime?: number;
     numberOfSets?: number;
-    exerciseType?: string;
+    exerciseType?: ExerciseType;
     isMultiExercise?: boolean;
     blockSummaries?: { label: string; reps: number }[];
 }
@@ -116,8 +120,11 @@ export function parseActivityFeedDoc(id: string, data: unknown): ActivityFeedDoc
         goalReps: typeof data.goalReps === 'number' ? data.goalReps : 0,
         elapsedTime: typeof data.elapsedTime === 'number' ? data.elapsedTime : undefined,
         numberOfSets: typeof data.numberOfSets === 'number' ? data.numberOfSets : undefined,
-        exerciseType: typeof data.exerciseType === 'string' ? data.exerciseType : undefined,
+        exerciseType: isKnownExerciseType(data.exerciseType) ? data.exerciseType : undefined,
         isMultiExercise: typeof data.isMultiExercise === 'boolean' ? data.isMultiExercise : undefined,
-        blockSummaries: Array.isArray(data.blockSummaries) ? data.blockSummaries as { label: string; reps: number }[] : undefined,
+        blockSummaries: Array.isArray(data.blockSummaries)
+            ? data.blockSummaries.filter((b): b is { label: string; reps: number } =>
+                isObj(b) && typeof b.label === 'string' && typeof b.reps === 'number')
+            : undefined,
     };
 }

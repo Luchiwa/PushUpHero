@@ -129,7 +129,7 @@ export function useActivityFeed(friends: Friend[]) {
                             goalReps: d.goalReps,
                             elapsedTime: d.elapsedTime,
                             numberOfSets: d.numberOfSets,
-                            exerciseType: d.exerciseType as ExerciseType | undefined,
+                            exerciseType: d.exerciseType,
                             isMultiExercise: d.isMultiExercise,
                             blockSummaries: d.blockSummaries,
                             createdAt: d.createdAtMs,

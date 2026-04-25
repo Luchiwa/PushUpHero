@@ -65,8 +65,11 @@ export function onIncomingRequests(
  * Legacy docs (created before denormalization) may lack `toUsername`. For
  * those, we emit an optimistic OutgoingRequest with `toUsername = uid` first,
  * then fire a single batched `where(documentId(), 'in', chunk)` query
- * (chunked at 30, the Firestore hard limit) to enrich and re-emit. No async
- * work happens inside the snapshot callback itself.
+ * (chunked at 30, the Firestore hard limit) to enrich and re-emit.
+ *
+ * The enrich continuation is guarded against (a) unsubscription, and (b) a
+ * newer snapshot landing while the fetch is in flight — without these guards
+ * a stale enriched callback could overwrite canonical state.
  *
  * Returns unsubscribe.
  */
@@ -74,7 +77,11 @@ export function onOutgoingRequests(
     uid: string,
     callback: (requests: OutgoingRequest[]) => void,
 ): () => void {
-    return onSnapshot(sentRequestsCol(uid), snap => {
+    let cancelled = false;
+    let snapshotSeq = 0;
+
+    const unsub = onSnapshot(sentRequestsCol(uid), snap => {
+        const mySeq = ++snapshotSeq;
         const requests: OutgoingRequest[] = snap.docs.map(d => {
             const data = d.data() as { toUsername?: string; sentAt?: unknown };
             return {
@@ -93,13 +100,15 @@ export function onOutgoingRequests(
         if (missing.length === 0) return;
 
         enrichOutgoingUsernames(missing).then(usernames => {
-            if (usernames.size === 0) return;
+            if (cancelled || mySeq !== snapshotSeq || usernames.size === 0) return;
             const enriched = requests.map(r =>
                 usernames.has(r.toUid) ? { ...r, toUsername: usernames.get(r.toUid)! } : r,
             );
             callback(enriched);
         }).catch(err => console.warn('[friendRepository] enrich legacy outgoing requests failed', err));
     });
+
+    return () => { cancelled = true; unsub(); };
 }
 
 async function enrichOutgoingUsernames(uids: string[]): Promise<Map<string, string>> {

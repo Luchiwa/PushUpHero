@@ -148,6 +148,7 @@ Browser APIs, Firebase init, Firestore refs. No business logic.
 - `avatarCache.ts` — Avatar URL caching via Cache API.
 - `soundEngine.ts` — Web Audio API sound effects.
 - `speechEngine.ts` — Web Speech API wrapper.
+- `coachEngine.ts` — Coaching phrase selection + speech dispatch.
 
 ### Firebase isolation rules (enforced by ESLint + reviewers)
 
@@ -157,7 +158,6 @@ These rules are non-negotiable. They were violated repeatedly before PUS-12 and 
 - **Repositories must never expose Firestore SDK types in public signatures.** No `DocumentData`, `Timestamp`, `DocumentChange`, `QuerySnapshot`, `DocumentSnapshot`, `DocumentReference` in exported function params or return types. Map to a domain shape and use `tsToMs` to coerce timestamps before they leave the repo.
 - **Cast only after a guard.** Every `as DbUser` / `as SessionRecord` / `as FriendRequest` in `src/data/` must be preceded by the matching `isXxx(...)` guard from `firestoreValidators`. A doc that fails validation is filtered with `console.warn` — never propagated to the UI.
 - **`onSnapshot` callbacks are synchronous.** No `getDoc`/`getDocs` inside the callback. If a join is needed, denormalize at write time, or batch via `where(documentId(), 'in', chunk)` outside the callback (chunks of 30, the Firestore hard limit).
-- `coachEngine.ts` — Coaching phrase selection + speech dispatch.
 
 ### Cloud Functions
 
