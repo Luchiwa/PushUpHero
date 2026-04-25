@@ -5,10 +5,13 @@
  * firebase/firestore directly.
  */
 
-import { getDoc, onSnapshot } from 'firebase/firestore';
-import { userRef, friendsCol, friendRequestsCol, sentRequestsCol } from '@infra/refs';
-import { isFriendRequest } from '@infra/firestoreValidators';
+import { documentId, getDocs, onSnapshot, query, where } from 'firebase/firestore';
+import { usersCol, friendsCol, friendRequestsCol, sentRequestsCol } from '@infra/refs';
+import { isFriendRequest, tsToMs } from '@infra/firestoreValidators';
 import type { FriendRequest, OutgoingRequest } from '@services/friendService';
+
+/** Firestore `in` operator hard limit. */
+const IN_QUERY_CHUNK = 30;
 
 export interface FriendEntry {
     uid: string;
@@ -52,25 +55,65 @@ export function onIncomingRequests(
     });
 }
 
-/** Real-time listener on outgoing friend requests. Returns unsubscribe. */
+/**
+ * Real-time listener on outgoing friend requests.
+ *
+ * The listener callback is **synchronous** — it maps each doc to an
+ * OutgoingRequest using the denormalized `toUsername` field that
+ * `friendService.sendFriendRequest` writes alongside the request.
+ *
+ * Legacy docs (created before denormalization) may lack `toUsername`. For
+ * those, we emit an optimistic OutgoingRequest with `toUsername = uid` first,
+ * then fire a single batched `where(documentId(), 'in', chunk)` query
+ * (chunked at 30, the Firestore hard limit) to enrich and re-emit. No async
+ * work happens inside the snapshot callback itself.
+ *
+ * Returns unsubscribe.
+ */
 export function onOutgoingRequests(
     uid: string,
     callback: (requests: OutgoingRequest[]) => void,
 ): () => void {
-    return onSnapshot(sentRequestsCol(uid), async snap => {
-        const requests = await Promise.all(
-            snap.docs.map(async d => {
-                const data = d.data();
-                let toUsername: string = data.toUsername || '';
-                if (!toUsername) {
-                    const profileSnap = await getDoc(userRef(d.id));
-                    toUsername = profileSnap.exists()
-                        ? (profileSnap.data().displayName || d.id)
-                        : d.id;
-                }
-                return { toUid: d.id, toUsername, sentAt: data.sentAt || 0 } as OutgoingRequest;
-            }),
-        );
+    return onSnapshot(sentRequestsCol(uid), snap => {
+        const requests: OutgoingRequest[] = snap.docs.map(d => {
+            const data = d.data() as { toUsername?: string; sentAt?: unknown };
+            return {
+                toUid: d.id,
+                toUsername: data.toUsername || d.id,
+                sentAt: tsToMs(data.sentAt),
+            };
+        });
+
         callback(requests);
+
+        const missing = snap.docs
+            .filter(d => !(d.data() as { toUsername?: string }).toUsername)
+            .map(d => d.id);
+
+        if (missing.length === 0) return;
+
+        enrichOutgoingUsernames(missing).then(usernames => {
+            if (usernames.size === 0) return;
+            const enriched = requests.map(r =>
+                usernames.has(r.toUid) ? { ...r, toUsername: usernames.get(r.toUid)! } : r,
+            );
+            callback(enriched);
+        }).catch(err => console.warn('[friendRepository] enrich legacy outgoing requests failed', err));
     });
+}
+
+async function enrichOutgoingUsernames(uids: string[]): Promise<Map<string, string>> {
+    const result = new Map<string, string>();
+    for (let i = 0; i < uids.length; i += IN_QUERY_CHUNK) {
+        const chunk = uids.slice(i, i + IN_QUERY_CHUNK);
+        const q = query(usersCol(), where(documentId(), 'in', chunk));
+        const snap = await getDocs(q);
+        for (const d of snap.docs) {
+            const name = (d.data() as { displayName?: string }).displayName;
+            if (typeof name === 'string' && name.length > 0) {
+                result.set(d.id, name);
+            }
+        }
+    }
+    return result;
 }
