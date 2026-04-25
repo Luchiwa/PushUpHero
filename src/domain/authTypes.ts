@@ -28,6 +28,7 @@ export interface DbUser {
     photoThumb?: string;
     streak?: number;
     lastSessionDate?: string; // UTC date string YYYY-MM-DD
+    totalSessions?: number;
     exerciseXp?: ExerciseXpMap;
     exerciseLevels?: Partial<Record<ExerciseType, number>>;
 

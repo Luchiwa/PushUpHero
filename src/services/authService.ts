@@ -8,15 +8,45 @@
 import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
+    onAuthStateChanged as fbOnAuthStateChanged,
+    signInWithPopup,
+    signOut as fbSignOut,
     EmailAuthProvider,
     GoogleAuthProvider,
     reauthenticateWithCredential,
     reauthenticateWithPopup,
     updatePassword as fbUpdatePassword,
+    type User,
 } from 'firebase/auth';
 import { runTransaction } from 'firebase/firestore';
 import { auth, db } from '@infra/firebase';
 import { userRef, usernameRef } from '@infra/refs';
+import type { AppUser } from '@domain/authTypes';
+
+// ── Domain mapping ───────────────────────────────────────────────────────────
+
+/** Maps a Firebase Auth User to the framework-agnostic AppUser domain type. */
+function toAppUser(user: User | null): AppUser | null {
+    if (!user) return null;
+    return { uid: user.uid, providerIds: user.providerData.map(p => p.providerId) };
+}
+
+// ── Auth state subscription ──────────────────────────────────────────────────
+
+/** Subscribe to auth state changes. Callback receives a domain AppUser, never a Firebase User. */
+export function subscribeAuthState(callback: (user: AppUser | null) => void): () => void {
+    return fbOnAuthStateChanged(auth, fbUser => callback(toAppUser(fbUser)));
+}
+
+// ── Session-level operations ─────────────────────────────────────────────────
+
+export async function signInWithGoogle(): Promise<void> {
+    await signInWithPopup(auth, new GoogleAuthProvider());
+}
+
+export async function logoutSession(): Promise<void> {
+    await fbSignOut(auth);
+}
 
 // ── Error translation ────────────────────────────────────────────────────────
 
