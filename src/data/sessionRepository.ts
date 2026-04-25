@@ -6,7 +6,21 @@
 
 import { onSnapshot, query, orderBy, limit, where, getDocs } from 'firebase/firestore';
 import { sessionsCol } from '@infra/refs';
+import { isSessionRecord } from '@infra/firestoreValidators';
 import type { SessionRecord } from '@exercises/types';
+
+function parseSessionDocs(rawDocs: { data: () => unknown }[], context: string): SessionRecord[] {
+    const out: SessionRecord[] = [];
+    for (const d of rawDocs) {
+        const data = d.data();
+        if (isSessionRecord(data)) {
+            out.push(data);
+        } else {
+            console.warn(`[sessionRepository] Invalid session doc skipped (${context})`, data);
+        }
+    }
+    return out;
+}
 
 /** Real-time listener on the last N sessions (default 5). Returns unsubscribe. */
 export function onRecentSessions(
@@ -16,7 +30,7 @@ export function onRecentSessions(
 ): () => void {
     const q = query(sessionsCol(uid), orderBy('date', 'desc'), limit(count));
     return onSnapshot(q, (snap) => {
-        callback(snap.docs.map(d => d.data() as SessionRecord));
+        callback(parseSessionDocs(snap.docs, 'onRecentSessions'));
     });
 }
 
@@ -35,13 +49,18 @@ export async function getSessionsByDateRange(
         limit(maxResults),
     );
     const snap = await getDocs(q);
-    return snap.docs.map(d => d.data() as SessionRecord);
+    return parseSessionDocs(snap.docs, 'getSessionsByDateRange');
 }
 
-/** Fetch the oldest session date (ms timestamp). Returns null if no sessions exist. */
+/** Fetch the oldest session date (ms timestamp). Returns null if no valid sessions exist. */
 export async function getOldestSessionDate(uid: string): Promise<number | null> {
     const q = query(sessionsCol(uid), orderBy('date', 'asc'), limit(1));
     const snap = await getDocs(q);
     if (snap.empty) return null;
-    return (snap.docs[0].data() as SessionRecord).date;
+    const data = snap.docs[0].data();
+    if (!isSessionRecord(data)) {
+        console.warn('[sessionRepository] Invalid oldest session doc', data);
+        return null;
+    }
+    return data.date;
 }

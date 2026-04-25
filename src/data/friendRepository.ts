@@ -7,6 +7,7 @@
 
 import { getDoc, onSnapshot } from 'firebase/firestore';
 import { userRef, friendsCol, friendRequestsCol, sentRequestsCol } from '@infra/refs';
+import { isFriendRequest } from '@infra/firestoreValidators';
 import type { FriendRequest, OutgoingRequest } from '@services/friendService';
 
 export interface FriendEntry {
@@ -22,11 +23,11 @@ export function onFriendsList(
 ): () => void {
     return onSnapshot(friendsCol(uid), snap => {
         callback(snap.docs.map(d => {
-            const data = d.data();
+            const data = d.data() as { uid?: string; displayName?: string; photoURL?: string };
             return {
-                uid: (data.uid ?? d.id) as string,
-                displayName: (data.displayName ?? '') as string,
-                photoURL: data.photoURL as string | undefined,
+                uid: data.uid ?? d.id,
+                displayName: data.displayName ?? '',
+                photoURL: data.photoURL,
             };
         }));
     });
@@ -38,7 +39,16 @@ export function onIncomingRequests(
     callback: (requests: FriendRequest[]) => void,
 ): () => void {
     return onSnapshot(friendRequestsCol(uid), snap => {
-        callback(snap.docs.map(d => d.data() as FriendRequest));
+        const requests: FriendRequest[] = [];
+        for (const d of snap.docs) {
+            const data = d.data();
+            if (isFriendRequest(data)) {
+                requests.push(data);
+            } else {
+                console.warn('[friendRepository] Invalid incoming request skipped', d.id);
+            }
+        }
+        callback(requests);
     });
 }
 
