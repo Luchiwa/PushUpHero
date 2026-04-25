@@ -63,6 +63,10 @@ Three nested contexts in `AuthProvider.tsx` prevent unrelated re-renders:
 
 **WorkoutContext** → `useWorkout()` wraps the entire state machine return. Components never bypass it for direct state access.
 
+### Auth boundary
+
+`AuthProvider` imports auth operations from `@services/authService` only — `subscribeAuthState`, `signInWithGoogle`, `logoutSession`. **No `firebase/*` import is allowed in `src/app/`.** The `User → AppUser` mapping happens at the service boundary, so the rest of the app sees only domain types.
+
 ## Important Patterns
 
 - **Refs for stale closure prevention**: `goalRepsRef`, `sessionModeRef`, `timeGoalRef` are synced via wrapper setters that update the ref synchronously. `handleStart` reads from refs, not state.
