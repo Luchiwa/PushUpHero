@@ -50,13 +50,16 @@ Prefer the granular hooks (`useAuthCore()`, `useLevel()`, `useSessions()`) — t
 
 ### Workout state machine
 
-The core game loop lives in `src/app/useWorkoutStateMachine.ts`, composed of three sub-hooks:
+The core game loop lives in `src/app/workout/`, composed of a thin orchestrator + state-owning sub-hooks + pure helpers. PUS-14 broke the original 449-LOC `useWorkoutStateMachine` and 239-LOC `useWorkoutSession` into this layout:
 
-- **workoutReducer** — Pure reducer with explicit screens: `'idle' | 'config' | 'active' | 'rest' | 'exercise-rest' | 'stopped' | 'levelup'`. No side effects.
-- **useWorkoutPlan** — Multi-exercise workout configuration (blocks of exercises with sets, reps/time modes, rest periods)
-- **useWorkoutSession** — Session persistence to Firestore, XP calculation, level-up detection
+- **workoutReducer** — Pure reducer with explicit screens (`'idle' | 'config' | 'active' | 'rest' | 'exercise-rest' | 'stopped' | 'levelup'`). No side effects.
+- **useWorkoutPlan** — Plan configuration (blocks, sets, reps/time modes, rest periods), derived values, set building, timing refs.
+- **useWorkoutMachineCore** — Mounts the reducer + plan + session, exposes the aggregate state and the trivial dispatch-only handlers.
+- **useWorkoutExecution** — All side-effect-driven handlers (start/stop/skip/resume/…), the level-up sound effect, the auto-complete-on-rep-goal effect, and the ref-synced config setters.
+- **useWorkoutSession** — Slim orchestrator over `useWorkoutSave` + `useQuestEvaluation` + the pure helpers (`xpProjection.ts`, `bodyProfileCapture.ts`).
+- **useWorkoutStateMachine** — Top-level orchestrator composing core + execution. Returns `WorkoutMachineReturn` (declared in `WorkoutContext.tsx`).
 
-All workout state flows through **WorkoutContext** (`src/app/WorkoutContext.tsx`). Components consume `useWorkout()` — never bypass it for direct state access.
+All workout state flows through **WorkoutContext** (`src/app/WorkoutContext.tsx`). `WorkoutContextType` is an **explicit interface** (not `ReturnType<typeof …>`) so internal hook refactors stay invisible to consumers. Components consume `useWorkout()` — never bypass it for direct state access.
 
 ### Exercise detection system
 
@@ -169,6 +172,30 @@ Mirror of the Firebase rules above, applied to `window.localStorage`. PUS-13 col
 - **All keys live in the `STORAGE_KEYS` registry** (or `STORAGE_KEY_BUILDERS` for parameterized keys like `feed_last_seen_${uid}`). Inline string literals are forbidden — they break "find references" and let renames silently rot.
 - **Prefix scans for dynamic keys** (e.g. `feed_last_seen_*`, `pushup_encourage_*`) are owned by `clearAppKeys`. New parameterized key families must register their prefix in `DYNAMIC_KEY_PREFIXES` so logout cleanup stays exhaustive.
 - **No module-level mutable cache for user-scoped data.** A cache that survives across users is a leak. Either lift to a Context invalidated on auth change (see `FeedCacheContext`), or accept refetch on remount.
+
+### Hook decomposition rules (enforced by reviewers)
+
+A "god hook" is a hook that grew across multiple unrelated responsibilities until any change risks breaking something far away. PUS-14 carved up two of them; these invariants keep new ones from accruing.
+
+- **A hook callback must touch at most 2 domains.** If it mixes XP calc + Firestore save + quest eval + body-profile capture (the original `useWorkoutSession.saveWorkoutSession`), each domain extracts into its own state-owning sub-hook (`useWorkoutSave`, `useQuestEvaluation`) or pure helper (`xpProjection.ts`, `bodyProfileCapture.ts`). Multi-domain mixing is the disease; the rest are symptoms.
+- **Heuristic signals — any one is a flag to look harder, not an automatic split:**
+  - LOC > 200 in a single hook file
+  - Returned shape > 12 properties
+  - `useCallback` / `useMemo` with > 8 **non-stable** deps (`dispatch` from `useReducer` and refs are stable per React's contract — they don't count)
+  - 3+ `useRefSync` to fight stale closures in the same hook
+- **Context types are explicit interfaces.** Declare `WorkoutContextType`-style shapes field-by-field in the `*Context.tsx` file. Forbidden:
+  ```ts
+  // ❌ leaks the hook's internal shape into the public contract
+  export type WorkoutMachineReturn = ReturnType<typeof useWorkoutStateMachine>;
+  export interface WorkoutContextType extends WorkoutMachineReturn { … }
+  ```
+  Reason: extending a `ReturnType<…>` makes any internal hook refactor a public-API change, and reviewers can't see what consumers actually depend on.
+- **Decomposition pattern.** When an orchestrator composes several pieces (the workout pattern), prefer:
+  - **Pure reducer** for state transitions (`workoutReducer.ts`)
+  - **State-owning sub-hooks** for ref guards + async coordination (`useWorkoutSave`)
+  - **Pure helpers** for transformations (`xpProjection.ts`, `bodyProfileCapture.ts`)
+  - **Thin orchestrator** wiring them
+  Colocate them in `src/app/<feature>/` (precedent: `src/app/workout/`).
 
 ### Cloud Functions
 
