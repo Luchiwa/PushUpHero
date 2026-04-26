@@ -1,4 +1,6 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useActivityFeed, buildEventMessage, formatRelativeTime } from '@hooks/useActivityFeed';
 import { getGradeLetter, getGradeColor, getGradeBackground } from '@domain';
 import type { Friend } from '@services/friendService';
@@ -10,6 +12,7 @@ interface FriendsFeedPanelProps {
 }
 
 export function FriendsFeedPanel({ friends }: FriendsFeedPanelProps) {
+    const { t } = useTranslation('modals');
     const { feed, loading, error, refresh } = useActivityFeed(friends);
 
     const todayFeed = useMemo(() => {
@@ -28,7 +31,7 @@ export function FriendsFeedPanel({ friends }: FriendsFeedPanelProps) {
         return (
             <div className="feed-empty">
                 <span className="feed-empty-icon">👥</span>
-                <p>Add friends to see their activity here.</p>
+                <p>{t('feed.empty_no_friends')}</p>
             </div>
         );
     }
@@ -52,8 +55,8 @@ export function FriendsFeedPanel({ friends }: FriendsFeedPanelProps) {
     if (error) {
         return (
             <div className="feed-error">
-                <p>{error}</p>
-                <button className="btn-text" onClick={refresh}>Try again</button>
+                <p>{t(error)}</p>
+                <button className="btn-text" onClick={refresh}>{t('feed.error_retry')}</button>
             </div>
         );
     }
@@ -62,7 +65,7 @@ export function FriendsFeedPanel({ friends }: FriendsFeedPanelProps) {
         return (
             <div className="feed-empty">
                 <span className="feed-empty-icon">💤</span>
-                <p>No activity yet. Challenge your friends!</p>
+                <p>{t('feed.empty_no_activity')}</p>
             </div>
         );
     }
@@ -72,21 +75,21 @@ export function FriendsFeedPanel({ friends }: FriendsFeedPanelProps) {
             <div className="feed-header">
                 <span className="feed-header-title">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true" style={{ color: 'var(--accent)' }}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
-                    Activity Feed
+                    {t('feed.header_title')}
                 </span>
                 <span className="feed-live-badge">
                     <span className="feed-live-dot" />
-                    LIVE
+                    {t('feed.live_badge')}
                 </span>
             </div>
 
             <div className="feed-scroll">
             {todayFeed.length > 0 && (
                 <section className="feed-section">
-                    <div className="feed-divider"><span>Today</span></div>
+                    <div className="feed-divider"><span>{t('feed.section_today')}</span></div>
                     <ul className="feed-list">
                         {todayFeed.map((event, i) => (
-                            <FeedItem key={`${event.uid}-${event.id}`} event={event} index={i} />
+                            <FeedItem key={`${event.uid}-${event.id}`} event={event} index={i} t={t} />
                         ))}
                     </ul>
                 </section>
@@ -94,10 +97,10 @@ export function FriendsFeedPanel({ friends }: FriendsFeedPanelProps) {
 
             {earlierFeed.length > 0 && (
                 <section className="feed-section">
-                    <div className="feed-divider"><span>Earlier</span></div>
+                    <div className="feed-divider"><span>{t('feed.section_earlier')}</span></div>
                     <ul className="feed-list">
                         {earlierFeed.map((event, i) => (
-                            <FeedItem key={`${event.uid}-${event.id}`} event={event} index={todayFeed.length + i} />
+                            <FeedItem key={`${event.uid}-${event.id}`} event={event} index={todayFeed.length + i} t={t} />
                         ))}
                     </ul>
                 </section>
@@ -107,11 +110,11 @@ export function FriendsFeedPanel({ friends }: FriendsFeedPanelProps) {
     );
 }
 
-function FeedItem({ event, index }: { event: import('@hooks/useActivityFeed').ActivityEvent; index: number }) {
+function FeedItem({ event, index, t }: { event: import('@hooks/useActivityFeed').ActivityEvent; index: number; t: TFunction<'modals'> }) {
     const grade = getGradeLetter(event.averageScore);
     const gradeColor = getGradeColor(event.averageScore);
     const gradeBg = getGradeBackground(event.averageScore);
-    const message = buildEventMessage(event);
+    const message = buildEventMessage(event, t);
 
     return (
         <li className="feed-item" style={{ animationDelay: `${index * 55}ms` }}>
@@ -129,7 +132,7 @@ function FeedItem({ event, index }: { event: import('@hooks/useActivityFeed').Ac
                 >
                     {grade}
                 </span>
-                <span className="feed-item-time">{formatRelativeTime(event.createdAt)}</span>
+                <span className="feed-item-time">{formatRelativeTime(event.createdAt, t)}</span>
             </div>
         </li>
     );

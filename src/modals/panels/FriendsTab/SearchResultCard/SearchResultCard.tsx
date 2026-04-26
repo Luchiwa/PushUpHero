@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { SearchResult } from '@services/friendService';
 import { Avatar } from '@components/Avatar/Avatar';
 import { getTier } from '@domain';
@@ -12,6 +13,7 @@ export interface SearchResultCardProps {
 }
 
 export function SearchResultCard({ result, onSend, onCancel }: SearchResultCardProps) {
+    const { t } = useTranslation('modals');
     const [loading, setLoading] = useState(false);
 
     const handle = async (fn: () => void) => {
@@ -32,14 +34,14 @@ export function SearchResultCard({ result, onSend, onCancel }: SearchResultCardP
             <div className="friend-info">
                 <span className="friend-name">{result.displayName}</span>
                 <div className="friend-stats">
-                    <span>{result.totalReps.toLocaleString()} reps</span>
+                    <span>{t('friends.card.stat_reps', { count: result.totalReps })}</span>
                     <span className="friend-stats-dot">·</span>
-                    <span>{result.totalSessions} sessions</span>
+                    <span>{t('friends.card.stat_sessions', { count: result.totalSessions })}</span>
                 </div>
             </div>
             <div className="friend-search-action">
                 {result.relation === 'friend' && (
-                    <span className="friend-badge friend-badge--already">Friends</span>
+                    <span className="friend-badge friend-badge--already">{t('friends.search.already_friends')}</span>
                 )}
                 {result.relation === 'request_sent' && (
                     <button
@@ -48,11 +50,11 @@ export function SearchResultCard({ result, onSend, onCancel }: SearchResultCardP
                         disabled={loading}
                         onClick={() => handle(onCancel)}
                     >
-                        {loading ? '…' : 'Cancel'}
+                        {loading ? t('friends.search_loading') : t('friends.cancel_request')}
                     </button>
                 )}
                 {result.relation === 'request_received' && (
-                    <span className="friend-badge friend-badge--incoming">Pending</span>
+                    <span className="friend-badge friend-badge--incoming">{t('friends.search.pending')}</span>
                 )}
                 {result.relation === 'none' && (
                     <button
@@ -61,7 +63,7 @@ export function SearchResultCard({ result, onSend, onCancel }: SearchResultCardP
                         disabled={loading}
                         onClick={() => handle(onSend)}
                     >
-                        {loading ? '…' : '+ Add'}
+                        {loading ? t('friends.search_loading') : t('friends.search.add')}
                     </button>
                 )}
             </div>
