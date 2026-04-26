@@ -1,0 +1,102 @@
+{
+    "config": {
+        "title": "Configuration du workout",
+        "empty_title": "Aucun exercice pour le moment",
+        "empty_sub": "Ajoute ton premier exercice pour commencer",
+        "add_exercise": "Ajouter un exercice",
+        "summary_divider": "Récapitulatif",
+        "kpi_exercises": "Exercices",
+        "kpi_total_sets": "Sets totaux",
+        "kpi_estimated_reps": "Reps estimés",
+        "start_workout": "Démarrer le workout",
+        "getting_ready": "Préparation…",
+        "block_card": {
+            "details": "{{sets}} × {{goal}}",
+            "details_with_rest": "{{sets}} × {{goal}} · {{rest}} de repos",
+            "time_goal": "{{minutes}}:{{seconds}}",
+            "rest_after": "⏸️ {{duration}} de repos",
+            "move_up_aria": "Monter",
+            "move_down_aria": "Descendre",
+            "edit_aria": "Modifier",
+            "remove_aria": "Supprimer"
+        },
+        "editor": {
+            "add_title": "Ajouter un exercice",
+            "edit_title": "Modifier l'exercice {{n}}",
+            "step_counter": "Étape {{current}} sur {{total}}",
+            "step_progress_aria": "Étape {{current}} sur {{total}}",
+            "exercise_title": "Choisis ton exercice",
+            "exercise_subtitle": "Sélectionne l'exercice pour ce bloc",
+            "sets_title": "Combien de sets ?",
+            "sets_subtitle": "Nombre de sets pour {{exercise}}",
+            "sets_unit": "sets",
+            "goal_title": "Définis ton objectif",
+            "goal_subtitle": "Cible pour chaque set de {{exercise}}",
+            "session_mode_aria": "Mode de session",
+            "goal_mode_reps": "Reps",
+            "goal_mode_time": "Temps",
+            "rest_sets_title": "Repos entre les sets",
+            "rest_sets_subtitle": "Combien de repos entre chaque set de {{exercise}} ?",
+            "rest_exercise_title": "Repos avant le prochain exercice",
+            "rest_exercise_subtitle": "Temps de récupération après {{exercise}}"
+        }
+    },
+    "rest": {
+        "set_done": "✅ Set {{current}}/{{total}}",
+        "exercise_done": "✅ Exercice {{current}}/{{total}} terminé",
+        "stat_reps": "Reps",
+        "stat_grade": "Grade",
+        "stat_score": "Score",
+        "next_set_in": "Prochain set dans",
+        "next_exercise_in": "Prochain exercice dans",
+        "up_next_exercise": "À suivre : {{exercise}}",
+        "up_next_set": "À suivre : Set {{current}}/{{total}}",
+        "skip_rest": "⏭ Passer le repos"
+    },
+    "summary": {
+        "victory_workout_complete": "WORKOUT TERMINÉ !",
+        "victory_goal_reached": "OBJECTIF ATTEINT !",
+        "title_session_complete": "Session terminée",
+        "title_workout_complete": "Workout terminé",
+        "continue": "Continuer",
+        "exercises_sets_badge": "{{exercises}} exercices · {{sets}} sets",
+        "stat_duration": "Durée",
+        "stat_total_reps": "Reps totaux",
+        "stat_grade": "Grade",
+        "stat_avg_score": "Score moyen",
+        "achievements_unlocked": "🏆 Achievements débloqués",
+        "new_records": "🏅 Nouveaux records",
+        "quest_complete_label": "Quête terminée !",
+        "quest_xp_reward": "+{{xp}} XP",
+        "sets_breakdown": "Détail des sets",
+        "exercise_breakdown": "Détail par exercice",
+        "set_n": "Set {{n}}",
+        "set_stats": "{{reps}} reps · {{score}}%",
+        "block_stats": "{{reps}} reps · {{sets}}",
+        "xp_total": "+{{xp}} XP",
+        "xp_raw": "XP brute : {{xp}}",
+        "xp_exercise_pill": "{{exercise}} +{{xp}}",
+        "bonus": {
+            "streak": "Série {{count}}j",
+            "marathon": "Marathon",
+            "endurance": "Endurance",
+            "perfection": "Perfection",
+            "goal": "Objectif atteint",
+            "multi": "Multi-exercice"
+        }
+    },
+    "levelup": {
+        "label": "LEVEL UP",
+        "continue": "Continuer",
+        "xp_earned": "+{{xp}} XP",
+        "xp_to_next": "{{xp}} XP → Niveau {{level}}",
+        "messages": [
+            "Continue à pousser ! 💪",
+            "Tu es en feu ! 🔥",
+            "Inarrêtable ! 🚀",
+            "Mode bête activé ! 🦾",
+            "Rien ne peut t'arrêter ! ⚡",
+            "Une légende en devenir ! 🏆"
+        ]
+    }
+}

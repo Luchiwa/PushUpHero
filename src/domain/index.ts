@@ -77,6 +77,9 @@ export {
     CATEGORY_META,
     RECORDS,
     TIER_COLORS,
+    getAchievementTitle,
+    getAchievementDescription,
+    getRecordLabel,
     type AchievementDef,
     type RecordDef,
     type AchievementCategory,
@@ -122,6 +125,10 @@ export {
     isBodyProfileQuest,
     computeQuestProgressPct,
     emptyQuestProgress,
+    getQuestTitle,
+    getQuestDescription,
+    getQuestCategoryLabel,
+    type ComplexQuestHint,
     type QuestDef,
     type QuestProgress,
     type QuestGoal,
@@ -153,3 +160,10 @@ export {
     compactNum,
     type ExerciseFilter,
 } from './stats';
+
+// ── Locale-aware Intl format helpers ───────────────────────────────────────
+export {
+    formatDate,
+    formatTime,
+    formatNumber,
+} from './format';

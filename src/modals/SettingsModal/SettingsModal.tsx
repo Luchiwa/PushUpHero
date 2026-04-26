@@ -1,7 +1,9 @@
 import { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuthCore } from '@hooks/useAuth';
 import { useModalClose } from '@hooks/shared/useModalClose';
 import { useFocusTrap } from '@hooks/shared/useFocusTrap';
+import { LanguagePreferenceSection } from './LanguagePreferenceSection/LanguagePreferenceSection';
 import { PasswordChangeSection } from './PasswordChangeSection/PasswordChangeSection';
 import { DeleteAccountSection } from './DeleteAccountSection/DeleteAccountSection';
 import './SettingsModal.scss';
@@ -37,6 +39,7 @@ function SettingsAccordion({ title, danger, isOpen, onToggle, children }: {
 }
 
 export function SettingsModal({ onClose, onAccountDeleted }: SettingsModalProps) {
+    const { t } = useTranslation('modals');
     const { user, logout } = useAuthCore();
     const { closing, handleClose, handleAnimationEnd } = useModalClose(onClose);
     const modalRef = useRef<HTMLDivElement>(null);
@@ -65,8 +68,8 @@ export function SettingsModal({ onClose, onAccountDeleted }: SettingsModalProps)
             <div className={`settings-card${closing ? ' settings-card--exit' : ''}`} role="dialog" aria-modal="true" onClick={e => e.stopPropagation()} onKeyDown={e => e.stopPropagation()}>
                 {/* Header */}
                 <div className="settings-header">
-                    <h2 className="settings-title">Settings</h2>
-                    <button type="button" className="btn-icon settings-close-btn" onClick={handleClose} aria-label="Close">
+                    <h2 className="settings-title">{t('settings.title')}</h2>
+                    <button type="button" className="btn-icon settings-close-btn" onClick={handleClose} aria-label={t('settings.close_aria')}>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                             <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                         </svg>
@@ -74,15 +77,20 @@ export function SettingsModal({ onClose, onAccountDeleted }: SettingsModalProps)
                 </div>
 
                 <div className="settings-body">
+                    {/* ── Language ──────────────────────────────── */}
+                    <SettingsAccordion title={t('settings.section_language')} isOpen={openSection === 'language'} onToggle={() => toggleSection('language')}>
+                        <LanguagePreferenceSection />
+                    </SettingsAccordion>
+
                     {/* ── Change Password ───────────────────────── */}
                     {!isGoogleUser && (
-                        <SettingsAccordion title="Change Password" isOpen={openSection === 'password'} onToggle={() => toggleSection('password')}>
+                        <SettingsAccordion title={t('settings.section_password')} isOpen={openSection === 'password'} onToggle={() => toggleSection('password')}>
                             <PasswordChangeSection />
                         </SettingsAccordion>
                     )}
 
                     {/* ── Danger Zone ───────────────────────────── */}
-                    <SettingsAccordion title="Delete Account" danger isOpen={openSection === 'delete'} onToggle={() => toggleSection('delete')}>
+                    <SettingsAccordion title={t('settings.section_delete')} danger isOpen={openSection === 'delete'} onToggle={() => toggleSection('delete')}>
                         <DeleteAccountSection onAccountDeleted={onAccountDeleted} />
                     </SettingsAccordion>
 
@@ -92,7 +100,7 @@ export function SettingsModal({ onClose, onAccountDeleted }: SettingsModalProps)
                             <polyline points="16 17 21 12 16 7"></polyline>
                             <line x1="21" y1="12" x2="9" y2="12"></line>
                         </svg>
-                        Sign Out
+                        {t('settings.btn_signout')}
                     </button>
                 </div>
             </div>

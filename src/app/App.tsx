@@ -7,7 +7,7 @@ import { useCamera, type FacingMode } from '@hooks/useCamera';
 import { usePoseDetection } from '@hooks/usePoseDetection';
 import { useExerciseDetector } from '@hooks/useExerciseDetector';
 import { useLevel, useAuthCore } from '@hooks/useAuth';
-import { getExerciseLabel, type ExerciseType } from '@exercises/types';
+import { type ExerciseType } from '@exercises/types';
 import { EXERCISE_REGISTRY } from '@exercises/registry';
 import { useWorkoutStateMachine, durationToSeconds } from './workout/useWorkoutStateMachine';
 import { WorkoutContext, type WorkoutContextType } from './WorkoutContext';
@@ -224,7 +224,7 @@ function App() {
             totalSets={wm.totalSetsInBlock}
             lastSetResult={wm.completedSets[wm.completedSets.length - 1]}
             onRestComplete={wm.handleRestComplete}
-            exerciseLabel={getExerciseLabel(wm.currentBlock.exerciseType)}
+            exerciseType={wm.currentBlock.exerciseType}
           />
         )}
 
@@ -235,11 +235,11 @@ function App() {
             totalSets={wm.totalBlocks}
             lastSetResult={wm.completedSets[wm.completedSets.length - 1]}
             onRestComplete={wm.handleExerciseRestComplete}
-            exerciseLabel={getExerciseLabel(wm.currentBlock.exerciseType)}
+            exerciseType={wm.currentBlock.exerciseType}
             isExerciseTransition
-            nextExerciseLabel={
+            nextExerciseType={
               wm.currentBlockIndex + 1 < wm.totalBlocks
-                ? getExerciseLabel(wm.workoutPlan.blocks[wm.currentBlockIndex + 1].exerciseType)
+                ? wm.workoutPlan.blocks[wm.currentBlockIndex + 1].exerciseType
                 : undefined
             }
           />

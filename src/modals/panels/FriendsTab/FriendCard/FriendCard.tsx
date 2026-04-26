@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Friend } from '@services/friendService';
 import { Avatar } from '@components/Avatar/Avatar';
 import { ENCOURAGE_COOLDOWN_MS, getTier } from '@domain';
@@ -40,6 +41,7 @@ export interface FriendCardProps {
 }
 
 export function FriendCard({ friend, onRemove, onEncourage }: FriendCardProps) {
+    const { t } = useTranslation('modals');
     const { onCooldown, minutesLeft, markSent } = useEncourageCooldown(friend.uid);
     const [sending, setSending] = useState(false);
 
@@ -70,9 +72,9 @@ export function FriendCard({ friend, onRemove, onEncourage }: FriendCardProps) {
                     )}
                 </span>
                 <div className="friend-stats">
-                    <span>{friend.totalReps.toLocaleString()} reps</span>
+                    <span>{t('friends.card.stat_reps', { count: friend.totalReps })}</span>
                     <span className="friend-stats-dot">·</span>
-                    <span>{friend.totalSessions} sessions</span>
+                    <span>{t('friends.card.stat_sessions', { count: friend.totalSessions })}</span>
                 </div>
             </div>
             <div className="friend-card-actions">
@@ -81,12 +83,12 @@ export function FriendCard({ friend, onRemove, onEncourage }: FriendCardProps) {
                     className={`btn-encourage${onCooldown ? ' btn-encourage--cooldown' : ''}${sending ? ' btn-encourage--sending' : ''}`}
                     onClick={handleEncourage}
                     disabled={onCooldown || sending}
-                    title={onCooldown ? `Send again in ${minutesLeft} min` : 'Send encouragement'}
-                    aria-label="Encourage"
+                    title={onCooldown ? t('friends.card.encourage_cooldown_title', { count: minutesLeft }) : t('friends.card.encourage_title')}
+                    aria-label={t('friends.card.encourage_aria')}
                 >
                     {sending ? <span className="btn-encourage-spinner" /> : '💪'}
                 </button>
-                <button type="button" className="btn-remove-friend" onClick={onRemove} title="Remove friend" aria-label="Remove friend">
+                <button type="button" className="btn-remove-friend" onClick={onRemove} title={t('friends.card.remove_title')} aria-label={t('friends.card.remove_aria')}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                         <circle cx="9" cy="7" r="4"/>

@@ -1,5 +1,6 @@
-import { getExerciseLabel } from '@exercises/types';
-import type { SessionXpResult } from '@domain';
+import { useTranslation } from 'react-i18next';
+import { getExerciseLabelKey } from '@exercises/types';
+import { formatNumber, type SessionXpResult } from '@domain';
 import './XPBreakdown.scss';
 
 interface XPBreakdownProps {
@@ -7,10 +8,11 @@ interface XPBreakdownProps {
 }
 
 export function XPBreakdown({ sessionXp }: XPBreakdownProps) {
+    const { t } = useTranslation('workout');
     return (
         <div className="xp-breakdown">
             <div className="xp-breakdown-header">
-                <span className="xp-breakdown-total">+{sessionXp.totalXp.toLocaleString()} XP</span>
+                <span className="xp-breakdown-total">{t('summary.xp_total', { xp: formatNumber(sessionXp.totalXp) })}</span>
                 {sessionXp.multiplier > 1 && (
                     <span className="xp-breakdown-multiplier">×{sessionXp.multiplier.toFixed(2)}</span>
                 )}
@@ -21,7 +23,7 @@ export function XPBreakdown({ sessionXp }: XPBreakdownProps) {
                 <div className="xp-breakdown-exercises">
                     {sessionXp.perExercise.map(ex => (
                         <span key={ex.exerciseType} className="xp-exercise-pill">
-                            {getExerciseLabel(ex.exerciseType)} +{ex.finalXp.toLocaleString()}
+                            {t('summary.xp_exercise_pill', { exercise: t(getExerciseLabelKey(ex.exerciseType)), xp: formatNumber(ex.finalXp) })}
                             {ex.difficultyCoefficient > 1.0 && (
                                 <span className="xp-difficulty-badge">×{ex.difficultyCoefficient.toFixed(1)}</span>
                             )}
@@ -35,7 +37,7 @@ export function XPBreakdown({ sessionXp }: XPBreakdownProps) {
                 <div className="xp-breakdown-bonuses">
                     {sessionXp.bonuses.map(b => (
                         <span key={b.key} className="xp-bonus-tag">
-                            {b.emoji} {b.label} <strong>+{b.pct}%</strong>
+                            {b.emoji} {t(b.labelKey, b.labelParams)} <strong>+{b.pct}%</strong>
                         </span>
                     ))}
                 </div>
@@ -44,7 +46,7 @@ export function XPBreakdown({ sessionXp }: XPBreakdownProps) {
             {/* Raw XP line */}
             {sessionXp.multiplier > 1 && (
                 <span className="xp-breakdown-raw">
-                    XP brute : {sessionXp.rawXp.toLocaleString()}
+                    {t('summary.xp_raw', { xp: formatNumber(sessionXp.rawXp) })}
                 </span>
             )}
         </div>

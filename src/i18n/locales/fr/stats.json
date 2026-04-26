@@ -1,0 +1,121 @@
+{
+    "screen": {
+        "title": "Statistiques",
+        "metric_aria": "Métrique du graphique",
+        "filter_all": "Tous",
+        "filter_aria_select": "Filtrer par {{label}}",
+        "this_week_sessions": "Sessions de cette semaine",
+        "no_sessions": "Aucune session à afficher.",
+        "week_prev_aria": "Semaine précédente",
+        "week_next_aria": "Semaine suivante",
+        "week_chip_this": "CETTE SEMAINE",
+        "week_chip_last": "SEMAINE DERNIÈRE",
+        "week_chip_n_ago": "IL Y A {{count}} SEMAINES",
+        "week_chip_upcoming": "À VENIR",
+        "kpi_xp": "XP",
+        "kpi_best": "Meilleur",
+        "kpi_reps": "Reps",
+        "kpi_sessions": "Sessions",
+        "kpi_active": "Actif",
+        "chart_label_xp": "XP hebdomadaire",
+        "chart_label_reps": "Reps hebdomadaires",
+        "chart_metric_xp": "XP",
+        "chart_metric_reps": "reps",
+        "chart_empty_no_filter": "Aucune activité cette semaine pour le moment",
+        "chart_empty_with_filter": "Aucune activité cette semaine"
+    },
+    "progression": {
+        "title": "Progression",
+        "section_levels": "🎮 Niveaux",
+        "section_records": "📊 Records",
+        "section_achievements": "🏆 Achievements",
+        "global_level_label": "Niveau global",
+        "level_kicker": "NIVEAU",
+        "xp_progress": "{{current}} / {{total}} XP"
+    },
+    "records": {
+        "longest_workout_label": "Workout le plus long",
+        "best_grade_label": "Meilleur grade",
+        "most_xp_label": "Plus d'XP en une session",
+        "most_sessions_in_week_label": "Plus de sessions dans une semaine",
+        "longest_streak_label": "Plus longue série",
+        "max_reps_in_session_label": "Meilleur {{exercise}} en une session",
+        "value_xp": "{{xp}} XP"
+    },
+    "toast": {
+        "unlocked": "🏆 Achievement débloqué !"
+    },
+    "widget": {
+        "unit_reps": "reps",
+        "unit_sessions": "sessions",
+        "view_full": "Voir toutes les stats"
+    },
+    "achievements": {
+        "category": {
+            "strength": "Force",
+            "discipline": "Discipline",
+            "social": "Social",
+            "performance": "Performance"
+        },
+        "lifetime_reps": {
+            "title": "{{count}} {{exercise}}",
+            "description": "Faire {{count}} {{exercise}} au total"
+        },
+        "session_reps": {
+            "title": "{{count}} {{exercise}} en une session",
+            "description": "Faire {{count}} {{exercise}} en une seule session"
+        },
+        "by_id": {
+            "sessions_1":   { "title": "Première sueur",      "description": "Termine 1 session de workout" },
+            "sessions_10":  { "title": "Démarrage",           "description": "Termine 10 sessions de workout" },
+            "sessions_25":  { "title": "Régulier",            "description": "Termine 25 sessions de workout" },
+            "sessions_50":  { "title": "Dévoué(e)",           "description": "Termine 50 sessions de workout" },
+            "sessions_100": { "title": "Centurion",           "description": "Termine 100 sessions de workout" },
+            "sessions_250": { "title": "Machine",             "description": "Termine 250 sessions de workout" },
+            "sessions_500": { "title": "Légende vivante",     "description": "Termine 500 sessions de workout" },
+
+            "streak_3":   { "title": "Triplé",                "description": "Atteins une série de 3 jours" },
+            "streak_7":   { "title": "Semaine pleine",        "description": "Atteins une série de 7 jours" },
+            "streak_14":  { "title": "Quinzaine",             "description": "Atteins une série de 14 jours" },
+            "streak_30":  { "title": "Guerrier mensuel",      "description": "Atteins une série de 30 jours" },
+            "streak_60":  { "title": "Volonté de fer",        "description": "Atteins une série de 60 jours" },
+            "streak_100": { "title": "Inarrêtable",           "description": "Atteins une série de 100 jours" },
+
+            "friends_1":  { "title": "Premier compagnon",     "description": "Aie 1 ami" },
+            "friends_5":  { "title": "Équipe",                "description": "Aie 5 amis" },
+            "friends_10": { "title": "Crew",                  "description": "Aie 10 amis" },
+            "friends_25": { "title": "Leader communautaire",  "description": "Aie 25 amis" },
+
+            "encouragements_1":   { "title": "Pom-pom girl",     "description": "Envoie 1 encouragement" },
+            "encouragements_10":  { "title": "Motivateur",       "description": "Envoie 10 encouragements" },
+            "encouragements_50":  { "title": "Machine à hype",   "description": "Envoie 50 encouragements" },
+            "encouragements_100": { "title": "Inspiration",      "description": "Envoie 100 encouragements" },
+
+            "training_time_1800":   { "title": "Échauffement",       "description": "Cumule 30 minutes d'entraînement" },
+            "training_time_3600":   { "title": "Club d'une heure",   "description": "Cumule 1 heure d'entraînement" },
+            "training_time_10800":  { "title": "Sérieux(se)",        "description": "Cumule 3 heures d'entraînement" },
+            "training_time_36000":  { "title": "Deux chiffres",      "description": "Cumule 10 heures d'entraînement" },
+            "training_time_86400":  { "title": "Guerrier 24h",       "description": "Cumule 24 heures d'entraînement" },
+            "training_time_180000": { "title": "Demi-centurion",     "description": "Cumule 50 heures d'entraînement" },
+            "training_time_360000": { "title": "Centurion du temps", "description": "Cumule 100 heures d'entraînement" },
+
+            "session_duration_300":  { "title": "Brûlage rapide",   "description": "Termine une session de 5 minutes" },
+            "session_duration_600":  { "title": "Rythme régulier",  "description": "Termine une session de 10 minutes" },
+            "session_duration_1200": { "title": "Test d'endurance", "description": "Termine une session de 20 minutes" },
+            "session_duration_1800": { "title": "Héros 30 minutes", "description": "Termine une session de 30 minutes" },
+            "session_duration_3600": { "title": "Heure de fer",     "description": "Termine une session de 60 minutes" },
+            "session_duration_5400": { "title": "Inarrêtable",      "description": "Termine une session de 90 minutes" },
+
+            "grade_s":         { "title": "Perfectionniste",       "description": "Obtiens un grade S sur un workout" },
+            "grade_s_10":      { "title": "Excellence constante",  "description": "Obtiens un grade S sur 10 workouts" },
+            "grade_s_50":      { "title": "Maître de la forme",    "description": "Obtiens un grade S sur 50 workouts" },
+            "xp_session_100":  { "title": "Pic d'XP",              "description": "Gagne 100+ XP en une session" },
+            "xp_session_500":  { "title": "Tempête d'XP",          "description": "Gagne 500+ XP en une session" },
+            "xp_session_1000": { "title": "Tsunami d'XP",          "description": "Gagne 1 000+ XP en une session" },
+            "level_5":         { "title": "Étoile montante",       "description": "Atteins le niveau global 5" },
+            "level_10":        { "title": "Vétéran",               "description": "Atteins le niveau global 10" },
+            "level_25":        { "title": "Élite",                 "description": "Atteins le niveau global 25" },
+            "level_50":        { "title": "Légendaire",            "description": "Atteins le niveau global 50" }
+        }
+    }
+}

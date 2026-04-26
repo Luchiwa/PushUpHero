@@ -20,11 +20,13 @@ import { EXERCISE_DIFFICULTY } from './exerciseDifficulty';
 
 // ── Config types ────────────────────────────────────────────────
 
+/** Position-guide config — emoji is data; the three text fields are i18next
+ *  keys (resolved via `t()` in PositionGuide). */
 export interface PositionGuideConfig {
     emoji: string;
-    title: string;
-    description: string;
-    calibrationText: string;
+    titleKey: string;
+    descriptionKey: string;
+    calibrationKey: string;
 }
 
 export interface ExerciseConfig {
@@ -36,10 +38,6 @@ export interface ExerciseConfig {
     keyJoints: Set<number>;
     /** Text shown on the camera feed during calibration */
     positionGuide: PositionGuideConfig;
-    /** Voice coach phrases spoken during calibration */
-    calibrationPhrases: string[];
-    /** Voice coach phrases for incomplete reps (didn't reach full depth) */
-    incompleteRepPhrases: string[];
 }
 
 // ── Registry ────────────────────────────────────────────────────
@@ -51,16 +49,10 @@ export const EXERCISE_REGISTRY: Record<ExerciseType, ExerciseConfig> = {
         keyJoints: new Set([11, 12, 13, 14, 15, 16, 23, 24]),
         positionGuide: {
             emoji: '🧑‍💻',
-            title: 'Get in plank position',
-            description: 'Place your phone so the camera can see your full body in push-up stance.',
-            calibrationText: 'Hold plank…',
+            titleKey: 'dashboard:position_guide.pushup.title',
+            descriptionKey: 'dashboard:position_guide.pushup.description',
+            calibrationKey: 'dashboard:position_guide.pushup.calibration',
         },
-        calibrationPhrases: [
-            'Get in plank position',
-            'Place your phone to see your full body',
-            'Arms straight, body horizontal',
-        ],
-        incompleteRepPhrases: ['Go lower!', 'Deeper!', 'Full range of motion'],
     },
     squat: {
         createDetector: () => new SquatDetector(),
@@ -68,16 +60,10 @@ export const EXERCISE_REGISTRY: Record<ExerciseType, ExerciseConfig> = {
         keyJoints: new Set([11, 12, 23, 24, 25, 26, 27, 28]),
         positionGuide: {
             emoji: '🦵',
-            title: 'Stand facing the camera',
-            description: 'Step back so your full body is visible from head to feet.',
-            calibrationText: 'Stand still…',
+            titleKey: 'dashboard:position_guide.squat.title',
+            descriptionKey: 'dashboard:position_guide.squat.description',
+            calibrationKey: 'dashboard:position_guide.squat.calibration',
         },
-        calibrationPhrases: [
-            'Stand facing the camera',
-            'Step back so your full body is visible',
-            'Stand tall, feet shoulder width',
-        ],
-        incompleteRepPhrases: ['Go deeper!', 'Lower!', 'Break parallel'],
     },
     pullup: {
         createDetector: () => new PullUpDetector(),
@@ -85,16 +71,10 @@ export const EXERCISE_REGISTRY: Record<ExerciseType, ExerciseConfig> = {
         keyJoints: new Set([11, 12, 13, 14, 15, 16, 23, 24]),
         positionGuide: {
             emoji: '💪',
-            title: 'Hang from the bar',
-            description: 'Position the camera so your full body hangs visible, arms extended.',
-            calibrationText: 'Hold hang…',
+            titleKey: 'dashboard:position_guide.pullup.title',
+            descriptionKey: 'dashboard:position_guide.pullup.description',
+            calibrationKey: 'dashboard:position_guide.pullup.calibration',
         },
-        calibrationPhrases: [
-            'Hang from the bar',
-            'Let the camera see your full body',
-            'Arms fully extended',
-        ],
-        incompleteRepPhrases: ['Pull higher!', 'Chin over bar!', 'All the way up!'],
     },
     legraise: {
         createDetector: () => new LegRaiseDetector(),
@@ -102,16 +82,10 @@ export const EXERCISE_REGISTRY: Record<ExerciseType, ExerciseConfig> = {
         keyJoints: new Set([11, 12, 23, 24, 25, 26, 27, 28]),
         positionGuide: {
             emoji: '🧘',
-            title: 'Lie on your back',
-            description: 'Position the camera to the side so it can see your full body lying flat.',
-            calibrationText: 'Hold still…',
+            titleKey: 'dashboard:position_guide.legraise.title',
+            descriptionKey: 'dashboard:position_guide.legraise.description',
+            calibrationKey: 'dashboard:position_guide.legraise.calibration',
         },
-        calibrationPhrases: [
-            'Lie on your back',
-            'Keep your legs straight',
-            'Let the camera see your full body',
-        ],
-        incompleteRepPhrases: ['Raise higher!', 'Legs up!', 'All the way up!'],
     },
 };
 

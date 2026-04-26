@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import './WeekNavigator.scss';
 
 interface WeekNavigatorProps {
@@ -10,15 +12,16 @@ interface WeekNavigatorProps {
 }
 
 /** Tiny relative-week chip: THIS WEEK / LAST WEEK / N WEEKS AGO. */
-function relativeChip(offset: number): string {
-    if (offset === 0) return 'THIS WEEK';
-    if (offset === -1) return 'LAST WEEK';
-    if (offset < -1) return `${Math.abs(offset)} WEEKS AGO`;
-    return 'UPCOMING';
+function relativeChip(offset: number, t: TFunction<'stats'>): string {
+    if (offset === 0) return t('screen.week_chip_this');
+    if (offset === -1) return t('screen.week_chip_last');
+    if (offset < -1) return t('screen.week_chip_n_ago', { count: Math.abs(offset) });
+    return t('screen.week_chip_upcoming');
 }
 
 export function WeekNavigator({ currentWeekOffset, onPrev, onNext, weekLabel, isPrevDisabled, isNextDisabled }: WeekNavigatorProps) {
-    const chip = relativeChip(currentWeekOffset);
+    const { t } = useTranslation('stats');
+    const chip = relativeChip(currentWeekOffset, t);
     const isCurrent = currentWeekOffset === 0;
 
     return (
@@ -28,7 +31,7 @@ export function WeekNavigator({ currentWeekOffset, onPrev, onNext, weekLabel, is
                 className="stats-nav-btn"
                 onClick={onPrev}
                 disabled={isPrevDisabled}
-                aria-label="Previous week"
+                aria-label={t('screen.week_prev_aria')}
             >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
             </button>
@@ -46,7 +49,7 @@ export function WeekNavigator({ currentWeekOffset, onPrev, onNext, weekLabel, is
                 className="stats-nav-btn"
                 onClick={onNext}
                 disabled={isNextDisabled}
-                aria-label="Next week"
+                aria-label={t('screen.week_next_aria')}
             >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
             </button>

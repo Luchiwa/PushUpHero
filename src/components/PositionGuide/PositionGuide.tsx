@@ -5,6 +5,7 @@
  * Fades out automatically once calibration completes.
  */
 import { memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { ExerciseType } from '@exercises/types';
 import { EXERCISE_REGISTRY } from '@exercises/registry';
 import './PositionGuide.scss';
@@ -16,6 +17,7 @@ interface PositionGuideProps {
 }
 
 export const PositionGuide = memo(function PositionGuide({ exerciseType, isCalibrated, calibratingPercentage }: PositionGuideProps) {
+  const { t } = useTranslation('dashboard');
   const isHidden = isCalibrated;
   const guide = EXERCISE_REGISTRY[exerciseType].positionGuide;
 
@@ -23,12 +25,12 @@ export const PositionGuide = memo(function PositionGuide({ exerciseType, isCalib
     <div className={`position-guide${isHidden ? ' position-guide-hidden' : ''}`}>
       <div className="position-guide-card">
         <span className="position-guide-emoji" aria-hidden="true">{guide.emoji}</span>
-        <p className="position-guide-title">{guide.title}</p>
-        <p className="position-guide-desc">{guide.description}</p>
+        <p className="position-guide-title">{t(guide.titleKey)}</p>
+        <p className="position-guide-desc">{t(guide.descriptionKey)}</p>
 
         {!isCalibrated && (
-          <div className="calibration-ui" role="progressbar" aria-valuenow={calibratingPercentage} aria-valuemin={0} aria-valuemax={100} aria-label="Calibration progress">
-            <p className="calibration-title">{guide.calibrationText}</p>
+          <div className="calibration-ui" role="progressbar" aria-valuenow={calibratingPercentage} aria-valuemin={0} aria-valuemax={100} aria-label={t('position_guide.calibration_progress_aria')}>
+            <p className="calibration-title">{t(guide.calibrationKey)}</p>
             <div className="calibration-bar-track">
               <div className="calibration-bar-fill" style={{ width: `${calibratingPercentage}%` }} />
             </div>

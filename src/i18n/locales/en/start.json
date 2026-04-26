@@ -1,0 +1,33 @@
+{
+    "hud": {
+        "open_profile": "Open profile",
+        "level_kicker": "LEVEL {{level}} · {{current}}/{{total}}",
+        "default_player_name": "Player",
+        "total_xp_aria": "{{xp}} total XP",
+        "xp_to_next_level": "{{xp}} XP → LV {{level}}",
+        "guest_kicker": "Guest Profile",
+        "guest_subtitle": "Sign in to save your progress",
+        "sign_in": "Sign in"
+    },
+    "cta": {
+        "quick_session": "Quick Session",
+        "multi_set_workout": "Multi-Set Workout"
+    },
+    "signup_promo": {
+        "title": "Quest complete — don't lose your progress!",
+        "perk_save": "Save your XP, level & stats forever",
+        "perk_unlock": "Unlock achievements & leaderboards",
+        "perk_track": "Track your progress across devices"
+    },
+    "resume": {
+        "title": "Workout in progress",
+        "detail": "{{completed}}/{{total}} sets · {{reps}} reps · {{ago}}",
+        "next": "Next: {{exercise}}",
+        "btn_resume": "Resume",
+        "btn_discard_aria": "Discard workout",
+        "ago_just_now": "just now",
+        "ago_minutes": "{{count}}m ago",
+        "ago_hours": "{{count}}h ago",
+        "ago_days": "{{count}}d ago"
+    }
+}

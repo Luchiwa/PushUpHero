@@ -1,0 +1,64 @@
+{
+    "set_indicator_block": "{{block}}/{{totalBlocks}} · {{set}}/{{totalSets}}",
+    "set_indicator": "Set {{current}}/{{total}}",
+    "flip_camera_to_rear": "Switch to rear camera",
+    "flip_camera_to_front": "Switch to front camera",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "stop_workout_aria": "Stop workout",
+    "wrong_person_banner": "👤 Wrong person detected — get back in frame",
+    "combo_label": "COMBO",
+    "average_label": "AVG",
+    "position_guide": {
+        "calibration_progress_aria": "Calibration progress",
+        "pushup": {
+            "title": "Get in plank position",
+            "description": "Place your phone so the camera can see your full body in push-up stance.",
+            "calibration": "Hold plank…"
+        },
+        "squat": {
+            "title": "Stand facing the camera",
+            "description": "Step back so your full body is visible from head to feet.",
+            "calibration": "Stand still…"
+        },
+        "pullup": {
+            "title": "Hang from the bar",
+            "description": "Position the camera so your full body hangs visible, arms extended.",
+            "calibration": "Hold hang…"
+        },
+        "legraise": {
+            "title": "Lie on your back",
+            "description": "Position the camera to the side so it can see your full body lying flat.",
+            "calibration": "Hold still…"
+        }
+    },
+    "install_banner": {
+        "title": "Install Push-Up Hero",
+        "subtitle": "Play offline as a native app",
+        "btn_install": "Install",
+        "btn_how": "How?",
+        "btn_dismiss_aria": "Dismiss",
+        "ios_guide": {
+            "title": "Install Push-Up Hero",
+            "subtitle": "Unlock the full experience",
+            "step1_chrome_prefix": "Tap the",
+            "step1_chrome_strong": "⋮ menu",
+            "step1_chrome_suffix": "button (top right)",
+            "step1_safari_prefix": "Tap the",
+            "step1_safari_strong": "Share",
+            "step1_safari_suffix": "button below",
+            "step2_chrome_prefix": "Tap",
+            "step2_safari_prefix": "Scroll down and tap",
+            "step2_strong": "\"Add to Home Screen\"",
+            "step3_prefix": "Tap",
+            "step3_strong": "\"Add\"",
+            "step3_suffix": "— done!",
+            "pointer_chrome_prefix": "Look for the",
+            "pointer_chrome_strong": "⋮",
+            "pointer_chrome_suffix": "button above",
+            "pointer_safari_prefix": "Look for the",
+            "pointer_safari_strong": "Share",
+            "pointer_safari_suffix": "button below"
+        }
+    }
+}

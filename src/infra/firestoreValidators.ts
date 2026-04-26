@@ -64,6 +64,8 @@ export interface FlatUserDoc {
     records?: RecordsMap;
     bodyProfile?: BodyProfile;
     questProgress?: QuestProgress;
+    /** Persisted UI language preference (e.g. `'fr'`, `'en'`). */
+    preferredLanguage?: string;
 }
 
 // ── Required-field guards ────────────────────────────────────────────────────

@@ -3,6 +3,7 @@
  * Lives in the StatsScreen topbar `rightAction` slot.
  * Two options only — a dropdown would be overkill.
  */
+import { useTranslation } from 'react-i18next';
 import type { MetricMode } from '../StatsScreen';
 import './MetricToggle.scss';
 
@@ -12,8 +13,9 @@ interface MetricToggleProps {
 }
 
 export function MetricToggle({ metric, onChange }: MetricToggleProps) {
+    const { t } = useTranslation('stats');
     return (
-        <div className="metric-toggle" role="tablist" aria-label="Chart metric">
+        <div className="metric-toggle" role="tablist" aria-label={t('screen.metric_aria')}>
             <div
                 className="metric-toggle__indicator"
                 style={{ left: metric === 'xp' ? '3px' : 'calc(50% + 1px)' }}
@@ -28,7 +30,7 @@ export function MetricToggle({ metric, onChange }: MetricToggleProps) {
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
                 </svg>
-                XP
+                {t('screen.kpi_xp')}
             </button>
             <button
                 type="button"
@@ -42,7 +44,7 @@ export function MetricToggle({ metric, onChange }: MetricToggleProps) {
                     <polyline points="23 20 23 14 17 14" />
                     <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
                 </svg>
-                Reps
+                {t('screen.kpi_reps')}
             </button>
         </div>
     );

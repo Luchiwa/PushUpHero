@@ -1,5 +1,6 @@
 import { useRef, useEffect, useLayoutEffect, useCallback } from 'react';
-import { EXERCISE_META, type ExerciseType } from '@exercises/types';
+import { useTranslation } from 'react-i18next';
+import { EXERCISE_META, getExerciseCategoryKey, getExerciseLabelKey, type ExerciseType } from '@exercises/types';
 import './ExercisePicker.scss';
 
 interface ExercisePickerProps {
@@ -23,6 +24,7 @@ function realIndexOf(type: ExerciseType): number {
 }
 
 export function ExercisePicker({ value, onChange }: ExercisePickerProps) {
+    const { t } = useTranslation();
     const viewportRef = useRef<HTMLDivElement>(null);
     const scrollEndTimer = useRef<number | null>(null);
     const totalLabel = String(N).padStart(2, '0');
@@ -134,6 +136,8 @@ export function ExercisePicker({ value, onChange }: ExercisePickerProps) {
                     const realIdx = cloneIndex % N;
                     const selected = value === ex.type;
                     const indexLabel = String(realIdx + 1).padStart(2, '0');
+                    const exerciseLabel = t(getExerciseLabelKey(ex.type));
+                    const categoryLabel = t(getExerciseCategoryKey(ex.type));
                     return (
                         <button
                             key={cloneIndex}
@@ -142,7 +146,7 @@ export function ExercisePicker({ value, onChange }: ExercisePickerProps) {
                             className={`exercise-picker__card${selected ? ' is-selected' : ''}`}
                             onClick={() => onChange(ex.type)}
                             aria-pressed={selected}
-                            aria-label={`${ex.label} — ${ex.category}`}
+                            aria-label={`${exerciseLabel} — ${categoryLabel}`}
                         >
                             <span className="exercise-picker__bg" aria-hidden="true" />
                             <span className="exercise-picker__index" aria-hidden="true">
@@ -154,16 +158,17 @@ export function ExercisePicker({ value, onChange }: ExercisePickerProps) {
                                 </svg>
                             </span>
                             <span className="exercise-picker__emoji" aria-hidden="true">{ex.emoji}</span>
-                            <span className="exercise-picker__label">{ex.label}</span>
-                            <span className="exercise-picker__tag">{ex.category}</span>
+                            <span className="exercise-picker__label">{exerciseLabel}</span>
+                            <span className="exercise-picker__tag">{categoryLabel}</span>
                         </button>
                     );
                 })}
             </div>
 
-            <div className="exercise-picker__dots" role="tablist" aria-label="Exercise selection">
+            <div className="exercise-picker__dots" role="tablist" aria-label={t('common:aria.choose_exercise')}>
                 {EXERCISE_META.map((ex) => {
                     const selected = value === ex.type;
+                    const exerciseLabel = t(getExerciseLabelKey(ex.type));
                     return (
                         <button
                             key={ex.type}
@@ -172,7 +177,7 @@ export function ExercisePicker({ value, onChange }: ExercisePickerProps) {
                             className={`exercise-picker__dot${selected ? ' is-active' : ''}`}
                             onClick={() => onChange(ex.type)}
                             aria-selected={selected}
-                            aria-label={`Select ${ex.label}`}
+                            aria-label={exerciseLabel}
                         />
                     );
                 })}

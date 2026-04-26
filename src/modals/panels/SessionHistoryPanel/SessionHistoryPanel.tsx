@@ -4,9 +4,11 @@
  * Otherwise falls back to useSessionHistory() (last 5 sessions).
  */
 import { useState, type CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useSessionHistory } from '@hooks/useSessionHistory';
-import { EXERCISE_META, getExerciseLabel, type SessionRecord, type TimeDuration } from '@exercises/types';
-import { getGradeLetter, getGradeClass, getGradeColor, formatElapsedTime } from '@domain';
+import { EXERCISE_META, getExerciseLabelKey, type SessionRecord, type TimeDuration } from '@exercises/types';
+import { formatDate, formatTime, getGradeLetter, getGradeClass, getGradeColor, formatElapsedTime } from '@domain';
 import './SessionHistoryPanel.scss';
 
 const EXERCISE_EMOJI: Record<string, string> = Object.fromEntries(
@@ -19,29 +21,29 @@ interface SessionHistoryPanelProps {
     onViewAll?: () => void;
 }
 
-/** Compact relative day label: TODAY / YESTERDAY / MON / 12 APR */
-function formatRelativeDay(ts: number): string {
+/** Compact relative day label: TODAY / YESTERDAY / MON / 12 APR (locale-aware). */
+function formatRelativeDay(ts: number, t: TFunction<'modals'>): string {
     const d = new Date(ts);
     const today = new Date();
     const yesterday = new Date();
     yesterday.setDate(today.getDate() - 1);
 
-    if (d.toDateString() === today.toDateString()) return 'TODAY';
-    if (d.toDateString() === yesterday.toDateString()) return 'YESTERDAY';
+    if (d.toDateString() === today.toDateString()) return t('sessions.rel_today');
+    if (d.toDateString() === yesterday.toDateString()) return t('sessions.rel_yesterday');
 
     // Within the last 6 days → weekday name (MON, TUE…)
     const diffDays = Math.floor((today.getTime() - d.getTime()) / 86_400_000);
     if (diffDays < 7) {
-        return d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+        return formatDate(d, { weekday: 'short' }).toUpperCase();
     }
 
     // Older → "12 APR"
-    return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' }).toUpperCase();
+    return formatDate(d, { day: 'numeric', month: 'short' }).toUpperCase();
 }
 
-/** 24h time, e.g. "14:30" */
-function formatTime(ts: number): string {
-    return new Date(ts).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+/** 24h time, e.g. "14:30" — locale-aware via the format helper's default options. */
+function formatTimeOfDay(ts: number): string {
+    return formatTime(ts, { hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
 /** Format a TimeDuration object to a compact string, e.g. "1min30s" */
@@ -69,11 +71,12 @@ function getSessionDuration(s: SessionRecord): string {
 }
 
 export function SessionHistoryPanel({ sessions: sessionsProp, title, onViewAll }: SessionHistoryPanelProps) {
+    const { t } = useTranslation('modals');
     const { sessions: hookSessions, totalSessionCount } = useSessionHistory();
     const [expandedId, setExpandedId] = useState<string | null>(null);
 
     const sessions = sessionsProp ?? hookSessions;
-    const resolvedTitle = title ?? 'Recent sessions';
+    const resolvedTitle = title ?? t('sessions.panel_title');
     const showViewAll = !sessionsProp && onViewAll && totalSessionCount > 5;
 
     if (sessions.length === 0) return null;
@@ -108,8 +111,8 @@ export function SessionHistoryPanel({ sessions: sessionsProp, title, onViewAll }
                     const isTimeMode = !isMulti && s.sessionMode === 'time';
 
                     const exerciseLabel = isMulti
-                        ? 'Mixed Workout'
-                        : getExerciseLabel(s.exerciseType ?? 'pushup');
+                        ? t('sessions.mixed_workout')
+                        : t(getExerciseLabelKey(s.exerciseType ?? 'pushup'));
                     const exerciseEmoji = isMulti
                         ? '🏋️'
                         : EXERCISE_EMOJI[s.exerciseType ?? 'pushup'];
@@ -129,8 +132,8 @@ export function SessionHistoryPanel({ sessions: sessionsProp, title, onViewAll }
                                 {/* ── Zone 1 — Identity ─────────────────────────── */}
                                 <div className="session-card__identity">
                                     <span className="session-card__icon" aria-hidden="true">{exerciseEmoji}</span>
-                                    <span className="session-card__day">{formatRelativeDay(s.date)}</span>
-                                    <span className="session-card__time">{formatTime(s.date)}</span>
+                                    <span className="session-card__day">{formatRelativeDay(s.date, t)}</span>
+                                    <span className="session-card__time">{formatTimeOfDay(s.date)}</span>
                                 </div>
 
                                 {/* ── Zone 2 — Metrics ──────────────────────────── */}
@@ -141,32 +144,32 @@ export function SessionHistoryPanel({ sessions: sessionsProp, title, onViewAll }
                                         {isMulti ? (
                                             <>
                                                 <span className="session-card__hero-number">{s.reps}</span>
-                                                <span className="session-card__hero-suffix">reps</span>
+                                                <span className="session-card__hero-suffix">{t('sessions.hero_suffix_reps')}</span>
                                             </>
                                         ) : isTimeMode ? (
                                             <>
                                                 <span className="session-card__hero-number">{formatElapsedTime(s.elapsedTime)}</span>
-                                                <span className="session-card__hero-suffix">· {s.reps} reps</span>
+                                                <span className="session-card__hero-suffix">{t('sessions.hero_suffix_time', { count: s.reps })}</span>
                                             </>
                                         ) : (
                                             <>
                                                 <span className="session-card__hero-number">{s.reps}</span>
-                                                <span className="session-card__hero-suffix">/{effectiveGoal} reps</span>
+                                                <span className="session-card__hero-suffix">{t('sessions.hero_suffix_partial', { goal: effectiveGoal })}</span>
                                             </>
                                         )}
-                                        {goalReached && <span className="session-card__trophy" title="Goal reached">🏆</span>}
+                                        {goalReached && <span className="session-card__trophy" title={t('sessions.trophy_title')}>🏆</span>}
                                     </div>
 
                                     <div className="session-card__meta">
                                         {isMulti ? (
                                             <>
-                                                <span className="session-card__chip">{s.blocks?.length ?? 0} exercises</span>
-                                                <span className="session-card__chip">{s.sets?.length ?? 0} sets</span>
+                                                <span className="session-card__chip">{t('sessions.chip_exercises', { count: s.blocks?.length ?? 0 })}</span>
+                                                <span className="session-card__chip">{t('sessions.chip_sets', { count: s.sets?.length ?? 0 })}</span>
                                                 {duration && <span className="session-card__chip">{duration}</span>}
                                             </>
                                         ) : (
                                             <>
-                                                {nSets > 1 && <span className="session-card__chip">{nSets} sets</span>}
+                                                {nSets > 1 && <span className="session-card__chip">{t('sessions.chip_sets', { count: nSets })}</span>}
                                                 {duration && <span className="session-card__chip">{duration}</span>}
                                             </>
                                         )}
@@ -202,12 +205,12 @@ export function SessionHistoryPanel({ sessions: sessionsProp, title, onViewAll }
                                                     ? Math.round(blockSets.reduce((sum, st) => sum + st.averageScore * st.reps, 0) / blockReps)
                                                     : 0;
                                                 const emoji = EXERCISE_EMOJI[block.exerciseType] ?? '💪';
-                                                const label = getExerciseLabel(block.exerciseType);
+                                                const label = t(getExerciseLabelKey(block.exerciseType));
                                                 const grade = getGradeLetter(blockAvg);
                                                 const blockGradeClass = getGradeClass(blockAvg);
                                                 const modeLabel = block.sessionMode === 'time'
-                                                    ? `⏱ ${formatTimeDuration(block.timeGoal)}`
-                                                    : `🎯 ${block.goalReps} reps`;
+                                                    ? t('sessions.block.mode_time', { duration: formatTimeDuration(block.timeGoal) })
+                                                    : t('sessions.block.mode_reps', { count: block.goalReps });
 
                                                 return (
                                                     <div key={`${s.id}-block-${bi}`} className="session-card__block">
@@ -216,11 +219,11 @@ export function SessionHistoryPanel({ sessions: sessionsProp, title, onViewAll }
                                                             <span className={`session-card__block-grade ${blockGradeClass}`}>{grade}</span>
                                                         </div>
                                                         <div className="session-card__block-meta">
-                                                            <span>{block.numberOfSets} set{block.numberOfSets > 1 ? 's' : ''}</span>
+                                                            <span>{t('sessions.block.set', { count: block.numberOfSets })}</span>
                                                             <span className="session-card__block-sep">·</span>
                                                             <span>{modeLabel}</span>
                                                             <span className="session-card__block-sep">·</span>
-                                                            <span>🔄 {formatTimeDuration(block.restBetweenSets)}</span>
+                                                            <span>{t('sessions.block.rest', { duration: formatTimeDuration(block.restBetweenSets) })}</span>
                                                         </div>
                                                     </div>
                                                 );
@@ -235,7 +238,7 @@ export function SessionHistoryPanel({ sessions: sessionsProp, title, onViewAll }
             </ul>
             {showViewAll && (
                 <button type="button" className="session-history-view-all" onClick={onViewAll}>
-                    View all history
+                    {t('sessions.view_all')}
                 </button>
             )}
         </div>

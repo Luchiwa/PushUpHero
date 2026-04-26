@@ -1,0 +1,54 @@
+{
+    "feedback": {
+        "perfect":            ["Parfait !", "Impeccable !", "Top !"],
+        "good":               ["Beau rep", "Bien joué", "Solide"],
+        "go_lower":           ["Plus bas", "Plus profond !", "Amplitude complète"],
+        "arms_uneven":        ["Bras à niveau", "Équilibre tes bras"],
+        "body_sagging":       ["Hanches en haut !", "Gaine ton corps"],
+        "body_piking":        ["Baisse les hanches", "À plat"],
+        "too_fast":           ["Ralentis", "Contrôle le rep"],
+        "lean_forward":       ["Redresse-toi", "Buste droit !"],
+        "knees_caving":       ["Genoux vers l'extérieur", "Genoux au-dessus des pieds"],
+        "torso_lean":         ["Garde le buste droit", "Reste vertical"],
+        "kipping":             ["Pas de kipping", "Forme stricte !"],
+        "body_sway":          ["Reste immobile", "Pas de balancement"],
+        "raise_higher":       ["Plus haut", "Jambes en l'air !", "Plus haut !"],
+        "keep_legs_straight": ["Tends les jambes", "Garde les jambes droites"],
+        "keep_back_flat":     ["Garde le dos plat", "Dos au sol"]
+    },
+    "encouragement": [
+        "Continue !",
+        "Tu es en feu !",
+        "Belle série !",
+        "T'as l'air fort(e) !",
+        "Mode bête !"
+    ],
+    "calibration": {
+        "pushup": [
+            "Mets-toi en position de planche",
+            "Place ton téléphone pour voir tout ton corps",
+            "Bras tendus, corps horizontal"
+        ],
+        "squat": [
+            "Tiens-toi face à la caméra",
+            "Recule pour que ton corps entier soit visible",
+            "Tiens-toi droit, pieds écartés"
+        ],
+        "pullup": [
+            "Suspends-toi à la barre",
+            "Laisse la caméra voir ton corps entier",
+            "Bras complètement tendus"
+        ],
+        "legraise": [
+            "Allonge-toi sur le dos",
+            "Garde les jambes tendues",
+            "Laisse la caméra voir ton corps entier"
+        ]
+    },
+    "incomplete_rep": {
+        "pushup":   ["Plus bas !", "Plus profond !", "Amplitude complète"],
+        "squat":    ["Plus profond !", "Plus bas !", "Casse la parallèle"],
+        "pullup":   ["Plus haut !", "Menton au-dessus de la barre !", "Jusqu'en haut !"],
+        "legraise": ["Plus haut !", "Jambes en l'air !", "Jusqu'en haut !"]
+    }
+}

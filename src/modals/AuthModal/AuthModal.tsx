@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import './AuthModal.scss';
 import { loginWithEmail, registerWithEmail, translateAuthError } from '@services/authService';
 import { useAuthCore } from '@hooks/useAuth';
@@ -15,6 +16,7 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ onClose, onSuccess, initialMode = 'login', promoBanner }: AuthModalProps) {
+    const { t } = useTranslation('modals');
     const { loginWithGoogle } = useAuthCore();
     const [mode, setMode] = useState<'login' | 'register'>(initialMode);
     const [email, setEmail] = useState('');
@@ -45,7 +47,7 @@ export function AuthModal({ onClose, onSuccess, initialMode = 'login', promoBann
             onSuccess?.();
             onClose();
         } catch (err: unknown) {
-            setError(translateAuthError(err));
+            setError(t(translateAuthError(err)));
         } finally {
             setLoading(false);
         }
@@ -54,13 +56,15 @@ export function AuthModal({ onClose, onSuccess, initialMode = 'login', promoBann
     const handleEmailAuth = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-        setLoading(true);
 
+        if (mode === 'register' && username.trim().length < 3) {
+            setError(t('auth.username_too_short'));
+            return;
+        }
+
+        setLoading(true);
         try {
             if (mode === 'register') {
-                if (username.trim().length < 3) {
-                    throw new Error("Username must be at least 3 characters");
-                }
                 await registerWithEmail(email, password, username);
             } else {
                 await loginWithEmail(email, password);
@@ -69,7 +73,7 @@ export function AuthModal({ onClose, onSuccess, initialMode = 'login', promoBann
             onClose();
         } catch (err: unknown) {
             console.error(err);
-            setError(translateAuthError(err));
+            setError(t(translateAuthError(err)));
         } finally {
             setLoading(false);
         }
@@ -82,18 +86,16 @@ export function AuthModal({ onClose, onSuccess, initialMode = 'login', promoBann
             onAnimationEnd={handleAnimationEnd}
             role="dialog"
             aria-modal="true"
-            aria-label={mode === 'register' ? 'Create an account' : 'Sign in'}
+            aria-label={mode === 'register' ? t('auth.title_register') : t('auth.title_login')}
         >
             <div className={`auth-modal-card${closing ? ' auth-modal-card--exit' : ''}`}>
-                <button className="auth-close-btn" onClick={handleClose}>×</button>
+                <button className="auth-close-btn" onClick={handleClose} aria-label={t('auth.close_aria')}>×</button>
 
                 <h2 className="auth-title">
-                    {mode === 'register' ? 'Create an account' : 'Sign in'}
+                    {mode === 'register' ? t('auth.title_register') : t('auth.title_login')}
                 </h2>
                 <p className="auth-subtitle">
-                    {mode === 'register'
-                        ? 'Save your sessions and level to the cloud.'
-                        : 'Pick up where you left off.'}
+                    {mode === 'register' ? t('auth.subtitle_register') : t('auth.subtitle_login')}
                 </p>
 
                 {promoBanner && mode === 'register' && (
@@ -105,14 +107,14 @@ export function AuthModal({ onClose, onSuccess, initialMode = 'login', promoBann
                 <form onSubmit={handleEmailAuth} className="auth-form">
                     {mode === 'register' && (
                         <div className="input-group">
-                            <label htmlFor="auth-username">Username</label>
+                            <label htmlFor="auth-username">{t('auth.label_username')}</label>
                             <input
                                 id="auth-username"
                                 ref={usernameInputRef}
                                 type="text"
                                 value={username}
                                 onChange={e => setUsername(e.target.value)}
-                                placeholder="Goku99"
+                                placeholder={t('auth.username_placeholder')}
                                 required
                                 minLength={3}
                                 maxLength={20}
@@ -122,27 +124,27 @@ export function AuthModal({ onClose, onSuccess, initialMode = 'login', promoBann
                         </div>
                     )}
                     <div className="input-group">
-                        <label htmlFor="auth-email">Email</label>
+                        <label htmlFor="auth-email">{t('auth.label_email')}</label>
                         <input
                             id="auth-email"
                             ref={emailInputRef}
                             type="email"
                             value={email}
                             onChange={e => setEmail(e.target.value)}
-                            placeholder="hero@example.com"
+                            placeholder={t('auth.email_placeholder')}
                             required
                             aria-describedby={error ? 'auth-form-error' : undefined}
                             aria-invalid={!!error || undefined}
                         />
                     </div>
                     <div className="input-group">
-                        <label htmlFor="auth-password">Password</label>
+                        <label htmlFor="auth-password">{t('auth.label_password')}</label>
                         <input
                             id="auth-password"
                             type="password"
                             value={password}
                             onChange={e => setPassword(e.target.value)}
-                            placeholder="••••••••"
+                            placeholder={t('auth.password_placeholder')}
                             required
                             minLength={6}
                             aria-describedby={error ? 'auth-form-error' : undefined}
@@ -151,12 +153,12 @@ export function AuthModal({ onClose, onSuccess, initialMode = 'login', promoBann
                     </div>
 
                     <button type="submit" className="btn-primary auth-submit" disabled={loading}>
-                        {loading ? 'Loading...' : (mode === 'register' ? "Sign up" : "Sign in")}
+                        {loading ? t('auth.btn_loading') : (mode === 'register' ? t('auth.btn_signup') : t('auth.btn_signin'))}
                     </button>
                 </form>
 
                 <div className="auth-divider">
-                    <span>or</span>
+                    <span>{t('auth.or')}</span>
                 </div>
 
                 <button type="button" className="btn-google" onClick={handleGoogle} disabled={loading}>
@@ -166,13 +168,13 @@ export function AuthModal({ onClose, onSuccess, initialMode = 'login', promoBann
                         <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
                         <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                     </svg>
-                    Continue with Google
+                    {t('auth.google_continue')}
                 </button>
 
                 <p className="auth-switch">
-                    {mode === 'register' ? 'Already have an account?' : "Don't have an account?"}
+                    {mode === 'register' ? t('auth.switch_to_login') : t('auth.switch_to_register')}
                     <button type="button" onClick={() => { setMode(mode === 'register' ? 'login' : 'register'); setError(''); }}>
-                        {mode === 'register' ? 'Sign in' : "Sign up"}
+                        {mode === 'register' ? t('auth.btn_signin') : t('auth.btn_signup')}
                     </button>
                 </p>
             </div>

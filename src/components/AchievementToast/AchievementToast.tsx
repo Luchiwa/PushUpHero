@@ -3,7 +3,8 @@
  * Used on the camera overlay during active workout.
  */
 import { useEffect, useState } from 'react';
-import { TIER_COLORS, type AchievementDef } from '@domain';
+import { useTranslation } from 'react-i18next';
+import { TIER_COLORS, getAchievementTitle, type AchievementDef } from '@domain';
 import './AchievementToast.scss';
 
 interface AchievementToastProps {
@@ -22,6 +23,7 @@ function tierEmoji(tier: string): string {
 }
 
 export function AchievementToast({ achievement, onDone }: AchievementToastProps) {
+    const { t } = useTranslation('stats');
     const [visible, setVisible] = useState(false);
 
     useEffect(() => {
@@ -48,8 +50,8 @@ export function AchievementToast({ achievement, onDone }: AchievementToastProps)
                 <span className="achievement-toast-tier">{tierEmoji(achievement.tier)}</span>
             </div>
             <div className="achievement-toast-content">
-                <span className="achievement-toast-label">🏆 Achievement Unlocked!</span>
-                <span className="achievement-toast-title">{achievement.title}</span>
+                <span className="achievement-toast-label">{t('toast.unlocked')}</span>
+                <span className="achievement-toast-title">{getAchievementTitle(achievement, t)}</span>
             </div>
         </div>
     );

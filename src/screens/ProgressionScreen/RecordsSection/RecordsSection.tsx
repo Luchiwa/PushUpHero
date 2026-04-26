@@ -1,5 +1,7 @@
 import type { CSSProperties } from 'react';
-import { RECORDS, formatElapsedTime, getGradeLetter, type RecordsMap } from '@domain';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
+import { RECORDS, formatDate, formatElapsedTime, getGradeLetter, getRecordLabel, type RecordsMap } from '@domain';
 import type { ExerciseType } from '@exercises/types';
 import './RecordsSection.scss';
 
@@ -8,9 +10,10 @@ interface RecordsSectionProps {
 }
 
 export function RecordsSection({ records }: RecordsSectionProps) {
+    const { t } = useTranslation('stats');
     return (
         <section className="progression-section">
-            <h3 className="progression-section-title">📊 Records</h3>
+            <h3 className="progression-section-title">{t('progression.section_records')}</h3>
             <div className="records-grid">
                 {RECORDS.map((rec, i) => {
                     const value = getRecordValue(records, rec.key);
@@ -21,15 +24,15 @@ export function RecordsSection({ records }: RecordsSectionProps) {
                             style={{ '--i': i } as CSSProperties}
                         >
                             <span className="record-card-emoji">{rec.emoji}</span>
-                            <span className="record-card-label">{rec.label}</span>
+                            <span className="record-card-label">{getRecordLabel(rec, t)}</span>
                             <span className="record-card-value">
-                                {value !== null ? formatRecordValue(value, rec.unit) : '—'}
+                                {value !== null ? formatRecordValue(value, rec.unit, t) : '—'}
                             </span>
                             {value !== null && (() => {
                                 const d = getRecordDate(records, rec.key);
                                 return d ? (
                                     <span className="record-card-date">
-                                        {new Date(d).toLocaleDateString()}
+                                        {formatDate(d)}
                                     </span>
                                 ) : null;
                             })()}
@@ -63,16 +66,16 @@ function getRecordDate(records: RecordsMap, key: string): number | null {
     return null;
 }
 
-function formatRecordValue(value: number, unit: string): string {
+function formatRecordValue(value: number, unit: string, t: TFunction<'stats'>): string {
     switch (unit) {
         case 'time': return formatElapsedTime(value) || '0s';
         case 'score': {
             const grade = getGradeLetter(value);
             return `${grade} (${Math.round(value)}%)`;
         }
-        case 'xp': return `${value.toLocaleString()} XP`;
-        case 'days': return `${value} day${value > 1 ? 's' : ''}`;
-        case 'reps': return value.toLocaleString();
+        case 'xp': return t('records.value_xp', { xp: value.toLocaleString() });
+        case 'days': return t('common:unit.day', { count: value });
+        case 'reps': return t('common:unit.rep', { count: value });
         case 'count': return value.toString();
         default: return value.toString();
     }

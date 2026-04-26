@@ -28,6 +28,7 @@
  * alongside the body profile in localStorage + Firestore.
  */
 
+import type { TFunction } from 'i18next';
 import type { ExerciseType } from '@exercises/types';
 
 // ── Quest types ──────────────────────────────────────────────────
@@ -56,8 +57,10 @@ export interface QuestDef {
     order: number;
     /** Short category label shown as a colored badge */
     category: QuestCategory;
-    title: string;
-    description: string;
+    /** i18next key for the display title. Resolve via `getQuestTitle(def, t)`. */
+    titleKey: string;
+    /** i18next key for the description. Resolve via `getQuestDescription(def, t)`. */
+    descriptionKey: string;
     emoji: string;
     /** XP rewarded on completion */
     xpReward: number;
@@ -81,15 +84,22 @@ export type QuestCategory =
     | 'endurance'
     | 'variety';
 
-export const QUEST_CATEGORY_META: Record<QuestCategory, { label: string; color: string }> = {
-    onboarding: { label: 'Getting Started', color: 'var(--ember)' },
-    exercise:   { label: 'Exercise',        color: 'var(--good)' },
-    mastery:    { label: 'Mastery',         color: 'var(--gold)' },
-    endurance:  { label: 'Endurance',       color: 'var(--blood)' },
-    variety:    { label: 'Variety',         color: 'var(--ice)' },
+export const QUEST_CATEGORY_META: Record<QuestCategory, { labelKey: string; color: string }> = {
+    onboarding: { labelKey: 'quests:category.onboarding', color: 'var(--ember)' },
+    exercise:   { labelKey: 'quests:category.exercise',   color: 'var(--good)' },
+    mastery:    { labelKey: 'quests:category.mastery',    color: 'var(--gold)' },
+    endurance:  { labelKey: 'quests:category.endurance',  color: 'var(--blood)' },
+    variety:    { labelKey: 'quests:category.variety',    color: 'var(--ice)' },
 };
 
 // ── Quest definitions ────────────────────────────────────────────
+
+function questKeys(id: string): { titleKey: string; descriptionKey: string } {
+    return {
+        titleKey: `quests:def.${id}.title`,
+        descriptionKey: `quests:def.${id}.description`,
+    };
+}
 
 export const QUESTS: QuestDef[] = [
     // ── Onboarding ──
@@ -97,8 +107,7 @@ export const QUESTS: QuestDef[] = [
         id: 'first_steps',
         order: 0,
         category: 'onboarding',
-        title: 'First Steps',
-        description: 'Complete 5 reps of any exercise to calibrate your body profile.',
+        ...questKeys('first_steps'),
         emoji: '🎯',
         xpReward: 50,
         goal: { reps: 5 },
@@ -110,8 +119,7 @@ export const QUESTS: QuestDef[] = [
         id: 'warm_up',
         order: 1,
         category: 'onboarding',
-        title: 'Warm Up',
-        description: 'Complete 10 reps of any exercise.',
+        ...questKeys('warm_up'),
         emoji: '🔥',
         xpReward: 75,
         goal: { reps: 10 },
@@ -124,8 +132,7 @@ export const QUESTS: QuestDef[] = [
         id: 'pushup_initiate',
         order: 10,
         category: 'exercise',
-        title: 'Push-Up Initiate',
-        description: 'Complete 15 push-ups.',
+        ...questKeys('pushup_initiate'),
         emoji: '💪',
         xpReward: 100,
         goal: { reps: 15, exerciseType: 'pushup' },
@@ -136,8 +143,7 @@ export const QUESTS: QuestDef[] = [
         id: 'squat_initiate',
         order: 11,
         category: 'exercise',
-        title: 'Squat Initiate',
-        description: 'Complete 15 squats.',
+        ...questKeys('squat_initiate'),
         emoji: '🦵',
         xpReward: 100,
         goal: { reps: 15, exerciseType: 'squat' },
@@ -148,8 +154,7 @@ export const QUESTS: QuestDef[] = [
         id: 'legraise_initiate',
         order: 12,
         category: 'exercise',
-        title: 'Leg Raise Initiate',
-        description: 'Complete 15 leg raises.',
+        ...questKeys('legraise_initiate'),
         emoji: '🧘',
         xpReward: 100,
         goal: { reps: 15, exerciseType: 'legraise' },
@@ -160,8 +165,7 @@ export const QUESTS: QuestDef[] = [
         id: 'pullup_initiate',
         order: 13,
         category: 'exercise',
-        title: 'Pull-Up Initiate',
-        description: 'Complete 5 pull-ups.',
+        ...questKeys('pullup_initiate'),
         emoji: '🏋️',
         xpReward: 150,
         goal: { reps: 5, exerciseType: 'pullup' },
@@ -174,8 +178,7 @@ export const QUESTS: QuestDef[] = [
         id: 'quality_over_quantity',
         order: 20,
         category: 'mastery',
-        title: 'Quality Over Quantity',
-        description: 'Complete 10 reps with an average score of A (75+).',
+        ...questKeys('quality_over_quantity'),
         emoji: '⭐',
         xpReward: 150,
         goal: { reps: 10, minAvgScore: 75 },
@@ -186,8 +189,7 @@ export const QUESTS: QuestDef[] = [
         id: 'perfect_ten',
         order: 21,
         category: 'mastery',
-        title: 'Perfect Ten',
-        description: 'Complete 10 reps with an average score of S (90+).',
+        ...questKeys('perfect_ten'),
         emoji: '💎',
         xpReward: 300,
         goal: { reps: 10, minAvgScore: 90 },
@@ -198,8 +200,7 @@ export const QUESTS: QuestDef[] = [
         id: 'pushup_master',
         order: 22,
         category: 'mastery',
-        title: 'Push-Up Master',
-        description: 'Complete 30 push-ups with an average A grade.',
+        ...questKeys('pushup_master'),
         emoji: '🏅',
         xpReward: 250,
         goal: { reps: 30, exerciseType: 'pushup', minAvgScore: 75 },
@@ -210,8 +211,7 @@ export const QUESTS: QuestDef[] = [
         id: 'legraise_master',
         order: 24,
         category: 'mastery',
-        title: 'Leg Raise Master',
-        description: 'Complete 30 leg raises with an average A grade.',
+        ...questKeys('legraise_master'),
         emoji: '🏅',
         xpReward: 250,
         goal: { reps: 30, exerciseType: 'legraise', minAvgScore: 75 },
@@ -222,8 +222,7 @@ export const QUESTS: QuestDef[] = [
         id: 'squat_master',
         order: 25,
         category: 'mastery',
-        title: 'Squat Master',
-        description: 'Complete 30 squats with an average A grade.',
+        ...questKeys('squat_master'),
         emoji: '🏅',
         xpReward: 250,
         goal: { reps: 30, exerciseType: 'squat', minAvgScore: 75 },
@@ -236,8 +235,7 @@ export const QUESTS: QuestDef[] = [
         id: 'marathon_starter',
         order: 30,
         category: 'endurance',
-        title: 'Marathon Starter',
-        description: 'Complete 25 reps in a single session.',
+        ...questKeys('marathon_starter'),
         emoji: '🏃',
         xpReward: 125,
         goal: { reps: 25, singleSession: true },
@@ -248,8 +246,7 @@ export const QUESTS: QuestDef[] = [
         id: 'iron_will',
         order: 31,
         category: 'endurance',
-        title: 'Iron Will',
-        description: 'Complete 50 reps in a single session.',
+        ...questKeys('iron_will'),
         emoji: '🔩',
         xpReward: 250,
         goal: { reps: 50, singleSession: true },
@@ -260,8 +257,7 @@ export const QUESTS: QuestDef[] = [
         id: 'centurion',
         order: 32,
         category: 'endurance',
-        title: 'Centurion',
-        description: 'Complete 100 reps in a single session.',
+        ...questKeys('centurion'),
         emoji: '💯',
         xpReward: 500,
         goal: { reps: 100, singleSession: true },
@@ -274,8 +270,7 @@ export const QUESTS: QuestDef[] = [
         id: 'multi_set_warrior',
         order: 40,
         category: 'variety',
-        title: 'Multi-Set Warrior',
-        description: 'Complete a multi-set workout (2+ sets).',
+        ...questKeys('multi_set_warrior'),
         emoji: '🔄',
         xpReward: 100,
         goal: { reps: 1, multiSet: true },
@@ -286,8 +281,7 @@ export const QUESTS: QuestDef[] = [
         id: 'cross_trainer',
         order: 41,
         category: 'variety',
-        title: 'Cross-Trainer',
-        description: 'Complete a multi-exercise workout.',
+        ...questKeys('cross_trainer'),
         emoji: '🎭',
         xpReward: 200,
         goal: { reps: 1, multiExercise: true },
@@ -298,8 +292,7 @@ export const QUESTS: QuestDef[] = [
         id: 'versatile_athlete',
         order: 42,
         category: 'variety',
-        title: 'Versatile Athlete',
-        description: 'Complete 20+ reps in a multi-exercise workout with A grade.',
+        ...questKeys('versatile_athlete'),
         emoji: '🌟',
         xpReward: 350,
         goal: { reps: 20, multiExercise: true, minAvgScore: 75 },
@@ -307,6 +300,23 @@ export const QUESTS: QuestDef[] = [
         requiredLevel: 7,
     },
 ];
+
+// ── Display helpers ──────────────────────────────────────────────
+
+/** Resolve the localized title for a quest. */
+export function getQuestTitle(quest: QuestDef, t: TFunction): string {
+    return t(quest.titleKey);
+}
+
+/** Resolve the localized description for a quest. */
+export function getQuestDescription(quest: QuestDef, t: TFunction): string {
+    return t(quest.descriptionKey);
+}
+
+/** Resolve the localized label for a quest category. */
+export function getQuestCategoryLabel(category: QuestCategory, t: TFunction): string {
+    return t(QUEST_CATEGORY_META[category].labelKey);
+}
 
 // ── Quest lookup map (perf) ──────────────────────────────────────
 
@@ -521,11 +531,14 @@ export function getAcceptedQuests(progress: QuestProgress, userLevel: number = 0
     return QUESTS.filter(q => getQuestStatus(q, progress, userLevel) === 'accepted');
 }
 
-/** Return a contextual hint for complex (non-quick-startable) quests */
-export function getComplexQuestHint(quest: QuestDef): string | null {
+/** Discriminator describing why a quest can't be quick-started — UI maps to a localized hint. */
+export type ComplexQuestHint = 'multi_exercise' | 'multi_set';
+
+/** Return a contextual hint discriminator for complex (non-quick-startable) quests */
+export function getComplexQuestHint(quest: QuestDef): ComplexQuestHint | null {
     if (isQuestQuickStartable(quest)) return null;
-    if (quest.goal.multiExercise) return 'Use Multi-Set Workout with 2+ exercises';
-    if (quest.goal.multiSet) return 'Use Multi-Set Workout with 2+ sets';
+    if (quest.goal.multiExercise) return 'multi_exercise';
+    if (quest.goal.multiSet) return 'multi_set';
     return null;
 }
 

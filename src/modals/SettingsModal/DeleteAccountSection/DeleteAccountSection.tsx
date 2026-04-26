@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuthCore } from '@hooks/useAuth';
 import { reauthenticateWithGoogle, reauthenticateWithEmail, translateAuthError } from '@services/authService';
 import { deleteCurrentAccount } from '@services/deleteAccount';
@@ -9,6 +10,7 @@ interface DeleteAccountSectionProps {
 }
 
 export function DeleteAccountSection({ onAccountDeleted }: DeleteAccountSectionProps) {
+    const { t } = useTranslation('modals');
     const { user } = useAuthCore();
 
     const [deleteInput, setDeleteInput] = useState('');
@@ -18,6 +20,7 @@ export function DeleteAccountSection({ onAccountDeleted }: DeleteAccountSectionP
 
     const isGoogleUser = user?.providerIds.includes('google.com') ?? false;
     const isEmailUser = user?.providerIds.includes('password') ?? false;
+    const confirmWord = t('settings.delete.type_to_confirm_word');
 
     const handleDeleteAccount = async () => {
         setDeleteError('');
@@ -30,7 +33,7 @@ export function DeleteAccountSection({ onAccountDeleted }: DeleteAccountSectionP
                 await reauthenticateWithGoogle();
             } else if (isEmailUser) {
                 if (!password) {
-                    setDeleteError('Please enter your password to confirm deletion.');
+                    setDeleteError(t('settings.delete.missing_password_error'));
                     setDeleteLoading(false);
                     return;
                 }
@@ -40,7 +43,7 @@ export function DeleteAccountSection({ onAccountDeleted }: DeleteAccountSectionP
             await deleteCurrentAccount();
             onAccountDeleted();
         } catch (err: unknown) {
-            setDeleteError(translateAuthError(err));
+            setDeleteError(t(translateAuthError(err)));
         } finally {
             setDeleteLoading(false);
         }
@@ -49,30 +52,32 @@ export function DeleteAccountSection({ onAccountDeleted }: DeleteAccountSectionP
     return (
         <>
             <p className="settings-danger-desc">
-                Deleting your account is <strong>permanent and irreversible</strong>. All your data (sessions, friends, progress) will be permanently deleted.
+                {t('settings.delete.warning_lead')} <strong>{t('settings.delete.warning_strong')}</strong>{t('settings.delete.warning_tail')}
             </p>
             <div className="input-group">
-                <label htmlFor="settings-delete-confirm">Type <strong>DELETE</strong> to confirm</label>
+                <label htmlFor="settings-delete-confirm">
+                    {t('settings.delete.type_to_confirm_prefix')} <strong>{confirmWord}</strong> {t('settings.delete.type_to_confirm_suffix')}
+                </label>
                 <input
                     id="settings-delete-confirm"
                     type="text"
                     value={deleteInput}
                     onChange={e => setDeleteInput(e.target.value)}
-                    placeholder="DELETE"
-                    className={deleteInput === 'DELETE' ? 'input--danger-ready' : ''}
+                    placeholder={confirmWord}
+                    className={deleteInput === confirmWord ? 'input--danger-ready' : ''}
                     aria-describedby={deleteError ? 'delete-account-error' : undefined}
                     aria-invalid={!!deleteError || undefined}
                 />
             </div>
-            {isEmailUser && deleteInput === 'DELETE' && (
+            {isEmailUser && deleteInput === confirmWord && (
                 <div className="input-group">
-                    <label htmlFor="settings-delete-password">Enter your password</label>
+                    <label htmlFor="settings-delete-password">{t('settings.delete.label_password')}</label>
                     <input
                         id="settings-delete-password"
                         type="password"
                         value={password}
                         onChange={e => setPassword(e.target.value)}
-                        placeholder="Your password"
+                        placeholder={t('settings.delete.password_placeholder')}
                         autoComplete="current-password"
                         aria-describedby={deleteError ? 'delete-account-error' : undefined}
                         aria-invalid={!!deleteError || undefined}
@@ -84,9 +89,9 @@ export function DeleteAccountSection({ onAccountDeleted }: DeleteAccountSectionP
                 type="button"
                 className="btn-danger"
                 onClick={handleDeleteAccount}
-                disabled={deleteInput !== 'DELETE' || deleteLoading || (isEmailUser && !password)}
+                disabled={deleteInput !== confirmWord || deleteLoading || (isEmailUser && !password)}
             >
-                {deleteLoading ? 'Deleting…' : 'Delete My Account'}
+                {deleteLoading ? t('settings.delete.btn_loading') : t('settings.delete.btn_submit')}
             </button>
         </>
     );

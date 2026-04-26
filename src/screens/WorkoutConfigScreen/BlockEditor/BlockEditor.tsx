@@ -1,9 +1,10 @@
+import { useTranslation } from 'react-i18next';
 import { DragNumberPicker } from '@components/DragNumberPicker/DragNumberPicker';
 import { TimePicker } from '@components/TimePicker/TimePicker';
 import { ExercisePicker } from '@components/ExercisePicker/ExercisePicker';
 import { SegmentedToggle } from '@components/SegmentedToggle/SegmentedToggle';
 import { MIN_SETS, MAX_SETS, MAX_REST_SECONDS, MAX_EXERCISE_REST_SECONDS } from '@domain';
-import { getExerciseLabel, type WorkoutBlock } from '@exercises/types';
+import { getExerciseLabelKey, type WorkoutBlock } from '@exercises/types';
 import { PageLayout } from '@components/PageLayout/PageLayout';
 import { PrimaryCTA } from '@components/PrimaryCTA/PrimaryCTA';
 import './BlockEditor.scss';
@@ -31,14 +32,16 @@ export function BlockEditor({
     onNext,
     onUpdateBlock,
 }: BlockEditorProps) {
+    const { t } = useTranslation('workout');
     const { exerciseType, numberOfSets, sessionMode, goalReps, timeGoal, restBetweenSets, restAfterBlock } = editingBlock;
     const maxRestMinutes = Math.floor(MAX_REST_SECONDS / 60);
     const maxExerciseRestMinutes = Math.floor(MAX_EXERCISE_REST_SECONDS / 60);
     const blockStepIndex = blockSteps.indexOf(blockStep);
+    const exerciseLabel = t(getExerciseLabelKey(exerciseType));
 
     return (
         <PageLayout
-            title={isAddingNew ? 'Add Exercise' : `Edit Exercise ${editingBlockIndex + 1}`}
+            title={isAddingNew ? t('config.editor.add_title') : t('config.editor.edit_title', { n: editingBlockIndex + 1 })}
             onClose={onBack}
             // At non-first wizard steps, "back" navigates within the same mounted
             // BlockEditor (just changes blockStep). Bypass PageLayout's exit
@@ -66,7 +69,7 @@ export function BlockEditor({
                         }}
                     />
                 </div>
-                <span className="wc-progress-label">{blockStepIndex + 1} / {blockSteps.length}</span>
+                <span className="wc-progress-label">{t('config.editor.step_progress_aria', { current: blockStepIndex + 1, total: blockSteps.length })}</span>
             </div>
 
             <div className="wc-body">
@@ -76,13 +79,13 @@ export function BlockEditor({
                             <span className="wc-step-icon">
                                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 4v6a6 6 0 0 0 12 0V4" /><line x1="4" y1="20" x2="20" y2="20" /></svg>
                             </span>
-                            <h2 className="wc-step-title">Choose exercise</h2>
-                            <p className="wc-step-subtitle">Select the exercise for this block</p>
+                            <h2 className="wc-step-title">{t('config.editor.exercise_title')}</h2>
+                            <p className="wc-step-subtitle">{t('config.editor.exercise_subtitle')}</p>
                         </div>
                         <div className="wc-step-content">
                             <ExercisePicker
                                 value={exerciseType}
-                                onChange={(t) => onUpdateBlock({ exerciseType: t })}
+                                onChange={(type) => onUpdateBlock({ exerciseType: type })}
                             />
                         </div>
                     </div>
@@ -94,8 +97,8 @@ export function BlockEditor({
                             <span className="wc-step-icon">
                                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
                             </span>
-                            <h2 className="wc-step-title">How many sets?</h2>
-                            <p className="wc-step-subtitle">Number of sets for {getExerciseLabel(exerciseType)}</p>
+                            <h2 className="wc-step-title">{t('config.editor.sets_title')}</h2>
+                            <p className="wc-step-subtitle">{t('config.editor.sets_subtitle', { exercise: exerciseLabel })}</p>
                         </div>
                         <div className="wc-step-content">
                             <DragNumberPicker
@@ -103,7 +106,7 @@ export function BlockEditor({
                                 min={MIN_SETS}
                                 max={MAX_SETS}
                                 onChange={(v) => onUpdateBlock({ numberOfSets: v })}
-                                unit="sets"
+                                unit={t('config.editor.sets_unit')}
                             />
                         </div>
                     </div>
@@ -118,25 +121,25 @@ export function BlockEditor({
                                     : <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
                                 }
                             </span>
-                            <h2 className="wc-step-title">Set your goal</h2>
-                            <p className="wc-step-subtitle">Target for each set of {getExerciseLabel(exerciseType)}</p>
+                            <h2 className="wc-step-title">{t('config.editor.goal_title')}</h2>
+                            <p className="wc-step-subtitle">{t('config.editor.goal_subtitle', { exercise: exerciseLabel })}</p>
                         </div>
                         <div className="wc-step-content">
                             <SegmentedToggle
                                 value={sessionMode}
                                 onChange={(v) => onUpdateBlock({ sessionMode: v })}
-                                aria-label="Session mode"
+                                aria-label={t('config.editor.session_mode_aria')}
                                 options={[
                                     {
                                         value: 'reps',
-                                        label: 'Reps',
+                                        label: t('config.editor.goal_mode_reps'),
                                         icon: (
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>
                                         ),
                                     },
                                     {
                                         value: 'time',
-                                        label: 'Time',
+                                        label: t('config.editor.goal_mode_time'),
                                         icon: (
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
                                         ),
@@ -153,7 +156,7 @@ export function BlockEditor({
                             ) : (
                                 <TimePicker
                                     value={timeGoal}
-                                    onChange={(t) => onUpdateBlock({ timeGoal: t })}
+                                    onChange={(time) => onUpdateBlock({ timeGoal: time })}
                                 />
                             )}
                         </div>
@@ -166,13 +169,13 @@ export function BlockEditor({
                             <span className="wc-step-icon">
                                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
                             </span>
-                            <h2 className="wc-step-title">Rest between sets</h2>
-                            <p className="wc-step-subtitle">How long between each set of {getExerciseLabel(exerciseType)}?</p>
+                            <h2 className="wc-step-title">{t('config.editor.rest_sets_title')}</h2>
+                            <p className="wc-step-subtitle">{t('config.editor.rest_sets_subtitle', { exercise: exerciseLabel })}</p>
                         </div>
                         <div className="wc-step-content">
                             <TimePicker
                                 value={restBetweenSets}
-                                onChange={(t) => onUpdateBlock({ restBetweenSets: t })}
+                                onChange={(time) => onUpdateBlock({ restBetweenSets: time })}
                                 maxMinutes={maxRestMinutes}
                             />
                         </div>
@@ -185,13 +188,13 @@ export function BlockEditor({
                             <span className="wc-step-icon">
                                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>
                             </span>
-                            <h2 className="wc-step-title">Rest before next exercise</h2>
-                            <p className="wc-step-subtitle">Recovery time after {getExerciseLabel(exerciseType)}</p>
+                            <h2 className="wc-step-title">{t('config.editor.rest_exercise_title')}</h2>
+                            <p className="wc-step-subtitle">{t('config.editor.rest_exercise_subtitle', { exercise: exerciseLabel })}</p>
                         </div>
                         <div className="wc-step-content">
                             <TimePicker
                                 value={restAfterBlock}
-                                onChange={(t) => onUpdateBlock({ restAfterBlock: t })}
+                                onChange={(time) => onUpdateBlock({ restAfterBlock: time })}
                                 maxMinutes={maxExerciseRestMinutes}
                             />
                         </div>
@@ -209,13 +212,13 @@ export function BlockEditor({
                         : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>}
                     onClick={onNext}
                 >
-                    {blockStepIndex >= blockSteps.length - 1 ? 'Done' : 'Next'}
+                    {blockStepIndex >= blockSteps.length - 1 ? t('common:action.done') : t('common:action.next')}
                 </PrimaryCTA>
             </div>
 
             <div className="wc-footer">
                 <span className="wc-step-counter">
-                    Step {blockStepIndex + 1} of {blockSteps.length}
+                    {t('config.editor.step_counter', { current: blockStepIndex + 1, total: blockSteps.length })}
                 </span>
             </div>
         </PageLayout>

@@ -1,0 +1,33 @@
+{
+    "hud": {
+        "open_profile": "Ouvrir le profil",
+        "level_kicker": "NIVEAU {{level}} · {{current}}/{{total}}",
+        "default_player_name": "Joueur",
+        "total_xp_aria": "{{xp}} XP au total",
+        "xp_to_next_level": "{{xp}} XP → NV {{level}}",
+        "guest_kicker": "Profil invité",
+        "guest_subtitle": "Connecte-toi pour sauvegarder ta progression",
+        "sign_in": "Se connecter"
+    },
+    "cta": {
+        "quick_session": "Session rapide",
+        "multi_set_workout": "Workout multi-sets"
+    },
+    "signup_promo": {
+        "title": "Quête terminée — ne perds pas ta progression !",
+        "perk_save": "Sauvegarde XP, niveau et stats à vie",
+        "perk_unlock": "Débloque achievements et classements",
+        "perk_track": "Suis ta progression sur tous tes appareils"
+    },
+    "resume": {
+        "title": "Workout en cours",
+        "detail": "{{completed}}/{{total}} sets · {{reps}} reps · {{ago}}",
+        "next": "Prochain : {{exercise}}",
+        "btn_resume": "Reprendre",
+        "btn_discard_aria": "Annuler le workout",
+        "ago_just_now": "à l'instant",
+        "ago_minutes": "il y a {{count}} min",
+        "ago_hours": "il y a {{count}} h",
+        "ago_days": "il y a {{count}} j"
+    }
+}

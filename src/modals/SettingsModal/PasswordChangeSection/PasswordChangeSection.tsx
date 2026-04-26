@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { changePassword, translateAuthError } from '@services/authService';
 import './PasswordChangeSection.scss';
 
 export function PasswordChangeSection() {
+    const { t } = useTranslation('modals');
     const [currentPwd, setCurrentPwd] = useState('');
     const [newPwd, setNewPwd] = useState('');
     const [confirmPwd, setConfirmPwd] = useState('');
@@ -16,11 +18,11 @@ export function PasswordChangeSection() {
         setPwdSuccess(false);
 
         if (newPwd.length < 6) {
-            setPwdError('New password must be at least 6 characters.');
+            setPwdError(t('settings.password.min_length_error'));
             return;
         }
         if (newPwd !== confirmPwd) {
-            setPwdError('Passwords do not match.');
+            setPwdError(t('settings.password.mismatch_error'));
             return;
         }
 
@@ -32,7 +34,7 @@ export function PasswordChangeSection() {
             setNewPwd('');
             setConfirmPwd('');
         } catch (err: unknown) {
-            setPwdError(translateAuthError(err));
+            setPwdError(t(translateAuthError(err)));
         } finally {
             setPwdLoading(false);
         }
@@ -41,13 +43,13 @@ export function PasswordChangeSection() {
     return (
         <form className="settings-form" onSubmit={handlePasswordChange}>
             <div className="input-group">
-                <label htmlFor="settings-current-pwd">Current password</label>
+                <label htmlFor="settings-current-pwd">{t('settings.password.label_current')}</label>
                 <input
                     id="settings-current-pwd"
                     type="password"
                     value={currentPwd}
                     onChange={e => setCurrentPwd(e.target.value)}
-                    placeholder="••••••••"
+                    placeholder={t('settings.password.placeholder')}
                     required
                     autoComplete="current-password"
                     aria-describedby={pwdError ? 'password-change-error' : undefined}
@@ -55,13 +57,13 @@ export function PasswordChangeSection() {
                 />
             </div>
             <div className="input-group">
-                <label htmlFor="settings-new-pwd">New password</label>
+                <label htmlFor="settings-new-pwd">{t('settings.password.label_new')}</label>
                 <input
                     id="settings-new-pwd"
                     type="password"
                     value={newPwd}
                     onChange={e => setNewPwd(e.target.value)}
-                    placeholder="••••••••"
+                    placeholder={t('settings.password.placeholder')}
                     required
                     autoComplete="new-password"
                     aria-describedby={pwdError ? 'password-change-error' : undefined}
@@ -69,13 +71,13 @@ export function PasswordChangeSection() {
                 />
             </div>
             <div className="input-group">
-                <label htmlFor="settings-confirm-pwd">Confirm new password</label>
+                <label htmlFor="settings-confirm-pwd">{t('settings.password.label_confirm')}</label>
                 <input
                     id="settings-confirm-pwd"
                     type="password"
                     value={confirmPwd}
                     onChange={e => setConfirmPwd(e.target.value)}
-                    placeholder="••••••••"
+                    placeholder={t('settings.password.placeholder')}
                     required
                     autoComplete="new-password"
                     aria-describedby={pwdError ? 'password-change-error' : undefined}
@@ -83,9 +85,9 @@ export function PasswordChangeSection() {
                 />
             </div>
             {pwdError && <p id="password-change-error" className="settings-feedback settings-feedback--error" role="alert">{pwdError}</p>}
-            {pwdSuccess && <p className="settings-feedback settings-feedback--success">Password updated successfully!</p>}
+            {pwdSuccess && <p className="settings-feedback settings-feedback--success">{t('settings.password.success')}</p>}
             <button type="submit" className="btn-primary settings-submit" disabled={pwdLoading}>
-                {pwdLoading ? 'Updating…' : 'Update Password'}
+                {pwdLoading ? t('settings.password.btn_loading') : t('settings.password.btn_submit')}
             </button>
         </form>
     );

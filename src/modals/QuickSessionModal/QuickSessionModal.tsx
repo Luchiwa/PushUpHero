@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { DragNumberPicker } from '@components/DragNumberPicker/DragNumberPicker';
 import { TimePicker } from '@components/TimePicker/TimePicker';
 import { ExercisePicker } from '@components/ExercisePicker/ExercisePicker';
@@ -14,6 +15,7 @@ interface QuickSessionModalProps {
 }
 
 export function QuickSessionModal({ onClose }: QuickSessionModalProps) {
+    const { t } = useTranslation('modals');
     const {
         exerciseType, changeExerciseType,
         sessionMode, setSessionMode,
@@ -34,14 +36,14 @@ export function QuickSessionModal({ onClose }: QuickSessionModalProps) {
             onAnimationEnd={handleAnimationEnd}
             role="dialog"
             aria-modal="true"
-            aria-label="Quick Session"
+            aria-label={t('quicksession.label_aria')}
         >
             <div className={`qs-card${closing ? ' qs-card--exit' : ''}`} onClick={e => e.stopPropagation()}>
-                <button type="button" className="qs-close-btn" onClick={handleClose} aria-label="Close">×</button>
+                <button type="button" className="qs-close-btn" onClick={handleClose} aria-label={t('quicksession.close_aria')}>×</button>
 
                 <div className="qs-header">
-                    <span className="qs-kicker">Quick Session</span>
-                    <h2 className="qs-title">Ready, set, go</h2>
+                    <span className="qs-kicker">{t('quicksession.kicker')}</span>
+                    <h2 className="qs-title">{t('quicksession.title')}</h2>
                 </div>
 
                 <ExercisePicker value={exerciseType} onChange={changeExerciseType} />
@@ -49,18 +51,18 @@ export function QuickSessionModal({ onClose }: QuickSessionModalProps) {
                 <SegmentedToggle
                     value={sessionMode}
                     onChange={setSessionMode}
-                    aria-label="Session mode"
+                    aria-label={t('quicksession.session_mode_aria')}
                     options={[
                         {
                             value: 'reps',
-                            label: 'Reps',
+                            label: t('quicksession.mode_reps'),
                             icon: (
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>
                             ),
                         },
                         {
                             value: 'time',
-                            label: 'Time',
+                            label: t('quicksession.mode_time'),
                             icon: (
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
                             ),
@@ -69,7 +71,7 @@ export function QuickSessionModal({ onClose }: QuickSessionModalProps) {
                 />
 
                 <div className="qs-goal-section">
-                    <p className="qs-goal-label">{sessionMode === 'reps' ? 'Set your goal' : 'Time limit'}</p>
+                    <p className="qs-goal-label">{sessionMode === 'reps' ? t('quicksession.goal_set') : t('quicksession.goal_time')}</p>
                     {sessionMode === 'reps' ? (
                         <DragNumberPicker
                             value={goalReps}
@@ -94,8 +96,8 @@ export function QuickSessionModal({ onClose }: QuickSessionModalProps) {
                     disabled={closing}
                 >
                     {sessionMode === 'reps'
-                        ? `Start — ${goalReps} rep${goalReps > 1 ? 's' : ''}`
-                        : `Start — ${String(timeGoal.minutes).padStart(2, '0')}:${String(timeGoal.seconds).padStart(2, '0')}`
+                        ? t('quicksession.start_reps', { count: goalReps })
+                        : t('quicksession.start_time', { minutes: String(timeGoal.minutes).padStart(2, '0'), seconds: String(timeGoal.seconds).padStart(2, '0') })
                     }
                 </PrimaryCTA>
             </div>

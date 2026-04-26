@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuthCore, useLevel, useSessions } from '@hooks/useAuth';
 import { InstallBanner } from '@overlays/InstallBanner/InstallBanner';
 import { PrimaryCTA } from '@components/PrimaryCTA/PrimaryCTA';
@@ -46,6 +47,7 @@ export function StartScreen({
     pendingSignupPrompt,
     onSignupPromptHandled,
 }: StartScreenProps) {
+    const { t } = useTranslation('start');
     const {
         exerciseType, changeExerciseType,
         setGoalReps, setSessionMode,
@@ -235,7 +237,7 @@ export function StartScreen({
                         icon="⚡"
                         onClick={() => setActiveModal({ type: 'quickSession' })}
                     >
-                        Quick Session
+                        {t('cta.quick_session')}
                     </PrimaryCTA>
                 )}
 
@@ -248,7 +250,7 @@ export function StartScreen({
                         icon="🏋️"
                         onClick={handleOpenConfig}
                     >
-                        Multi-Set Workout
+                        {t('cta.multi_set_workout')}
                     </PrimaryCTA>
                 )}
             </div>
@@ -271,20 +273,20 @@ export function StartScreen({
                                 ? (
                                     <>
                                         <p className="auth-promo-title">
-                                            <span>🎉</span> Quest complete — don't lose your progress!
+                                            <span>🎉</span> {t('signup_promo.title')}
                                         </p>
                                         <ul className="auth-promo-perks">
                                             <li className="auth-promo-perk">
                                                 <span className="perk-icon">💾</span>
-                                                Save your XP, level & stats forever
+                                                {t('signup_promo.perk_save')}
                                             </li>
                                             <li className="auth-promo-perk">
                                                 <span className="perk-icon">🏆</span>
-                                                Unlock achievements & leaderboards
+                                                {t('signup_promo.perk_unlock')}
                                             </li>
                                             <li className="auth-promo-perk">
                                                 <span className="perk-icon">📈</span>
-                                                Track your progress across devices
+                                                {t('signup_promo.perk_track')}
                                             </li>
                                         </ul>
                                     </>
