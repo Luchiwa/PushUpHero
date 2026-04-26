@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useWeekSessions, getWeekStart, formatWeekRange } from '@hooks/useWeekSessions';
-import { EXERCISE_META, type ExerciseType } from '@exercises/types';
+import { EXERCISE_META, getExerciseLabelKey, type ExerciseType } from '@exercises/types';
 import { WeeklyChart } from './WeeklyChart/WeeklyChart';
 import { SessionHistoryPanel } from '@modals/panels/SessionHistoryPanel/SessionHistoryPanel';
 import { PageLayout } from '@components/PageLayout/PageLayout';
@@ -12,11 +13,6 @@ import './StatsScreen.scss';
 
 type ExerciseFilter = 'all' | ExerciseType;
 export type MetricMode = 'xp' | 'reps';
-
-const FILTERS: { value: ExerciseFilter; emoji: string; label: string }[] = [
-    { value: 'all', emoji: '🏋️', label: 'All' },
-    ...EXERCISE_META.map(m => ({ value: m.type as ExerciseFilter, emoji: m.emoji, label: m.label })),
-];
 
 // ── Swipe hook ──────────────────────────────────────────────────
 const SWIPE_THRESHOLD = 50;
@@ -54,10 +50,18 @@ interface StatsScreenProps {
 }
 
 export function StatsScreen({ onClose }: StatsScreenProps) {
+    const { t } = useTranslation('stats');
     const [weekOffset, setWeekOffset] = useState(0);
     const [exerciseFilter, setExerciseFilter] = useState<ExerciseFilter>('all');
     const [metric, setMetric] = useState<MetricMode>('xp');
     const { sessions, prevSessions, loading, firstSessionDate, fetchWeek } = useWeekSessions();
+    const filters: { value: ExerciseFilter; emoji: string; label: string }[] = useMemo(
+        () => [
+            { value: 'all', emoji: '🏋️', label: t('screen.filter_all') },
+            ...EXERCISE_META.map(m => ({ value: m.type as ExerciseFilter, emoji: m.emoji, label: t(getExerciseLabelKey(m.type)) })),
+        ],
+        [t],
+    );
 
     useEffect(() => {
         fetchWeek(weekOffset);
@@ -109,7 +113,7 @@ export function StatsScreen({ onClose }: StatsScreenProps) {
 
     return (
         <PageLayout
-            title="Statistics"
+            title={t('screen.title')}
             onClose={onClose}
             zIndex={200}
             bodyClassName="stats-body"
@@ -119,7 +123,7 @@ export function StatsScreen({ onClose }: StatsScreenProps) {
 
                 {/* Exercise type filter */}
                 <div className="stats-filter-row">
-                    {FILTERS.map((f, i) => (
+                    {filters.map((f, i) => (
                         <button
                             key={f.value}
                             type="button"
@@ -177,7 +181,7 @@ export function StatsScreen({ onClose }: StatsScreenProps) {
 
             {(filteredSessions.length > 0 || !loading) && (
                 <div className="stats-sessions-divider">
-                    <span className="stats-sessions-divider__label">This week's sessions</span>
+                    <span className="stats-sessions-divider__label">{t('screen.this_week_sessions')}</span>
                     {filteredSessions.length > 0 && (
                         <span className="stats-sessions-divider__count">{filteredSessions.length}</span>
                     )}
@@ -188,7 +192,7 @@ export function StatsScreen({ onClose }: StatsScreenProps) {
                 {filteredSessions.length > 0 ? (
                     <SessionHistoryPanel sessions={filteredSessions} />
                 ) : !loading && (
-                    <p className="stats-sessions-empty">No sessions to display.</p>
+                    <p className="stats-sessions-empty">{t('screen.no_sessions')}</p>
                 )}
             </div>
         </PageLayout>

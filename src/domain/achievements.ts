@@ -4,10 +4,17 @@
  * Static registry of every achievement and record in PushUpHero.
  * Pure data — no React, no Firestore. Importable anywhere.
  *
+ * Display strings live in the i18n bundles (`stats.json` →
+ * `stats.achievements.*` and `stats.records.*`). Each def carries the
+ * i18next `titleKey` / `descriptionKey` (or `labelKey` for records) and
+ * optional interpolation params. Resolve via `getAchievementTitle()` /
+ * `getAchievementDescription()` / `getRecordLabel()`.
+ *
  * @see ACHIEVEMENTS.md for the full design document.
  */
 
-import { EXERCISE_TYPES, getExerciseEmoji, getExerciseLabel, type ExerciseType } from '@exercises/types';
+import type { TFunction } from 'i18next';
+import { EXERCISE_TYPES, getExerciseEmoji, getExerciseLabelKey, type ExerciseType } from '@exercises/types';
 
 // ─── Rarity tiers ────────────────────────────────────────────────────────────
 
@@ -26,11 +33,11 @@ export const TIER_COLORS: Record<AchievementTier, string> = {
 export type AchievementCategory = 'strength' | 'discipline' | 'social' | 'performance';
 
 // Keep in sync with Arena semantic tokens on :root.
-export const CATEGORY_META: Record<AchievementCategory, { label: string; emoji: string; color: string }> = {
-    strength:    { label: 'Strength',    emoji: '🏋️', color: 'var(--blood)' },
-    discipline:  { label: 'Discipline',  emoji: '📅',  color: 'var(--good)' },
-    social:      { label: 'Social',      emoji: '👥',  color: 'var(--ice)' },
-    performance: { label: 'Performance', emoji: '⚡',  color: 'var(--purple)' },
+export const CATEGORY_META: Record<AchievementCategory, { labelKey: string; emoji: string; color: string }> = {
+    strength:    { labelKey: 'stats:achievements.category.strength',    emoji: '🏋️', color: 'var(--blood)' },
+    discipline:  { labelKey: 'stats:achievements.category.discipline',  emoji: '📅',  color: 'var(--good)' },
+    social:      { labelKey: 'stats:achievements.category.social',      emoji: '👥',  color: 'var(--ice)' },
+    performance: { labelKey: 'stats:achievements.category.performance', emoji: '⚡',  color: 'var(--purple)' },
 };
 
 // ─── Achievement definition ──────────────────────────────────────────────────
@@ -39,8 +46,14 @@ export interface AchievementDef {
     id: string;
     category: AchievementCategory;
     tier: AchievementTier;
-    title: string;
-    description: string;
+    /** i18next key for the display title. Resolve via `getAchievementTitle(def, t)`. */
+    titleKey: string;
+    /** i18next key for the description. Resolve via `getAchievementDescription(def, t)`. */
+    descriptionKey: string;
+    /** Optional interpolation values for the title key. */
+    titleParams?: Record<string, string | number>;
+    /** Optional interpolation values for the description key. */
+    descriptionParams?: Record<string, string | number>;
     /** The stat key used to check progress (e.g. 'pushup_lifetime_reps', 'totalSessions', 'bestStreak') */
     statKey: string;
     /** Threshold value to unlock */
@@ -67,8 +80,10 @@ function lifetimeRepsAchievements(): AchievementDef[] {
             id: `${ex}_reps_${threshold}`,
             category: 'strength' as const,
             tier,
-            title: `${threshold >= 1000 ? `${threshold / 1000}K` : threshold} ${getExerciseLabel(ex)}`,
-            description: `Perform ${threshold.toLocaleString()} ${getExerciseLabel(ex).toLowerCase()} total`,
+            titleKey: 'stats:achievements.lifetime_reps.title',
+            titleParams: { count: threshold >= 1000 ? `${threshold / 1000}K` : `${threshold}` },
+            descriptionKey: 'stats:achievements.lifetime_reps.description',
+            descriptionParams: { count: threshold },
             statKey: `${ex}_lifetime_reps`,
             threshold,
             exerciseType: ex,
@@ -89,8 +104,10 @@ function sessionRepsAchievements(): AchievementDef[] {
             id: `${ex}_session_${threshold}`,
             category: 'strength' as const,
             tier,
-            title: `${threshold} ${getExerciseLabel(ex)} in one session`,
-            description: `Complete ${threshold} ${getExerciseLabel(ex).toLowerCase()} in a single session`,
+            titleKey: 'stats:achievements.session_reps.title',
+            titleParams: { count: threshold },
+            descriptionKey: 'stats:achievements.session_reps.description',
+            descriptionParams: { count: threshold },
             statKey: `${ex}_session_reps`,
             threshold,
             exerciseType: ex,
@@ -98,140 +115,116 @@ function sessionRepsAchievements(): AchievementDef[] {
     );
 }
 
-function sessionsCountAchievements(): AchievementDef[] {
-    const tiers: { threshold: number; tier: AchievementTier; title: string }[] = [
-        { threshold: 1,   tier: 'bronze',   title: 'First Sweat' },
-        { threshold: 10,  tier: 'bronze',   title: 'Getting Started' },
-        { threshold: 25,  tier: 'silver',   title: 'Regular' },
-        { threshold: 50,  tier: 'silver',   title: 'Dedicated' },
-        { threshold: 100, tier: 'gold',     title: 'Centurion' },
-        { threshold: 250, tier: 'gold',     title: 'Machine' },
-        { threshold: 500, tier: 'platinum', title: 'Living Legend' },
-    ];
-    return tiers.map(({ threshold, tier, title }) => ({
-        id: `sessions_${threshold}`,
-        category: 'discipline' as const,
+function byIdDef(id: string, category: AchievementCategory, tier: AchievementTier, statKey: string, threshold: number): AchievementDef {
+    return {
+        id,
+        category,
         tier,
-        title,
-        description: `Complete ${threshold} workout session${threshold > 1 ? 's' : ''}`,
-        statKey: 'totalSessions',
+        titleKey: `stats:achievements.by_id.${id}.title`,
+        descriptionKey: `stats:achievements.by_id.${id}.description`,
+        statKey,
         threshold,
-    }));
+    };
+}
+
+function sessionsCountAchievements(): AchievementDef[] {
+    const tiers: { threshold: number; tier: AchievementTier }[] = [
+        { threshold: 1,   tier: 'bronze' },
+        { threshold: 10,  tier: 'bronze' },
+        { threshold: 25,  tier: 'silver' },
+        { threshold: 50,  tier: 'silver' },
+        { threshold: 100, tier: 'gold' },
+        { threshold: 250, tier: 'gold' },
+        { threshold: 500, tier: 'platinum' },
+    ];
+    return tiers.map(({ threshold, tier }) =>
+        byIdDef(`sessions_${threshold}`, 'discipline', tier, 'totalSessions', threshold),
+    );
 }
 
 function streakAchievements(): AchievementDef[] {
-    const tiers: { threshold: number; tier: AchievementTier; title: string }[] = [
-        { threshold: 3,   tier: 'bronze',   title: 'Three-peat' },
-        { threshold: 7,   tier: 'silver',   title: 'Full Week' },
-        { threshold: 14,  tier: 'silver',   title: 'Fortnight' },
-        { threshold: 30,  tier: 'gold',     title: 'Monthly Warrior' },
-        { threshold: 60,  tier: 'gold',     title: 'Iron Will' },
-        { threshold: 100, tier: 'platinum', title: 'Unstoppable' },
+    const tiers: { threshold: number; tier: AchievementTier }[] = [
+        { threshold: 3,   tier: 'bronze' },
+        { threshold: 7,   tier: 'silver' },
+        { threshold: 14,  tier: 'silver' },
+        { threshold: 30,  tier: 'gold' },
+        { threshold: 60,  tier: 'gold' },
+        { threshold: 100, tier: 'platinum' },
     ];
-    return tiers.map(({ threshold, tier, title }) => ({
-        id: `streak_${threshold}`,
-        category: 'discipline' as const,
-        tier,
-        title,
-        description: `Reach a ${threshold}-day streak`,
-        statKey: 'bestStreak',
-        threshold,
-    }));
+    return tiers.map(({ threshold, tier }) =>
+        byIdDef(`streak_${threshold}`, 'discipline', tier, 'bestStreak', threshold),
+    );
 }
 
 function friendsAchievements(): AchievementDef[] {
-    const tiers: { threshold: number; tier: AchievementTier; title: string }[] = [
-        { threshold: 1,  tier: 'bronze',   title: 'First Buddy' },
-        { threshold: 5,  tier: 'silver',   title: 'Squad' },
-        { threshold: 10, tier: 'gold',     title: 'Crew' },
-        { threshold: 25, tier: 'platinum', title: 'Community Leader' },
+    const tiers: { threshold: number; tier: AchievementTier }[] = [
+        { threshold: 1,  tier: 'bronze' },
+        { threshold: 5,  tier: 'silver' },
+        { threshold: 10, tier: 'gold' },
+        { threshold: 25, tier: 'platinum' },
     ];
-    return tiers.map(({ threshold, tier, title }) => ({
-        id: `friends_${threshold}`,
-        category: 'social' as const,
-        tier,
-        title,
-        description: `Have ${threshold} friend${threshold > 1 ? 's' : ''}`,
-        statKey: 'friendsCount',
-        threshold,
-    }));
+    return tiers.map(({ threshold, tier }) =>
+        byIdDef(`friends_${threshold}`, 'social', tier, 'friendsCount', threshold),
+    );
 }
 
 function encouragementsAchievements(): AchievementDef[] {
-    const tiers: { threshold: number; tier: AchievementTier; title: string }[] = [
-        { threshold: 1,   tier: 'bronze',   title: 'Cheerleader' },
-        { threshold: 10,  tier: 'silver',   title: 'Motivator' },
-        { threshold: 50,  tier: 'gold',     title: 'Hype Machine' },
-        { threshold: 100, tier: 'platinum', title: 'Inspiration' },
+    const tiers: { threshold: number; tier: AchievementTier }[] = [
+        { threshold: 1,   tier: 'bronze' },
+        { threshold: 10,  tier: 'silver' },
+        { threshold: 50,  tier: 'gold' },
+        { threshold: 100, tier: 'platinum' },
     ];
-    return tiers.map(({ threshold, tier, title }) => ({
-        id: `encouragements_${threshold}`,
-        category: 'social' as const,
-        tier,
-        title,
-        description: `Send ${threshold} encouragement${threshold > 1 ? 's' : ''}`,
-        statKey: 'totalEncouragementsSent',
-        threshold,
-    }));
+    return tiers.map(({ threshold, tier }) =>
+        byIdDef(`encouragements_${threshold}`, 'social', tier, 'totalEncouragementsSent', threshold),
+    );
 }
 
 function trainingTimeAchievements(): AchievementDef[] {
-    const tiers: { threshold: number; tier: AchievementTier; title: string; description: string }[] = [
-        { threshold: 1800,   tier: 'bronze',   title: 'Warm Up',            description: 'Cumulate 30 minutes of training' },
-        { threshold: 3600,   tier: 'bronze',   title: 'One Hour Club',      description: 'Cumulate 1 hour of training' },
-        { threshold: 10800,  tier: 'silver',   title: 'Getting Serious',    description: 'Cumulate 3 hours of training' },
-        { threshold: 36000,  tier: 'silver',   title: 'Double Digits',      description: 'Cumulate 10 hours of training' },
-        { threshold: 86400,  tier: 'gold',     title: 'Full Day Warrior',   description: 'Cumulate 24 hours of training' },
-        { threshold: 180000, tier: 'gold',     title: 'Half Centurion',     description: 'Cumulate 50 hours of training' },
-        { threshold: 360000, tier: 'platinum', title: 'Centurion of Time',  description: 'Cumulate 100 hours of training' },
+    const tiers: { threshold: number; tier: AchievementTier }[] = [
+        { threshold: 1800,   tier: 'bronze' },
+        { threshold: 3600,   tier: 'bronze' },
+        { threshold: 10800,  tier: 'silver' },
+        { threshold: 36000,  tier: 'silver' },
+        { threshold: 86400,  tier: 'gold' },
+        { threshold: 180000, tier: 'gold' },
+        { threshold: 360000, tier: 'platinum' },
     ];
-    return tiers.map(({ threshold, tier, title, description }) => ({
-        id: `training_time_${threshold}`,
-        category: 'discipline' as const,
-        tier,
-        title,
-        description,
-        statKey: 'lifetimeTrainingTime',
-        threshold,
-    }));
+    return tiers.map(({ threshold, tier }) =>
+        byIdDef(`training_time_${threshold}`, 'discipline', tier, 'lifetimeTrainingTime', threshold),
+    );
 }
 
 function sessionDurationAchievements(): AchievementDef[] {
-    const tiers: { threshold: number; tier: AchievementTier; title: string; description: string }[] = [
-        { threshold: 300,  tier: 'bronze',   title: 'Quick Burn',      description: 'Complete a 5-minute session' },
-        { threshold: 600,  tier: 'bronze',   title: 'Steady Pace',     description: 'Complete a 10-minute session' },
-        { threshold: 1200, tier: 'silver',   title: 'Endurance Test',  description: 'Complete a 20-minute session' },
-        { threshold: 1800, tier: 'silver',   title: 'Half Hour Hero',  description: 'Complete a 30-minute session' },
-        { threshold: 3600, tier: 'gold',     title: 'Iron Hour',       description: 'Complete a 60-minute session' },
-        { threshold: 5400, tier: 'platinum', title: 'Unstoppable',     description: 'Complete a 90-minute session' },
+    const tiers: { threshold: number; tier: AchievementTier }[] = [
+        { threshold: 300,  tier: 'bronze' },
+        { threshold: 600,  tier: 'bronze' },
+        { threshold: 1200, tier: 'silver' },
+        { threshold: 1800, tier: 'silver' },
+        { threshold: 3600, tier: 'gold' },
+        { threshold: 5400, tier: 'platinum' },
     ];
-    return tiers.map(({ threshold, tier, title, description }) => ({
-        id: `session_duration_${threshold}`,
-        category: 'discipline' as const,
-        tier,
-        title,
-        description,
-        statKey: 'sessionDuration',
-        threshold,
-    }));
+    return tiers.map(({ threshold, tier }) =>
+        byIdDef(`session_duration_${threshold}`, 'discipline', tier, 'sessionDuration', threshold),
+    );
 }
 
 function performanceAchievements(): AchievementDef[] {
-    return [
-        // Grade S
-        { id: 'grade_s',    category: 'performance', tier: 'bronze', title: 'Perfectionist',         description: 'Get an S grade on a workout',       statKey: 'sGradeCount', threshold: 1 },
-        { id: 'grade_s_10', category: 'performance', tier: 'silver', title: 'Consistent Excellence', description: 'Get S grade on 10 workouts',        statKey: 'sGradeCount', threshold: 10 },
-        { id: 'grade_s_50', category: 'performance', tier: 'gold',   title: 'Master of Form',        description: 'Get S grade on 50 workouts',        statKey: 'sGradeCount', threshold: 50 },
-        // XP in one session
-        { id: 'xp_session_100',  category: 'performance', tier: 'bronze', title: 'XP Burst',   description: 'Earn 100+ XP in one session',   statKey: 'sessionXp', threshold: 100 },
-        { id: 'xp_session_500',  category: 'performance', tier: 'silver', title: 'XP Storm',   description: 'Earn 500+ XP in one session',   statKey: 'sessionXp', threshold: 500 },
-        { id: 'xp_session_1000', category: 'performance', tier: 'gold',   title: 'XP Tsunami', description: 'Earn 1,000+ XP in one session', statKey: 'sessionXp', threshold: 1000 },
-        // Global level
-        { id: 'level_5',  category: 'performance', tier: 'bronze',   title: 'Rising Star', description: 'Reach global level 5',  statKey: 'globalLevel', threshold: 5 },
-        { id: 'level_10', category: 'performance', tier: 'silver',   title: 'Veteran',     description: 'Reach global level 10', statKey: 'globalLevel', threshold: 10 },
-        { id: 'level_25', category: 'performance', tier: 'gold',     title: 'Elite',       description: 'Reach global level 25', statKey: 'globalLevel', threshold: 25 },
-        { id: 'level_50', category: 'performance', tier: 'platinum', title: 'Legendary',   description: 'Reach global level 50', statKey: 'globalLevel', threshold: 50 },
+    const performanceTiers: { id: string; tier: AchievementTier; statKey: string; threshold: number }[] = [
+        { id: 'grade_s',         tier: 'bronze',   statKey: 'sGradeCount', threshold: 1 },
+        { id: 'grade_s_10',      tier: 'silver',   statKey: 'sGradeCount', threshold: 10 },
+        { id: 'grade_s_50',      tier: 'gold',     statKey: 'sGradeCount', threshold: 50 },
+        { id: 'xp_session_100',  tier: 'bronze',   statKey: 'sessionXp',   threshold: 100 },
+        { id: 'xp_session_500',  tier: 'silver',   statKey: 'sessionXp',   threshold: 500 },
+        { id: 'xp_session_1000', tier: 'gold',     statKey: 'sessionXp',   threshold: 1000 },
+        { id: 'level_5',         tier: 'bronze',   statKey: 'globalLevel', threshold: 5 },
+        { id: 'level_10',        tier: 'silver',   statKey: 'globalLevel', threshold: 10 },
+        { id: 'level_25',        tier: 'gold',     statKey: 'globalLevel', threshold: 25 },
+        { id: 'level_50',        tier: 'platinum', statKey: 'globalLevel', threshold: 50 },
     ];
+    return performanceTiers.map(({ id, tier, statKey, threshold }) =>
+        byIdDef(id, 'performance', tier, statKey, threshold),
+    );
 }
 
 // ─── Full registry ───────────────────────────────────────────────────────────
@@ -256,14 +249,39 @@ export const ACHIEVEMENTS_BY_CATEGORY: Record<AchievementCategory, AchievementDe
     performance: ACHIEVEMENTS.filter(a => a.category === 'performance'),
 };
 
+// ─── Display helpers ────────────────────────────────────────────────────────
+
+function buildAchievementParams(
+    def: AchievementDef,
+    explicit: Record<string, string | number> | undefined,
+    t: TFunction,
+): Record<string, string | number> {
+    const params: Record<string, string | number> = { ...explicit };
+    if (def.exerciseType && params.exercise === undefined) {
+        params.exercise = t(getExerciseLabelKey(def.exerciseType));
+    }
+    return params;
+}
+
+/** Resolve the localized title for an achievement. */
+export function getAchievementTitle(def: AchievementDef, t: TFunction): string {
+    return t(def.titleKey, buildAchievementParams(def, def.titleParams, t));
+}
+
+/** Resolve the localized description for an achievement. */
+export function getAchievementDescription(def: AchievementDef, t: TFunction): string {
+    return t(def.descriptionKey, buildAchievementParams(def, def.descriptionParams, t));
+}
+
 // ─── Records ─────────────────────────────────────────────────────────────────
 
 export interface RecordDef {
     key: string;
-    label: string;
+    /** i18next key for the display label. Resolve via `getRecordLabel(def, t)`. */
+    labelKey: string;
     unit: string;
     emoji: string;
-    /** If set, this record is per-exercise */
+    /** If set, this record is per-exercise (the label key receives `{{exercise}}`). */
     exerciseType?: ExerciseType;
 }
 
@@ -271,15 +289,24 @@ export const RECORDS: RecordDef[] = [
     // Per-exercise max reps in a session
     ...EXERCISE_TYPES.map(ex => ({
         key: `maxRepsInSession.${ex}`,
-        label: `Best ${getExerciseLabel(ex)} in a session`,
+        labelKey: 'stats:records.max_reps_in_session_label',
         unit: 'reps',
         emoji: getExerciseEmoji(ex),
         exerciseType: ex,
     })),
     // Global records
-    { key: 'longestWorkout',    label: 'Longest Workout',         unit: 'time',  emoji: '⏱️' },
-    { key: 'bestGrade',         label: 'Best Grade',              unit: 'score', emoji: '🎯' },
-    { key: 'mostXpInSession',   label: 'Most XP in a Session',    unit: 'xp',    emoji: '✨' },
-    { key: 'mostSessionsInWeek', label: 'Most Sessions in a Week', unit: 'count', emoji: '📆' },
-    { key: 'longestStreak',     label: 'Longest Streak',          unit: 'days',  emoji: '🔥' },
+    { key: 'longestWorkout',     labelKey: 'stats:records.longest_workout_label',         unit: 'time',  emoji: '⏱️' },
+    { key: 'bestGrade',          labelKey: 'stats:records.best_grade_label',              unit: 'score', emoji: '🎯' },
+    { key: 'mostXpInSession',    labelKey: 'stats:records.most_xp_label',                 unit: 'xp',    emoji: '✨' },
+    { key: 'mostSessionsInWeek', labelKey: 'stats:records.most_sessions_in_week_label',   unit: 'count', emoji: '📆' },
+    { key: 'longestStreak',      labelKey: 'stats:records.longest_streak_label',          unit: 'days',  emoji: '🔥' },
 ];
+
+/** Resolve the localized label for a record. */
+export function getRecordLabel(def: RecordDef, t: TFunction): string {
+    const params: Record<string, string> = {};
+    if (def.exerciseType) {
+        params.exercise = t(getExerciseLabelKey(def.exerciseType));
+    }
+    return t(def.labelKey, params);
+}

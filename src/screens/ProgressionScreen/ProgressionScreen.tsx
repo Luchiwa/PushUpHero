@@ -1,4 +1,5 @@
 import { useMemo, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuthCore, useLevel } from '@hooks/useAuth';
 import { useSessionHistory } from '@hooks/useSessionHistory';
 import { useFriends } from '@hooks/useFriends';
@@ -16,6 +17,7 @@ interface ProgressionScreenProps {
 }
 
 export function ProgressionScreen({ onClose }: ProgressionScreenProps) {
+    const { t } = useTranslation('stats');
     const { dbUser } = useAuthCore();
     const { level, xpIntoCurrentLevel, xpNeededForNextLevel, levelProgressPct, getExerciseLevelProgress } = useLevel();
     const { sessions, totalSessionCount } = useSessionHistory();
@@ -71,7 +73,7 @@ export function ProgressionScreen({ onClose }: ProgressionScreenProps) {
     const unlockedCount = Object.keys(achievements).length;
 
     return (
-        <PageLayout title="Progression" onClose={onClose} zIndex={200} bodyClassName="progression-body">
+        <PageLayout title={t('progression.title')} onClose={onClose} zIndex={200} bodyClassName="progression-body">
             <LevelsSection
                 level={level}
                 levelProgressPct={levelProgressPct}

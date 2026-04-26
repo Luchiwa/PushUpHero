@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
-import { ACHIEVEMENTS_BY_CATEGORY, CATEGORY_META, TIER_COLORS, getAchievementProgress, type AchievementCategory, type AchievementDef, type AchievementMap, type UserStats } from '@domain';
+import { useTranslation } from 'react-i18next';
+import { ACHIEVEMENTS_BY_CATEGORY, CATEGORY_META, TIER_COLORS, getAchievementProgress, getAchievementTitle, type AchievementCategory, type AchievementDef, type AchievementMap, type UserStats } from '@domain';
 import './AchievementsGrid.scss';
 
 interface AchievementsGridProps {
@@ -15,10 +16,11 @@ export function AchievementsGrid({
     unlockedCount,
     totalAchievements,
 }: AchievementsGridProps) {
+    const { t } = useTranslation('stats');
     return (
         <section className="progression-section">
             <div className="progression-section-header">
-                <h3 className="progression-section-title">🏆 Achievements</h3>
+                <h3 className="progression-section-title">{t('progression.section_achievements')}</h3>
                 <span className="progression-section-count">{unlockedCount}/{totalAchievements}</span>
             </div>
 
@@ -34,7 +36,7 @@ export function AchievementsGrid({
                         >
                             <div className="achievement-category-header">
                                 <span className="achievement-category-emoji">{meta.emoji}</span>
-                                <span className="achievement-category-label">{meta.label}</span>
+                                <span className="achievement-category-label">{t(meta.labelKey)}</span>
                                 <span className="achievement-category-count">{categoryUnlocked}/{defs.length}</span>
                             </div>
                             <div className="achievement-grid">
@@ -52,7 +54,7 @@ export function AchievementsGrid({
                                             <div className="achievement-badge-ring">
                                                 <span className="achievement-badge-tier">{tierEmoji(ach.tier)}</span>
                                             </div>
-                                            <span className="achievement-badge-title">{ach.title}</span>
+                                            <span className="achievement-badge-title">{getAchievementTitle(ach, t)}</span>
                                             {!prog.unlocked && (
                                                 <div className="achievement-badge-progress">
                                                     <div className="achievement-badge-bar">

@@ -1,8 +1,12 @@
 import { useState, useRef, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { SessionRecord } from '@exercises/types';
 import { buildDayTotals, buildDayTotalsXp, niceMax, type ExerciseFilter } from '@domain';
 import './WeeklyChart.scss';
 
+// Day labels stay as English short codes for the chart axis — keeping a
+// fixed 3-letter form across languages avoids overflowing the tiny tick
+// space (FR full names are too long). Localizable swap deferred to commit 6.
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const DAY_LABELS_SHORT = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
@@ -26,6 +30,7 @@ interface Props {
 }
 
 export function WeeklyChart({ sessions, weekOffset, exerciseFilter = 'all', metric = 'xp', loading }: Props) {
+    const { t } = useTranslation('stats');
     // Tooltip state — declared first so hook order stays stable across renders.
     const [tooltip, setTooltip] = useState<{ x: number; y: number; day: number; value: number } | null>(null);
     const svgRef = useRef<SVGSVGElement>(null);
@@ -34,7 +39,8 @@ export function WeeklyChart({ sessions, weekOffset, exerciseFilter = 'all', metr
         ? buildDayTotalsXp(sessions, weekOffset, exerciseFilter)
         : buildDayTotals(sessions, weekOffset, exerciseFilter);
     const maxReps = niceMax(Math.max(...totals));
-    const metricLabel = metric === 'xp' ? 'XP' : 'reps';
+    const metricLabel = metric === 'xp' ? t('screen.chart_metric_xp') : t('screen.chart_metric_reps');
+    const headerLabel = metric === 'xp' ? t('screen.chart_label_xp') : t('screen.chart_label_reps');
     const totalForWeek = totals.reduce((sum, v) => sum + v, 0);
     const hasAnyData = totalForWeek > 0;
 
@@ -61,7 +67,7 @@ export function WeeklyChart({ sessions, weekOffset, exerciseFilter = 'all', metr
         return (
             <div className="stats-chart-card stats-chart-card--loading">
                 <div className="stats-chart-card__header">
-                    <span className="stats-chart-card__label">Weekly</span>
+                    <span className="stats-chart-card__label">{headerLabel}</span>
                 </div>
                 <div className="stats-chart-card__skeleton">
                     {[40, 70, 30, 90, 55, 75, 25].map((h, i) => (
@@ -102,7 +108,7 @@ export function WeeklyChart({ sessions, weekOffset, exerciseFilter = 'all', metr
         <div className="stats-chart-card">
             {/* ── Header strip ───────────────────────────────────── */}
             <div className="stats-chart-card__header">
-                <span className="stats-chart-card__label">Weekly {metricLabel}</span>
+                <span className="stats-chart-card__label">{headerLabel}</span>
                 <span className="stats-chart-card__total">
                     {hasAnyData ? `${totalForWeek.toLocaleString()} ${metricLabel}` : '—'}
                 </span>
@@ -255,7 +261,7 @@ export function WeeklyChart({ sessions, weekOffset, exerciseFilter = 'all', metr
                 <div className="stats-chart-card__empty">
                     <span className="stats-chart-card__empty-icon">{exerciseFilter === 'all' ? '🏖️' : '🔍'}</span>
                     <p className="stats-chart-card__empty-text">
-                        {weekOffset === 0 ? 'No activity yet this week' : 'No activity this week'}
+                        {weekOffset === 0 ? t('screen.chart_empty_no_filter') : t('screen.chart_empty_with_filter')}
                     </p>
                 </div>
             )}

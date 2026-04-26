@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import './StatsWidget.scss';
 
 interface StatsWidgetProps {
@@ -13,6 +14,7 @@ export function StatsWidget({
     totalSessionCount,
     onOpen,
 }: StatsWidgetProps) {
+    const { t } = useTranslation('stats');
     return (
         <button type="button" className="stats-widget" onClick={onOpen}>
             <div className="stats-widget-shine" />
@@ -38,14 +40,14 @@ export function StatsWidget({
                             <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" />
                         </svg>
                         <span className="stats-widget-val">{totalLifetimeReps.toLocaleString()}</span>
-                        <span className="stats-widget-lbl">reps</span>
+                        <span className="stats-widget-lbl">{t('widget.unit_reps')}</span>
                     </div>
                     <div className="stats-widget-stat">
                         <svg className="stats-widget-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
                         </svg>
                         <span className="stats-widget-val">{totalSessionCount}</span>
-                        <span className="stats-widget-lbl">sessions</span>
+                        <span className="stats-widget-lbl">{t('widget.unit_sessions')}</span>
                     </div>
                 </div>
             </div>
@@ -53,7 +55,7 @@ export function StatsWidget({
             {/* CTA badge */}
             <div className="stats-widget-cta">
                 <span>📊</span>
-                <span>View full stats</span>
+                <span>{t('widget.view_full')}</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
             </div>
         </button>

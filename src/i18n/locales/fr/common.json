@@ -33,6 +33,8 @@
         "rep_one": "{{count}} rep",
         "rep_other": "{{count}} reps",
         "set_one": "{{count}} set",
-        "set_other": "{{count}} sets"
+        "set_other": "{{count}} sets",
+        "day_one": "{{count}} jour",
+        "day_other": "{{count}} jours"
     }
 }

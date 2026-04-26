@@ -1,1 +1,127 @@
-{}
+{
+    "screen": {
+        "title": "Quests",
+        "header_title": "Quest Progress",
+        "all_completed": "All quests completed! 🎉",
+        "active_remaining": "{{active}}/{{max}} active · {{remaining}} remaining",
+        "remaining_one": "{{count}} quest remaining",
+        "remaining_other": "{{count}} quests remaining"
+    },
+    "card": {
+        "active_badge": "Active",
+        "level_required": "Level {{level}} required",
+        "complete_first": "Complete \"{{title}}\" first",
+        "locked": "Locked",
+        "completed_on": "Completed {{date}}",
+        "max_active": "Max {{max}} active quests",
+        "accept": "✨ Accept",
+        "abandon": "Abandon",
+        "start_with_exercise": "🚀 Start — {{count}} {{exercise}}",
+        "start_with_reps": "🚀 Start — {{count}} reps",
+        "progress": "{{current}}/{{goal}}"
+    },
+    "category": {
+        "onboarding": "Getting Started",
+        "exercise": "Exercise",
+        "mastery": "Mastery",
+        "endurance": "Endurance",
+        "variety": "Variety"
+    },
+    "complex_hint": {
+        "multi_exercise": "Use Multi-Set Workout with 2+ exercises",
+        "multi_set": "Use Multi-Set Workout with 2+ sets"
+    },
+    "widget": {
+        "title": "Quests",
+        "all_done": "✓ All done",
+        "active_and_available": "{{active}} active · {{available}} available",
+        "available_compact": "{{count}} new",
+        "active_only_one": "{{count}} active",
+        "active_only_other": "{{count}} active",
+        "available_only_one": "{{count}} available",
+        "available_only_other": "{{count}} available",
+        "completed_summary_one": "🏆 {{count}} quest conquered",
+        "completed_summary_other": "🏆 {{count}} quests conquered",
+        "browse": "Browse available quests →",
+        "more_count": "+{{count}} more",
+        "in_progress": "In progress"
+    },
+    "summary_card": {
+        "accept": "Accept Quest",
+        "kicker_default": "QUEST",
+        "start_remaining": "Start — {{count}} {{exercise}} left",
+        "start_total": "Start — {{count}} {{exercise}}",
+        "reps_label": "reps",
+        "progress_count": "{{current}}/{{goal}} {{exercise}}"
+    },
+    "def": {
+        "first_steps": {
+            "title": "First Steps",
+            "description": "Complete 5 reps of any exercise to calibrate your body profile."
+        },
+        "warm_up": {
+            "title": "Warm Up",
+            "description": "Complete 10 reps of any exercise."
+        },
+        "pushup_initiate": {
+            "title": "Push-Up Initiate",
+            "description": "Complete 15 push-ups."
+        },
+        "squat_initiate": {
+            "title": "Squat Initiate",
+            "description": "Complete 15 squats."
+        },
+        "legraise_initiate": {
+            "title": "Leg Raise Initiate",
+            "description": "Complete 15 leg raises."
+        },
+        "pullup_initiate": {
+            "title": "Pull-Up Initiate",
+            "description": "Complete 5 pull-ups."
+        },
+        "quality_over_quantity": {
+            "title": "Quality Over Quantity",
+            "description": "Complete 10 reps with an average score of A (75+)."
+        },
+        "perfect_ten": {
+            "title": "Perfect Ten",
+            "description": "Complete 10 reps with an average score of S (90+)."
+        },
+        "pushup_master": {
+            "title": "Push-Up Master",
+            "description": "Complete 30 push-ups with an average A grade."
+        },
+        "legraise_master": {
+            "title": "Leg Raise Master",
+            "description": "Complete 30 leg raises with an average A grade."
+        },
+        "squat_master": {
+            "title": "Squat Master",
+            "description": "Complete 30 squats with an average A grade."
+        },
+        "marathon_starter": {
+            "title": "Marathon Starter",
+            "description": "Complete 25 reps in a single session."
+        },
+        "iron_will": {
+            "title": "Iron Will",
+            "description": "Complete 50 reps in a single session."
+        },
+        "centurion": {
+            "title": "Centurion",
+            "description": "Complete 100 reps in a single session."
+        },
+        "multi_set_warrior": {
+            "title": "Multi-Set Warrior",
+            "description": "Complete a multi-set workout (2+ sets)."
+        },
+        "cross_trainer": {
+            "title": "Cross-Trainer",
+            "description": "Complete a multi-exercise workout."
+        },
+        "versatile_athlete": {
+            "title": "Versatile Athlete",
+            "description": "Complete 20+ reps in a multi-exercise workout with A grade."
+        }
+    }
+}

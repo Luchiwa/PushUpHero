@@ -5,7 +5,7 @@ import { useSoundEffect } from '@hooks/useSoundEffect';
 import { useModalClose } from '@hooks/shared/useModalClose';
 import { useWorkout } from '@app/WorkoutContext';
 import { useExerciseState } from '@app/ExerciseStateContext';
-import { RECORDS, TIER_COLORS, formatElapsedTime, getGradeClass, getGradeLetter, weightedAverageScore, type AchievementDef } from '@domain';
+import { RECORDS, TIER_COLORS, formatElapsedTime, getAchievementTitle, getGradeClass, getGradeLetter, getQuestTitle, getRecordLabel, weightedAverageScore, type AchievementDef } from '@domain';
 import { AchievementToastQueue } from '@components/AchievementToastQueue/AchievementToastQueue';
 import { PrimaryCTA } from '@components/PrimaryCTA/PrimaryCTA';
 import { ConfettiCanvas } from './ConfettiCanvas/ConfettiCanvas';
@@ -91,7 +91,7 @@ export function SummaryScreen({ newAchievements }: SummaryProps) {
                                 <span className="summary-quest-emoji" aria-hidden="true">{quest.emoji}</span>
                                 <div className="summary-quest-info">
                                     <span className="summary-quest-label">{t('summary.quest_complete_label')}</span>
-                                    <span className="summary-quest-title">{quest.title}</span>
+                                    <span className="summary-quest-title">{getQuestTitle(quest, t)}</span>
                                 </div>
                                 <span className="summary-quest-xp">{t('summary.quest_xp_reward', { xp: quest.xpReward })}</span>
                             </div>
@@ -195,7 +195,7 @@ export function SummaryScreen({ newAchievements }: SummaryProps) {
                                     <span className="summary-achievement-tier" style={{ color: TIER_COLORS[ach.tier] }}>
                                         {ach.tier === 'bronze' ? '🥉' : ach.tier === 'silver' ? '🥈' : ach.tier === 'gold' ? '🥇' : '💎'}
                                     </span>
-                                    <span className="summary-achievement-title">{ach.title}</span>
+                                    <span className="summary-achievement-title">{getAchievementTitle(ach, t)}</span>
                                 </div>
                             ))}
                         </div>
@@ -212,7 +212,7 @@ export function SummaryScreen({ newAchievements }: SummaryProps) {
                                 return (
                                     <div key={rec.key} className="summary-record-chip">
                                         <span className="summary-record-emoji">{def?.emoji ?? '🏅'}</span>
-                                        <span className="summary-record-label">{def?.label ?? rec.key}</span>
+                                        <span className="summary-record-label">{def ? getRecordLabel(def, t) : rec.key}</span>
                                         <span className="summary-record-value">
                                             {rec.oldValue != null && (
                                                 <span className="summary-record-old">{rec.oldValue} →</span>
