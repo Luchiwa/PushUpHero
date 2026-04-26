@@ -7,10 +7,10 @@
 import type { ExerciseType, SetRecord } from '@exercises/types';
 import { calculateSessionXp, levelFromTotalXp } from '@domain/xpSystem';
 import type { BonusContext } from '@domain/xpSystem';
+import { weightedAverageScore } from '@domain/scoring';
 
 export interface FinalXpInput {
     allSets: SetRecord[];
-    totalReps: number;
     totalWorkoutDuration: number;
     streak: number;
     isMultiExercise: boolean;
@@ -25,10 +25,9 @@ export interface FinalXpResult {
 
 /** Build the bonus context, compute session XP and the post-save level. */
 export function computeFinalXp(input: FinalXpInput): FinalXpResult {
-    const { allSets, totalReps, totalWorkoutDuration, streak, isMultiExercise, totalXp } = input;
+    const { allSets, totalWorkoutDuration, streak, isMultiExercise, totalXp } = input;
 
-    const weightedScoreSum = allSets.reduce((sum, s) => sum + s.averageScore * s.reps, 0);
-    const avgScore = totalReps > 0 ? Math.round(weightedScoreSum / totalReps) : 0;
+    const avgScore = weightedAverageScore(allSets);
 
     const allGoalsMet = allSets.every(s => {
         if (s.setMode === 'time') return true;

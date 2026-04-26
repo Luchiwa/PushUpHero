@@ -72,9 +72,8 @@ export function useWorkoutSave({
         const totalWorkoutDuration = Math.round((Date.now() - workoutStartTimeRef.current) / 1000);
         const { bonusCtx, avgScore, computedLevel } = computeFinalXp({
             allSets,
-            totalReps,
             totalWorkoutDuration,
-            streak: dbUser?.streak ?? 0,
+            streak: dbUser?.stats.streak ?? 0,
             isMultiExercise,
             totalXp,
         });

@@ -10,9 +10,11 @@
  */
 
 import { Timestamp } from 'firebase/firestore';
-import type { DbUser } from '@domain/authTypes';
-import type { SessionRecord, ExerciseType } from '@exercises/types';
+import type { ExerciseType, ExerciseXpMap, SessionRecord } from '@exercises/types';
 import { EXERCISE_TYPES } from '@exercises/types';
+import type { RecordsMap } from '@domain/achievementEngine';
+import type { BodyProfile } from '@domain/bodyProfile';
+import type { QuestProgress } from '@domain/quests';
 import type { FriendRequest } from '@services/friendService';
 
 const isObj = (v: unknown): v is Record<string, unknown> =>
@@ -34,9 +36,42 @@ export function tsToMs(v: unknown, fallback = 0): number {
     return fallback;
 }
 
+// ── Persisted user doc (Firestore wire format, flat) ────────────────────────
+
+/**
+ * The flat shape Firestore actually stores. Mirrors the legacy `DbUser`
+ * before PUS-16. Repositories validate with `isFlatUserDoc`, then unfold
+ * into the nested domain `DbUser` via `unfoldDbUser` in `userRepository`.
+ */
+export interface FlatUserDoc {
+    uid: string;
+    displayName: string;
+    level: number;
+    totalXp: number;
+    /** @deprecated Legacy field — use totalXp */
+    totalReps?: number;
+    createdAt?: number;
+    photoURL?: string;
+    photoThumb?: string;
+    streak?: number;
+    lastSessionDate?: string;
+    totalSessions?: number;
+    exerciseXp?: ExerciseXpMap;
+    exerciseLevels?: Partial<Record<ExerciseType, number>>;
+    bestStreak?: number;
+    totalEncouragementsSent?: number;
+    sGradeCount?: number;
+    lifetimeReps?: Partial<Record<ExerciseType, number>>;
+    lifetimeTrainingTime?: number;
+    achievements?: Record<string, number>;
+    records?: RecordsMap;
+    bodyProfile?: BodyProfile;
+    questProgress?: QuestProgress;
+}
+
 // ── Required-field guards ────────────────────────────────────────────────────
 
-export function isDbUser(v: unknown): v is DbUser {
+export function isFlatUserDoc(v: unknown): v is FlatUserDoc {
     return isObj(v)
         && typeof v.uid === 'string'
         && typeof v.displayName === 'string'

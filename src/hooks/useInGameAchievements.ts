@@ -62,7 +62,7 @@ export function useInGameAchievements({
 
         // Build lifetime reps from either dbUser (logged in) or localStorage (guest)
         const lifetimeReps: Partial<Record<ExerciseType, number>> = dbUser
-            ? { ...dbUser.lifetimeReps }
+            ? { ...dbUser.progression.lifetimeReps }
             : { ...getGuestLifetimeReps() };
         lifetimeReps[exerciseType] = (lifetimeReps[exerciseType] ?? 0) + totalSessionReps;
 

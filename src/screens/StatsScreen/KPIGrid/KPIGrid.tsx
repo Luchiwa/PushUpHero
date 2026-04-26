@@ -1,10 +1,10 @@
 import type { CSSProperties } from 'react';
 import type { SessionRecord } from '@exercises/types';
+import { compactNum, pctChange } from '@domain/stats';
+import type { ExerciseFilter } from '@domain/stats';
 import type { MetricMode } from '../StatsScreen';
 import type { WeeklySummary } from './computeWeeklySummary';
 import './KPIGrid.scss';
-
-type ExerciseFilter = 'all' | import('@exercises/types').ExerciseType;
 
 // CSS var refs for per-tile gradient/border tint via `--kpi-color`.
 const KPI_COLOR: Record<string, string> = {
@@ -13,17 +13,6 @@ const KPI_COLOR: Record<string, string> = {
     indigo: 'var(--purple)',
     orange: 'var(--ice)',
 };
-
-function compactNum(n: number): string {
-    if (n >= 10_000) return `${(n / 1000).toFixed(1)}k`;
-    return n.toLocaleString();
-}
-
-function pctChange(current: number, previous: number): number | null {
-    if (previous === 0 && current === 0) return null;
-    if (previous === 0) return 100;
-    return Math.round(((current - previous) / previous) * 100);
-}
 
 interface KPIGridProps {
     summary: WeeklySummary;

@@ -1,6 +1,7 @@
 import { useState, useRef, useMemo } from 'react';
 import type { SessionRecord } from '@exercises/types';
-import type { ExerciseType } from '@exercises/types';
+import { buildDayTotals, buildDayTotalsXp, niceMax } from '@domain/stats';
+import type { ExerciseFilter } from '@domain/stats';
 import './WeeklyChart.scss';
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -15,7 +16,6 @@ const PAD_BOTTOM = 30;
 const PLOT_W = CHART_W - PAD_LEFT - PAD_RIGHT;
 const PLOT_H = CHART_H - PAD_TOP - PAD_BOTTOM;
 
-type ExerciseFilter = 'all' | ExerciseType;
 type MetricMode = 'xp' | 'reps';
 
 interface Props {
@@ -24,72 +24,6 @@ interface Props {
     exerciseFilter?: ExerciseFilter;
     metric?: MetricMode;
     loading?: boolean;
-}
-
-/**
- * Count reps per day, respecting the exercise filter.
- * For multi-exercise sessions filtered by type, only count reps from matching blocks.
- */
-function buildDayTotals(sessions: SessionRecord[], weekOffset: number, exerciseFilter: ExerciseFilter = 'all'): number[] {
-    const totals = [0, 0, 0, 0, 0, 0, 0];
-    const now = new Date();
-    const todayDay = now.getDay();
-    const sunday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - todayDay + weekOffset * 7);
-
-    sessions.forEach(s => {
-        const d = new Date(s.date);
-        const localDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-        const diff = Math.round((localDay.getTime() - sunday.getTime()) / 86_400_000);
-        if (diff < 0 || diff > 6) return;
-
-        if (exerciseFilter !== 'all' && s.isMultiExercise && s.blocks && s.sets) {
-            let setIdx = 0;
-            for (const block of s.blocks) {
-                const blockSets = s.sets.slice(setIdx, setIdx + block.numberOfSets);
-                setIdx += block.numberOfSets;
-                if (block.exerciseType === exerciseFilter) {
-                    totals[diff] += blockSets.reduce((sum, st) => sum + st.reps, 0);
-                }
-            }
-        } else {
-            totals[diff] += s.reps;
-        }
-    });
-    return totals;
-}
-
-/**
- * Sum XP per day. Uses xpEarned from each session.
- * For filtered exercises, uses xpPerExercise breakdown when available.
- */
-function buildDayTotalsXp(sessions: SessionRecord[], weekOffset: number, exerciseFilter: ExerciseFilter = 'all'): number[] {
-    const totals = [0, 0, 0, 0, 0, 0, 0];
-    const now = new Date();
-    const todayDay = now.getDay();
-    const sunday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - todayDay + weekOffset * 7);
-
-    sessions.forEach(s => {
-        const d = new Date(s.date);
-        const localDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-        const diff = Math.round((localDay.getTime() - sunday.getTime()) / 86_400_000);
-        if (diff < 0 || diff > 6) return;
-
-        if (exerciseFilter !== 'all' && s.xpPerExercise) {
-            const match = s.xpPerExercise.find(e => e.exerciseType === exerciseFilter);
-            if (match) totals[diff] += match.finalXp;
-        } else {
-            totals[diff] += s.xpEarned ?? 0;
-        }
-    });
-    return totals;
-}
-
-function niceMax(value: number): number {
-    if (value <= 0) return 10;
-    const magnitude = Math.pow(10, Math.floor(Math.log10(value)));
-    const normalized = value / magnitude;
-    const nice = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
-    return nice * magnitude;
 }
 
 export function WeeklyChart({ sessions, weekOffset, exerciseFilter = 'all', metric = 'xp', loading }: Props) {

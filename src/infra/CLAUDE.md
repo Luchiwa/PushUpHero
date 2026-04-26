@@ -8,7 +8,7 @@ Browser APIs, Firebase init, and low-level utilities. No business logic.
 |------|---------|
 | `firebase.ts` | Firebase app init. Exports `auth`, `db`, `storage` singletons. |
 | `refs.ts` | Centralized Firestore ref builders: `userRef(uid)`, `sessionsCol(uid)`, `friendRef(uid, fid)`, etc. |
-| `firestoreValidators.ts` | Runtime type guards + parsers used by repositories before casting Firestore docs. |
+| `firestoreValidators.ts` | Runtime type guards + parsers used by repositories before casting Firestore docs. Also defines `FlatUserDoc` — the persistence shape for user docs (Firestore stays flat; the domain `DbUser` is a nested view over it, unfolded by `userRepository`). |
 | `storage.ts` | Typed `localStorage` access (`read`/`write`/`remove`/`clearAll`/`clearAppKeys`) + `STORAGE_KEYS` registry. **Sole authorized importer of `window.localStorage`.** |
 | `device.ts` | Platform detection: `isMobile()`, `isIos()`, `isAndroid()`, `isSafari()` |
 | `soundEngine.ts` | Web Audio API sound effects (rep beep, level-up, victory, achievement) |
