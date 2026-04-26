@@ -7,18 +7,43 @@
  *         ├─ LevelContext.Provider  (XP, level, per-exercise)
  *         └─ SessionContext.Provider  (sessions, count)
  */
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { subscribeAuthState, signInWithGoogle, logoutSession } from '@services/authService';
 import { uploadAvatar as uploadAvatarService } from '@services/avatarService';
 import { onUserProfile } from '@data/userRepository';
-import { AuthCoreContext, LevelContext, SessionContext } from '@hooks/useAuth';
+import { AuthCoreContext, LevelContext, SessionContext, useAuthCore } from '@hooks/useAuth';
 import type { AppUser, DbUser, AuthCoreContextType, LevelContextType, SessionContextType } from '@hooks/useAuth';
 import { useLevelSystem } from '@hooks/useLevelSystem';
 import { useNotifications } from '@hooks/useNotifications';
 import { useSyncCloud } from '@hooks/useSyncCloud';
 import { clearAppKeys } from '@infra/storage';
-import { FeedCacheProvider } from './FeedCacheContext';
+import { FeedCacheContext, emptyFeedCache } from './FeedCacheContext';
+import type { FeedCache, FeedCacheContextValue } from './FeedCacheContext';
 import type { SessionRecord } from '@exercises/types';
+
+// ── Inner provider: feed cache (resets on auth change) ──
+
+function FeedCacheProvider({ children }: { children: React.ReactNode }) {
+    const cacheRef = useRef<FeedCache>(emptyFeedCache());
+    const { user } = useAuthCore();
+
+    // Reset whenever the logged-in user changes so the next user can't
+    // observe the previous one's feed (logout, account swap on shared device).
+    useEffect(() => {
+        cacheRef.current = emptyFeedCache();
+    }, [user?.uid]);
+
+    const value = useMemo<FeedCacheContextValue>(() => ({
+        get: () => cacheRef.current,
+        set: (next) => { cacheRef.current = next; },
+    }), []);
+
+    return (
+        <FeedCacheContext.Provider value={value}>
+            {children}
+        </FeedCacheContext.Provider>
+    );
+}
 
 // ── Inner provider: Level + Sessions (mounts expensive hooks once) ──
 
