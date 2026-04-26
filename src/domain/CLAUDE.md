@@ -49,4 +49,13 @@ Static `ACHIEVEMENTS` array with categories and tiers (bronze/silver/gold/platin
 `weightedAverageScore(sets)` — weighted by reps per set (a 20-rep set counts more than a 5-rep set).
 
 ## Types (`authTypes.ts`)
-`AppUser` (Firebase Auth user wrapper), `DbUser` (Firestore user document shape with all profile/stats fields).
+`AppUser` (Firebase Auth user wrapper), `DbUser` (nested domain shape: `{ uid, profile, stats, progression, achievements?, records?, bodyProfile?, questProgress? }`). The Firestore wire format is the flat `FlatUserDoc` (in `infra/firestoreValidators.ts`); `userRepository` unfolds flat → nested at the read boundary. Components reach for `dbUser.stats.bestStreak`, `dbUser.profile.displayName`, etc. — never flat keys.
+
+## Stats helpers (`stats.ts`)
+Pure helpers for the StatsScreen: `buildDayTotals`, `buildDayTotalsXp` (Sunday-anchored weekly aggregations, exercise-filterable), `niceMax` (axis tick rounding), `pctChange` (delta with null/100 edge cases), `compactNum` (>10k → "Nk"). Plus the `ExerciseFilter = 'all' | ExerciseType` type used by chart/KPI components.
+
+## Level progress (`xpSystem.ts:computeXpProgress`)
+`computeXpProgress(xpInto, xpNeeded) → { xpRemaining, progressRatio }` powers the HUD level ring + XP bar. `progressRatio` is a 0..1 ratio (LevelRing input), not a percentage.
+
+## Quest progress (`quests.ts:computeQuestProgressPct`)
+`computeQuestProgressPct(currentReps, goalReps, isCrossSession) → 0..100`. Returns 0 for single-session quests (their progress is all-or-nothing, not a bar).

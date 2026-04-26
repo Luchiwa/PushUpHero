@@ -131,7 +131,7 @@ Zero side effects, zero Firebase/browser API imports. Testable with just import 
 - `quests.ts` — Quest definitions + evaluation (`getQuestStatus`, `getActiveQuest`, `isQuestGoalMet`)
 - `bodyProfile.ts` — Morphological calibration types and threshold functions
 - `constants.ts` — Magic numbers, grade functions (`getGradeLetter`, `getGradeColor`). Grade colors are CSS custom properties (`--grade-s`, etc.) generated via SCSS `@each` loop. Grade backgrounds use CSS `color-mix()`.
-- `authTypes.ts` — `AppUser`, `DbUser` interfaces
+- `authTypes.ts` — `AppUser`, `DbUser` interfaces. `DbUser` is the **domain** shape with nested sections (`profile`, `stats`, `progression`, plus top-level `achievements`/`records`/`bodyProfile`/`questProgress`). The Firestore wire format is the flat `FlatUserDoc` (in `@infra/firestoreValidators`); the repo unfolds flat → nested at the read boundary.
 
 ### Service layer (`src/services/`) — Firebase writes
 
@@ -152,7 +152,7 @@ Browser APIs, Firebase init, Firestore refs. No business logic.
 
 - `firebase.ts` — Firebase app initialization, exports `auth`, `db`, `storage` singletons.
 - `refs.ts` — Centralized Firestore document/collection reference builders (`userRef(uid)`, `sessionsCol(uid)`, `friendRef(uid, friendId)`, etc.).
-- `firestoreValidators.ts` — Type guards (`isDbUser`, `isSessionRecord`, …) and parsers (`parseNotification`, `parseActivityFeedDoc`, `tsToMs`) used by repositories before casting raw Firestore data.
+- `firestoreValidators.ts` — Type guards (`isFlatUserDoc`, `isSessionRecord`, …) and parsers (`parseNotification`, `parseActivityFeedDoc`, `tsToMs`) used by repositories before casting raw Firestore data. Also defines `FlatUserDoc` — the persistence shape for user docs (Firestore stays flat; the domain `DbUser` is a nested view over it, unfolded by `userRepository`).
 - `storage.ts` — Typed `localStorage` access (`read`/`write`/`remove`/`clearAll`/`clearAppKeys`) plus the `STORAGE_KEYS` registry and `STORAGE_KEY_BUILDERS` for parameterized keys. Sole authorized importer of `window.localStorage`.
 - `device.ts` — Platform detection (`isMobile()`, `isIos()`).
 - `avatarCache.ts` — Avatar URL caching via Cache API.
@@ -166,7 +166,7 @@ These rules are non-negotiable. They were violated repeatedly before PUS-12 and 
 
 - **Imports from `firebase/*` are allowed only in `src/infra/`, `src/services/`, and `src/data/`.** Any other layer (`src/app/`, `src/hooks/`, `src/screens/`, `src/components/`, `src/modals/`, `src/overlays/`) must go through a service or repo. ESLint blocks violations at lint time.
 - **Repositories must never expose Firestore SDK types in public signatures.** No `DocumentData`, `Timestamp`, `DocumentChange`, `QuerySnapshot`, `DocumentSnapshot`, `DocumentReference` in exported function params or return types. Map to a domain shape and use `tsToMs` to coerce timestamps before they leave the repo.
-- **Cast only after a guard.** Every `as DbUser` / `as SessionRecord` / `as FriendRequest` in `src/data/` must be preceded by the matching `isXxx(...)` guard from `firestoreValidators`. A doc that fails validation is filtered with `console.warn` — never propagated to the UI.
+- **Cast only after a guard.** Every `as FlatUserDoc` / `as SessionRecord` / `as FriendRequest` in `src/data/` must be preceded by the matching `isXxx(...)` guard from `firestoreValidators`. A doc that fails validation is filtered with `console.warn` — never propagated to the UI. The validated flat doc is then unfolded into the domain shape (e.g. `unfoldDbUser` in `userRepository`) before leaving the repo — UI never sees the persistence shape.
 - **`onSnapshot` callbacks are synchronous.** No `getDoc`/`getDocs` inside the callback. If a join is needed, denormalize at write time, or batch via `where(documentId(), 'in', chunk)` outside the callback (chunks of 30, the Firestore hard limit).
 
 ### Storage isolation rules (enforced by ESLint + reviewers)
@@ -201,6 +201,15 @@ A "god hook" is a hook that grew across multiple unrelated responsibilities unti
   - **Pure helpers** for transformations (`xpProjection.ts`, `bodyProfileCapture.ts`)
   - **Thin orchestrator** wiring them
   Colocate them in `src/app/<feature>/` (precedent: `src/app/workout/`).
+
+### Component purity rules (enforced by reviewers)
+
+A component's job is layout, event wiring, and rendering — not arithmetic, not aggregation, not formula reinvention. PUS-16 lifted six inline calculations out of UI files (XP progress, weighted average, weekly chart aggregations, KPI deltas, number formatting, quest progress %); these invariants keep new ones from being added.
+
+- **Components don't compute.** Pure data transforms — XP %, weighted averages, chart aggregations, number formatters, progress % — live in `@domain/` (e.g. `@domain/stats`, `@domain/scoring`, `@domain/xpSystem`, `@domain/quests`). Components import named helpers and consume the result. If you find yourself writing `Math.round(x / y * 100)` or `arr.reduce(...) / arr.length` inside a `.tsx`, the formula belongs in `@domain/<topic>.ts`.
+- **Same formula in two places = one helper, two imports.** Before adding a calculation in a component or hook, grep `@domain/` for an existing helper with the same shape. Reinventing `weightedAverageScore` or `niceMax` because you didn't know it existed is the recurring failure mode.
+- **Components don't read raw `DbUser` fields ad-hoc.** `DbUser` is a domain shape with sections (`profile`, `stats`, `progression`, plus top-level `achievements`/`records`/`bodyProfile`/`questProgress`). Access via `dbUser?.stats?.bestStreak`, `dbUser?.profile?.displayName`, etc. — never via flat-key fallbacks. The Firestore-flat shape is hidden behind `userRepository`'s `unfoldDbUser`. If a new field is needed, add it to the right section in `domain/authTypes.ts`, mirror it in `FlatUserDoc` (in `infra/firestoreValidators.ts`), wire the unfold mapper, then consume.
+- **Boundary code can stay flat.** `useSyncCloud` reads raw flat fields via `onUserDoc(...) → Partial<FlatUserDoc>` because it IS the boundary — its job is to mirror Firestore changes into in-memory state. Don't generalize the flat-shape access pattern beyond that single sync hook.
 
 ### Cloud Functions
 
