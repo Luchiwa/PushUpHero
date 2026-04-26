@@ -157,6 +157,7 @@ function App() {
         playsInline
       />
 
+      <main className="app-main">
       {wm.screen === 'active' && (
         <ErrorBoundary fallback="section">
           <PoseOverlay ref={poseOverlayRef} videoRef={videoRef} exerciseType={exerciseType} />
@@ -270,6 +271,7 @@ function App() {
           </ErrorBoundary>
         )}
       </Suspense>
+      </main>
 
       <ReloadPrompt />
     </div>

@@ -55,6 +55,7 @@ export function Avatar({ photoURL, photoThumb, initials, size = 40, className = 
             onKeyDown={onClick ? (e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } }) : undefined}
             role={onClick ? 'button' : undefined}
             tabIndex={onClick ? 0 : undefined}
+            aria-label={onClick ? 'Change avatar' : undefined}
         >
             {imgSrc ? (
                 <img
