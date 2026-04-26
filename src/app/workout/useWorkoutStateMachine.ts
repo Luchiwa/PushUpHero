@@ -10,6 +10,7 @@ import type { ExerciseState, ExerciseType } from '@exercises/types';
 import type { QuestDef, QuestProgress } from '@domain/quests';
 import type { BodyProfile } from '@domain/bodyProfile';
 import type { CapturedRatios } from '@exercises/BaseExerciseDetector';
+import type { WorkoutMachineReturn } from '../WorkoutContext';
 import { useWorkoutMachineCore } from './useWorkoutMachineCore';
 import { useWorkoutExecution } from './useWorkoutExecution';
 
@@ -44,7 +45,7 @@ export function useWorkoutStateMachine({
     onCompleteQuests,
     onAddProgress,
     getCapturedRatios,
-}: UseWorkoutStateMachineProps) {
+}: UseWorkoutStateMachineProps): WorkoutMachineReturn {
     const core = useWorkoutMachineCore({
         exerciseState,
         availableQuests,
@@ -111,6 +112,3 @@ export function useWorkoutStateMachine({
         handleDiscardCheckpoint: exec.handleDiscardCheckpoint,
     };
 }
-
-/** Type helper — enables WorkoutContext to type-check without duplicating the interface. */
-export type WorkoutMachineReturn = ReturnType<typeof useWorkoutStateMachine>;
