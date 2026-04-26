@@ -5,22 +5,16 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuthCore } from './useAuth';
 import { updateQuestProgress } from '@services/profileService';
+import { read, write, STORAGE_KEYS } from '@infra/storage';
 import type { QuestProgress } from '@domain/quests';
 import { emptyQuestProgress } from '@domain/quests';
 
-const LS_QUEST_KEY = 'pushup-hero-quest-progress';
-
 function loadQuestProgress(): QuestProgress {
-    try {
-        const raw = localStorage.getItem(LS_QUEST_KEY);
-        if (raw) {
-            const parsed = JSON.parse(raw) as QuestProgress;
-            if (!parsed.accepted) parsed.accepted = {};
-            if (!parsed.progress) parsed.progress = {};
-            return parsed;
-        }
-    } catch { /* corrupt data, ignore */ }
-    return emptyQuestProgress();
+    const stored = read<QuestProgress | null>(STORAGE_KEYS.questProgress, null);
+    if (!stored) return emptyQuestProgress();
+    if (!stored.accepted) stored.accepted = {};
+    if (!stored.progress) stored.progress = {};
+    return stored;
 }
 
 export function useQuestProgress() {
@@ -42,7 +36,7 @@ export function useQuestProgress() {
                 progress: dbUser.questProgress.progress ?? {},
             };
             setQuestProgressState(cloud);
-            localStorage.setItem(LS_QUEST_KEY, JSON.stringify(cloud));
+            write(STORAGE_KEYS.questProgress, cloud);
         } else if (Object.keys(localQuests.completed).length > 0 || Object.keys(localQuests.accepted).length > 0) {
             updateQuestProgress(user.uid, localQuests).catch(console.error);
         }
@@ -60,7 +54,7 @@ export function useQuestProgress() {
 
     const saveQuestProgress = useCallback((progress: QuestProgress) => {
         setQuestProgressState(progress);
-        localStorage.setItem(LS_QUEST_KEY, JSON.stringify(progress));
+        write(STORAGE_KEYS.questProgress, progress);
         if (user) {
             updateQuestProgress(user.uid, progress).catch(console.error);
         }

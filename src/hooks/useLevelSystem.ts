@@ -10,32 +10,23 @@
 import { useState, useCallback } from 'react';
 import { useAuthCore } from './useAuth';
 import { levelFromTotalXp, totalXpForLevel } from '@domain/xpSystem';
+import { read, write, STORAGE_KEYS } from '@infra/storage';
 import type { ExerciseType, ExerciseXpMap } from '@exercises/types';
 
 // ─── Re-export pure functions & types so existing imports keep working ───────
 export { levelFromTotalXp, totalXpForLevel } from '@domain/xpSystem';
 export type { ExerciseXpMap } from '@exercises/types';
 
-// ─── LocalStorage keys (XP-based) ───────────────────────────────────────────
-const STORAGE_TOTAL_XP = 'pushup_hero_total_xp';
-const STORAGE_EXERCISE_XP = 'pushup_hero_exercise_xp';
-
 export function useLevelSystem() {
     const { user } = useAuthCore();
 
     // ── Global XP ────────────────────────────────────────────────────────────
-    const [totalXp, setTotalXpState] = useState<number>(() => {
-        const stored = localStorage.getItem(STORAGE_TOTAL_XP);
-        return stored ? parseInt(stored, 10) : 0;
-    });
+    const [totalXp, setTotalXpState] = useState<number>(() => read(STORAGE_KEYS.totalXp, 0));
 
     // ── Per-exercise XP ──────────────────────────────────────────────────────
-    const [exerciseXp, setExerciseXpState] = useState<ExerciseXpMap>(() => {
-        try {
-            const raw = localStorage.getItem(STORAGE_EXERCISE_XP);
-            return raw ? JSON.parse(raw) : {};
-        } catch { return {}; }
-    });
+    const [exerciseXp, setExerciseXpState] = useState<ExerciseXpMap>(
+        () => read<ExerciseXpMap>(STORAGE_KEYS.exerciseXp, {}),
+    );
 
     // Setters for useSyncCloud to wire into
     const setTotalXp = useCallback((xp: number) => {
@@ -52,7 +43,7 @@ export function useLevelSystem() {
 
         setTotalXpState(prev => {
             const next = prev + globalXp;
-            localStorage.setItem(STORAGE_TOTAL_XP, next.toString());
+            write(STORAGE_KEYS.totalXp, next);
             return next;
         });
 
@@ -61,7 +52,7 @@ export function useLevelSystem() {
             for (const { exerciseType, xp } of perExercise) {
                 next[exerciseType] = (next[exerciseType] ?? 0) + xp;
             }
-            localStorage.setItem(STORAGE_EXERCISE_XP, JSON.stringify(next));
+            write(STORAGE_KEYS.exerciseXp, next);
             return next;
         });
     }, [user]);

@@ -5,19 +5,13 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useAuthCore } from './useAuth';
 import { updateBodyProfile } from '@services/profileService';
+import { read, write, STORAGE_KEYS } from '@infra/storage';
 import type { BodyProfile } from '@domain/bodyProfile';
 import { emptyBodyProfile, BODY_PROFILE_VERSION } from '@domain/bodyProfile';
 
-const LS_PROFILE_KEY = 'pushup-hero-body-profile';
-
 function loadProfile(): BodyProfile {
-    try {
-        const raw = localStorage.getItem(LS_PROFILE_KEY);
-        if (raw) {
-            const parsed = JSON.parse(raw) as BodyProfile;
-            if (parsed.version === BODY_PROFILE_VERSION) return parsed;
-        }
-    } catch { /* corrupt data, ignore */ }
+    const stored = read<BodyProfile | null>(STORAGE_KEYS.bodyProfile, null);
+    if (stored && stored.version === BODY_PROFILE_VERSION) return stored;
     return emptyBodyProfile();
 }
 
@@ -49,7 +43,7 @@ export function useBodyProfile() {
     useEffect(() => {
         if (!dbUser || !uid) return;
         if (dbUser.bodyProfile && dbUser.bodyProfile.version === BODY_PROFILE_VERSION) {
-            localStorage.setItem(LS_PROFILE_KEY, JSON.stringify(dbUser.bodyProfile));
+            write(STORAGE_KEYS.bodyProfile, dbUser.bodyProfile);
         } else {
             const localProfile = loadProfile();
             if (localProfile.capturedAt > 0) {
@@ -60,7 +54,7 @@ export function useBodyProfile() {
 
     const saveBodyProfile = useCallback((profile: BodyProfile) => {
         setBodyProfileState(profile);
-        localStorage.setItem(LS_PROFILE_KEY, JSON.stringify(profile));
+        write(STORAGE_KEYS.bodyProfile, profile);
         if (uid) {
             updateBodyProfile(uid, profile).catch(console.error);
         }
