@@ -19,6 +19,8 @@ export const STORAGE_KEYS = {
     exerciseXp:         'pushup_hero_exercise_xp',
     sessions:           'pushup-sessions',
     totalSessions:      'pushup_game_total_sessions',
+    // Legacy cleanup only — no current writer. Kept so older installs get
+    // wiped via clearAppKeys / mergeGuestDataToCloud.
     totalReps:          'pushup_game_total_reps',
     // Guest stats (per-device accumulators while not logged in)
     guestAchievements:  'pushup_hero_guest_achievements',
@@ -114,19 +116,4 @@ export function clearAppKeys(): void {
         }
         for (const key of dynamic) remove(key);
     } catch { /* storage unavailable — best effort */ }
-}
-
-/**
- * Probe whether `localStorage` is usable. Returns `false` in some
- * incognito / iOS ITP / disabled-cookies contexts where access throws.
- */
-export function isStorageAvailable(): boolean {
-    try {
-        const probe = '__storage_probe__';
-        localStorage.setItem(probe, '1');
-        localStorage.removeItem(probe);
-        return true;
-    } catch {
-        return false;
-    }
 }
