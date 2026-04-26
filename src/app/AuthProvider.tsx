@@ -16,7 +16,7 @@ import type { AppUser, DbUser, AuthCoreContextType, LevelContextType, SessionCon
 import { useLevelSystem } from '@hooks/useLevelSystem';
 import { useNotifications } from '@hooks/useNotifications';
 import { useSyncCloud } from '@hooks/useSyncCloud';
-import { clearAllLocalStorage } from '@services/clearLocalStorage';
+import { clearAppKeys } from '@infra/storage';
 import type { SessionRecord } from '@exercises/types';
 
 // ── Inner provider: Level + Sessions (mounts expensive hooks once) ──
@@ -95,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // If user was logged in and is now null → logout or account deletion
             // Clear localStorage synchronously BEFORE React re-renders child hooks
             if (prevUser && !appUser) {
-                clearAllLocalStorage();
+                clearAppKeys();
             }
             prevUser = appUser;
 

@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { useAuthCore } from './useAuth';
 import { totalXpForLevel } from '@domain/xpSystem';
 import { migrateLegacyXp } from '@services/profileService';
-import { mergeGuestDataToCloud, LS_XP_KEY, LS_EXERCISE_XP_KEY, LS_SESSIONS_KEY, LS_TOTAL_SESSIONS_KEY } from '@services/guestMerge';
+import { mergeGuestDataToCloud } from '@services/guestMerge';
+import { read, STORAGE_KEYS } from '@infra/storage';
 import { onUserDoc } from '@data/userRepository';
 import { onRecentSessions } from '@data/sessionRepository';
 import type { SessionRecord } from '@exercises/types';
@@ -28,18 +29,10 @@ export function useSyncCloud(
     useEffect(() => {
         if (!user) {
             // Guest: seed state from localStorage
-            const xp = parseInt(localStorage.getItem(LS_XP_KEY) ?? '0', 10) || 0;
-            setTotalXp(xp);
-            try {
-                const raw = localStorage.getItem(LS_EXERCISE_XP_KEY);
-                setExerciseXp(raw ? JSON.parse(raw) : {});
-            } catch { setExerciseXp({}); }
-            try {
-                const raw = localStorage.getItem(LS_SESSIONS_KEY);
-                setSessions(raw ? JSON.parse(raw) : []);
-            } catch { setSessions([]); }
-            const count = parseInt(localStorage.getItem(LS_TOTAL_SESSIONS_KEY) ?? '0', 10) || 0;
-            setTotalSessionCount(count);
+            setTotalXp(read(STORAGE_KEYS.totalXp, 0));
+            setExerciseXp(read<ExerciseXpMap>(STORAGE_KEYS.exerciseXp, {}));
+            setSessions(read<SessionRecord[]>(STORAGE_KEYS.sessions, []));
+            setTotalSessionCount(read(STORAGE_KEYS.totalSessions, 0));
             return;
         }
 
