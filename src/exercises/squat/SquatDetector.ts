@@ -1,4 +1,4 @@
-import { BaseExerciseDetector } from '../BaseExerciseDetector';
+import { AngleBasedExerciseDetector } from '../base/AngleBasedExerciseDetector';
 import type { ExerciseState, Landmark, RepFeedback } from '../types';
 import { getSquatThresholds } from '@domain/bodyProfile';
 import type { SquatThresholds } from '@domain/bodyProfile';
@@ -23,7 +23,7 @@ const TORSO_LEAN_TOLERANCE = 0.03;
 // ── Key landmarks for post-calibration visibility check ─────────
 const KEY_LANDMARKS = [LM.LEFT_HIP, LM.RIGHT_HIP, LM.LEFT_KNEE, LM.RIGHT_KNEE, LM.LEFT_ANKLE, LM.RIGHT_ANKLE];
 
-export class SquatDetector extends BaseExerciseDetector {
+export class SquatDetector extends AngleBasedExerciseDetector {
     private worstKneeDeviation = 0;
     private worstTorsoLean = 0;
     private thresholds: SquatThresholds;
@@ -100,7 +100,7 @@ export class SquatDetector extends BaseExerciseDetector {
                     kneeAngle: smoothedAngle,
                 });
             }
-            if (status === 'completed') this.finalizeCalibration(landmarks);
+            if (status === 'completed') this.runFinalizeCalibration(landmarks);
             return this.getState();
         }
 
@@ -149,10 +149,13 @@ export class SquatDetector extends BaseExerciseDetector {
 
     // ── Calibration finalization ─────────────────────────────────
 
-    private finalizeCalibration(landmarks: Landmark[]): void {
-        // Use median for robustness against outlier frames
-        const med = (fn: (f: typeof this.calibrationFrames[0]) => number) =>
-            this.medianOf(this.calibrationFrames.map(fn));
+    protected getCalibrationFrames(): unknown[] {
+        return this.calibrationFrames;
+    }
+
+    protected captureCalibrationRatios(medUntyped: (extractor: (f: unknown) => number) => number): void {
+        type Frame = (typeof this.calibrationFrames)[number];
+        const med = medUntyped as (extractor: (f: Frame) => number) => number;
 
         this.calibratedMinBodyVerticalSpread = med(f => f.spread) * 0.4;
         this.calibratedShoulderAboveHipMargin = med(f => f.shoulderHipDiff) * 0.3;
@@ -165,8 +168,6 @@ export class SquatDetector extends BaseExerciseDetector {
                 stanceWidthRatio: med(f => f.stanceWidth),
             };
         }
-
-        this.lockBoundingBox(landmarks);
     }
 
     // ── Scoring ─────────────────────────────────────────────────

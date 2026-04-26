@@ -63,14 +63,19 @@ All workout state flows through **WorkoutContext** (`src/app/WorkoutContext.tsx`
 
 ### Exercise detection system
 
-All detectors extend `BaseExerciseDetector` (`src/exercises/BaseExerciseDetector.ts`):
+Detector class hierarchy lives in `src/exercises/`:
+
+- **`BaseExerciseDetector`** (`src/exercises/BaseExerciseDetector.ts`) — owns calibration lifecycle, bbox lock, dynamic calibration, scoring helpers, and the `runFinalizeCalibration` template method. Subclasses implement two abstracts: `getCalibrationFrames()` and `captureCalibrationRatios(med)`. Detectors with custom phase machines (`PullUpDetector`, `LegRaiseDetector`) `extends BaseExerciseDetector` directly.
+- **`AngleBasedExerciseDetector`** (`src/exercises/base/AngleBasedExerciseDetector.ts`) — extends `BaseExerciseDetector` and adds `processAngleBasedPhase`, the standard "REST-counted" state machine. Detectors that count at the return-to-rest (`PushUpDetector`, `SquatDetector`) `extends AngleBasedExerciseDetector`.
+
+Lifecycle:
 
 - **Calibration phase** (~90 frames) captures body morphology and locks a bounding box
 - **Bounding box lock** rejects poses from different people (anti-cheat for gym environments)
 - **Body profile** stores captured ratios for adaptive thresholds across sessions
-- Concrete detectors: `PushUpDetector`, `SquatDetector`, `PullUpDetector` — each implements `processPose(landmarks)` with exercise-specific phase detection and scoring
+- Concrete detectors: `PushUpDetector`, `SquatDetector`, `PullUpDetector`, `LegRaiseDetector` — each implements `processPose(landmarks)` with exercise-specific phase detection and scoring
 
-Exercise type is `'pushup' | 'squat' | 'pullup'` (defined in `src/exercises/types.ts`).
+Exercise type is `'pushup' | 'squat' | 'pullup' | 'legraise'` (defined in `src/exercises/types.ts`). See `src/exercises/CLAUDE.md` for the full per-exercise spec, the "Adding a new exercise" checklist, and which base class to choose.
 
 **Exercise registry** (`src/exercises/registry.ts`) is the single source of truth for all per-exercise config: detector factory, difficulty coefficient, key joints, position guide text, and coach phrases. Current exercises: pushup (×1.3 difficulty), squat (×1.0), pullup (×2.5). To add a new exercise: create the detector file, add an entry in the registry, add the type to `types.ts`, and add key joints to `poseOverlay.worker.ts` (Web Worker can't import the registry).
 

@@ -127,7 +127,7 @@ export class LegRaiseDetector extends BaseExerciseDetector {
                     hipAngle: smoothedAngle, baselineShoulderY: midShoulderY,
                 });
             }
-            if (status === 'completed') this.finalizeCalibration(landmarks);
+            if (status === 'completed') this.runFinalizeCalibration(landmarks);
             return this.getState();
         }
 
@@ -220,9 +220,13 @@ export class LegRaiseDetector extends BaseExerciseDetector {
 
     // ── Calibration finalization ─────────────────────────────────
 
-    private finalizeCalibration(landmarks: Landmark[]): void {
-        const med = (fn: (f: typeof this.calibrationFrames[0]) => number) =>
-            this.medianOf(this.calibrationFrames.map(fn));
+    protected getCalibrationFrames(): unknown[] {
+        return this.calibrationFrames;
+    }
+
+    protected captureCalibrationRatios(medUntyped: (extractor: (f: unknown) => number) => number): void {
+        type Frame = (typeof this.calibrationFrames)[number];
+        const med = medUntyped as (extractor: (f: Frame) => number) => number;
 
         this.calibratedMaxBodyVerticalSpread = med(f => f.spread) + 0.35;
         this.calibratedMaxTorsoTilt = med(f => f.torsoTilt) + 0.20;
@@ -235,8 +239,6 @@ export class LegRaiseDetector extends BaseExerciseDetector {
                 naturalHipExtension: Math.round(med(f => f.hipAngle)),
             };
         }
-
-        this.lockBoundingBox(landmarks);
     }
 
     // ── Scoring ─────────────────────────────────────────────────

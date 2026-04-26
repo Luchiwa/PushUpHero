@@ -1,4 +1,4 @@
-import { BaseExerciseDetector } from '../BaseExerciseDetector';
+import { AngleBasedExerciseDetector } from '../base/AngleBasedExerciseDetector';
 import type { ExerciseState, Landmark, RepFeedback } from '../types';
 import { getPushupThresholds } from '@domain/bodyProfile';
 import type { PushupThresholds } from '@domain/bodyProfile';
@@ -28,7 +28,7 @@ const MIN_REP_INTERVAL_MS = 500;
 // which would reject frames at the exact moment the UP phase should trigger.
 const KEY_LANDMARKS = [LM.LEFT_SHOULDER, LM.RIGHT_SHOULDER, LM.LEFT_HIP, LM.RIGHT_HIP];
 
-export class PushUpDetector extends BaseExerciseDetector {
+export class PushUpDetector extends AngleBasedExerciseDetector {
     private worstHipDeviation = 0;
     private worstArmAsymmetry = 0;
     private thresholds: PushupThresholds;
@@ -98,7 +98,7 @@ export class PushUpDetector extends BaseExerciseDetector {
                 this.calibrationFrames.push({ spread: bodyVerticalSpread, wristOffset, armLen, bodySpread, torsoLen, elbowAngle: smoothedAngle });
             } else if (status === 'completed') {
                 this.calibrationFrames.push({ spread: bodyVerticalSpread, wristOffset, armLen, bodySpread, torsoLen, elbowAngle: smoothedAngle });
-                this.finalizeCalibration(landmarks);
+                this.runFinalizeCalibration(landmarks);
             }
             return this.getState();
         }
@@ -145,10 +145,13 @@ export class PushUpDetector extends BaseExerciseDetector {
 
     // ── Calibration finalization ─────────────────────────────────
 
-    private finalizeCalibration(landmarks: Landmark[]): void {
-        // Use median for robustness against outlier frames
-        const med = (fn: (f: typeof this.calibrationFrames[0]) => number) =>
-            this.medianOf(this.calibrationFrames.map(fn));
+    protected getCalibrationFrames(): unknown[] {
+        return this.calibrationFrames;
+    }
+
+    protected captureCalibrationRatios(medUntyped: (extractor: (f: unknown) => number) => number): void {
+        type Frame = (typeof this.calibrationFrames)[number];
+        const med = medUntyped as (extractor: (f: Frame) => number) => number;
 
         this.calibratedMaxBodyVerticalSpread = med(f => f.spread) + 0.30;
         this.calibratedWristBelowShoulderMargin = med(f => f.wristOffset) + 0.15;
@@ -164,8 +167,6 @@ export class PushUpDetector extends BaseExerciseDetector {
                 naturalElbowExtension: Math.round(med(f => f.elbowAngle)),
             };
         }
-
-        this.lockBoundingBox(landmarks);
     }
 
     // ── Scoring ─────────────────────────────────────────────────

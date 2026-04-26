@@ -130,7 +130,7 @@ export class PullUpDetector extends BaseExerciseDetector {
                     torsoLen: shoulderHipSpread, elbowAngle: smoothedAngle,
                 });
             }
-            if (status === 'completed') this.finalizeCalibration(landmarks);
+            if (status === 'completed') this.runFinalizeCalibration(landmarks);
             return this.getState();
         }
 
@@ -207,10 +207,13 @@ export class PullUpDetector extends BaseExerciseDetector {
 
     // ── Calibration finalization ─────────────────────────────────
 
-    private finalizeCalibration(landmarks: Landmark[]): void {
-        // Use median for robustness against outlier frames
-        const med = (fn: (f: typeof this.calibrationFrames[0]) => number) =>
-            this.medianOf(this.calibrationFrames.map(fn));
+    protected getCalibrationFrames(): unknown[] {
+        return this.calibrationFrames;
+    }
+
+    protected captureCalibrationRatios(medUntyped: (extractor: (f: unknown) => number) => number): void {
+        type Frame = (typeof this.calibrationFrames)[number];
+        const med = medUntyped as (extractor: (f: Frame) => number) => number;
 
         const medSpread = med(f => f.spread);
         this.calibratedMinShoulderHipSpread = medSpread * 0.3;
@@ -225,8 +228,6 @@ export class PullUpDetector extends BaseExerciseDetector {
                 naturalArmExtension: Math.round(med(f => f.elbowAngle)),
             };
         }
-
-        this.lockBoundingBox(landmarks);
     }
 
     // ── Scoring ─────────────────────────────────────────────────
