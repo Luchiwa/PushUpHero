@@ -455,13 +455,7 @@ export abstract class BaseExerciseDetector {
         return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
     }
 
-    /**
-     * Common scaffolding for finalizeCalibration() across all detectors.
-     * Builds the typed `med` closure over the subclass's frame collection,
-     * runs the subclass capture callback, then locks the bounding box.
-     * Subclasses keep their own private finalizeCalibration() that delegates
-     * here — they own the per-exercise threshold computation and ratio shape.
-     */
+    /** Shared scaffolding for each detector's finalizeCalibration: builds `med`, runs the capture callback, then locks the bbox. */
     protected finalizeCalibrationLifecycle<F>(
         frames: F[],
         landmarks: Landmark[],
