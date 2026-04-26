@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ACHIEVEMENTS_BY_CATEGORY, CATEGORY_META, TIER_COLORS, getAchievementProgress, getAchievementTitle, type AchievementCategory, type AchievementDef, type AchievementMap, type UserStats } from '@domain';
+import { ACHIEVEMENTS_BY_CATEGORY, CATEGORY_META, TIER_COLORS, formatDate, getAchievementProgress, getAchievementTitle, type AchievementCategory, type AchievementDef, type AchievementMap, type UserStats } from '@domain';
 import './AchievementsGrid.scss';
 
 interface AchievementsGridProps {
@@ -70,7 +70,7 @@ export function AchievementsGrid({
                                             )}
                                             {prog.unlocked && prog.unlockedAt && (
                                                 <span className="achievement-badge-date">
-                                                    {new Date(prog.unlockedAt).toLocaleDateString()}
+                                                    {formatDate(prog.unlockedAt)}
                                                 </span>
                                             )}
                                         </div>

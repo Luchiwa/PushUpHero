@@ -38,10 +38,6 @@ export interface ExerciseConfig {
     keyJoints: Set<number>;
     /** Text shown on the camera feed during calibration */
     positionGuide: PositionGuideConfig;
-    /** Voice coach phrases spoken during calibration */
-    calibrationPhrases: string[];
-    /** Voice coach phrases for incomplete reps (didn't reach full depth) */
-    incompleteRepPhrases: string[];
 }
 
 // ── Registry ────────────────────────────────────────────────────
@@ -57,12 +53,6 @@ export const EXERCISE_REGISTRY: Record<ExerciseType, ExerciseConfig> = {
             descriptionKey: 'dashboard:position_guide.pushup.description',
             calibrationKey: 'dashboard:position_guide.pushup.calibration',
         },
-        calibrationPhrases: [
-            'Get in plank position',
-            'Place your phone to see your full body',
-            'Arms straight, body horizontal',
-        ],
-        incompleteRepPhrases: ['Go lower!', 'Deeper!', 'Full range of motion'],
     },
     squat: {
         createDetector: () => new SquatDetector(),
@@ -74,12 +64,6 @@ export const EXERCISE_REGISTRY: Record<ExerciseType, ExerciseConfig> = {
             descriptionKey: 'dashboard:position_guide.squat.description',
             calibrationKey: 'dashboard:position_guide.squat.calibration',
         },
-        calibrationPhrases: [
-            'Stand facing the camera',
-            'Step back so your full body is visible',
-            'Stand tall, feet shoulder width',
-        ],
-        incompleteRepPhrases: ['Go deeper!', 'Lower!', 'Break parallel'],
     },
     pullup: {
         createDetector: () => new PullUpDetector(),
@@ -91,12 +75,6 @@ export const EXERCISE_REGISTRY: Record<ExerciseType, ExerciseConfig> = {
             descriptionKey: 'dashboard:position_guide.pullup.description',
             calibrationKey: 'dashboard:position_guide.pullup.calibration',
         },
-        calibrationPhrases: [
-            'Hang from the bar',
-            'Let the camera see your full body',
-            'Arms fully extended',
-        ],
-        incompleteRepPhrases: ['Pull higher!', 'Chin over bar!', 'All the way up!'],
     },
     legraise: {
         createDetector: () => new LegRaiseDetector(),
@@ -108,12 +86,6 @@ export const EXERCISE_REGISTRY: Record<ExerciseType, ExerciseConfig> = {
             descriptionKey: 'dashboard:position_guide.legraise.description',
             calibrationKey: 'dashboard:position_guide.legraise.calibration',
         },
-        calibrationPhrases: [
-            'Lie on your back',
-            'Keep your legs straight',
-            'Let the camera see your full body',
-        ],
-        incompleteRepPhrases: ['Raise higher!', 'Legs up!', 'All the way up!'],
     },
 };
 

@@ -21,6 +21,7 @@ import {
     getQuestProgressCount,
     getComplexQuestHint,
     MAX_ACCEPTED_QUESTS,
+    formatDate,
     type QuestDef, type QuestProgress, type QuestStatus,
 } from '@domain';
 import { getExerciseLabelKey } from '@exercises/types';
@@ -208,7 +209,7 @@ function QuestCard({
                 )}
                 {status === 'completed' && completedAt && (
                     <span className="quest-item-date">
-                        {t('card.completed_on', { date: new Date(completedAt).toLocaleDateString() })}
+                        {t('card.completed_on', { date: formatDate(completedAt) })}
                     </span>
                 )}
                 {/* ── Progress bar (cross-session accepted quests) ── */}

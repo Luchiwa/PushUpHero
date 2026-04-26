@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
-import { computeXpProgress, type AppUser, type DbUser } from '@domain';
+import { computeXpProgress, formatNumber, type AppUser, type DbUser } from '@domain';
 import { Avatar } from '@components/Avatar/Avatar';
 import { XPBar } from '@components/XPBar/XPBar';
 import { PrimaryCTA } from '@components/PrimaryCTA/PrimaryCTA';
@@ -65,8 +65,8 @@ export function PlayerHUD({
     const { t } = useTranslation('start');
     const levelLabel = t('hud.level_kicker', {
         level: String(level).padStart(2, '0'),
-        current: xpIntoCurrentLevel.toLocaleString(),
-        total: xpNeededForNextLevel.toLocaleString(),
+        current: formatNumber(xpIntoCurrentLevel),
+        total: formatNumber(xpNeededForNextLevel),
     });
     const { xpRemaining, progressRatio } = computeXpProgress(xpIntoCurrentLevel, xpNeededForNextLevel);
 
@@ -101,8 +101,8 @@ export function PlayerHUD({
                             <span className="hud-name">{dbUser?.profile.displayName || t('hud.default_player_name')}</span>
                         </div>
 
-                        <div className="hud-total-xp" aria-label={t('hud.total_xp_aria', { xp: totalXp.toLocaleString() })}>
-                            <span className="hud-total-xp-val">{totalXp.toLocaleString()}</span>
+                        <div className="hud-total-xp" aria-label={t('hud.total_xp_aria', { xp: formatNumber(totalXp) })}>
+                            <span className="hud-total-xp-val">{formatNumber(totalXp)}</span>
                             <span className="hud-total-xp-lbl">XP</span>
                         </div>
                     </div>
@@ -110,7 +110,7 @@ export function PlayerHUD({
                     <XPBar
                         current={xpIntoCurrentLevel}
                         next={xpNeededForNextLevel}
-                        rightLabel={t('hud.xp_to_next_level', { xp: xpRemaining.toLocaleString(), level: level + 1 })}
+                        rightLabel={t('hud.xp_to_next_level', { xp: formatNumber(xpRemaining), level: level + 1 })}
                     />
                 </>
             ) : (

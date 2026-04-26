@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import { RECORDS, formatElapsedTime, getGradeLetter, getRecordLabel, type RecordsMap } from '@domain';
+import { RECORDS, formatDate, formatElapsedTime, getGradeLetter, getRecordLabel, type RecordsMap } from '@domain';
 import type { ExerciseType } from '@exercises/types';
 import './RecordsSection.scss';
 
@@ -32,7 +32,7 @@ export function RecordsSection({ records }: RecordsSectionProps) {
                                 const d = getRecordDate(records, rec.key);
                                 return d ? (
                                     <span className="record-card-date">
-                                        {new Date(d).toLocaleDateString()}
+                                        {formatDate(d)}
                                     </span>
                                 ) : null;
                             })()}

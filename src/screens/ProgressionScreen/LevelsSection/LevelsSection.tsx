@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
+import { formatNumber } from '@domain';
 import { EXERCISE_META, EXERCISE_TYPES, getExerciseLabelKey, type ExerciseType } from '@exercises/types';
 import './LevelsSection.scss';
 
@@ -47,7 +48,7 @@ export function LevelsSection({
                     <div className="level-progress-fill" style={{ width: `${levelProgressPct}%` }} />
                 </div>
                 <span className="level-progress-text">
-                    {t('progression.xp_progress', { current: xpIntoCurrentLevel.toLocaleString(), total: xpNeededForNextLevel.toLocaleString() })}
+                    {t('progression.xp_progress', { current: formatNumber(xpIntoCurrentLevel), total: formatNumber(xpNeededForNextLevel) })}
                 </span>
             </div>
 

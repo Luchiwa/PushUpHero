@@ -1,1 +1,54 @@
-{}
+{
+    "feedback": {
+        "perfect":            ["Perfect!", "Flawless!", "Nailed it!"],
+        "good":               ["Nice rep", "Good one", "Solid"],
+        "go_lower":           ["Go lower", "Deeper!", "Full range"],
+        "arms_uneven":        ["Even arms", "Balance your arms"],
+        "body_sagging":       ["Hips up!", "Tighten your core"],
+        "body_piking":        ["Lower your hips", "Flatten out"],
+        "too_fast":           ["Slow down", "Control the rep"],
+        "lean_forward":       ["Stay upright", "Chest up!"],
+        "knees_caving":       ["Push knees out", "Knees over toes"],
+        "torso_lean":         ["Keep your torso up", "Stay vertical"],
+        "kipping":            ["No kipping", "Strict form!"],
+        "body_sway":          ["Stay still", "Minimize sway"],
+        "raise_higher":       ["Raise higher", "Legs up!", "Higher!"],
+        "keep_legs_straight": ["Straighten your legs", "Keep legs straight"],
+        "keep_back_flat":     ["Keep your back flat", "Back on the ground"]
+    },
+    "encouragement": [
+        "Keep it up!",
+        "You're on fire!",
+        "Great streak!",
+        "Looking strong!",
+        "Beast mode!"
+    ],
+    "calibration": {
+        "pushup": [
+            "Get in plank position",
+            "Place your phone to see your full body",
+            "Arms straight, body horizontal"
+        ],
+        "squat": [
+            "Stand facing the camera",
+            "Step back so your full body is visible",
+            "Stand tall, feet shoulder width"
+        ],
+        "pullup": [
+            "Hang from the bar",
+            "Let the camera see your full body",
+            "Arms fully extended"
+        ],
+        "legraise": [
+            "Lie on your back",
+            "Keep your legs straight",
+            "Let the camera see your full body"
+        ]
+    },
+    "incomplete_rep": {
+        "pushup":   ["Go lower!", "Deeper!", "Full range of motion"],
+        "squat":    ["Go deeper!", "Lower!", "Break parallel"],
+        "pullup":   ["Pull higher!", "Chin over bar!", "All the way up!"],
+        "legraise": ["Raise higher!", "Legs up!", "All the way up!"]
+    }
+}

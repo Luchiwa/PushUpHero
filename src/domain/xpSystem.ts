@@ -91,7 +91,10 @@ export function getTier(level: Level): Tier {
 
 export interface XpBonusDetail {
     key: string;
-    label: string;
+    /** i18next key for the display label. Resolve via `t(labelKey, labelParams)` at the call site. */
+    labelKey: string;
+    /** Optional interpolation values (e.g. streak day count). */
+    labelParams?: Record<string, string | number>;
     emoji: string;
     /** Additive percentage (e.g. 15 means +15%). Streak is special: value is already the full pct. */
     pct: number;
@@ -128,7 +131,8 @@ export function calculateBonuses(ctx: BonusContext): XpBonusResult {
         const streakPct = Math.min(ctx.streak * 5, 50);
         bonuses.push({
             key: 'streak',
-            label: `Streak ${ctx.streak}j`,
+            labelKey: 'workout:summary.bonus.streak',
+            labelParams: { count: ctx.streak },
             emoji: '🔥',
             pct: streakPct,
         });
@@ -136,24 +140,24 @@ export function calculateBonuses(ctx: BonusContext): XpBonusResult {
 
     // ⏱️ Endurance / Marathon (mutually exclusive, marathon wins)
     if (ctx.elapsedTime >= 1200) {
-        bonuses.push({ key: 'marathon', label: 'Marathon', emoji: '⏱️', pct: 25 });
+        bonuses.push({ key: 'marathon', labelKey: 'workout:summary.bonus.marathon', emoji: '⏱️', pct: 25 });
     } else if (ctx.elapsedTime >= 600) {
-        bonuses.push({ key: 'endurance', label: 'Endurance', emoji: '⏱️', pct: 15 });
+        bonuses.push({ key: 'endurance', labelKey: 'workout:summary.bonus.endurance', emoji: '⏱️', pct: 15 });
     }
 
     // 💯 Perfection: average score ≥ 90
     if (ctx.averageScore >= 90) {
-        bonuses.push({ key: 'perfection', label: 'Perfection', emoji: '💯', pct: 20 });
+        bonuses.push({ key: 'perfection', labelKey: 'workout:summary.bonus.perfection', emoji: '💯', pct: 20 });
     }
 
     // 🎯 Goal met: all sets reached their target
     if (ctx.allGoalsMet) {
-        bonuses.push({ key: 'goal', label: 'Objectif atteint', emoji: '🎯', pct: 10 });
+        bonuses.push({ key: 'goal', labelKey: 'workout:summary.bonus.goal', emoji: '🎯', pct: 10 });
     }
 
     // 🏋️ Multi-exercise
     if (ctx.isMultiExercise) {
-        bonuses.push({ key: 'multi', label: 'Multi-exercice', emoji: '🏋️', pct: 10 });
+        bonuses.push({ key: 'multi', labelKey: 'workout:summary.bonus.multi', emoji: '🏋️', pct: 10 });
     }
 
     const totalPct = bonuses.reduce((sum, b) => sum + b.pct, 0);

@@ -47,7 +47,7 @@ export function AuthModal({ onClose, onSuccess, initialMode = 'login', promoBann
             onSuccess?.();
             onClose();
         } catch (err: unknown) {
-            setError(translateAuthError(err));
+            setError(t(translateAuthError(err)));
         } finally {
             setLoading(false);
         }
@@ -73,7 +73,7 @@ export function AuthModal({ onClose, onSuccess, initialMode = 'login', promoBann
             onClose();
         } catch (err: unknown) {
             console.error(err);
-            setError(translateAuthError(err));
+            setError(t(translateAuthError(err)));
         } finally {
             setLoading(false);
         }

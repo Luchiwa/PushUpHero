@@ -50,17 +50,27 @@ export async function logoutSession(): Promise<void> {
 
 // ── Error translation ────────────────────────────────────────────────────────
 
-/** Translates Firebase Auth error codes into user-friendly messages. */
+/**
+ * Translates a Firebase Auth error into an i18next key (resolve via `t()` at
+ * the call site). Returns `'errors:auth.<code>'` for known codes; for thrown
+ * errors that already carry a key in `.message` (e.g. `errors:auth.username_taken`),
+ * returns the message verbatim. Unknown errors fall back to `'errors:auth.unknown'`.
+ */
 export function translateAuthError(err: unknown): string {
     const code = (err as { code?: string }).code;
     switch (code) {
-        case 'auth/email-already-in-use': return 'This email is already in use.';
+        case 'auth/email-already-in-use': return 'errors:auth.email_already_in_use';
         case 'auth/invalid-credential':
-        case 'auth/wrong-password': return 'Incorrect email or password.';
-        case 'auth/requires-recent-login': return 'Session expired. Please sign out and sign in again.';
-        case 'auth/user-not-found': return 'No account found with this email.';
-        case 'auth/too-many-requests': return 'Too many attempts. Please try again later.';
-        default: return (err as Error).message || 'An error occurred.';
+        case 'auth/wrong-password': return 'errors:auth.invalid_credential';
+        case 'auth/requires-recent-login': return 'errors:auth.requires_recent_login';
+        case 'auth/user-not-found': return 'errors:auth.user_not_found';
+        case 'auth/too-many-requests': return 'errors:auth.too_many_requests';
+        default: {
+            const message = (err as Error).message;
+            // Pre-keyed errors (thrown by us) carry the i18n key in their message.
+            if (message?.startsWith('errors:')) return message;
+            return 'errors:auth.unknown';
+        }
     }
 }
 
@@ -110,7 +120,7 @@ export async function registerWithEmail(
         const usernameDoc = await transaction.get(uRef);
 
         if (usernameDoc.exists()) {
-            throw new Error('This username is already taken!');
+            throw new Error('errors:auth.username_taken');
         }
 
         // Create the user in Auth

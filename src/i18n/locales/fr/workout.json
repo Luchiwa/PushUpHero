@@ -75,7 +75,15 @@
         "block_stats": "{{reps}} reps · {{sets}}",
         "xp_total": "+{{xp}} XP",
         "xp_raw": "XP brute : {{xp}}",
-        "xp_exercise_pill": "{{exercise}} +{{xp}}"
+        "xp_exercise_pill": "{{exercise}} +{{xp}}",
+        "bonus": {
+            "streak": "Série {{count}}j",
+            "marathon": "Marathon",
+            "endurance": "Endurance",
+            "perfection": "Perfection",
+            "goal": "Objectif atteint",
+            "multi": "Multi-exercice"
+        }
     },
     "levelup": {
         "label": "LEVEL UP",

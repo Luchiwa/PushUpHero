@@ -187,7 +187,7 @@ export interface SessionRecord {
     xpEarned?: number;             // Total XP earned (after bonuses)
     xpRaw?: number;                // XP before bonuses
     xpMultiplier?: number;         // Multiplier applied
-    xpBonuses?: { key: string; label: string; emoji: string; pct: number }[];
+    xpBonuses?: { key: string; labelKey: string; labelParams?: Record<string, string | number>; emoji: string; pct: number }[];
     xpPerExercise?: { exerciseType: string; rawXp: number; finalXp: number }[];
 }
 

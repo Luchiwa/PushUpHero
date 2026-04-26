@@ -1,7 +1,10 @@
 /**
  * speechEngine — Web Speech API wrapper for workout coaching.
- * Selects a clean, energetic English voice (Google US English on Chrome,
- * or the best available alternative). Zero dependencies, zero bundle cost.
+ *
+ * Voice resolution is per-language (BCP-47): each lang has a curated list
+ * of preferred voices, with the same fallback to "any voice in this lang".
+ * The lang itself is sourced from `i18next.language` (mapped to BCP-47 via
+ * `mapToBcp47`) unless an explicit `lang` option is passed to `speak`.
  *
  * Includes workarounds for Chrome's speechSynthesis bugs:
  * - Queue corruption: cancel() before every speak() to prevent stuck queue
@@ -9,6 +12,8 @@
  * - Stuck state: watchdog timer detects unresponsive engine and force-resets
  * - Tab blur: resume() handles Chrome auto-pausing on tab focus loss
  */
+
+import i18n from 'i18next';
 
 let enabled = true;
 
@@ -23,61 +28,79 @@ let watchdogTimer: ReturnType<typeof setTimeout> | undefined;
 let consecutiveFailures = 0;
 const MAX_CONSECUTIVE_FAILURES = 3;
 
+// ── Lang mapping ─────────────────────────────────────────────────
+
+/** Map an i18next lang code (`'fr'`, `'en'`) to a BCP-47 tag for the speech engine. */
+function mapToBcp47(lang: string): string {
+    if (lang.startsWith('fr')) return 'fr-FR';
+    return 'en-US';
+}
+
 // ── Voice selection ──────────────────────────────────────────────
-let cachedVoice: SpeechSynthesisVoice | null = null;
-let voiceResolved = false;
 
-// Ordered by preference — first match wins.
-// "Google US English" is Chrome's built-in: clear, crisp, NOT breathy.
-// Avoid macOS "Samantha" which sounds aspirated/tired.
-const PREFERRED_VOICES: [RegExp, boolean][] = [
-    [/google us english/i,           false],  // Chrome built-in, best quality
-    [/google uk english female/i,    false],  // Chrome alternative
-    [/microsoft aria/i,              false],  // Edge — clear female
-    [/microsoft guy/i,               false],  // Edge — clear male
-    [/alex/i,                        true ],  // macOS — clear male (not breathy)
-    [/karen/i,                       true ],  // macOS — Australian, clear
-    [/daniel/i,                      true ],  // macOS — UK male, clear
-    [/tessa/i,                       true ],  // macOS — South African, clear
-];
+// Per-BCP-47 voice cache — voices vary by language.
+const voiceCache: Record<string, SpeechSynthesisVoice | null | undefined> = {};
 
-function resolveVoice(): SpeechSynthesisVoice | null {
-    if (voiceResolved) return cachedVoice;
+// Ordered preferences per language prefix. First match wins.
+// EN: avoid macOS "Samantha" (breathy/tired); prefer Google US English.
+// FR: prefer cloud voices over older macOS local voices.
+const VOICE_PREFERENCES: Record<string, [RegExp, boolean][]> = {
+    en: [
+        [/google us english/i,           false],  // Chrome built-in, best quality
+        [/google uk english female/i,    false],  // Chrome alternative
+        [/microsoft aria/i,              false],  // Edge — clear female
+        [/microsoft guy/i,               false],  // Edge — clear male
+        [/alex/i,                        true ],  // macOS — clear male (not breathy)
+        [/karen/i,                       true ],  // macOS — Australian, clear
+        [/daniel/i,                      true ],  // macOS — UK male, clear
+        [/tessa/i,                       true ],  // macOS — South African, clear
+    ],
+    fr: [
+        [/google français/i,             false],  // Chrome built-in
+        [/microsoft denise/i,            false],  // Edge — clear female
+        [/microsoft henri/i,             false],  // Edge — clear male
+        [/amelie/i,                      true ],  // macOS — clear female
+        [/thomas/i,                      true ],  // macOS — clear male
+    ],
+};
+
+function resolveVoice(bcp47: string): SpeechSynthesisVoice | null {
+    if (bcp47 in voiceCache) return voiceCache[bcp47] ?? null;
 
     const voices = speechSynthesis.getVoices();
     if (voices.length === 0) return null;
 
-    for (const [pattern, mustBeLocal] of PREFERRED_VOICES) {
+    const langPrefix = bcp47.split('-')[0];
+    const preferences = VOICE_PREFERENCES[langPrefix] ?? [];
+
+    for (const [pattern, mustBeLocal] of preferences) {
         const match = voices.find(v =>
             pattern.test(v.name) &&
-            v.lang.startsWith('en') &&
+            v.lang.startsWith(langPrefix) &&
             (!mustBeLocal || v.localService)
         );
         if (match) {
-            cachedVoice = match;
-            voiceResolved = true;
-            return cachedVoice;
+            voiceCache[bcp47] = match;
+            return match;
         }
     }
 
-    // Fallback: any English voice, prefer non-local (Google remote voices
-    // are generally better than macOS local ones on Chrome)
-    const anyRemote = voices.find(v => v.lang.startsWith('en') && !v.localService);
-    const anyLocal  = voices.find(v => v.lang.startsWith('en') && v.localService);
-    cachedVoice = anyRemote ?? anyLocal ?? null;
-    voiceResolved = true;
-    return cachedVoice;
+    // Fallback: any voice in the right language. Prefer non-local (cloud
+    // voices are generally better on Chrome than the older macOS locals).
+    const anyRemote = voices.find(v => v.lang.startsWith(langPrefix) && !v.localService);
+    const anyLocal  = voices.find(v => v.lang.startsWith(langPrefix) && v.localService);
+    voiceCache[bcp47] = anyRemote ?? anyLocal ?? null;
+    return voiceCache[bcp47] ?? null;
 }
 
-// Voices load asynchronously — re-resolve when they change.
+// Voices load asynchronously — clear the per-lang cache when they change.
 // Guard: only clear cache if voices are actually available (prevents
 // clearing during a transient unload/reload cycle).
 if (typeof speechSynthesis !== 'undefined') {
     speechSynthesis.addEventListener('voiceschanged', () => {
         const voices = speechSynthesis.getVoices();
         if (voices.length > 0) {
-            voiceResolved = false;
-            cachedVoice = null;
+            for (const k of Object.keys(voiceCache)) delete voiceCache[k];
         }
     });
     speechSynthesis.getVoices();
@@ -120,11 +143,18 @@ export function warmUpSpeech(): void {
 
     const utt = new SpeechSynthesisUtterance(' ');
     utt.volume = 0.01;
-    utt.lang = 'en-US';
+    utt.lang = mapToBcp47(i18n.language);
     utteranceHolder.current = utt;
     utt.onend = () => { if (utteranceHolder.current === utt) utteranceHolder.current = null; };
     utt.onerror = () => { if (utteranceHolder.current === utt) utteranceHolder.current = null; };
     speechSynthesis.speak(utt);
+}
+
+export interface SpeakOptions {
+    rate?: number;
+    pitch?: number;
+    /** Override the BCP-47 lang. Defaults to `mapToBcp47(i18next.language)`. */
+    lang?: string;
 }
 
 /**
@@ -134,7 +164,7 @@ export function warmUpSpeech(): void {
  * Chrome workaround: cancel() before every speak() prevents queue corruption.
  * A watchdog timer force-resets if the utterance never completes.
  */
-export function speak(text: string, options?: { rate?: number; pitch?: number }): void {
+export function speak(text: string, options?: SpeakOptions): void {
     if (!enabled) return;
     if (typeof speechSynthesis === 'undefined') return;
 
@@ -150,13 +180,15 @@ export function speak(text: string, options?: { rate?: number; pitch?: number })
         speechSynthesis.resume();
     }
 
+    const lang = options?.lang ?? mapToBcp47(i18n.language);
+
     const utt = new SpeechSynthesisUtterance(text);
-    utt.lang = 'en-US';
+    utt.lang = lang;
     utt.rate  = options?.rate  ?? 1.2;   // punchy pace
     utt.pitch = options?.pitch ?? 1.15;  // bright, not monotone
     utt.volume = 1.0;
 
-    const voice = resolveVoice();
+    const voice = resolveVoice(lang);
     if (voice) utt.voice = voice;
 
     utteranceHolder.current = utt;

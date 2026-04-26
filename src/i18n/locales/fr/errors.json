@@ -1,1 +1,12 @@
-{}
+{
+    "auth": {
+        "email_already_in_use": "Cet email est déjà utilisé.",
+        "invalid_credential": "Email ou mot de passe incorrect.",
+        "requires_recent_login": "Session expirée. Déconnecte-toi et reconnecte-toi.",
+        "user_not_found": "Aucun compte trouvé avec cet email.",
+        "too_many_requests": "Trop de tentatives. Réessaie plus tard.",
+        "username_taken": "Ce nom d'utilisateur est déjà pris !",
+        "no_authenticated_user": "Aucun utilisateur authentifié.",
+        "unknown": "Une erreur est survenue."
+    }
+}

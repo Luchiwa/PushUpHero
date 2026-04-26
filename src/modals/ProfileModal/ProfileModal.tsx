@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuthCore, useLevel } from '@hooks/useAuth';
-import { getTier } from '@domain';
+import { formatDate, getTier } from '@domain';
 import { Avatar } from '@components/Avatar/Avatar';
 import { useSessionHistory } from '@hooks/useSessionHistory';
 import { useFriends } from '@hooks/useFriends';
@@ -73,7 +73,7 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
     if (!user) return null;
 
     const memberSince = dbUser?.profile.createdAt
-        ? new Date(dbUser.profile.createdAt).toLocaleDateString()
+        ? formatDate(dbUser.profile.createdAt)
         : '';
 
     return (

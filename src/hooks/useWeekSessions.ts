@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useAuthCore } from './useAuth';
 import { getSessionsByDateRange, getOldestSessionDate } from '@data/sessionRepository';
+import { formatDate } from '@domain';
 import type { SessionRecord } from '@exercises/types';
 
 /** Returns the Sunday 00:00:00.000 local time for a given weekOffset (0 = current week). */
@@ -21,13 +22,13 @@ export function getWeekEnd(weekOffset: number): Date {
     return end;
 }
 
-/** Format "Mar 9 – Mar 15, 2026" for a week. */
+/** Format "Mar 9 – Mar 15, 2026" for a week (locale-aware). */
 export function formatWeekRange(weekOffset: number): string {
     const start = getWeekStart(weekOffset);
     const end = getWeekEnd(weekOffset);
     const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long' };
-    const startStr = start.toLocaleDateString('en-US', opts);
-    const endStr = end.toLocaleDateString('en-US', opts);
+    const startStr = formatDate(start, opts);
+    const endStr = formatDate(end, opts);
     const year = end.getFullYear();
     return `${startStr} – ${endStr}, ${year}`;
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useModalClose } from '@hooks/shared/useModalClose';
+import { formatNumber } from '@domain';
 import { ConfettiCanvas } from '@screens/SummaryScreen/ConfettiCanvas/ConfettiCanvas';
 import './LevelUpScreen.scss';
 
@@ -79,11 +80,11 @@ export function LevelUpScreen({ previousLevel, newLevel, onContinue, xpEarned, x
                 {(xpEarned !== undefined || xpToNextLevel !== undefined) && (
                     <div className={`levelup-xp-info levelup-xp-info--${phase}`}>
                         {xpEarned !== undefined && (
-                            <span className="levelup-xp-earned">{t('levelup.xp_earned', { xp: xpEarned.toLocaleString() })}</span>
+                            <span className="levelup-xp-earned">{t('levelup.xp_earned', { xp: formatNumber(xpEarned) })}</span>
                         )}
                         {xpToNextLevel !== undefined && (
                             <span className="levelup-xp-next">
-                                {t('levelup.xp_to_next', { xp: xpToNextLevel.toLocaleString(), level: newLevel + 1 })}
+                                {t('levelup.xp_to_next', { xp: formatNumber(xpToNextLevel), level: newLevel + 1 })}
                             </span>
                         )}
                     </div>

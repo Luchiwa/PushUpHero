@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { useSessionHistory } from '@hooks/useSessionHistory';
 import { EXERCISE_META, getExerciseLabelKey, type SessionRecord, type TimeDuration } from '@exercises/types';
-import { getGradeLetter, getGradeClass, getGradeColor, formatElapsedTime } from '@domain';
+import { formatDate, formatTime, getGradeLetter, getGradeClass, getGradeColor, formatElapsedTime } from '@domain';
 import './SessionHistoryPanel.scss';
 
 const EXERCISE_EMOJI: Record<string, string> = Object.fromEntries(
@@ -21,9 +21,7 @@ interface SessionHistoryPanelProps {
     onViewAll?: () => void;
 }
 
-/** Compact relative day label: TODAY / YESTERDAY / MON / 12 APR.
- *  Weekday + month forms still hit `en-US` — Intl-locale formatting lands
- *  with the rest of the date helpers in commit 6. */
+/** Compact relative day label: TODAY / YESTERDAY / MON / 12 APR (locale-aware). */
 function formatRelativeDay(ts: number, t: TFunction<'modals'>): string {
     const d = new Date(ts);
     const today = new Date();
@@ -36,16 +34,16 @@ function formatRelativeDay(ts: number, t: TFunction<'modals'>): string {
     // Within the last 6 days → weekday name (MON, TUE…)
     const diffDays = Math.floor((today.getTime() - d.getTime()) / 86_400_000);
     if (diffDays < 7) {
-        return d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+        return formatDate(d, { weekday: 'short' }).toUpperCase();
     }
 
     // Older → "12 APR"
-    return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' }).toUpperCase();
+    return formatDate(d, { day: 'numeric', month: 'short' }).toUpperCase();
 }
 
-/** 24h time, e.g. "14:30" */
-function formatTime(ts: number): string {
-    return new Date(ts).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+/** 24h time, e.g. "14:30" — locale-aware via the format helper's default options. */
+function formatTimeOfDay(ts: number): string {
+    return formatTime(ts, { hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
 /** Format a TimeDuration object to a compact string, e.g. "1min30s" */
@@ -135,7 +133,7 @@ export function SessionHistoryPanel({ sessions: sessionsProp, title, onViewAll }
                                 <div className="session-card__identity">
                                     <span className="session-card__icon" aria-hidden="true">{exerciseEmoji}</span>
                                     <span className="session-card__day">{formatRelativeDay(s.date, t)}</span>
-                                    <span className="session-card__time">{formatTime(s.date)}</span>
+                                    <span className="session-card__time">{formatTimeOfDay(s.date)}</span>
                                 </div>
 
                                 {/* ── Zone 2 — Metrics ──────────────────────────── */}

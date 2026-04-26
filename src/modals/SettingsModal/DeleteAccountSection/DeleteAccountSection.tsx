@@ -43,7 +43,7 @@ export function DeleteAccountSection({ onAccountDeleted }: DeleteAccountSectionP
             await deleteCurrentAccount();
             onAccountDeleted();
         } catch (err: unknown) {
-            setDeleteError(translateAuthError(err));
+            setDeleteError(t(translateAuthError(err)));
         } finally {
             setDeleteLoading(false);
         }

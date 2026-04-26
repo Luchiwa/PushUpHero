@@ -160,3 +160,10 @@ export {
     compactNum,
     type ExerciseFilter,
 } from './stats';
+
+// ── Locale-aware Intl format helpers ───────────────────────────────────────
+export {
+    formatDate,
+    formatTime,
+    formatNumber,
+} from './format';

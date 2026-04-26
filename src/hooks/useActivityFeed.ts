@@ -5,7 +5,7 @@ import { useFeedCache } from '@app/FeedCacheContext';
 import { getRecentActivity } from '@data/activityRepository';
 import type { Friend } from '@services/friendService';
 import { getExerciseLabelKey, type ExerciseType } from '@exercises/types';
-import { EVENTS_PER_FRIEND, getGradeLetter, type UserId } from '@domain';
+import { EVENTS_PER_FRIEND, formatDate, getGradeLetter, type UserId } from '@domain';
 
 export interface ActivityEvent {
     id: string;
@@ -33,8 +33,7 @@ export function formatRelativeTime(ms: number, t: TFunction<'modals'>): string {
     if (diffSec < 3600) return t('feed.rel_minutes', { count: Math.floor(diffSec / 60) });
     if (diffSec < 86400) return t('feed.rel_hours', { count: Math.floor(diffSec / 3600) });
     if (diffSec < 172800) return t('feed.rel_yesterday');
-    const d = new Date(ms);
-    return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+    return formatDate(ms, { day: 'numeric', month: 'short' });
 }
 
 function formatDurationCompact(elapsedSec: number | undefined): string {
