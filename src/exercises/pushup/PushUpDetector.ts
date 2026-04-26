@@ -146,26 +146,22 @@ export class PushUpDetector extends BaseExerciseDetector {
     // ── Calibration finalization ─────────────────────────────────
 
     private finalizeCalibration(landmarks: Landmark[]): void {
-        // Use median for robustness against outlier frames
-        const med = (fn: (f: typeof this.calibrationFrames[0]) => number) =>
-            this.medianOf(this.calibrationFrames.map(fn));
+        this.finalizeCalibrationLifecycle(this.calibrationFrames, landmarks, (med) => {
+            this.calibratedMaxBodyVerticalSpread = med(f => f.spread) + 0.30;
+            this.calibratedWristBelowShoulderMargin = med(f => f.wristOffset) + 0.15;
 
-        this.calibratedMaxBodyVerticalSpread = med(f => f.spread) + 0.30;
-        this.calibratedWristBelowShoulderMargin = med(f => f.wristOffset) + 0.15;
-
-        const medTorso = med(f => f.torsoLen);
-        // In plank position, shoulder–hip Y distance is small. Allow generous margin
-        // but reject clearly upright/leaning poses (e.g. getting up after push-ups).
-        this.calibratedMaxTorsoTilt = medTorso + 0.15;
-        if (medTorso > 0.01) {
-            this._capturedRatios.pushup = {
-                armToTorsoRatio: med(f => f.armLen) / medTorso,
-                bodySpreadRatio: med(f => f.bodySpread) / medTorso,
-                naturalElbowExtension: Math.round(med(f => f.elbowAngle)),
-            };
-        }
-
-        this.lockBoundingBox(landmarks);
+            const medTorso = med(f => f.torsoLen);
+            // In plank position, shoulder–hip Y distance is small. Allow generous margin
+            // but reject clearly upright/leaning poses (e.g. getting up after push-ups).
+            this.calibratedMaxTorsoTilt = medTorso + 0.15;
+            if (medTorso > 0.01) {
+                this._capturedRatios.pushup = {
+                    armToTorsoRatio: med(f => f.armLen) / medTorso,
+                    bodySpreadRatio: med(f => f.bodySpread) / medTorso,
+                    naturalElbowExtension: Math.round(med(f => f.elbowAngle)),
+                };
+            }
+        });
     }
 
     // ── Scoring ─────────────────────────────────────────────────

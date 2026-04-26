@@ -208,25 +208,21 @@ export class PullUpDetector extends BaseExerciseDetector {
     // ── Calibration finalization ─────────────────────────────────
 
     private finalizeCalibration(landmarks: Landmark[]): void {
-        // Use median for robustness against outlier frames
-        const med = (fn: (f: typeof this.calibrationFrames[0]) => number) =>
-            this.medianOf(this.calibrationFrames.map(fn));
+        this.finalizeCalibrationLifecycle(this.calibrationFrames, landmarks, (med) => {
+            const medSpread = med(f => f.spread);
+            this.calibratedMinShoulderHipSpread = medSpread * 0.3;
+            this.calibratedWristAboveShoulderMargin = med(f => f.wristOffset) + 0.25;
+            this.calibratedBaselineShoulderY = med(f => f.shoulderY);
+            this.calibratedTorsoLength = medSpread;
 
-        const medSpread = med(f => f.spread);
-        this.calibratedMinShoulderHipSpread = medSpread * 0.3;
-        this.calibratedWristAboveShoulderMargin = med(f => f.wristOffset) + 0.25;
-        this.calibratedBaselineShoulderY = med(f => f.shoulderY);
-        this.calibratedTorsoLength = medSpread;
-
-        const medTorso = med(f => f.torsoLen);
-        if (medTorso > 0.01) {
-            this._capturedRatios.pullup = {
-                armToTorsoRatio: med(f => f.armLen) / medTorso,
-                naturalArmExtension: Math.round(med(f => f.elbowAngle)),
-            };
-        }
-
-        this.lockBoundingBox(landmarks);
+            const medTorso = med(f => f.torsoLen);
+            if (medTorso > 0.01) {
+                this._capturedRatios.pullup = {
+                    armToTorsoRatio: med(f => f.armLen) / medTorso,
+                    naturalArmExtension: Math.round(med(f => f.elbowAngle)),
+                };
+            }
+        });
     }
 
     // ── Scoring ─────────────────────────────────────────────────

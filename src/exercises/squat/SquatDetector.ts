@@ -150,23 +150,19 @@ export class SquatDetector extends BaseExerciseDetector {
     // ── Calibration finalization ─────────────────────────────────
 
     private finalizeCalibration(landmarks: Landmark[]): void {
-        // Use median for robustness against outlier frames
-        const med = (fn: (f: typeof this.calibrationFrames[0]) => number) =>
-            this.medianOf(this.calibrationFrames.map(fn));
+        this.finalizeCalibrationLifecycle(this.calibrationFrames, landmarks, (med) => {
+            this.calibratedMinBodyVerticalSpread = med(f => f.spread) * 0.4;
+            this.calibratedShoulderAboveHipMargin = med(f => f.shoulderHipDiff) * 0.3;
 
-        this.calibratedMinBodyVerticalSpread = med(f => f.spread) * 0.4;
-        this.calibratedShoulderAboveHipMargin = med(f => f.shoulderHipDiff) * 0.3;
-
-        const medTorso = med(f => f.torsoLen);
-        if (medTorso > 0.01) {
-            this._capturedRatios.squat = {
-                legToTorsoRatio: med(f => f.legLen) / medTorso,
-                naturalKneeExtension: Math.round(med(f => f.kneeAngle)),
-                stanceWidthRatio: med(f => f.stanceWidth),
-            };
-        }
-
-        this.lockBoundingBox(landmarks);
+            const medTorso = med(f => f.torsoLen);
+            if (medTorso > 0.01) {
+                this._capturedRatios.squat = {
+                    legToTorsoRatio: med(f => f.legLen) / medTorso,
+                    naturalKneeExtension: Math.round(med(f => f.kneeAngle)),
+                    stanceWidthRatio: med(f => f.stanceWidth),
+                };
+            }
+        });
     }
 
     // ── Scoring ─────────────────────────────────────────────────

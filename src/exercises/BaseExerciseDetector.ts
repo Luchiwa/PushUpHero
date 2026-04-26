@@ -455,6 +455,23 @@ export abstract class BaseExerciseDetector {
         return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
     }
 
+    /**
+     * Common scaffolding for finalizeCalibration() across all detectors.
+     * Builds the typed `med` closure over the subclass's frame collection,
+     * runs the subclass capture callback, then locks the bounding box.
+     * Subclasses keep their own private finalizeCalibration() that delegates
+     * here — they own the per-exercise threshold computation and ratio shape.
+     */
+    protected finalizeCalibrationLifecycle<F>(
+        frames: F[],
+        landmarks: Landmark[],
+        capture: (med: (extractor: (f: F) => number) => number) => void,
+    ): void {
+        const med = (extractor: (f: F) => number) => this.medianOf(frames.map(extractor));
+        capture(med);
+        this.lockBoundingBox(landmarks);
+    }
+
     protected recordRep(score: number, amplitudeScore: number, alignmentScore: number, minAngle: number, feedback: RepFeedback = 'good'): void {
         const repResult = { score, amplitudeScore, alignmentScore, minAngle, feedback };
         this.state.repHistory.push(repResult);
