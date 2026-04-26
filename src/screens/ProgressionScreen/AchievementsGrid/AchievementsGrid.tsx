@@ -1,8 +1,8 @@
 import type { CSSProperties } from 'react';
-import { ACHIEVEMENTS_BY_CATEGORY, CATEGORY_META, TIER_COLORS } from '@domain/achievements';
-import type { AchievementCategory, AchievementDef } from '@domain/achievements';
-import { getAchievementProgress } from '@domain/achievementEngine';
-import type { UserStats, AchievementMap } from '@domain/achievementEngine';
+import { ACHIEVEMENTS_BY_CATEGORY, CATEGORY_META, TIER_COLORS } from '@domain';
+import type { AchievementCategory, AchievementDef } from '@domain';
+import { getAchievementProgress } from '@domain';
+import type { UserStats, AchievementMap } from '@domain';
 import './AchievementsGrid.scss';
 
 interface AchievementsGridProps {

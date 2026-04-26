@@ -1,7 +1,7 @@
 import { BaseExerciseDetector } from '../BaseExerciseDetector';
 import type { ExerciseState, Landmark, RepFeedback } from '../types';
-import { getLegRaiseThresholds } from '@domain/bodyProfile';
-import type { LegRaiseThresholds } from '@domain/bodyProfile';
+import { getLegRaiseThresholds } from '@domain';
+import type { LegRaiseThresholds } from '@domain';
 
 const LM = {
     LEFT_SHOULDER: 11, RIGHT_SHOULDER: 12,

@@ -7,7 +7,7 @@
 
 import { doc, collection } from 'firebase/firestore';
 import { db } from './firebase';
-import type { UserId } from '@domain/brands';
+import type { UserId } from '@domain';
 
 // ── Users ───────────────────────────────────────────────────────────────────
 

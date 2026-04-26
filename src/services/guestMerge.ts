@@ -11,8 +11,8 @@ import { read, write, remove, STORAGE_KEYS } from '@infra/storage';
 import { mergeLocalDataToCloud } from './userService';
 import type { SessionRecord } from '@exercises/types';
 import { getGuestStatsSnapshot, clearGuestStats } from './guestStatsStore';
-import type { UserId } from '@domain/brands';
-import { createXpAmount } from '@domain/brands';
+import type { UserId } from '@domain';
+import { createXpAmount } from '@domain';
 
 /**
  * Reads guest data from localStorage, claims a merge lock, clears local

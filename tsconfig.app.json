@@ -38,6 +38,7 @@
       "@hooks/*": ["src/hooks/*"],
       "@exercises/*": ["src/exercises/*"],
       "@data/*": ["src/data/*"],
+      "@domain": ["src/domain/index.ts"],
       "@domain/*": ["src/domain/*"],
       "@services/*": ["src/services/*"],
       "@infra/*": ["src/infra/*"],

@@ -5,11 +5,11 @@
  * orchestration. No state, no React, no Firebase.
  */
 import type { ExerciseType, SetRecord } from '@exercises/types';
-import { calculateSessionXp, levelFromTotalXp } from '@domain/xpSystem';
-import type { BonusContext } from '@domain/xpSystem';
-import { weightedAverageScore } from '@domain/scoring';
-import type { Level, XpAmount } from '@domain/brands';
-import { createXpAmount } from '@domain/brands';
+import { calculateSessionXp, levelFromTotalXp } from '@domain';
+import type { BonusContext } from '@domain';
+import { weightedAverageScore } from '@domain';
+import type { Level, XpAmount } from '@domain';
+import { createXpAmount } from '@domain';
 
 export interface FinalXpInput {
     allSets: SetRecord[];

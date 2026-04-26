@@ -2,12 +2,12 @@ import { useCallback } from 'react';
 import { useAuthCore, useLevel, useSessions } from './useAuth';
 import { saveSession, localDateString, yesterdayDateString } from '@services/sessionService';
 import type { SaveSessionResult } from '@services/sessionService';
-import { calculateSessionXp } from '@domain/xpSystem';
-import type { BonusContext, SessionXpResult } from '@domain/xpSystem';
-import { MAX_LOCAL_SESSIONS, getGradeLetter } from '@domain/constants';
+import { calculateSessionXp } from '@domain';
+import type { BonusContext, SessionXpResult } from '@domain';
+import { MAX_LOCAL_SESSIONS, getGradeLetter } from '@domain';
 import type { SetRecord, ExerciseType, SessionRecord } from '@exercises/types';
-import { evaluateAchievements, evaluateRecords, buildSessionRepsMap } from '@domain/achievementEngine';
-import type { AchievementMap, UserStats } from '@domain/achievementEngine';
+import { evaluateAchievements, evaluateRecords, buildSessionRepsMap } from '@domain';
+import type { AchievementMap, UserStats } from '@domain';
 import {
     getGuestStatsSnapshot,
     setGuestAchievements,

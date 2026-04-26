@@ -17,11 +17,11 @@ import type {
     WorkoutBlock,
     WorkoutPlan,
 } from '@exercises/types';
-import type { SessionXpResult } from '@domain/xpSystem';
+import type { SessionXpResult } from '@domain';
 import type { SaveSessionResult } from '@services/sessionService';
-import type { QuestDef } from '@domain/quests';
+import type { QuestDef } from '@domain';
 import type { AppScreen, SessionMode } from './workout/workoutTypes';
-import type { Level } from '@domain/brands';
+import type { Level } from '@domain';
 
 export interface WorkoutContextType {
     // ── Screen state ──

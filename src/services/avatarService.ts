@@ -10,7 +10,7 @@ import { updateDoc } from 'firebase/firestore';
 import { auth, storage } from '@infra/firebase';
 import { userRef } from '@infra/refs';
 import { invalidateAvatarCache } from '@infra/avatarCache';
-import type { UserId } from '@domain/brands';
+import type { UserId } from '@domain';
 
 const AVATAR_SIZE = 512;
 const THUMB_SIZE = 96;

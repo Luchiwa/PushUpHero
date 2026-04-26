@@ -1,6 +1,6 @@
 import type { ExerciseState, Landmark, RepFeedback } from './types';
-import type { BodyProfile } from '@domain/bodyProfile';
-import { CALIBRATION_FRAMES_REQUIRED } from '@domain/constants';
+import type { BodyProfile } from '@domain';
+import { CALIBRATION_FRAMES_REQUIRED } from '@domain';
 import { OneEuroFilter } from '@infra/oneEuroFilter';
 
 // ── Captured Ratios ──────────────────────────────────────────────

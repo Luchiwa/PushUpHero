@@ -7,8 +7,8 @@
  */
 import { useState, useCallback } from 'react';
 import type { ExerciseType } from '@exercises/types';
-import type { QuestDef, QuestProgress } from '@domain/quests';
-import { isSingleSessionQuest, getSessionQuestContribution } from '@domain/quests';
+import type { QuestDef, QuestProgress } from '@domain';
+import { isSingleSessionQuest, getSessionQuestContribution } from '@domain';
 
 export interface SessionQuestData {
     totalReps: number;

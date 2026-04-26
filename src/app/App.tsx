@@ -14,8 +14,8 @@ import { useWorkoutStateMachine, durationToSeconds } from './workout/useWorkoutS
 import { WorkoutContext } from './WorkoutContext';
 import type { WorkoutContextType } from './WorkoutContext';
 import { ExerciseStateContext } from './ExerciseStateContext';
-import { totalXpForLevel } from '@domain/xpSystem';
-import { createLevel } from '@domain/brands';
+import { totalXpForLevel } from '@domain';
+import { createLevel } from '@domain';
 import { StartScreen } from '@screens/StartScreen/StartScreen';
 import { AppLoader } from '@components/AppLoader/AppLoader';
 import { Dashboard } from '@overlays/Dashboard/Dashboard';
@@ -34,7 +34,7 @@ import { getExerciseLabel } from '@exercises/types';
 import { useInGameAchievements } from '@hooks/useInGameAchievements';
 import { useBodyProfile } from '@hooks/useBodyProfile';
 import { useQuestProgress } from '@hooks/useQuestProgress';
-import { getActiveQuest, getFeaturedQuest, getAvailableQuests, isQuestAccepted } from '@domain/quests';
+import { getActiveQuest, getFeaturedQuest, getAvailableQuests, isQuestAccepted } from '@domain';
 import { AchievementToast } from '@components/AchievementToast/AchievementToast';
 import './App.scss';
 

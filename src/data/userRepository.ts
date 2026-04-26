@@ -9,9 +9,9 @@ import { onSnapshot } from 'firebase/firestore';
 import { userRef } from '@infra/refs';
 import { isFlatUserDoc } from '@infra/firestoreValidators';
 import type { FlatUserDoc } from '@infra/firestoreValidators';
-import type { DbUser } from '@domain/authTypes';
-import type { UserId } from '@domain/brands';
-import { createUserId, createLevel, createXpAmount } from '@domain/brands';
+import type { DbUser } from '@domain';
+import type { UserId } from '@domain';
+import { createUserId, createLevel, createXpAmount } from '@domain';
 
 /**
  * Unfolds the flat Firestore wire shape into the nested domain `DbUser`.

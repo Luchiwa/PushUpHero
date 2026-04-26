@@ -1,6 +1,6 @@
-import { getTier } from '@domain/xpSystem';
-import type { Tier } from '@domain/xpSystem';
-import type { Level } from '@domain/brands';
+import { getTier } from '@domain';
+import type { Tier } from '@domain';
+import type { Level } from '@domain';
 import './TierBadge.scss';
 
 const TIER_ICON: Record<Tier, string> = { bronze: '🥉', silver: '🥈', gold: '🥇', platinum: '💎' };

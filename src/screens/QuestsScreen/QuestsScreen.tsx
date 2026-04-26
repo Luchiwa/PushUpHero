@@ -18,9 +18,9 @@ import {
     getQuestProgressCount,
     getComplexQuestHint,
     MAX_ACCEPTED_QUESTS,
-} from '@domain/quests';
+} from '@domain';
 import { getExerciseLabel } from '@exercises/types';
-import type { QuestDef, QuestProgress, QuestStatus } from '@domain/quests';
+import type { QuestDef, QuestProgress, QuestStatus } from '@domain';
 import './QuestsScreen.scss';
 
 interface QuestsScreenProps {

@@ -8,7 +8,7 @@
 import { query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { activityFeedCol } from '@infra/refs';
 import { parseActivityFeedDoc, type ActivityFeedDoc } from '@infra/firestoreValidators';
-import type { UserId } from '@domain/brands';
+import type { UserId } from '@domain';
 
 /**
  * Fetch the most recent activity events for a single user.

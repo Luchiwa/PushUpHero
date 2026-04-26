@@ -15,8 +15,8 @@ import {
     friendRef, friendRequestRef, sentRequestRef,
     notificationsCol,
 } from '@infra/refs';
-import type { UserId, Level } from '@domain/brands';
-import { createUserId, createLevel } from '@domain/brands';
+import type { UserId, Level } from '@domain';
+import { createUserId, createLevel } from '@domain';
 
 // ── Types (re-exported for consumers that only need types) ──────────────────
 

@@ -4,7 +4,7 @@
  * User can skip rest early.
  */
 import { useEffect, useState, useRef } from 'react';
-import { getGradeLetter, getGradeClass } from '@domain/constants';
+import { getGradeLetter, getGradeClass } from '@domain';
 import type { SetRecord } from '@exercises/types';
 import { useWorkout } from '@app/WorkoutContext';
 import { useBackButton } from '@hooks/shared/useBackButton';

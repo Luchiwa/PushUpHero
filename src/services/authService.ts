@@ -21,8 +21,8 @@ import {
 import { runTransaction } from 'firebase/firestore';
 import { auth, db } from '@infra/firebase';
 import { userRef, usernameRef } from '@infra/refs';
-import type { AppUser } from '@domain/authTypes';
-import { createUserId } from '@domain/brands';
+import type { AppUser } from '@domain';
+import { createUserId } from '@domain';
 
 // ── Domain mapping ───────────────────────────────────────────────────────────
 

@@ -1,8 +1,8 @@
 import type { CSSProperties } from 'react';
-import { RECORDS } from '@domain/achievements';
-import type { RecordsMap } from '@domain/achievementEngine';
+import { RECORDS } from '@domain';
+import type { RecordsMap } from '@domain';
 import type { ExerciseType } from '@exercises/types';
-import { formatElapsedTime, getGradeLetter } from '@domain/constants';
+import { formatElapsedTime, getGradeLetter } from '@domain';
 import './RecordsSection.scss';
 
 interface RecordsSectionProps {

@@ -12,12 +12,12 @@
 import { Timestamp } from 'firebase/firestore';
 import type { ExerciseType, ExerciseXpMap, SessionRecord } from '@exercises/types';
 import { EXERCISE_TYPES } from '@exercises/types';
-import type { RecordsMap } from '@domain/achievementEngine';
-import type { BodyProfile } from '@domain/bodyProfile';
-import type { QuestProgress } from '@domain/quests';
+import type { RecordsMap } from '@domain';
+import type { BodyProfile } from '@domain';
+import type { QuestProgress } from '@domain';
 import type { FriendRequest } from '@services/friendService';
-import type { UserId } from '@domain/brands';
-import { createUserId } from '@domain/brands';
+import type { UserId } from '@domain';
+import { createUserId } from '@domain';
 
 const isObj = (v: unknown): v is Record<string, unknown> =>
     typeof v === 'object' && v !== null;

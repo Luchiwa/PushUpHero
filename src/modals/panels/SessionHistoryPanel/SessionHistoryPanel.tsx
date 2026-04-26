@@ -8,7 +8,7 @@ import { useSessionHistory } from '@hooks/useSessionHistory';
 import type { SessionRecord } from '@exercises/types';
 import type { TimeDuration } from '@exercises/types';
 import { getExerciseLabel, EXERCISE_META } from '@exercises/types';
-import { getGradeLetter, getGradeClass, getGradeColor, formatElapsedTime } from '@domain/constants';
+import { getGradeLetter, getGradeClass, getGradeColor, formatElapsedTime } from '@domain';
 import './SessionHistoryPanel.scss';
 
 const EXERCISE_EMOJI: Record<string, string> = Object.fromEntries(

@@ -7,8 +7,8 @@
  * camera/pose/exercise-type around it.
  */
 import type { ExerciseState, ExerciseType } from '@exercises/types';
-import type { QuestDef, QuestProgress } from '@domain/quests';
-import type { BodyProfile } from '@domain/bodyProfile';
+import type { QuestDef, QuestProgress } from '@domain';
+import type { BodyProfile } from '@domain';
 import type { CapturedRatios } from '@exercises/BaseExerciseDetector';
 import type { WorkoutMachineReturn } from '../WorkoutContext';
 import { useWorkoutMachineCore } from './useWorkoutMachineCore';

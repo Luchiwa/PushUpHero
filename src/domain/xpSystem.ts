@@ -30,11 +30,6 @@ export function xpForRep(score: number): number {
     return XP_PER_GRADE[grade];
 }
 
-// ─── Exercise difficulty coefficients ────────────────────────────────────────
-// Re-exported from exercises/exerciseDifficulty.ts (canonical source).
-// Kept here for backward compatibility with existing imports.
-export { EXERCISE_DIFFICULTY, difficultyFor };
-
 // ─── Level curve ─────────────────────────────────────────────────────────────
 // Soft-exponential: XP_required(L) = 100 × L^1.5  (per level, cumulative)
 

@@ -9,7 +9,7 @@
 import { query, where, onSnapshot, limit } from 'firebase/firestore';
 import { notificationsCol } from '@infra/refs';
 import { parseNotification, type NotificationEvent } from '@infra/firestoreValidators';
-import type { UserId } from '@domain/brands';
+import type { UserId } from '@domain';
 
 /**
  * Real-time listener on unread notifications (max 50).

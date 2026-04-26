@@ -8,7 +8,7 @@ import {
     sessionsCol, friendRequestsCol, sentRequestsCol, notificationsCol, activityFeedCol,
 } from '@infra/refs';
 import { clearAll } from '@infra/storage';
-import { createUserId } from '@domain/brands';
+import { createUserId } from '@domain';
 
 /**
  * Deletes the current user's account and all associated Firestore data.

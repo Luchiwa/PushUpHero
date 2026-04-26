@@ -5,7 +5,7 @@ import { useWorkout } from '@app/WorkoutContext';
 import { useExerciseState } from '@app/ExerciseStateContext';
 import { useBackButton } from '@hooks/shared/useBackButton';
 import { useDashboardLogic } from './useDashboardLogic';
-import { nextCombo, computeGoalProgress } from '@domain/scoring';
+import { nextCombo, computeGoalProgress } from '@domain';
 
 import { FloatyNumbers } from '@components/FloatyNumbers/FloatyNumbers';
 import { GradePop } from './GradePop/GradePop';

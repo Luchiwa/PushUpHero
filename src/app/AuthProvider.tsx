@@ -13,7 +13,7 @@ import { uploadAvatar as uploadAvatarService } from '@services/avatarService';
 import { onUserProfile } from '@data/userRepository';
 import { AuthCoreContext, LevelContext, SessionContext, useAuthCore } from '@hooks/useAuth';
 import type { AuthCoreContextType, LevelContextType, SessionContextType } from '@hooks/useAuth';
-import type { AppUser, DbUser } from '@domain/authTypes';
+import type { AppUser, DbUser } from '@domain';
 import { useLevelSystem } from '@hooks/useLevelSystem';
 import { useNotifications } from '@hooks/useNotifications';
 import { useSyncCloud } from '@hooks/useSyncCloud';

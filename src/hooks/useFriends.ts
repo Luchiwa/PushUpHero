@@ -11,8 +11,8 @@ import {
     removeFriend as removeFr,
 } from '@services/friendService';
 import type { Friend, FriendRequest, OutgoingRequest, SearchResult } from '@services/friendService';
-import type { UserId } from '@domain/brands';
-import { createLevel } from '@domain/brands';
+import type { UserId } from '@domain';
+import { createLevel } from '@domain';
 
 // Re-export types for consumers that import from here
 export type { Friend, FriendRequest, OutgoingRequest, SearchResult } from '@services/friendService';

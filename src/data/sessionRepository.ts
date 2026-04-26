@@ -8,7 +8,7 @@ import { onSnapshot, query, orderBy, limit, where, getDocs } from 'firebase/fire
 import { sessionsCol } from '@infra/refs';
 import { isSessionRecord } from '@infra/firestoreValidators';
 import type { SessionRecord } from '@exercises/types';
-import type { UserId } from '@domain/brands';
+import type { UserId } from '@domain';
 
 function parseSessionDocs(rawDocs: { data: () => unknown }[], context: string): SessionRecord[] {
     const out: SessionRecord[] = [];
