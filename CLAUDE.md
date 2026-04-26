@@ -65,7 +65,7 @@ All workout state flows through **WorkoutContext** (`src/app/WorkoutContext.tsx`
 
 Detector class hierarchy lives in `src/exercises/`:
 
-- **`BaseExerciseDetector`** (`src/exercises/BaseExerciseDetector.ts`) — owns calibration lifecycle, bbox lock, dynamic calibration, scoring helpers, and the `runFinalizeCalibration` template method. Subclasses implement two abstracts: `getCalibrationFrames()` and `captureCalibrationRatios(med, landmarks)`. Detectors with custom phase machines (`PullUpDetector`, `LegRaiseDetector`) `extends BaseExerciseDetector` directly.
+- **`BaseExerciseDetector`** (`src/exercises/BaseExerciseDetector.ts`) — owns calibration lifecycle, bbox lock, dynamic calibration, scoring helpers, and the `runFinalizeCalibration` template method. Subclasses implement two abstracts: `getCalibrationFrames()` and `captureCalibrationRatios(med)`. Detectors with custom phase machines (`PullUpDetector`, `LegRaiseDetector`) `extends BaseExerciseDetector` directly.
 - **`AngleBasedExerciseDetector`** (`src/exercises/base/AngleBasedExerciseDetector.ts`) — extends `BaseExerciseDetector` and adds `processAngleBasedPhase`, the standard "REST-counted" state machine. Detectors that count at the return-to-rest (`PushUpDetector`, `SquatDetector`) `extends AngleBasedExerciseDetector`.
 
 Lifecycle:

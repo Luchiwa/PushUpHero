@@ -106,14 +106,9 @@ export abstract class BaseExerciseDetector {
     /** Subclass exposes its (typed) calibration-frame collection so the base can build the `med` closure. */
     protected abstract getCalibrationFrames(): unknown[];
 
-    /**
-     * Subclass populates `_capturedRatios.<exerciseType>` and any `calibratedXxx` fields from `med`.
-     * Called once per session by `runFinalizeCalibration`. `landmarks` is the frame at finalisation
-     * (used by the subclass for any landmark-driven calibration; bbox lock is handled by the base).
-     */
+    /** Subclass populates `_capturedRatios.<exerciseType>` and any `calibratedXxx` fields from `med`. Called once per session by `runFinalizeCalibration`. */
     protected abstract captureCalibrationRatios(
         med: (extractor: (f: unknown) => number) => number,
-        landmarks: Landmark[],
     ): void;
 
     /** Reset all state (called on "Try Again"). */
@@ -279,7 +274,6 @@ export abstract class BaseExerciseDetector {
         return Math.round(amplitudeScore * 0.6 + alignmentScore * 0.4);
     }
 
-    // ── Angle-Based Phase Machine ───────────────────────────────
     // ── Bounding Box Lock ───────────────────────────────────────
 
     protected computeBoundingBox(landmarks: Landmark[]): BoundingBox {
@@ -415,7 +409,7 @@ export abstract class BaseExerciseDetector {
     protected runFinalizeCalibration(landmarks: Landmark[]): void {
         const frames = this.getCalibrationFrames();
         const med = (extractor: (f: unknown) => number) => this.medianOf(frames.map(extractor));
-        this.captureCalibrationRatios(med, landmarks);
+        this.captureCalibrationRatios(med);
         this.lockBoundingBox(landmarks);
     }
 

@@ -38,7 +38,7 @@ Choosing wrong leaks a method you can't use into your IDE. The hierarchy split i
 
 Each subclass MUST implement two `protected abstract` hooks (declared on `BaseExerciseDetector`):
 - `getCalibrationFrames(): unknown[]` — return your typed `calibrationFrames` array (the cast back to your concrete frame type happens inside `captureCalibrationRatios`).
-- `captureCalibrationRatios(med, landmarks)` — populate `calibratedXxx` fields and `_capturedRatios.<exerciseType>` from `med`. Cast `med` once at the top: `const med = medUntyped as (extractor: (f: Frame) => number) => number;` where `Frame = (typeof this.calibrationFrames)[number]`.
+- `captureCalibrationRatios(med)` — populate `calibratedXxx` fields and `_capturedRatios.<exerciseType>` from `med`. Cast `med` once at the top: `const med = medUntyped as (extractor: (f: Frame) => number) => number;` where `Frame = (typeof this.calibrationFrames)[number]`.
 
 The base owns the `med` closure construction over your frames + the trailing `lockBoundingBox` call.
 
@@ -138,7 +138,7 @@ Grade mapping: S >= 90, A >= 75, B >= 60, C >= 45, D < 45.
    - Set angle thresholds (mind the smoothing lag and hysteresis gap)
    - Implement scoring (amplitude + alignment)
    - Map feedback types
-   - **Implement the abstracts**: `getCalibrationFrames()` returns `this.calibrationFrames`; `captureCalibrationRatios(med, landmarks)` populates `_capturedRatios.<exerciseType>` + any `calibratedXxx` fields. Cast `med` to your typed `Frame` once at the top.
+   - **Implement the abstracts**: `getCalibrationFrames()` returns `this.calibrationFrames`; `captureCalibrationRatios(med)` populates `_capturedRatios.<exerciseType>` + any `calibratedXxx` fields. Cast `med` to your typed `Frame` once at the top.
    - **Trigger finalisation**: when `calibrationFrameCount` reaches the threshold, call `this.runFinalizeCalibration(landmarks)` (do not write your own `finalizeCalibration` method — the base owns that template).
 3. **Update types.ts**: Add to `ExerciseType`, `EXERCISE_TYPES`, `EXERCISE_META`, and new `RepFeedback` values
 4. **Update bodyProfile.ts**: Add profile interface + threshold function (with safe defaults)
