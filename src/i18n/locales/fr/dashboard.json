@@ -1,1 +1,64 @@
-{}
+{
+    "set_indicator_block": "{{block}}/{{totalBlocks}} · {{set}}/{{totalSets}}",
+    "set_indicator": "Set {{current}}/{{total}}",
+    "flip_camera_to_rear": "Passer à la caméra arrière",
+    "flip_camera_to_front": "Passer à la caméra avant",
+    "mute": "Couper le son",
+    "unmute": "Activer le son",
+    "stop_workout_aria": "Arrêter le workout",
+    "wrong_person_banner": "👤 Mauvaise personne détectée — repositionne-toi dans le cadre",
+    "combo_label": "COMBO",
+    "average_label": "MOY",
+    "position_guide": {
+        "calibration_progress_aria": "Progression de la calibration",
+        "pushup": {
+            "title": "Mets-toi en position de planche",
+            "description": "Place ton téléphone pour que la caméra voie tout ton corps en position de pompes.",
+            "calibration": "Tiens la planche…"
+        },
+        "squat": {
+            "title": "Tiens-toi face à la caméra",
+            "description": "Recule pour que ton corps entier soit visible de la tête aux pieds.",
+            "calibration": "Reste immobile…"
+        },
+        "pullup": {
+            "title": "Suspends-toi à la barre",
+            "description": "Positionne la caméra pour que ton corps entier soit visible, bras tendus.",
+            "calibration": "Tiens la suspension…"
+        },
+        "legraise": {
+            "title": "Allonge-toi sur le dos",
+            "description": "Place la caméra de côté pour qu'elle voie ton corps entier allongé à plat.",
+            "calibration": "Reste immobile…"
+        }
+    },
+    "install_banner": {
+        "title": "Installer Push-Up Hero",
+        "subtitle": "Joue hors ligne comme une app native",
+        "btn_install": "Installer",
+        "btn_how": "Comment ?",
+        "btn_dismiss_aria": "Ignorer",
+        "ios_guide": {
+            "title": "Installer Push-Up Hero",
+            "subtitle": "Débloque l'expérience complète",
+            "step1_chrome_prefix": "Appuie sur le bouton",
+            "step1_chrome_strong": "⋮ menu",
+            "step1_chrome_suffix": "(en haut à droite)",
+            "step1_safari_prefix": "Appuie sur le bouton",
+            "step1_safari_strong": "Partage",
+            "step1_safari_suffix": "ci-dessous",
+            "step2_chrome_prefix": "Appuie sur",
+            "step2_safari_prefix": "Fais défiler vers le bas et appuie sur",
+            "step2_strong": "« Sur l'écran d'accueil »",
+            "step3_prefix": "Appuie sur",
+            "step3_strong": "« Ajouter »",
+            "step3_suffix": "— c'est fait !",
+            "pointer_chrome_prefix": "Cherche le bouton",
+            "pointer_chrome_strong": "⋮",
+            "pointer_chrome_suffix": "au-dessus",
+            "pointer_safari_prefix": "Cherche le bouton",
+            "pointer_safari_strong": "Partage",
+            "pointer_safari_suffix": "en bas"
+        }
+    }
+}

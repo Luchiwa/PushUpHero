@@ -24,7 +24,20 @@
         "next": "Suivant",
         "skip": "Passer",
         "edit": "Modifier",
-        "remove": "Supprimer"
+        "remove": "Supprimer",
+        "dismiss": "Ignorer",
+        "retry": "Réessayer"
+    },
+    "reload_prompt": {
+        "title": "Nouvelle version disponible !",
+        "subtitle": "Recharge pour profiter des dernières fonctionnalités",
+        "btn_update": "Mettre à jour"
+    },
+    "error": {
+        "section_message": "Une erreur est survenue dans cette section.",
+        "root_title": "😵 Oups, une erreur est survenue",
+        "root_default": "Une erreur inattendue s'est produite.",
+        "btn_try_again": "Réessayer"
     },
     "aria": {
         "choose_exercise": "Sélection d'exercice"

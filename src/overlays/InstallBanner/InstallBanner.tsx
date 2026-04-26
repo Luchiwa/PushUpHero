@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useInstallPrompt } from '@hooks/useInstallPrompt';
 import { isChromeiOS } from '@infra/device';
 import './InstallBanner.scss';
 
 export function InstallBanner() {
+    const { t } = useTranslation('dashboard');
     const { context, triggerInstall } = useInstallPrompt();
     const [showIOSGuide, setShowIOSGuide] = useState(false);
     const [dismissed, setDismissed] = useState(false);
@@ -22,21 +24,21 @@ export function InstallBanner() {
                     </svg>
                 </div>
                 <div className="install-banner-text">
-                    <span className="install-banner-title">Install Push-Up Hero</span>
-                    <span className="install-banner-sub">Play offline as a native app</span>
+                    <span className="install-banner-title">{t('install_banner.title')}</span>
+                    <span className="install-banner-sub">{t('install_banner.subtitle')}</span>
                 </div>
                 <div className="install-banner-actions">
                     {context === 'android' && (
                         <button type="button" className="install-banner-btn install-banner-btn--install" onClick={triggerInstall}>
-                            Install
+                            {t('install_banner.btn_install')}
                         </button>
                     )}
                     {context === 'ios' && (
                         <button type="button" className="install-banner-btn install-banner-btn--how" onClick={() => setShowIOSGuide(true)}>
-                            How?
+                            {t('install_banner.btn_how')}
                         </button>
                     )}
-                    <button type="button" className="install-banner-dismiss" onClick={() => setDismissed(true)} aria-label="Dismiss">
+                    <button type="button" className="install-banner-dismiss" onClick={() => setDismissed(true)} aria-label={t('install_banner.btn_dismiss_aria')}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                             <line x1="18" y1="6" x2="6" y2="18" />
                             <line x1="6" y1="6" x2="18" y2="18" />
@@ -57,8 +59,8 @@ export function InstallBanner() {
                         </button>
 
                         <div className="ios-guide-header">
-                            <h3 className="ios-guide-title">Install Push-Up Hero</h3>
-                            <p className="ios-guide-subtitle">Unlock the full experience</p>
+                            <h3 className="ios-guide-title">{t('install_banner.ios_guide.title')}</h3>
+                            <p className="ios-guide-subtitle">{t('install_banner.ios_guide.subtitle')}</p>
                         </div>
 
                         <div className="ios-guide-steps">
@@ -82,8 +84,8 @@ export function InstallBanner() {
                                     </span>
                                     <span>
                                         {isChromeiOS
-                                            ? <>Tap the <strong>&#8942; menu</strong> button (top right)</>
-                                            : <>Tap the <strong>Share</strong> button below</>
+                                            ? <>{t('install_banner.ios_guide.step1_chrome_prefix')} <strong>{t('install_banner.ios_guide.step1_chrome_strong')}</strong> {t('install_banner.ios_guide.step1_chrome_suffix')}</>
+                                            : <>{t('install_banner.ios_guide.step1_safari_prefix')} <strong>{t('install_banner.ios_guide.step1_safari_strong')}</strong> {t('install_banner.ios_guide.step1_safari_suffix')}</>
                                         }
                                     </span>
                                 </div>
@@ -100,8 +102,8 @@ export function InstallBanner() {
                                     </span>
                                     <span>
                                         {isChromeiOS
-                                            ? <>Tap <strong>"Add to Home Screen"</strong></>
-                                            : <>Scroll down and tap <strong>"Add to Home Screen"</strong></>
+                                            ? <>{t('install_banner.ios_guide.step2_chrome_prefix')} <strong>{t('install_banner.ios_guide.step2_strong')}</strong></>
+                                            : <>{t('install_banner.ios_guide.step2_safari_prefix')} <strong>{t('install_banner.ios_guide.step2_strong')}</strong></>
                                         }
                                     </span>
                                 </div>
@@ -115,7 +117,7 @@ export function InstallBanner() {
                                             <polyline points="20 6 9 17 4 12" />
                                         </svg>
                                     </span>
-                                    <span>Tap <strong>"Add"</strong> — done!</span>
+                                    <span>{t('install_banner.ios_guide.step3_prefix')} <strong>{t('install_banner.ios_guide.step3_strong')}</strong> {t('install_banner.ios_guide.step3_suffix')}</span>
                                 </div>
                             </div>
                         </div>
@@ -136,8 +138,8 @@ export function InstallBanner() {
                             </svg>
                             <span>
                                 {isChromeiOS
-                                    ? <>Look for the <strong>&#8942;</strong> button above</>
-                                    : <>Look for the <strong>Share</strong> button below</>
+                                    ? <>{t('install_banner.ios_guide.pointer_chrome_prefix')} <strong>{t('install_banner.ios_guide.pointer_chrome_strong')}</strong> {t('install_banner.ios_guide.pointer_chrome_suffix')}</>
+                                    : <>{t('install_banner.ios_guide.pointer_safari_prefix')} <strong>{t('install_banner.ios_guide.pointer_safari_strong')}</strong> {t('install_banner.ios_guide.pointer_safari_suffix')}</>
                                 }
                             </span>
                         </div>

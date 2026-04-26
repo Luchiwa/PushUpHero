@@ -24,7 +24,20 @@
         "next": "Next",
         "skip": "Skip",
         "edit": "Edit",
-        "remove": "Remove"
+        "remove": "Remove",
+        "dismiss": "Dismiss",
+        "retry": "Retry"
+    },
+    "reload_prompt": {
+        "title": "New version available!",
+        "subtitle": "Reload to get the latest features",
+        "btn_update": "Update"
+    },
+    "error": {
+        "section_message": "Something went wrong in this section.",
+        "root_title": "😵 Oops, something went wrong",
+        "root_default": "An unexpected error occurred.",
+        "btn_try_again": "Try again"
     },
     "aria": {
         "choose_exercise": "Exercise selection"
