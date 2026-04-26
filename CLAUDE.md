@@ -240,9 +240,31 @@ The agent's job is to chase the downstream consumers and surface dead branches t
 
 Skip this only for pure additions (new file, new branch of a switch, new prop that nothing else touches) — those don't widen existing invariants.
 
-### No barrel re-exports
+### Module boundaries: barrels vs. shims
 
-When a type or function moves to a new module, **update the imports in every consumer** rather than adding `export type { Foo } from '@new/location'` in the old module. A re-export is a back-compat shim: it hides where the symbol actually lives, makes "find references" misleading, and decays into permanent indirection. Touching N import lines is cheap; carrying a stale re-export forever is not. The same rule applies to types you create *inside* a module (e.g. `firestoreValidators`) — consumers import from the source-of-truth module, not from a downstream module that happens to use the type.
+The rule is **one canonical import path per symbol**. Two patterns satisfy that, one violates it.
+
+**✅ Architectural barrel (allowed).** A module exposes its public API via an `index.ts` (e.g. `src/domain/index.ts`), and consumers outside the module import from `@domain` only. This is *the* canonical path — `@domain/<file>` is reserved for intra-module imports. The barrel is the front door, not a back-compat layer; a symbol still has exactly one canonical home.
+
+**❌ Migration shim (forbidden).** When a type or function moves to a new module, **update the imports in every consumer** rather than adding `export type { Foo } from '@new/location'` in the old module. The shim is a hidden second path: "find references" lies, the symbol's real home is opaque, and the indirection decays into permanent ambient noise. Touching N import lines is cheap; carrying a stale re-export forever is not.
+
+**❌ Incidental re-export (forbidden).** A hook or component that re-exports a domain type it consumes (`export type { AppUser, DbUser } from '@domain/authTypes'` inside `useAuth.tsx`) is the same antipattern dressed up. The hook is not the home of those types; pruning the re-export is the fix, not a different formulation.
+
+Heuristic: if the same symbol has two valid import paths and one of them isn't its source-of-truth module's barrel, you have a shim — delete it. The same rule applies to types you create *inside* a module (e.g. `firestoreValidators`'s `FlatUserDoc`) — consumers import from the source-of-truth module, not from a downstream module that happens to use the type.
+
+### Brand at module boundaries
+
+Identity strings and scalar metrics that flow across modules are branded in `@domain` (currently `UserId`, `Level`, `XpAmount` — see `src/domain/brands.ts`). This blocks two failure modes at compile time:
+- Passing the wrong primitive: `userRef("display name")`, `getTier(totalXp)`, `levelFromTotalXp(level)`.
+- Confusing two scalars of the same shape: `Level` vs `XpAmount` are both `number` but never assignable to each other.
+
+Rules:
+- **Mint at the boundary, never inside business logic.** The factories (`createUserId`, `createLevel`, `createXpAmount`) are called only at entry points: `authService.toAppUser` (Firebase Auth → AppUser), `userRepository.unfoldDbUser` (Firestore flat doc → DbUser), `firestoreValidators.parseNotification`, `friendRepository` (joining doc IDs to entities), the localStorage seed in `useLevelSystem`. After that, branded values flow through the codebase as branded values.
+- **Re-mint after arithmetic.** A branded value plus a number is a number — TS strips the brand. When you must do arithmetic and re-emit a brand (e.g. `createLevel(currentLevel + 1)`, `createXpAmount(cloudXp + localXp)`), do it inline at the assignment site. Don't propagate stripped values further before re-minting.
+- **No `as UserId` outside `brands.ts`.** Casts bypass validation. If you genuinely have a string you trust, use the factory.
+- **Boundary code (`infra/firestoreValidators`, `useSyncCloud`) may still touch the wire-flat shape.** Those are *the* boundary. Branding happens as the value crosses out.
+
+When adding a new branded type: define it in `brands.ts` with a factory that validates, propagate to the data shapes that already use the underlying primitive, and let the typechecker show you the call sites that need updates.
 
 ## Skills (Claude Code)
 
