@@ -59,7 +59,7 @@ export function useLevelSystem() {
 
     // ── Derived global level values ──────────────────────────────────────────
     // Always derive level from totalXp — it's the source of truth.
-    // (dbUser.level is denormalised / may be stale from the old rep-based system)
+    // (dbUser.stats.level is denormalised / may be stale from the old rep-based system)
     const level = levelFromTotalXp(totalXp);
     const currentLevelBaseXp = totalXpForLevel(level);
     const nextLevelTotalReq = totalXpForLevel(level + 1);

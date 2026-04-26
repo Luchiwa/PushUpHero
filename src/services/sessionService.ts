@@ -49,9 +49,9 @@ export function yesterdayDateString(): string {
  * - Anything else → reset to 1 (new streak)
  */
 export function computeNewStreak(dbUser: DbUser | null, todayLocal: string): number {
-    const lastDate = dbUser?.lastSessionDate;
-    if (lastDate === todayLocal) return dbUser?.streak ?? 1;
-    if (lastDate === yesterdayDateString()) return (dbUser?.streak ?? 0) + 1;
+    const lastDate = dbUser?.stats?.lastSessionDate;
+    if (lastDate === todayLocal) return dbUser?.stats?.streak ?? 1;
+    if (lastDate === yesterdayDateString()) return (dbUser?.stats?.streak ?? 0) + 1;
     return 1;
 }
 
@@ -101,7 +101,7 @@ export async function saveSession({
     const newTotalXp = currentTotalXp + sessionXp;
     const newLevel = levelFromTotalXp(newTotalXp);
     const newStreak = computeNewStreak(dbUser, todayLocal);
-    const newBestStreak = Math.max(dbUser?.bestStreak ?? 0, newStreak);
+    const newBestStreak = Math.max(dbUser?.stats?.bestStreak ?? 0, newStreak);
 
     // Compute new per-exercise XP and levels
     const newExerciseXp: Record<string, number> = {};
@@ -119,7 +119,7 @@ export async function saveSession({
     // ── Lifetime reps per exercise (for achievements) ────────────────────
     const sessionRepsMap = buildSessionRepsMap(session);
 
-    const prevLifetimeReps = dbUser?.lifetimeReps ?? {};
+    const prevLifetimeReps = dbUser?.progression?.lifetimeReps ?? {};
     const newLifetimeReps: Partial<Record<ExerciseType, number>> = { ...prevLifetimeReps };
     for (const [ex, reps] of Object.entries(sessionRepsMap)) {
         newLifetimeReps[ex as ExerciseType] = (newLifetimeReps[ex as ExerciseType] ?? 0) + reps;
@@ -127,12 +127,12 @@ export async function saveSession({
 
     // ── S-grade tracking ─────────────────────────────────────────────────
     const isS = getGradeLetter(session.averageScore) === 'S';
-    const newSGradeCount = (dbUser?.sGradeCount ?? 0) + (isS ? 1 : 0);
+    const newSGradeCount = (dbUser?.stats?.sGradeCount ?? 0) + (isS ? 1 : 0);
     const newTotalSessions = currentTotalSessions + 1;
 
     // ── Cumulative training time ─────────────────────────────────────────
     const sessionDuration = session.totalDuration ?? session.elapsedTime ?? 0;
-    const newLifetimeTrainingTime = (dbUser?.lifetimeTrainingTime ?? 0) + sessionDuration;
+    const newLifetimeTrainingTime = (dbUser?.stats?.lifetimeTrainingTime ?? 0) + sessionDuration;
 
     // ── Evaluate achievements ────────────────────────────────────────────
     const currentAchievements: AchievementMap = { ...(dbUser?.achievements ?? {}) };
@@ -142,7 +142,7 @@ export async function saveSession({
         totalSessions: newTotalSessions,
         bestStreak: newBestStreak,
         friendsCount,
-        totalEncouragementsSent: dbUser?.totalEncouragementsSent ?? 0,
+        totalEncouragementsSent: dbUser?.stats?.totalEncouragementsSent ?? 0,
         sGradeCount: newSGradeCount,
         sessionXp: session.xpEarned ?? 0,
         globalLevel: newLevel,

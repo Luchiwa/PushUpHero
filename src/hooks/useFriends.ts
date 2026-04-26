@@ -105,12 +105,12 @@ export function useFriends() {
     // ── Thin wrappers (inject uid/displayName from auth context) ────
     const sendFriendRequest = useCallback(async (toUid: string, toUsername: string) => {
         if (!user || !dbUser) return;
-        await sendRequest(user.uid, dbUser.displayName, toUid, toUsername);
+        await sendRequest(user.uid, dbUser.profile.displayName, toUid, toUsername);
     }, [user, dbUser]);
 
     const acceptFriendRequest = useCallback(async (request: FriendRequest) => {
         if (!user || !dbUser) return;
-        await acceptRequest(user.uid, dbUser.displayName, request);
+        await acceptRequest(user.uid, dbUser.profile.displayName, request);
     }, [user, dbUser]);
 
     const declineFriendRequest = useCallback(async (fromUid: string) => {
@@ -125,7 +125,7 @@ export function useFriends() {
 
     const sendEncouragement = useCallback(async (toUid: string) => {
         if (!user || !dbUser) return;
-        await sendEnc(user.uid, dbUser.displayName, toUid);
+        await sendEnc(user.uid, dbUser.profile.displayName, toUid);
     }, [user, dbUser]);
 
     const removeFriend = useCallback(async (friendUid: string) => {

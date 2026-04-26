@@ -73,7 +73,7 @@ export function useWorkoutSave({
         const { bonusCtx, avgScore, computedLevel } = computeFinalXp({
             allSets,
             totalWorkoutDuration,
-            streak: dbUser?.streak ?? 0,
+            streak: dbUser?.stats?.streak ?? 0,
             isMultiExercise,
             totalXp,
         });
