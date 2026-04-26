@@ -7,17 +7,43 @@
  *         ├─ LevelContext.Provider  (XP, level, per-exercise)
  *         └─ SessionContext.Provider  (sessions, count)
  */
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { subscribeAuthState, signInWithGoogle, logoutSession } from '@services/authService';
 import { uploadAvatar as uploadAvatarService } from '@services/avatarService';
 import { onUserProfile } from '@data/userRepository';
-import { AuthCoreContext, LevelContext, SessionContext } from '@hooks/useAuth';
+import { AuthCoreContext, LevelContext, SessionContext, useAuthCore } from '@hooks/useAuth';
 import type { AppUser, DbUser, AuthCoreContextType, LevelContextType, SessionContextType } from '@hooks/useAuth';
 import { useLevelSystem } from '@hooks/useLevelSystem';
 import { useNotifications } from '@hooks/useNotifications';
 import { useSyncCloud } from '@hooks/useSyncCloud';
-import { clearAllLocalStorage } from '@services/clearLocalStorage';
+import { clearAppKeys } from '@infra/storage';
+import { FeedCacheContext, emptyFeedCache } from './FeedCacheContext';
+import type { FeedCache, FeedCacheContextValue } from './FeedCacheContext';
 import type { SessionRecord } from '@exercises/types';
+
+// ── Inner provider: feed cache (resets on auth change) ──
+
+function FeedCacheProvider({ children }: { children: React.ReactNode }) {
+    const cacheRef = useRef<FeedCache>(emptyFeedCache());
+    const { user } = useAuthCore();
+
+    // Reset whenever the logged-in user changes so the next user can't
+    // observe the previous one's feed (logout, account swap on shared device).
+    useEffect(() => {
+        cacheRef.current = emptyFeedCache();
+    }, [user?.uid]);
+
+    const value = useMemo<FeedCacheContextValue>(() => ({
+        get: () => cacheRef.current,
+        set: (next) => { cacheRef.current = next; },
+    }), []);
+
+    return (
+        <FeedCacheContext.Provider value={value}>
+            {children}
+        </FeedCacheContext.Provider>
+    );
+}
 
 // ── Inner provider: Level + Sessions (mounts expensive hooks once) ──
 
@@ -68,7 +94,9 @@ function LevelAndSessionProvider({ children }: { children: React.ReactNode }) {
     return (
         <LevelContext.Provider value={levelValue}>
             <SessionContext.Provider value={sessionValue}>
-                {children}
+                <FeedCacheProvider>
+                    {children}
+                </FeedCacheProvider>
             </SessionContext.Provider>
         </LevelContext.Provider>
     );
@@ -95,7 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // If user was logged in and is now null → logout or account deletion
             // Clear localStorage synchronously BEFORE React re-renders child hooks
             if (prevUser && !appUser) {
-                clearAllLocalStorage();
+                clearAppKeys();
             }
             prevUser = appUser;
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAuthCore } from './useAuth';
+import { useFeedCache } from '@app/FeedCacheContext';
 import { getRecentActivity } from '@data/activityRepository';
 import type { Friend } from './useFriends';
 import type { ExerciseType } from '@exercises/types';
@@ -67,19 +68,13 @@ export function buildEventMessage(event: ActivityEvent): string {
 }
 
 // ── Feed cache ──────────────────────────────────────────────────
-// Module-level cache survives unmount/remount (e.g. ProfileModal close → reopen).
-// Keyed on user UID + sorted friend UIDs to avoid stale cross-user data.
+// Cache lives in FeedCacheContext (provider mounted in AuthProvider).
+// Auto-resets on auth change so a logged-out user can't see the previous one's feed.
 const FEED_CACHE_TTL = 120_000; // 2 minutes
-
-interface FeedCache {
-    data: ActivityEvent[];
-    fetchedAt: number;
-    key: string;
-}
-let feedCache: FeedCache = { data: [], fetchedAt: 0, key: '' };
 
 export function useActivityFeed(friends: Friend[]) {
     const { user } = useAuthCore();
+    const cache = useFeedCache();
     const [feed, setFeed] = useState<ActivityEvent[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -102,9 +97,10 @@ export function useActivityFeed(friends: Friend[]) {
         }
 
         // Serve from cache if still fresh and same friend set
-        if (!bypassCache && feedCache.key === friendKey && Date.now() - feedCache.fetchedAt < FEED_CACHE_TTL) {
+        const cached = cache.get();
+        if (!bypassCache && cached.key === friendKey && Date.now() - cached.fetchedAt < FEED_CACHE_TTL) {
             // Restore cached data to state (covers remount scenario)
-            setFeed(feedCache.data);
+            setFeed(cached.data);
             return;
         }
 
@@ -145,7 +141,7 @@ export function useActivityFeed(friends: Friend[]) {
                 .flat()
                 .sort((a, b) => b.createdAt - a.createdAt);
 
-            feedCache = { data: merged, fetchedAt: Date.now(), key: friendKey };
+            cache.set({ data: merged, fetchedAt: Date.now(), key: friendKey });
             setFeed(merged);
         } catch (err) {
             console.error('[useActivityFeed] fetch error:', err);
@@ -153,7 +149,7 @@ export function useActivityFeed(friends: Friend[]) {
         } finally {
             setLoading(false);
         }
-    }, [user, friendKey]);
+    }, [user, friendKey, cache]);
 
     // Fetch on mount and whenever the friend set changes
     useEffect(() => {

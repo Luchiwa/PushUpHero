@@ -7,6 +7,7 @@ import {
     friendsCol, friendRef, friendRequestRef, sentRequestRef,
     sessionsCol, friendRequestsCol, sentRequestsCol, notificationsCol, activityFeedCol,
 } from '@infra/refs';
+import { clearAll } from '@infra/storage';
 
 /**
  * Deletes the current user's account and all associated Firestore data.
@@ -97,5 +98,5 @@ export async function deleteCurrentAccount(): Promise<void> {
     }
 
     // ── 8. Belt-and-suspenders: clear localStorage ───────────────
-    localStorage.clear();
+    clearAll();
 }

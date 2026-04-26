@@ -3,14 +3,13 @@ import type { Friend } from '@hooks/useFriends';
 import { Avatar } from '@components/Avatar/Avatar';
 import { ENCOURAGE_COOLDOWN_MS } from '@domain/constants';
 import { getTier } from '@domain/xpSystem';
+import { read, write, STORAGE_KEY_BUILDERS } from '@infra/storage';
 import { TierBadge } from '../TierBadge/TierBadge';
 import './FriendCard.scss';
 
-const ENCOURAGE_KEY = (uid: string) => `pushup_encourage_${uid}`;
-
 function useEncourageCooldown(friendUid: string) {
     const getRemaining = useCallback(() => {
-        const last = parseInt(localStorage.getItem(ENCOURAGE_KEY(friendUid)) || '0', 10);
+        const last = read(STORAGE_KEY_BUILDERS.encouragement(friendUid), 0);
         return Math.max(0, ENCOURAGE_COOLDOWN_MS - (Date.now() - last));
     }, [friendUid]);
     const [remaining, setRemaining] = useState(getRemaining);
@@ -27,7 +26,7 @@ function useEncourageCooldown(friendUid: string) {
     }, [isActive, getRemaining]);
 
     const markSent = () => {
-        localStorage.setItem(ENCOURAGE_KEY(friendUid), Date.now().toString());
+        write(STORAGE_KEY_BUILDERS.encouragement(friendUid), Date.now());
         setRemaining(ENCOURAGE_COOLDOWN_MS);
     };
 

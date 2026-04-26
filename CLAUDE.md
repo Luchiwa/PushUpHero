@@ -135,7 +135,8 @@ Pure functions with no React dependency, all Firestore/Auth/Storage mutations:
 - `avatarService.ts` — Avatar upload/compression to Firebase Storage.
 - `notificationService.ts` — FCM token registration, notification writes.
 - `deleteAccount.ts` — Account deletion orchestration.
-- `guestMerge.ts` / `guestStatsStore.ts` / `clearLocalStorage.ts` — Guest persistence and cleanup.
+- `guestMerge.ts` / `guestStatsStore.ts` — Guest persistence and merge-on-login (storage handled by `@infra/storage`).
+- `workoutCheckpointStore.ts` — Interrupted workout checkpoint persistence (via `@infra/storage`).
 
 ### Infrastructure (`src/infra/`) — platform plumbing
 
@@ -144,6 +145,7 @@ Browser APIs, Firebase init, Firestore refs. No business logic.
 - `firebase.ts` — Firebase app initialization, exports `auth`, `db`, `storage` singletons.
 - `refs.ts` — Centralized Firestore document/collection reference builders (`userRef(uid)`, `sessionsCol(uid)`, `friendRef(uid, friendId)`, etc.).
 - `firestoreValidators.ts` — Type guards (`isDbUser`, `isSessionRecord`, …) and parsers (`parseNotification`, `parseActivityFeedDoc`, `tsToMs`) used by repositories before casting raw Firestore data.
+- `storage.ts` — Typed `localStorage` access (`read`/`write`/`remove`/`clearAll`/`clearAppKeys`) plus the `STORAGE_KEYS` registry and `STORAGE_KEY_BUILDERS` for parameterized keys. Sole authorized importer of `window.localStorage`.
 - `device.ts` — Platform detection (`isMobile()`, `isIos()`).
 - `avatarCache.ts` — Avatar URL caching via Cache API.
 - `soundEngine.ts` — Web Audio API sound effects.
@@ -158,6 +160,15 @@ These rules are non-negotiable. They were violated repeatedly before PUS-12 and 
 - **Repositories must never expose Firestore SDK types in public signatures.** No `DocumentData`, `Timestamp`, `DocumentChange`, `QuerySnapshot`, `DocumentSnapshot`, `DocumentReference` in exported function params or return types. Map to a domain shape and use `tsToMs` to coerce timestamps before they leave the repo.
 - **Cast only after a guard.** Every `as DbUser` / `as SessionRecord` / `as FriendRequest` in `src/data/` must be preceded by the matching `isXxx(...)` guard from `firestoreValidators`. A doc that fails validation is filtered with `console.warn` — never propagated to the UI.
 - **`onSnapshot` callbacks are synchronous.** No `getDoc`/`getDocs` inside the callback. If a join is needed, denormalize at write time, or batch via `where(documentId(), 'in', chunk)` outside the callback (chunks of 30, the Firestore hard limit).
+
+### Storage isolation rules (enforced by ESLint + reviewers)
+
+Mirror of the Firebase rules above, applied to `window.localStorage`. PUS-13 collapsed 17 keys spread across 11 files into a single registry; these invariants keep it that way.
+
+- **Direct `localStorage` access is allowed only in `src/infra/storage.ts`.** Every other layer — including services and data — must go through the `read` / `write` / `remove` / `clearAppKeys` / `clearAll` API. ESLint blocks violations at lint time via `no-restricted-globals`.
+- **All keys live in the `STORAGE_KEYS` registry** (or `STORAGE_KEY_BUILDERS` for parameterized keys like `feed_last_seen_${uid}`). Inline string literals are forbidden — they break "find references" and let renames silently rot.
+- **Prefix scans for dynamic keys** (e.g. `feed_last_seen_*`, `pushup_encourage_*`) are owned by `clearAppKeys`. New parameterized key families must register their prefix in `DYNAMIC_KEY_PREFIXES` so logout cleanup stays exhaustive.
+- **No module-level mutable cache for user-scoped data.** A cache that survives across users is a leak. Either lift to a Context invalidated on auth change (see `FeedCacheContext`), or accept refetch on remount.
 
 ### Cloud Functions
 

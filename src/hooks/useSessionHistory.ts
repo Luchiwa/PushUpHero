@@ -19,15 +19,7 @@ import {
     setGuestSGradeCount,
     setGuestLifetimeTrainingTime,
 } from '@services/guestStatsStore';
-
-const STORAGE_KEY = 'pushup-sessions';
-const STORAGE_TOTAL_KEY = 'pushup_game_total_sessions';
-
-function saveLocalSessions(sessions: SessionRecord[]): void {
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
-    } catch { /* localStorage not available */ }
-}
+import { write, STORAGE_KEYS } from '@infra/storage';
 
 export function useSessionHistory() {
     const { user, dbUser } = useAuthCore();
@@ -104,10 +96,10 @@ export function useSessionHistory() {
         } else {
             const updated = [newSession, ...sessions].slice(0, MAX_LOCAL_SESSIONS);
             setSessions(updated);
-            saveLocalSessions(updated);
+            write(STORAGE_KEYS.sessions, updated);
             const newCount = totalSessionCount + 1;
             setTotalSessionCount(newCount);
-            localStorage.setItem(STORAGE_TOTAL_KEY, newCount.toString());
+            write(STORAGE_KEYS.totalSessions, newCount);
             addGuestXp(
                 xpResult.totalXp,
                 xpResult.perExercise.map(e => ({ exerciseType: e.exerciseType, xp: e.finalXp })),

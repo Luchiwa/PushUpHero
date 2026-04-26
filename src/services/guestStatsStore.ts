@@ -11,124 +11,74 @@
 import type { ExerciseType } from '@exercises/types';
 import type { AchievementMap, RecordsMap } from '@domain/achievementEngine';
 import { emptyRecords } from '@domain/achievementEngine';
-
-// ── localStorage keys ────────────────────────────────────────────────────────
-
-const KEY_ACHIEVEMENTS     = 'pushup_hero_guest_achievements';
-const KEY_RECORDS          = 'pushup_hero_guest_records';
-const KEY_LIFETIME_REPS    = 'pushup_hero_guest_lifetime_reps';
-const KEY_BEST_STREAK      = 'pushup_hero_guest_best_streak';
-const KEY_STREAK           = 'pushup_hero_guest_streak';
-const KEY_LAST_SESSION_DATE = 'pushup_hero_guest_last_session_date';
-const KEY_S_GRADE_COUNT    = 'pushup_hero_guest_s_grade_count';
-const KEY_TRAINING_TIME    = 'pushup_hero_guest_training_time';
-
-export const GUEST_STATS_KEYS = [
-    KEY_ACHIEVEMENTS,
-    KEY_RECORDS,
-    KEY_LIFETIME_REPS,
-    KEY_BEST_STREAK,
-    KEY_STREAK,
-    KEY_LAST_SESSION_DATE,
-    KEY_S_GRADE_COUNT,
-    KEY_TRAINING_TIME,
-] as const;
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-function readJSON<T>(key: string, fallback: T): T {
-    try {
-        const raw = localStorage.getItem(key);
-        return raw ? JSON.parse(raw) : fallback;
-    } catch {
-        return fallback;
-    }
-}
-
-function writeJSON(key: string, value: unknown): void {
-    try {
-        localStorage.setItem(key, JSON.stringify(value));
-    } catch { /* quota exceeded — best effort */ }
-}
-
-function readInt(key: string, fallback: number = 0): number {
-    return parseInt(localStorage.getItem(key) ?? '', 10) || fallback;
-}
-
-function writeInt(key: string, value: number): void {
-    try {
-        localStorage.setItem(key, value.toString());
-    } catch { /* best effort */ }
-}
+import { read, write, remove, STORAGE_KEYS } from '@infra/storage';
 
 // ── Read ─────────────────────────────────────────────────────────────────────
 
 export function getGuestAchievements(): AchievementMap {
-    return readJSON(KEY_ACHIEVEMENTS, {});
+    return read<AchievementMap>(STORAGE_KEYS.guestAchievements, {});
 }
 
 export function getGuestRecords(): RecordsMap {
-    return readJSON(KEY_RECORDS, emptyRecords());
+    return read<RecordsMap>(STORAGE_KEYS.guestRecords, emptyRecords());
 }
 
 export function getGuestLifetimeReps(): Partial<Record<ExerciseType, number>> {
-    return readJSON(KEY_LIFETIME_REPS, {});
+    return read<Partial<Record<ExerciseType, number>>>(STORAGE_KEYS.guestLifetimeReps, {});
 }
 
 export function getGuestBestStreak(): number {
-    return readInt(KEY_BEST_STREAK);
+    return read(STORAGE_KEYS.guestBestStreak, 0);
 }
 
 export function getGuestStreak(): number {
-    return readInt(KEY_STREAK);
+    return read(STORAGE_KEYS.guestStreak, 0);
 }
 
 export function getGuestLastSessionDate(): string | null {
-    return localStorage.getItem(KEY_LAST_SESSION_DATE);
+    return read<string | null>(STORAGE_KEYS.guestLastSession, null);
 }
 
 export function getGuestSGradeCount(): number {
-    return readInt(KEY_S_GRADE_COUNT);
+    return read(STORAGE_KEYS.guestSGradeCount, 0);
 }
 
 export function getGuestLifetimeTrainingTime(): number {
-    return readInt(KEY_TRAINING_TIME);
+    return read(STORAGE_KEYS.guestTrainingTime, 0);
 }
 
 // ── Write ────────────────────────────────────────────────────────────────────
 
 export function setGuestAchievements(map: AchievementMap): void {
-    writeJSON(KEY_ACHIEVEMENTS, map);
+    write(STORAGE_KEYS.guestAchievements, map);
 }
 
 export function setGuestRecords(records: RecordsMap): void {
-    writeJSON(KEY_RECORDS, records);
+    write(STORAGE_KEYS.guestRecords, records);
 }
 
 export function setGuestLifetimeReps(reps: Partial<Record<ExerciseType, number>>): void {
-    writeJSON(KEY_LIFETIME_REPS, reps);
+    write(STORAGE_KEYS.guestLifetimeReps, reps);
 }
 
 export function setGuestBestStreak(streak: number): void {
-    writeInt(KEY_BEST_STREAK, streak);
+    write(STORAGE_KEYS.guestBestStreak, streak);
 }
 
 export function setGuestStreak(streak: number): void {
-    writeInt(KEY_STREAK, streak);
+    write(STORAGE_KEYS.guestStreak, streak);
 }
 
 export function setGuestLastSessionDate(date: string): void {
-    try {
-        localStorage.setItem(KEY_LAST_SESSION_DATE, date);
-    } catch { /* best effort */ }
+    write(STORAGE_KEYS.guestLastSession, date);
 }
 
 export function setGuestSGradeCount(count: number): void {
-    writeInt(KEY_S_GRADE_COUNT, count);
+    write(STORAGE_KEYS.guestSGradeCount, count);
 }
 
 export function setGuestLifetimeTrainingTime(seconds: number): void {
-    writeInt(KEY_TRAINING_TIME, seconds);
+    write(STORAGE_KEYS.guestTrainingTime, seconds);
 }
 
 // ── Snapshot (read everything at once) ───────────────────────────────────────
@@ -159,7 +109,12 @@ export function getGuestStatsSnapshot(): GuestStatsSnapshot {
 
 /** Clear all guest stats keys (called after merge or on logout). */
 export function clearGuestStats(): void {
-    for (const key of GUEST_STATS_KEYS) {
-        localStorage.removeItem(key);
-    }
+    remove(STORAGE_KEYS.guestAchievements);
+    remove(STORAGE_KEYS.guestRecords);
+    remove(STORAGE_KEYS.guestLifetimeReps);
+    remove(STORAGE_KEYS.guestBestStreak);
+    remove(STORAGE_KEYS.guestStreak);
+    remove(STORAGE_KEYS.guestLastSession);
+    remove(STORAGE_KEYS.guestSGradeCount);
+    remove(STORAGE_KEYS.guestTrainingTime);
 }

@@ -11,6 +11,7 @@ import { SettingsModal } from '@modals/SettingsModal/SettingsModal';
 import { ProgressionScreen } from '@screens/ProgressionScreen/ProgressionScreen';
 import { PageLayout } from '@components/PageLayout/PageLayout';
 import { useFocusTrap } from '@hooks/shared/useFocusTrap';
+import { read, write, STORAGE_KEY_BUILDERS } from '@infra/storage';
 import './ProfileModal.scss';
 
 type ProfileTab = 'friends' | 'feed';
@@ -49,19 +50,19 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
         try { await uploadAvatar(file); } finally { setUploading(false); e.target.value = ''; }
     };
 
-    const FEED_SEEN_KEY = `feed_last_seen_${user?.uid}`;
     const [lastSeen, setLastSeen] = useState<number>(
-        () => parseInt(localStorage.getItem(`feed_last_seen_${user?.uid}`) ?? '0', 10)
+        () => user ? read(STORAGE_KEY_BUILDERS.feedLastSeen(user.uid), 0) : 0,
     );
     const { feed } = useActivityFeed(friends);
     const latestEventAt = feed.length > 0 ? feed[0].createdAt : 0;
     const hasFeedUnread = friends.length > 0 && latestEventAt > lastSeen;
 
     const markFeedSeen = useCallback(() => {
+        if (!user) return;
         const now = Date.now();
-        localStorage.setItem(FEED_SEEN_KEY, String(now));
+        write(STORAGE_KEY_BUILDERS.feedLastSeen(user.uid), now);
         setLastSeen(now);
-    }, [FEED_SEEN_KEY]);
+    }, [user]);
 
     useEffect(() => {
         if (activeTab === 'feed') markFeedSeen();

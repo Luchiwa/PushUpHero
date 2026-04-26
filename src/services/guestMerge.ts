@@ -7,44 +7,29 @@
 
 import { getDoc } from 'firebase/firestore';
 import { userRef } from '@infra/refs';
+import { read, write, remove, STORAGE_KEYS } from '@infra/storage';
 import { mergeLocalDataToCloud } from './userService';
 import type { SessionRecord } from '@exercises/types';
 import { getGuestStatsSnapshot, clearGuestStats } from './guestStatsStore';
 
-// ── localStorage keys shared with useSyncCloud (guest seed) ─────────────────
-export const LS_XP_KEY = 'pushup_hero_total_xp';
-export const LS_EXERCISE_XP_KEY = 'pushup_hero_exercise_xp';
-export const LS_SESSIONS_KEY = 'pushup-sessions';
-export const LS_TOTAL_SESSIONS_KEY = 'pushup_game_total_sessions';
-const MERGE_LOCK_KEY = 'pushup_merge_in_progress';
-
 /**
- * Reads guest data from localStorage, claims a merge lock,
- * clears local storage, snapshots guest stats, and pushes
- * everything to Firestore via `mergeLocalDataToCloud`.
+ * Reads guest data from localStorage, claims a merge lock, clears local
+ * storage, snapshots guest stats, and pushes everything to Firestore via
+ * `mergeLocalDataToCloud`.
  */
 export async function mergeGuestDataToCloud(uid: string): Promise<void> {
-    if (localStorage.getItem(MERGE_LOCK_KEY) === 'true') return;
+    if (read<boolean>(STORAGE_KEYS.mergeLock, false) === true) return;
 
-    const localXp = parseInt(localStorage.getItem(LS_XP_KEY) ?? '0', 10) || 0;
-    let localExerciseXp: Partial<Record<string, number>> = {};
-    try {
-        const raw = localStorage.getItem(LS_EXERCISE_XP_KEY);
-        if (raw) localExerciseXp = JSON.parse(raw);
-    } catch { /* skip */ }
-    let localSessions: SessionRecord[] = [];
-    try {
-        const raw = localStorage.getItem(LS_SESSIONS_KEY);
-        if (raw) localSessions = JSON.parse(raw);
-    } catch { /* malformed data — skip */ }
+    const localXp = read(STORAGE_KEYS.totalXp, 0);
+    const localExerciseXp = read<Partial<Record<string, number>>>(STORAGE_KEYS.exerciseXp, {});
+    const localSessions = read<SessionRecord[]>(STORAGE_KEYS.sessions, []);
 
     // Claim the lock and clear local storage before any async work
-    localStorage.setItem(MERGE_LOCK_KEY, 'true');
-    localStorage.removeItem(LS_XP_KEY);
-    localStorage.removeItem(LS_EXERCISE_XP_KEY);
-    localStorage.removeItem(LS_SESSIONS_KEY);
-    localStorage.removeItem(LS_TOTAL_SESSIONS_KEY);
-    localStorage.removeItem('pushup_game_total_reps');
+    write(STORAGE_KEYS.mergeLock, true);
+    remove(STORAGE_KEYS.totalXp);
+    remove(STORAGE_KEYS.exerciseXp);
+    remove(STORAGE_KEYS.sessions);
+    remove(STORAGE_KEYS.totalSessions);
 
     // Snapshot guest achievement stats before clearing
     const guestStats = getGuestStatsSnapshot();
@@ -67,5 +52,5 @@ export async function mergeGuestDataToCloud(uid: string): Promise<void> {
         }
     }
 
-    localStorage.removeItem(MERGE_LOCK_KEY);
+    remove(STORAGE_KEYS.mergeLock);
 }

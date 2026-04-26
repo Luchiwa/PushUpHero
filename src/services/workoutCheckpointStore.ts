@@ -8,6 +8,7 @@
  * workout finishes, is manually stopped, or the user discards it.
  */
 import type { WorkoutPlan, SetRecord } from '@exercises/types';
+import { read, write, remove, STORAGE_KEYS } from '@infra/storage';
 
 // ── Types ───────────────────────────────────────────────────────
 
@@ -24,32 +25,11 @@ export interface WorkoutCheckpoint {
     savedAt: number;
 }
 
-// ── Constants ───────────────────────────────────────────────────
-
-const CHECKPOINT_KEY = 'pushup_hero_workout_checkpoint';
-
-// ── Helpers ─────────────────────────────────────────────────────
-
-function readJSON<T>(key: string, fallback: T): T {
-    try {
-        const raw = localStorage.getItem(key);
-        return raw ? JSON.parse(raw) : fallback;
-    } catch {
-        return fallback;
-    }
-}
-
-function writeJSON(key: string, value: unknown): void {
-    try {
-        localStorage.setItem(key, JSON.stringify(value));
-    } catch { /* quota exceeded — best effort */ }
-}
-
 // ── Public API ──────────────────────────────────────────────────
 
 /** Read the saved checkpoint. Returns null if missing, corrupt, or invalid. */
 export function getWorkoutCheckpoint(): WorkoutCheckpoint | null {
-    const data = readJSON<WorkoutCheckpoint | null>(CHECKPOINT_KEY, null);
+    const data = read<WorkoutCheckpoint | null>(STORAGE_KEYS.workoutCheckpoint, null);
     if (!data) return null;
 
     // Validate required fields
@@ -60,7 +40,7 @@ export function getWorkoutCheckpoint(): WorkoutCheckpoint | null {
         || typeof data.elapsedMs !== 'number'
         || typeof data.savedAt !== 'number'
     ) {
-        localStorage.removeItem(CHECKPOINT_KEY);
+        remove(STORAGE_KEYS.workoutCheckpoint);
         return null;
     }
 
@@ -69,12 +49,12 @@ export function getWorkoutCheckpoint(): WorkoutCheckpoint | null {
 
 /** Save a checkpoint to localStorage. */
 export function saveWorkoutCheckpoint(checkpoint: WorkoutCheckpoint): void {
-    writeJSON(CHECKPOINT_KEY, checkpoint);
+    write(STORAGE_KEYS.workoutCheckpoint, checkpoint);
 }
 
 /** Remove the checkpoint from localStorage. */
 export function clearWorkoutCheckpoint(): void {
-    localStorage.removeItem(CHECKPOINT_KEY);
+    remove(STORAGE_KEYS.workoutCheckpoint);
 }
 
 /**
