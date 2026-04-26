@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAuthCore } from './useAuth';
 import { useFeedCache } from '@app/FeedCacheContext';
 import { getRecentActivity } from '@data/activityRepository';
-import type { Friend } from './useFriends';
+import type { Friend } from '@services/friendService';
 import type { ExerciseType } from '@exercises/types';
 import { getExerciseLabel } from '@exercises/types';
 import type { UserId } from '@domain';

@@ -14,9 +14,6 @@ import type { Friend, FriendRequest, OutgoingRequest, SearchResult } from '@serv
 import type { UserId } from '@domain';
 import { createLevel } from '@domain';
 
-// Re-export types for consumers that import from here
-export type { Friend, FriendRequest, OutgoingRequest, SearchResult } from '@services/friendService';
-
 const STATS_DEBOUNCE_MS = 300;
 
 export function useFriends() {

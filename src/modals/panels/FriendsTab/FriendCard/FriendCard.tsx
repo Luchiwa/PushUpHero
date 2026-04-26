@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { Friend } from '@hooks/useFriends';
+import type { Friend } from '@services/friendService';
 import { Avatar } from '@components/Avatar/Avatar';
 import { ENCOURAGE_COOLDOWN_MS } from '@domain';
 import { getTier } from '@domain';

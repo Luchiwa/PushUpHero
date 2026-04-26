@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useActivityFeed, buildEventMessage, formatRelativeTime } from '@hooks/useActivityFeed';
 import { getGradeLetter, getGradeColor, getGradeBackground } from '@domain';
-import type { Friend } from '@hooks/useFriends';
+import type { Friend } from '@services/friendService';
 import { Avatar } from '@components/Avatar/Avatar';
 import './FriendsFeedPanel.scss';
 

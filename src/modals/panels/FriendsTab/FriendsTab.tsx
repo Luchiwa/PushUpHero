@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import './FriendsTab.scss';
 import { useFriends } from '@hooks/useFriends';
-import type { SearchResult, Friend } from '@hooks/useFriends';
+import type { SearchResult, Friend } from '@services/friendService';
 import { FriendCard } from './FriendCard/FriendCard';
 import { RequestCard, OutgoingRequestCard } from './RequestCard/RequestCard';
 import { SearchResultCard } from './SearchResultCard/SearchResultCard';

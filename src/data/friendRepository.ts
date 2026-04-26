@@ -48,7 +48,9 @@ export function onIncomingRequests(
         for (const d of snap.docs) {
             const data = d.data();
             if (isFriendRequest(data)) {
-                requests.push(data);
+                // Mint UserId at the boundary — isFriendRequest only checks the
+                // raw string shape; the brand is applied as the value crosses out.
+                requests.push({ ...data, fromUid: createUserId(data.fromUid) });
             } else {
                 console.warn('[friendRepository] Invalid incoming request skipped', d.id);
             }

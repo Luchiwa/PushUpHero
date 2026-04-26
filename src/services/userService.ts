@@ -16,7 +16,7 @@ import { evaluateAchievements, emptyRecords, computeLifetimeReps, countSGrades, 
 import type { UserStats, AchievementMap } from '@domain';
 import type { GuestStatsSnapshot } from './guestStatsStore';
 import { localDateString, yesterdayDateString } from './sessionService';
-import type { UserId, XpAmount, Level } from '@domain';
+import type { UserId, XpAmount } from '@domain';
 import { createXpAmount } from '@domain';
 
 // ─── Merge local guest data into Firestore on first login ────────────────────
@@ -46,7 +46,7 @@ export async function mergeLocalDataToCloud({
     const batch = writeBatch(db);
 
     const newTotalXp = createXpAmount(cloudXp + localXp);
-    const newLevel: Level = levelFromTotalXp(newTotalXp);
+    const newLevel = levelFromTotalXp(newTotalXp);
 
     // Merge per-exercise XP
     const mergedExerciseXp: Record<string, number> = {};
