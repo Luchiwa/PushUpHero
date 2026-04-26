@@ -7,7 +7,7 @@
     align-items: center;
     justify-content: center;
     background: color-mix(in srgb, #{$obsidian} 55%, transparent);
-    z-index: 200;
+    z-index: $z-modal;
     pointer-events: none;
 }
 

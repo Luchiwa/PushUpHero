@@ -75,6 +75,7 @@ export function DeleteAccountSection({ onAccountDeleted }: DeleteAccountSectionP
                         placeholder="Your password"
                         autoComplete="current-password"
                         aria-describedby={deleteError ? 'delete-account-error' : undefined}
+                        aria-invalid={!!deleteError || undefined}
                     />
                 </div>
             )}
