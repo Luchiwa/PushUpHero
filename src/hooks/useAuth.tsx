@@ -9,8 +9,6 @@
 import { createContext, useContext } from 'react';
 import type { SessionRecord } from '@exercises/types';
 import type { ExerciseType, ExerciseXpMap } from '@exercises/types';
-export type { AppUser, DbUser } from '@domain/authTypes';
-export type { ExerciseXpMap } from '@exercises/types';
 import type { AppUser, DbUser } from '@domain/authTypes';
 
 // ── AuthContext (core auth only) ─────────────────────────────────

@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import type { AppUser, DbUser } from '@hooks/useAuth';
+import type { AppUser, DbUser } from '@domain/authTypes';
 import { computeXpProgress } from '@domain/xpSystem';
 import { Avatar } from '@components/Avatar/Avatar';
 import { XPBar } from '@components/XPBar/XPBar';

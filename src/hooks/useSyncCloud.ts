@@ -6,8 +6,7 @@ import { mergeGuestDataToCloud } from '@services/guestMerge';
 import { read, STORAGE_KEYS } from '@infra/storage';
 import { onUserDoc } from '@data/userRepository';
 import { onRecentSessions } from '@data/sessionRepository';
-import type { SessionRecord } from '@exercises/types';
-import type { ExerciseXpMap } from './useLevelSystem';
+import type { SessionRecord, ExerciseXpMap } from '@exercises/types';
 
 /**
  * useSyncCloud

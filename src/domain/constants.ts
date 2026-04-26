@@ -42,7 +42,7 @@ export const DEFAULT_EXERCISE_REST_SECONDS = 120; // 2 minutes
 
 export type GradeLetter = 'S' | 'A' | 'B' | 'C' | 'D';
 
-export const GRADE_THRESHOLDS: { min: number; letter: GradeLetter }[] = [
+const GRADE_THRESHOLDS: { min: number; letter: GradeLetter }[] = [
     { min: 90, letter: 'S' },
     { min: 75, letter: 'A' },
     { min: 60, letter: 'B' },

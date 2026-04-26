@@ -12,7 +12,8 @@ import { subscribeAuthState, signInWithGoogle, logoutSession } from '@services/a
 import { uploadAvatar as uploadAvatarService } from '@services/avatarService';
 import { onUserProfile } from '@data/userRepository';
 import { AuthCoreContext, LevelContext, SessionContext, useAuthCore } from '@hooks/useAuth';
-import type { AppUser, DbUser, AuthCoreContextType, LevelContextType, SessionContextType } from '@hooks/useAuth';
+import type { AuthCoreContextType, LevelContextType, SessionContextType } from '@hooks/useAuth';
+import type { AppUser, DbUser } from '@domain/authTypes';
 import { useLevelSystem } from '@hooks/useLevelSystem';
 import { useNotifications } from '@hooks/useNotifications';
 import { useSyncCloud } from '@hooks/useSyncCloud';

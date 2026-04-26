@@ -13,10 +13,6 @@ import { levelFromTotalXp, totalXpForLevel } from '@domain/xpSystem';
 import { read, write, STORAGE_KEYS } from '@infra/storage';
 import type { ExerciseType, ExerciseXpMap } from '@exercises/types';
 
-// ─── Re-export pure functions & types so existing imports keep working ───────
-export { levelFromTotalXp, totalXpForLevel } from '@domain/xpSystem';
-export type { ExerciseXpMap } from '@exercises/types';
-
 export function useLevelSystem() {
     const { user } = useAuthCore();
 
