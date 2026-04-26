@@ -5,10 +5,8 @@
  * 1. Block list — shows all added exercise blocks, can add/remove/reorder
  * 2. Block editor — step-by-step wizard for one block (exercise → sets → goal → rest)
  */
-import { useState, useCallback, useMemo } from 'react';
-import type { CSSProperties } from 'react';
-import type { WorkoutPlan, WorkoutBlock } from '@exercises/types';
-import { createDefaultBlock } from '@exercises/types';
+import { useCallback, useMemo, useState, type CSSProperties } from 'react';
+import { createDefaultBlock, type WorkoutBlock, type WorkoutPlan } from '@exercises/types';
 import { PageLayout } from '@components/PageLayout/PageLayout';
 import { PrimaryCTA } from '@components/PrimaryCTA/PrimaryCTA';
 import { BlockCard } from './BlockCard/BlockCard';

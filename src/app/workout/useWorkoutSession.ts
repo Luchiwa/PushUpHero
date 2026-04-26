@@ -6,8 +6,7 @@
  * and the live XP projection. Public surface unchanged so useWorkoutStateMachine
  * keeps its existing call site.
  */
-import { useCallback } from 'react';
-import type { Dispatch } from 'react';
+import { useCallback, type Dispatch } from 'react';
 import type { ExerciseType, SetRecord, WorkoutBlock, WorkoutPlan } from '@exercises/types';
 import type { CapturedRatios } from '@exercises/BaseExerciseDetector';
 import { useLevel } from '@hooks/useAuth';

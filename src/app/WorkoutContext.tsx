@@ -8,8 +8,7 @@
  *
  * Provider lives in App.tsx. Consumers call `useWorkout()`.
  */
-import { createContext, useContext } from 'react';
-import type { Dispatch, SetStateAction, MutableRefObject } from 'react';
+import { createContext, useContext, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import type {
     ExerciseType,
     SetRecord,

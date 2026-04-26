@@ -1,5 +1,4 @@
-import { getExerciseLabel } from '@exercises/types';
-import type { WorkoutBlock } from '@exercises/types';
+import { getExerciseLabel, type WorkoutBlock } from '@exercises/types';
 import { EXERCISE_EMOJI, formatDuration } from '../helpers';
 import './BlockCard.scss';
 

@@ -3,8 +3,7 @@
  * Each quest shows its status: completed, available (playable), accepted (active), or locked.
  * Supports multiple accepted quests (up to MAX_ACCEPTED_QUESTS) and quick-start.
  */
-import { useMemo } from 'react';
-import type { CSSProperties } from 'react';
+import { useMemo, type CSSProperties } from 'react';
 import { PageLayout } from '@components/PageLayout/PageLayout';
 import {
     QUEST_CATEGORY_META,
@@ -18,9 +17,9 @@ import {
     getQuestProgressCount,
     getComplexQuestHint,
     MAX_ACCEPTED_QUESTS,
+    type QuestDef, type QuestProgress, type QuestStatus,
 } from '@domain';
 import { getExerciseLabel } from '@exercises/types';
-import type { QuestDef, QuestProgress, QuestStatus } from '@domain';
 import './QuestsScreen.scss';
 
 interface QuestsScreenProps {

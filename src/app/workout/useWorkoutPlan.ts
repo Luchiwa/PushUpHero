@@ -4,10 +4,8 @@
  *
  * Receives currentBlockIndex / currentSetIndex from the reducer (no state duplication).
  */
-import { useState, useRef, useCallback } from 'react';
-import type { Dispatch, SetStateAction, MutableRefObject } from 'react';
-import type { ExerciseState, ExerciseType, SetRecord, WorkoutBlock, WorkoutPlan, TimeDuration } from '@exercises/types';
-import { createDefaultBlock } from '@exercises/types';
+import { useCallback, useRef, useState, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
+import { createDefaultBlock, type ExerciseState, type ExerciseType, type SetRecord, type TimeDuration, type WorkoutBlock, type WorkoutPlan } from '@exercises/types';
 import type { SessionMode } from './workoutTypes';
 
 // ── Props ────────────────────────────────────────────────────────

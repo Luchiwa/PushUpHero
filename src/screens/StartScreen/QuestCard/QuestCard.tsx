@@ -3,8 +3,7 @@ import { QuestCard as ArenaQuestCard } from '@components/QuestCard/QuestCard';
 import { PrimaryCTA } from '@components/PrimaryCTA/PrimaryCTA';
 import { ExercisePicker } from '@components/ExercisePicker/ExercisePicker';
 import { computeQuestProgressPct, getQuestProgressCount, isSingleSessionQuest, type QuestCategory, type QuestDef, type QuestProgress } from '@domain';
-import { getExerciseLabel } from '@exercises/types';
-import type { ExerciseType } from '@exercises/types';
+import { getExerciseLabel, type ExerciseType } from '@exercises/types';
 import './QuestCard.scss';
 
 interface QuestCardProps {

@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
-import { useAuthCore, useLevel } from '@hooks/useAuth';
-import { useSessions } from '@hooks/useAuth';
+import { useAuthCore, useLevel, useSessions } from '@hooks/useAuth';
 import { InstallBanner } from '@overlays/InstallBanner/InstallBanner';
 import { PrimaryCTA } from '@components/PrimaryCTA/PrimaryCTA';
 

@@ -9,10 +9,8 @@
 
 import type { ExerciseType, SetRecord } from '@exercises/types';
 import { EXERCISE_DIFFICULTY, difficultyFor } from '@exercises/exerciseDifficulty';
-import { getGradeLetter } from './constants';
-import type { GradeLetter } from './constants';
-import type { Level, XpAmount } from './brands';
-import { createLevel, createXpAmount } from './brands';
+import { getGradeLetter, type GradeLetter } from './constants';
+import { createLevel, createXpAmount, type Level, type XpAmount } from './brands';
 
 // ─── XP per rep, by grade ────────────────────────────────────────────────────
 

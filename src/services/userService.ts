@@ -10,8 +10,7 @@ import {
 import { db } from '@infra/firebase';
 import { userRef, sessionRef } from '@infra/refs';
 import { bulkEvaluateRecords, computeLifetimeReps, countSGrades, createXpAmount, emptyRecords, evaluateAchievements, levelFromTotalXp, type AchievementMap, type UserId, type UserStats, type XpAmount } from '@domain';
-import type { SessionRecord } from '@exercises/types';
-import type { ExerciseType } from '@exercises/types';
+import type { ExerciseType, SessionRecord } from '@exercises/types';
 import type { GuestStatsSnapshot } from './guestStatsStore';
 import { localDateString, yesterdayDateString } from './sessionService';
 

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useWeekSessions, getWeekStart, formatWeekRange } from '@hooks/useWeekSessions';
-import type { ExerciseType } from '@exercises/types';
-import { EXERCISE_META } from '@exercises/types';
+import { EXERCISE_META, type ExerciseType } from '@exercises/types';
 import { WeeklyChart } from './WeeklyChart/WeeklyChart';
 import { SessionHistoryPanel } from '@modals/panels/SessionHistoryPanel/SessionHistoryPanel';
 import { PageLayout } from '@components/PageLayout/PageLayout';

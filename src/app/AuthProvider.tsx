@@ -11,15 +11,13 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { subscribeAuthState, signInWithGoogle, logoutSession } from '@services/authService';
 import { uploadAvatar as uploadAvatarService } from '@services/avatarService';
 import { onUserProfile } from '@data/userRepository';
-import { AuthCoreContext, LevelContext, SessionContext, useAuthCore } from '@hooks/useAuth';
-import type { AuthCoreContextType, LevelContextType, SessionContextType } from '@hooks/useAuth';
+import { AuthCoreContext, LevelContext, SessionContext, useAuthCore, type AuthCoreContextType, type LevelContextType, type SessionContextType } from '@hooks/useAuth';
 import type { AppUser, DbUser } from '@domain';
 import { useLevelSystem } from '@hooks/useLevelSystem';
 import { useNotifications } from '@hooks/useNotifications';
 import { useSyncCloud } from '@hooks/useSyncCloud';
 import { clearAppKeys } from '@infra/storage';
-import { FeedCacheContext, emptyFeedCache } from './FeedCacheContext';
-import type { FeedCache, FeedCacheContextValue } from './FeedCacheContext';
+import { FeedCacheContext, emptyFeedCache, type FeedCache, type FeedCacheContextValue } from './FeedCacheContext';
 import type { SessionRecord } from '@exercises/types';
 
 // ── Inner provider: feed cache (resets on auth change) ──

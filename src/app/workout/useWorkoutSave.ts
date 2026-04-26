@@ -7,8 +7,7 @@
  * guests), and exposes the post-save metadata the orchestrator needs to
  * drive quest evaluation and body-profile capture.
  */
-import { useState, useRef, useCallback } from 'react';
-import type { Dispatch } from 'react';
+import { useCallback, useRef, useState, type Dispatch } from 'react';
 import type { ExerciseType, SetRecord, WorkoutBlock, WorkoutPlan } from '@exercises/types';
 import { useSessionHistory } from '@hooks/useSessionHistory';
 import { useAuthCore, useLevel } from '@hooks/useAuth';

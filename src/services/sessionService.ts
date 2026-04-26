@@ -19,9 +19,7 @@ import {
 import { db } from '@infra/firebase';
 import { userRef, sessionRef, activityFeedCol } from '@infra/refs';
 import { FEED_PRUNE_AGE_MS, buildSessionRepsMap, createXpAmount, emptyRecords, evaluateAchievements, evaluateRecords, getGradeLetter, levelFromTotalXp, type AchievementDef, type AchievementMap, type DbUser, type RecordUpdate, type RecordsMap, type UserId, type UserStats, type XpAmount } from '@domain';
-import type { SessionRecord } from '@exercises/types';
-import type { ExerciseType } from '@exercises/types';
-import { getExerciseLabel } from '@exercises/types';
+import { getExerciseLabel, type ExerciseType, type SessionRecord } from '@exercises/types';
 
 // ─── Date helpers ────────────────────────────────────────────────────────────
 

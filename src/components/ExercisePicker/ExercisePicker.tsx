@@ -1,6 +1,5 @@
 import { useRef, useEffect, useLayoutEffect, useCallback } from 'react';
-import type { ExerciseType } from '@exercises/types';
-import { EXERCISE_META } from '@exercises/types';
+import { EXERCISE_META, type ExerciseType } from '@exercises/types';
 import './ExercisePicker.scss';
 
 interface ExercisePickerProps {

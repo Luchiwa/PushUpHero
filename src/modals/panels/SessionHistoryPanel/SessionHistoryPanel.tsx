@@ -5,9 +5,7 @@
  */
 import { useState, type CSSProperties } from 'react';
 import { useSessionHistory } from '@hooks/useSessionHistory';
-import type { SessionRecord } from '@exercises/types';
-import type { TimeDuration } from '@exercises/types';
-import { getExerciseLabel, EXERCISE_META } from '@exercises/types';
+import { EXERCISE_META, getExerciseLabel, type SessionRecord, type TimeDuration } from '@exercises/types';
 import { getGradeLetter, getGradeClass, getGradeColor, formatElapsedTime } from '@domain';
 import './SessionHistoryPanel.scss';
 

@@ -10,8 +10,7 @@
  */
 
 import { Timestamp } from 'firebase/firestore';
-import type { ExerciseType, ExerciseXpMap, SessionRecord } from '@exercises/types';
-import { EXERCISE_TYPES } from '@exercises/types';
+import { EXERCISE_TYPES, type ExerciseType, type ExerciseXpMap, type SessionRecord } from '@exercises/types';
 import { createUserId, type BodyProfile, type QuestProgress, type RecordsMap, type UserId } from '@domain';
 import type { FriendRequest } from '@services/friendService';
 

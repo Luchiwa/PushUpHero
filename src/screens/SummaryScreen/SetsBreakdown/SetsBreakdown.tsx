@@ -1,5 +1,4 @@
-import type { SetRecord, WorkoutPlan } from '@exercises/types';
-import { getExerciseLabel } from '@exercises/types';
+import { getExerciseLabel, type SetRecord, type WorkoutPlan } from '@exercises/types';
 import { getGradeClass, getGradeLetter, weightedAverageScore } from '@domain';
 import './SetsBreakdown.scss';
 

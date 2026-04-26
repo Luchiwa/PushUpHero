@@ -13,8 +13,7 @@ import type { WorkoutMachineReturn } from '../WorkoutContext';
 import { useWorkoutMachineCore } from './useWorkoutMachineCore';
 import { useWorkoutExecution } from './useWorkoutExecution';
 
-export { durationToSeconds } from './workoutTypes';
-export type { AppScreen, SessionMode } from './workoutTypes';
+export { durationToSeconds, type AppScreen, type SessionMode } from './workoutTypes';
 
 interface UseWorkoutStateMachineProps {
     exerciseState: ExerciseState;

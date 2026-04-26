@@ -3,16 +3,14 @@
  * the current screen. All workout logic lives in useWorkoutStateMachine.
  */
 import { useMemo, useState, useRef, useEffect, useCallback, lazy, Suspense } from 'react';
-import { useCamera } from '@hooks/useCamera';
-import type { FacingMode } from '@hooks/useCamera';
+import { useCamera, type FacingMode } from '@hooks/useCamera';
 import { usePoseDetection } from '@hooks/usePoseDetection';
 import { useExerciseDetector } from '@hooks/useExerciseDetector';
 import { useLevel, useAuthCore } from '@hooks/useAuth';
-import type { ExerciseType } from '@exercises/types';
+import { getExerciseLabel, type ExerciseType } from '@exercises/types';
 import { EXERCISE_REGISTRY } from '@exercises/registry';
 import { useWorkoutStateMachine, durationToSeconds } from './workout/useWorkoutStateMachine';
-import { WorkoutContext } from './WorkoutContext';
-import type { WorkoutContextType } from './WorkoutContext';
+import { WorkoutContext, type WorkoutContextType } from './WorkoutContext';
 import { ExerciseStateContext } from './ExerciseStateContext';
 import { createLevel, getActiveQuest, getAvailableQuests, getFeaturedQuest, isQuestAccepted, totalXpForLevel } from '@domain';
 import { StartScreen } from '@screens/StartScreen/StartScreen';
@@ -24,12 +22,10 @@ const WorkoutConfigScreen = lazy(() => import('@screens/WorkoutConfigScreen/Work
 const RestScreen = lazy(() => import('@screens/RestScreen/RestScreen').then(m => ({ default: m.RestScreen })));
 const SummaryScreen = lazy(() => import('@screens/SummaryScreen/SummaryScreen').then(m => ({ default: m.SummaryScreen })));
 const LevelUpScreen = lazy(() => import('@screens/LevelUpScreen/LevelUpScreen').then(m => ({ default: m.LevelUpScreen })));
-import { PoseOverlay } from '@components/PoseOverlay/PoseOverlay';
-import type { PoseOverlayHandle } from '@components/PoseOverlay/PoseOverlay';
+import { PoseOverlay, type PoseOverlayHandle } from '@components/PoseOverlay/PoseOverlay';
 import { PositionGuide } from '@components/PositionGuide/PositionGuide';
 import { ReloadPrompt } from '@components/ReloadPrompt/ReloadPrompt';
 import { ErrorBoundary } from '@components/ErrorBoundary/ErrorBoundary';
-import { getExerciseLabel } from '@exercises/types';
 import { useInGameAchievements } from '@hooks/useInGameAchievements';
 import { useBodyProfile } from '@hooks/useBodyProfile';
 import { useQuestProgress } from '@hooks/useQuestProgress';

@@ -10,8 +10,10 @@
  */
 
 // ── Brands (identity & scalar primitives) ──────────────────────────────────
-export type { UserId, Level, XpAmount } from './brands';
-export { createUserId, createLevel, createXpAmount } from './brands';
+export {
+    createUserId, createLevel, createXpAmount,
+    type UserId, type Level, type XpAmount,
+} from './brands';
 
 // ── Auth & user shape ──────────────────────────────────────────────────────
 export type { AppUser, DbUser } from './authTypes';
@@ -27,16 +29,14 @@ export {
     estimateCompletedXp,
     projectLiveXp,
     computeXpProgress,
-} from './xpSystem';
-export type {
-    Tier,
-    XpBonusDetail,
-    XpBonusResult,
-    BonusContext,
-    XpPerExercise,
-    SessionXpResult,
-    LiveXpProjection,
-    XpProgress,
+    type Tier,
+    type XpBonusDetail,
+    type XpBonusResult,
+    type BonusContext,
+    type XpPerExercise,
+    type SessionXpResult,
+    type LiveXpProjection,
+    type XpProgress,
 } from './xpSystem';
 
 // ── Scoring ────────────────────────────────────────────────────────────────
@@ -45,8 +45,8 @@ export {
     nextCombo,
     computeGoalProgress,
     weightedAverageScore,
+    type GoalProgress,
 } from './scoring';
-export type { GoalProgress } from './scoring';
 
 // ── Constants & grades ─────────────────────────────────────────────────────
 export {
@@ -67,8 +67,8 @@ export {
     DEFAULT_REST_SECONDS,
     MAX_EXERCISE_REST_SECONDS,
     DEFAULT_EXERCISE_REST_SECONDS,
+    type GradeLetter,
 } from './constants';
-export type { GradeLetter } from './constants';
 
 // ── Achievements (definitions & evaluator) ─────────────────────────────────
 export {
@@ -77,12 +77,10 @@ export {
     CATEGORY_META,
     RECORDS,
     TIER_COLORS,
-} from './achievements';
-export type {
-    AchievementDef,
-    RecordDef,
-    AchievementCategory,
-    AchievementTier,
+    type AchievementDef,
+    type RecordDef,
+    type AchievementCategory,
+    type AchievementTier,
 } from './achievements';
 export {
     evaluateAchievements,
@@ -95,12 +93,10 @@ export {
     computeLifetimeReps,
     countSGrades,
     emptyRecords,
-} from './achievementEngine';
-export type {
-    UserStats,
-    AchievementMap,
-    RecordsMap,
-    RecordUpdate,
+    type UserStats,
+    type AchievementMap,
+    type RecordsMap,
+    type RecordUpdate,
 } from './achievementEngine';
 
 // ── Quests ─────────────────────────────────────────────────────────────────
@@ -126,13 +122,11 @@ export {
     isBodyProfileQuest,
     computeQuestProgressPct,
     emptyQuestProgress,
-} from './quests';
-export type {
-    QuestDef,
-    QuestProgress,
-    QuestGoal,
-    QuestStatus,
-    QuestCategory,
+    type QuestDef,
+    type QuestProgress,
+    type QuestGoal,
+    type QuestStatus,
+    type QuestCategory,
 } from './quests';
 
 // ── Body profile (morphological calibration) ───────────────────────────────
@@ -143,13 +137,11 @@ export {
     getSquatThresholds,
     getPullupThresholds,
     getLegRaiseThresholds,
-} from './bodyProfile';
-export type {
-    BodyProfile,
-    PushupThresholds,
-    SquatThresholds,
-    PullupThresholds,
-    LegRaiseThresholds,
+    type BodyProfile,
+    type PushupThresholds,
+    type SquatThresholds,
+    type PullupThresholds,
+    type LegRaiseThresholds,
 } from './bodyProfile';
 
 // ── Stats helpers (charts, KPIs) ───────────────────────────────────────────
@@ -159,5 +151,5 @@ export {
     niceMax,
     pctChange,
     compactNum,
+    type ExerciseFilter,
 } from './stats';
-export type { ExerciseFilter } from './stats';

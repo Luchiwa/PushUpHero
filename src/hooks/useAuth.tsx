@@ -7,8 +7,7 @@
  *   - SessionContext:  sessions list, session count          → useSessions()
  */
 import { createContext, useContext } from 'react';
-import type { SessionRecord } from '@exercises/types';
-import type { ExerciseType, ExerciseXpMap } from '@exercises/types';
+import type { ExerciseType, ExerciseXpMap, SessionRecord } from '@exercises/types';
 import { createLevel, createXpAmount, type AppUser, type DbUser, type Level, type XpAmount } from '@domain';
 
 // ── AuthContext (core auth only) ─────────────────────────────────

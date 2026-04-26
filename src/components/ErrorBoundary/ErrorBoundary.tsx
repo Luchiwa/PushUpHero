@@ -1,5 +1,4 @@
-import { Component } from 'react';
-import type { ErrorInfo, ReactNode } from 'react';
+import { Component, type ErrorInfo, type ReactNode } from 'react';
 
 /** Compact inline fallback for granular error boundaries around sections/modals. */
 export function SectionErrorFallback({ onRetry }: { onRetry?: () => void }) {

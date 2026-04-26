@@ -266,6 +266,8 @@ import { createUserId, type DbUser, type UserId } from '@domain';
 
 This is a hard rule the reviewer should flag: any file with two or more `from '<same-module>'` import statements is a defect, fix it on sight. Inline `type` modifiers (TS 4.5+) erase the same way `import type { … }` does, so consolidation is purely a readability win — no runtime cost, no bundler impact.
 
+ESLint enforces this via `no-duplicate-imports` (`includeExports: true`) in `eslint.config.js` — `npm run lint` fails on any duplicate, including the `export { … } from './foo'` form in barrel files like `src/domain/index.ts`. Use `export { x, type Y } from './foo'` to combine value + type re-exports in a single statement.
+
 ### Brand at module boundaries
 
 Identity strings and scalar metrics that flow across modules are branded in `@domain` (currently `UserId`, `Level`, `XpAmount` — see `src/domain/brands.ts`). This blocks two failure modes at compile time:

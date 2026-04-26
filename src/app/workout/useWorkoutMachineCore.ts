@@ -7,18 +7,14 @@
  * sound. Just the screen state, derived plan/session bundles, and the
  * trivial dispatch-only handlers.
  */
-import { useReducer, useCallback } from 'react';
-import type { Dispatch } from 'react';
+import { useCallback, useReducer, type Dispatch } from 'react';
 import { useRefSync } from '@hooks/shared/useRefSync';
 import type { ExerciseState } from '@exercises/types';
 import type { CapturedRatios } from '@exercises/BaseExerciseDetector';
 import type { BodyProfile, QuestDef, QuestProgress } from '@domain';
-import { workoutReducer, INITIAL_WORKOUT_STATE } from './workoutReducer';
-import type { WorkoutState, WorkoutAction } from './workoutReducer';
-import { useWorkoutPlan } from './useWorkoutPlan';
-import type { UseWorkoutPlanReturn } from './useWorkoutPlan';
-import { useWorkoutSession } from './useWorkoutSession';
-import type { UseWorkoutSessionReturn } from './useWorkoutSession';
+import { INITIAL_WORKOUT_STATE, workoutReducer, type WorkoutAction, type WorkoutState } from './workoutReducer';
+import { useWorkoutPlan, type UseWorkoutPlanReturn } from './useWorkoutPlan';
+import { useWorkoutSession, type UseWorkoutSessionReturn } from './useWorkoutSession';
 
 interface UseWorkoutMachineCoreProps {
     exerciseState: ExerciseState;
