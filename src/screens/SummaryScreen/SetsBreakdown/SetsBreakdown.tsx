@@ -1,6 +1,7 @@
 import type { SetRecord, WorkoutPlan } from '@exercises/types';
 import { getExerciseLabel } from '@exercises/types';
 import { getGradeLetter, getGradeClass } from '@domain/constants';
+import { weightedAverageScore } from '@domain/scoring';
 import './SetsBreakdown.scss';
 
 function ScoreGrade({ score }: { score: number }) {
@@ -30,9 +31,7 @@ export function SetsBreakdown({ isMultiExercise, isMultiSet, workoutPlan, comple
                 <p className="sets-breakdown-title">Exercise breakdown</p>
                 {blockGroups.map((group, bi) => {
                     const blockReps = group.sets.reduce((s, set) => s + set.reps, 0);
-                    const blockAvg = blockReps > 0
-                        ? Math.round(group.sets.reduce((s, set) => s + set.averageScore * set.reps, 0) / blockReps)
-                        : 0;
+                    const blockAvg = weightedAverageScore(group.sets);
                     return (
                         <div key={`block-${group.block.exerciseType}-${bi}`} className="set-item">
                             <div className="set-item-header">

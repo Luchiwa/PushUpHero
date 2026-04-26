@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { AppUser, DbUser } from '@hooks/useAuth';
+import { computeXpProgress } from '@domain/xpSystem';
 import { Avatar } from '@components/Avatar/Avatar';
 import { XPBar } from '@components/XPBar/XPBar';
 import { PrimaryCTA } from '@components/PrimaryCTA/PrimaryCTA';
@@ -62,8 +63,7 @@ export function PlayerHUD({
     onOpenAuth,
 }: PlayerHUDProps) {
     const levelLabel = `LEVEL ${String(level).padStart(2, '0')} · ${xpIntoCurrentLevel.toLocaleString()}/${xpNeededForNextLevel.toLocaleString()}`;
-    const xpRemaining = Math.max(0, xpNeededForNextLevel - xpIntoCurrentLevel);
-    const progress = xpIntoCurrentLevel / Math.max(1, xpNeededForNextLevel);
+    const { xpRemaining, progressRatio } = computeXpProgress(xpIntoCurrentLevel, xpNeededForNextLevel);
 
     return (
         <div className="player-hud">
@@ -77,7 +77,7 @@ export function PlayerHUD({
                             aria-label="Open profile"
                         >
                             <div className="hud-avatar-wrap">
-                                <LevelRing progress={progress} tier={tier} />
+                                <LevelRing progress={progressRatio} tier={tier} />
                                 <Avatar
                                     photoURL={dbUser?.photoURL}
                                     photoThumb={dbUser?.photoThumb}
