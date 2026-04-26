@@ -159,9 +159,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const uploadAvatar = useCallback(async (file: File) => {
         if (!user) throw new Error('Not authenticated');
-        const { photoURL, photoThumb } = await uploadAvatarService(user.uid, file, dbUser?.profile?.photoURL);
+        const { photoURL, photoThumb } = await uploadAvatarService(user.uid, file, dbUser?.profile.photoURL);
         setDbUser(prev => prev ? { ...prev, profile: { ...prev.profile, photoURL, photoThumb } } : prev);
-    }, [user, dbUser?.profile?.photoURL]);
+    }, [user, dbUser?.profile.photoURL]);
 
     const logout = useCallback(async () => {
         await logoutSession();

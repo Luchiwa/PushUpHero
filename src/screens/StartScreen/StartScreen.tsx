@@ -75,14 +75,14 @@ export function StartScreen({
 
     // Stats for the stats button
     const totalLifetimeReps = useMemo(() => {
-        const lifetimeReps = dbUser?.progression?.lifetimeReps;
+        const lifetimeReps = dbUser?.progression.lifetimeReps;
         if (!lifetimeReps) return 0;
         return Object.values(lifetimeReps).reduce<number>((sum, v) => sum + (v ?? 0), 0);
     }, [dbUser]);
 
     // Tier based on level: bronze / silver / gold / platinum
     const tier = getTier(level);
-    const streak = dbUser?.stats?.streak ?? 0;
+    const streak = dbUser?.stats.streak ?? 0;
 
     // Clean up deep link hash after reading it
     useEffect(() => {

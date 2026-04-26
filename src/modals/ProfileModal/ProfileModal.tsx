@@ -28,7 +28,7 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
     const { friends, incomingRequests } = useFriends();
 
     const tier = getTier(level);
-    const streak = dbUser?.stats?.streak ?? 0;
+    const streak = dbUser?.stats.streak ?? 0;
 
     // XP bar: 14 segments (Arena spec)
     const XP_SEGS = useMemo(() => Array.from({ length: 14 }, (_, i) => i), []);
@@ -70,7 +70,7 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
 
     if (!user) return null;
 
-    const memberSince = dbUser?.profile?.createdAt
+    const memberSince = dbUser?.profile.createdAt
         ? new Date(dbUser.profile.createdAt).toLocaleDateString()
         : '';
 
@@ -102,9 +102,9 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
                                 strokeDasharray={`${(levelProgressPct / 100) * 276.5} 276.5`} />
                         </svg>
                         <Avatar
-                            photoURL={dbUser?.profile?.photoURL}
-                            photoThumb={dbUser?.profile?.photoThumb}
-                            initials={dbUser?.profile?.displayName || 'U'}
+                            photoURL={dbUser?.profile.photoURL}
+                            photoThumb={dbUser?.profile.photoThumb}
+                            initials={dbUser?.profile.displayName || 'U'}
                             size={68}
                             onClick={handleAvatarClick}
                         />
@@ -121,7 +121,7 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
 
                     {/* Name + streak */}
                     <div className="player-card-identity">
-                        <h2 className="player-card-name">{dbUser?.profile?.displayName || 'User'}</h2>
+                        <h2 className="player-card-name">{dbUser?.profile.displayName || 'User'}</h2>
                         {streak > 0 && (
                             <span className={`player-card-streak${streak >= 7 ? ' on-fire' : ''}`}>
                                 {streak}<span className="player-card-streak-icon">🔥</span>

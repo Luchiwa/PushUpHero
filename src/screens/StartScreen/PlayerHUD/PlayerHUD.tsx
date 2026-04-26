@@ -79,9 +79,9 @@ export function PlayerHUD({
                             <div className="hud-avatar-wrap">
                                 <LevelRing progress={progressRatio} tier={tier} />
                                 <Avatar
-                                    photoURL={dbUser?.profile?.photoURL}
-                                    photoThumb={dbUser?.profile?.photoThumb}
-                                    initials={dbUser?.profile?.displayName || 'U'}
+                                    photoURL={dbUser?.profile.photoURL}
+                                    photoThumb={dbUser?.profile.photoThumb}
+                                    initials={dbUser?.profile.displayName || 'U'}
                                     size={56}
                                     className="hud-avatar"
                                 />
@@ -93,7 +93,7 @@ export function PlayerHUD({
 
                         <div className="hud-main">
                             <span className="hud-kicker">{levelLabel}</span>
-                            <span className="hud-name">{dbUser?.profile?.displayName || 'Player'}</span>
+                            <span className="hud-name">{dbUser?.profile.displayName || 'Player'}</span>
                         </div>
 
                         <div className="hud-total-xp" aria-label={`${totalXp} total XP`}>

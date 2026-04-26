@@ -27,20 +27,20 @@ export function ProgressionScreen({ onClose }: ProgressionScreenProps) {
     // Build user stats for achievement progress
     const guestSnapshot = useMemo(() => dbUser ? null : getGuestStatsSnapshot(), [dbUser]);
     const stats: UserStats = useMemo(() => {
-        const lifetimeReps = dbUser?.progression?.lifetimeReps
+        const lifetimeReps = dbUser?.progression.lifetimeReps
             ?? guestSnapshot?.lifetimeReps
             ?? computeLifetimeReps(sessions);
-        const lifetimeTrainingTime = dbUser?.stats?.lifetimeTrainingTime
+        const lifetimeTrainingTime = dbUser?.stats.lifetimeTrainingTime
             ?? guestSnapshot?.lifetimeTrainingTime
             ?? sessions.reduce((sum, s) => sum + (s.totalDuration ?? s.elapsedTime ?? 0), 0);
         return {
             lifetimeRepsByExercise: lifetimeReps,
             sessionRepsByExercise: {},
             totalSessions: totalSessionCount,
-            bestStreak: dbUser?.stats?.bestStreak ?? guestSnapshot?.bestStreak ?? 0,
+            bestStreak: dbUser?.stats.bestStreak ?? guestSnapshot?.bestStreak ?? 0,
             friendsCount: friends.length,
-            totalEncouragementsSent: dbUser?.stats?.totalEncouragementsSent ?? 0,
-            sGradeCount: dbUser?.stats?.sGradeCount ?? guestSnapshot?.sGradeCount ?? countSGrades(sessions),
+            totalEncouragementsSent: dbUser?.stats.totalEncouragementsSent ?? 0,
+            sGradeCount: dbUser?.stats.sGradeCount ?? guestSnapshot?.sGradeCount ?? countSGrades(sessions),
             sessionXp: 0,
             globalLevel: level,
             lifetimeTrainingTime,
