@@ -2,15 +2,25 @@
 
 ## Workout State Machine
 
-The core game loop uses a **reducer + hook composition** pattern:
+All workout-feature files live in `src/app/workout/` (precedent for a `src/app/<feature>/` subfolder when an orchestrator pulls in many sub-hooks). The core game loop uses a **reducer + orchestrator + state-owning sub-hooks + pure helpers** pattern:
 
 ```
-workoutReducer.ts      Pure state transitions (no side effects)
-useWorkoutPlan.ts      Plan config, derived values, set building, timing refs
-useWorkoutSession.ts   Session save, XP calc, quest progress, body profile
-useWorkoutStateMachine.ts   Orchestrator composing the above three
-WorkoutContext.tsx      React context provider — consumed via useWorkout()
+workout/
+  workoutReducer.ts          Pure state transitions (no side effects)
+  workoutTypes.ts            Shared types (AppScreen, SessionMode, durationToSeconds)
+  useWorkoutPlan.ts          Plan config, derived values, set building, timing refs
+  useWorkoutSession.ts       Slim orchestrator: save + quest eval + body profile
+  useWorkoutSave.ts          Owns sessionSavedRef + the Firestore/guest save
+  useQuestEvaluation.ts      Owns questCompletedThisSession + per-session eval
+  xpProjection.ts            Pure helpers: computeFinalXp, derivePrimaryExercise
+  bodyProfileCapture.ts      Pure helper: maybeCaptureBodyProfile
+  useWorkoutMachineCore.ts   Reducer + plan + session + dispatch-only handlers
+  useWorkoutExecution.ts     Side-effect handlers + effects + ref-synced setters
+  useWorkoutStateMachine.ts  Top-level orchestrator (core + execution → public API)
+WorkoutContext.tsx           Explicit WorkoutContextType interface, consumed via useWorkout()
 ```
+
+Why this layout: the original 449-LOC `useWorkoutStateMachine` and 239-LOC `useWorkoutSession` mixed orchestration with multi-domain side effects, so any change to the save flow or reducer touched a giant file with stale-closure-prone callbacks. PUS-14 split them along the responsibility seams. See the **Hook decomposition rules** section in the root `CLAUDE.md` for the heuristics that triggered the split, the **non-stable deps** counting convention, and the prohibition on `ReturnType<typeof useFooHook>` context types.
 
 ### Screen States
 
@@ -61,7 +71,7 @@ Three nested contexts in `AuthProvider.tsx` prevent unrelated re-renders:
 2. **LevelContext** → `useLevel()` — XP, level, per-exercise XP
 3. **SessionContext** → `useSessions()` — Session list, count
 
-**WorkoutContext** → `useWorkout()` wraps the entire state machine return. Components never bypass it for direct state access.
+**WorkoutContext** → `useWorkout()` exposes the explicit `WorkoutContextType` interface declared in `WorkoutContext.tsx`. The orchestrator returns `WorkoutMachineReturn` (= `Omit<WorkoutContextType, 'exerciseType' | 'changeExerciseType'>`); App.tsx merges the two App-owned fields in at the Provider boundary. Components never bypass `useWorkout()` for direct state access.
 
 ### Auth boundary
 

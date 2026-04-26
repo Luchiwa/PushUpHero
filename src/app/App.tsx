@@ -10,7 +10,7 @@ import { useExerciseDetector } from '@hooks/useExerciseDetector';
 import { useLevel, useAuthCore } from '@hooks/useAuth';
 import type { ExerciseType } from '@exercises/types';
 import { EXERCISE_REGISTRY } from '@exercises/registry';
-import { useWorkoutStateMachine, durationToSeconds } from './useWorkoutStateMachine';
+import { useWorkoutStateMachine, durationToSeconds } from './workout/useWorkoutStateMachine';
 import { WorkoutContext } from './WorkoutContext';
 import type { WorkoutContextType } from './WorkoutContext';
 import { ExerciseStateContext } from './ExerciseStateContext';
