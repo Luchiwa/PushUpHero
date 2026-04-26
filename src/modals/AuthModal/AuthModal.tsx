@@ -100,7 +100,7 @@ export function AuthModal({ onClose, onSuccess, initialMode = 'login', promoBann
                     <div className="auth-promo-banner">{promoBanner}</div>
                 )}
 
-                {error && <div className="auth-error" role="alert">{error}</div>}
+                {error && <div id="auth-form-error" className="auth-error" role="alert">{error}</div>}
 
                 <form onSubmit={handleEmailAuth} className="auth-form">
                     {mode === 'register' && (
@@ -115,6 +115,7 @@ export function AuthModal({ onClose, onSuccess, initialMode = 'login', promoBann
                                 required
                                 minLength={3}
                                 maxLength={20}
+                                aria-describedby={error ? 'auth-form-error' : undefined}
                             />
                         </div>
                     )}
@@ -127,6 +128,7 @@ export function AuthModal({ onClose, onSuccess, initialMode = 'login', promoBann
                             onChange={e => setEmail(e.target.value)}
                             placeholder="hero@example.com"
                             required
+                            aria-describedby={error ? 'auth-form-error' : undefined}
                         />
                     </div>
                     <div className="input-group">
@@ -138,6 +140,7 @@ export function AuthModal({ onClose, onSuccess, initialMode = 'login', promoBann
                             placeholder="••••••••"
                             required
                             minLength={6}
+                            aria-describedby={error ? 'auth-form-error' : undefined}
                         />
                     </div>
 
