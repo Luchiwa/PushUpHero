@@ -1,1 +1,38 @@
-{}
+{
+    "exercise": {
+        "pushup": "Push-ups",
+        "squat": "Squats",
+        "pullup": "Pull-ups",
+        "legraise": "Leg Raises"
+    },
+    "exercise_category": {
+        "upper_body": "Upper Body",
+        "lower_body": "Lower Body",
+        "pull": "Pull",
+        "core": "Core"
+    },
+    "exercise_invalid_position": {
+        "pushup": "⚠️ Get back into push-up position",
+        "squat": "⚠️ Stand upright facing the camera",
+        "pullup": "⚠️ Get back into hang position",
+        "legraise": "⚠️ Lie flat on your back"
+    },
+    "action": {
+        "back": "Back",
+        "continue": "Continue",
+        "done": "Done",
+        "next": "Next",
+        "skip": "Skip",
+        "edit": "Edit",
+        "remove": "Remove"
+    },
+    "aria": {
+        "choose_exercise": "Exercise selection"
+    },
+    "unit": {
+        "rep_one": "{{count}} rep",
+        "rep_other": "{{count}} reps",
+        "set_one": "{{count}} set",
+        "set_other": "{{count}} sets"
+    }
+}

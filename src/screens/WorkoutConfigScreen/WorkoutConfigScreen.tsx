@@ -6,6 +6,7 @@
  * 2. Block editor — step-by-step wizard for one block (exercise → sets → goal → rest)
  */
 import { useCallback, useMemo, useState, type CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createDefaultBlock, type WorkoutBlock, type WorkoutPlan } from '@exercises/types';
 import { PageLayout } from '@components/PageLayout/PageLayout';
 import { PrimaryCTA } from '@components/PrimaryCTA/PrimaryCTA';
@@ -49,6 +50,7 @@ export function WorkoutConfigScreen({
     onBack,
     isReady,
 }: WorkoutConfigScreenProps) {
+    const { t } = useTranslation('workout');
     // null = block list mode, number = editing block at that index
     const [editingBlockIndex, setEditingBlockIndex] = useState<number | null>(null);
     const [blockStep, setBlockStep] = useState<BlockStep>('exercise');
@@ -170,14 +172,14 @@ export function WorkoutConfigScreen({
     const allReps = blocks.every(b => b.sessionMode === 'reps');
 
     return (
-        <PageLayout title="Workout Setup" onClose={handleTopBack} zIndex={200} bodyClassName="wc-layout" transition="sheet">
+        <PageLayout title={t('config.title')} onClose={handleTopBack} zIndex={200} bodyClassName="wc-layout" transition="sheet">
             <div className="wc-body wc-body--list">
                 {/* Block cards */}
                 {blocks.length === 0 && (
                     <div className="wc-empty-state">
                         <span className="wc-empty-icon">🏋️</span>
-                        <p className="wc-empty-title">No exercises yet</p>
-                        <p className="wc-empty-sub">Add your first exercise to get started</p>
+                        <p className="wc-empty-title">{t('config.empty_title')}</p>
+                        <p className="wc-empty-sub">{t('config.empty_sub')}</p>
                     </div>
                 )}
 
@@ -201,27 +203,27 @@ export function WorkoutConfigScreen({
                     onClick={handleAddBlock}
                 >
                     <span className="wc-add-block-icon">+</span>
-                    <span>Add Exercise</span>
+                    <span>{t('config.add_exercise')}</span>
                 </button>
 
                 {/* Workout summary */}
                 {blocks.length > 0 && (
-                    <div className="wc-summary-divider"><span>Summary</span></div>
+                    <div className="wc-summary-divider"><span>{t('config.summary_divider')}</span></div>
                 )}
                 {blocks.length > 0 && (
                     <div className="wc-summary-grid">
                         <div className="wc-summary-kpi" style={{ '--kpi-color': KPI_COLOR.ember } as CSSProperties}>
                             <span className="wc-summary-kpi-value">{blocks.length}</span>
-                            <span className="wc-summary-kpi-label">Exercises</span>
+                            <span className="wc-summary-kpi-label">{t('config.kpi_exercises')}</span>
                         </div>
                         <div className="wc-summary-kpi" style={{ '--kpi-color': KPI_COLOR.ice } as CSSProperties}>
                             <span className="wc-summary-kpi-value">{totalSets}</span>
-                            <span className="wc-summary-kpi-label">Total sets</span>
+                            <span className="wc-summary-kpi-label">{t('config.kpi_total_sets')}</span>
                         </div>
                         {allReps && totalRepsEstimate > 0 && (
                             <div className="wc-summary-kpi" style={{ '--kpi-color': KPI_COLOR.gold } as CSSProperties}>
                                 <span className="wc-summary-kpi-value">{totalRepsEstimate}</span>
-                                <span className="wc-summary-kpi-label">Est. reps</span>
+                                <span className="wc-summary-kpi-label">{t('config.kpi_estimated_reps')}</span>
                             </div>
                         )}
                     </div>
@@ -239,7 +241,7 @@ export function WorkoutConfigScreen({
                     onClick={onStart}
                     disabled={!isReady || blocks.length === 0}
                 >
-                    {!isReady ? 'Getting Ready…' : 'Start Workout'}
+                    {!isReady ? t('config.getting_ready') : t('config.start_workout')}
                 </PrimaryCTA>
             </div>
         </PageLayout>

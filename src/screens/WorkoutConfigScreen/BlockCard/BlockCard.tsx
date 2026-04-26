@@ -1,4 +1,5 @@
-import { getExerciseLabel, type WorkoutBlock } from '@exercises/types';
+import { useTranslation } from 'react-i18next';
+import { getExerciseLabelKey, type WorkoutBlock } from '@exercises/types';
 import { EXERCISE_EMOJI, formatDuration } from '../helpers';
 import './BlockCard.scss';
 
@@ -13,9 +14,17 @@ interface BlockCardProps {
 }
 
 export function BlockCard({ block, index, totalBlocks, onEdit, onRemove, onMove, onEditRest }: BlockCardProps) {
+    const { t } = useTranslation('workout');
     const goalLabel = block.sessionMode === 'reps'
-        ? `${block.goalReps} rep${block.goalReps > 1 ? 's' : ''}`
-        : `${String(block.timeGoal.minutes).padStart(2, '0')}:${String(block.timeGoal.seconds).padStart(2, '0')}`;
+        ? t('common:unit.rep', { count: block.goalReps })
+        : t('config.block_card.time_goal', {
+            minutes: String(block.timeGoal.minutes).padStart(2, '0'),
+            seconds: String(block.timeGoal.seconds).padStart(2, '0'),
+        });
+    const setsLabel = t('common:unit.set', { count: block.numberOfSets });
+    const detailsLabel = block.numberOfSets > 1
+        ? t('config.block_card.details_with_rest', { sets: setsLabel, goal: goalLabel, rest: formatDuration(block.restBetweenSets) })
+        : t('config.block_card.details', { sets: setsLabel, goal: goalLabel });
 
     return (
         <div
@@ -28,12 +37,9 @@ export function BlockCard({ block, index, totalBlocks, onEdit, onRemove, onMove,
                     <span className="wc-block-num">{index + 1}</span>
                     <div className="wc-block-info">
                         <span className="wc-block-name">
-                            {EXERCISE_EMOJI[block.exerciseType]} {getExerciseLabel(block.exerciseType)}
+                            {EXERCISE_EMOJI[block.exerciseType]} {t(getExerciseLabelKey(block.exerciseType))}
                         </span>
-                        <span className="wc-block-details">
-                            {block.numberOfSets} set{block.numberOfSets > 1 ? 's' : ''} × {goalLabel}
-                            {block.numberOfSets > 1 && ` · ${formatDuration(block.restBetweenSets)} rest`}
-                        </span>
+                        <span className="wc-block-details">{detailsLabel}</span>
                     </div>
                 </div>
                 <div className="wc-block-card-actions">
@@ -44,7 +50,7 @@ export function BlockCard({ block, index, totalBlocks, onEdit, onRemove, onMove,
                                 className="wc-block-action"
                                 onClick={() => onMove(index, -1)}
                                 disabled={index === 0}
-                                aria-label="Move up"
+                                aria-label={t('config.block_card.move_up_aria')}
                             >
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15" /></svg>
                             </button>
@@ -53,7 +59,7 @@ export function BlockCard({ block, index, totalBlocks, onEdit, onRemove, onMove,
                                 className="wc-block-action"
                                 onClick={() => onMove(index, 1)}
                                 disabled={index === totalBlocks - 1}
-                                aria-label="Move down"
+                                aria-label={t('config.block_card.move_down_aria')}
                             >
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
                             </button>
@@ -63,7 +69,7 @@ export function BlockCard({ block, index, totalBlocks, onEdit, onRemove, onMove,
                         type="button"
                         className="wc-block-action"
                         onClick={() => onEdit(index)}
-                        aria-label="Edit"
+                        aria-label={t('config.block_card.edit_aria')}
                     >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
                     </button>
@@ -71,7 +77,7 @@ export function BlockCard({ block, index, totalBlocks, onEdit, onRemove, onMove,
                         type="button"
                         className="wc-block-action wc-block-action--danger"
                         onClick={() => onRemove(index)}
-                        aria-label="Remove"
+                        aria-label={t('config.block_card.remove_aria')}
                     >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4h6v2" /></svg>
                     </button>
@@ -86,7 +92,7 @@ export function BlockCard({ block, index, totalBlocks, onEdit, onRemove, onMove,
                 >
                     <span className="wc-block-rest-line" />
                     <span className="wc-block-rest-label">
-                        ⏸️ {formatDuration(block.restAfterBlock)} rest
+                        {t('config.block_card.rest_after', { duration: formatDuration(block.restAfterBlock) })}
                     </span>
                     <span className="wc-block-rest-line" />
                 </button>

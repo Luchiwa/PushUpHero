@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { getExerciseLabel } from '@exercises/types';
+import { useTranslation } from 'react-i18next';
+import { getExerciseLabelKey } from '@exercises/types';
 import { useSoundEffect } from '@hooks/useSoundEffect';
 import { useModalClose } from '@hooks/shared/useModalClose';
 import { useWorkout } from '@app/WorkoutContext';
@@ -22,6 +23,7 @@ function ScoreGrade({ score }: { score: number }) {
 }
 
 export function SummaryScreen({ newAchievements }: SummaryProps) {
+    const { t } = useTranslation('workout');
     const {
         exerciseType, completedSets,
         handleReset, sessionMode, elapsedTime,
@@ -68,7 +70,7 @@ export function SummaryScreen({ newAchievements }: SummaryProps) {
                     <div className="summary-victory-header" role="status">
                         <span className="summary-victory-emoji" aria-hidden="true">🏆</span>
                         <h2 className="summary-victory-title">
-                            {isMultiExercise || isMultiSet ? 'WORKOUT COMPLETE!' : 'GOAL REACHED!'}
+                            {isMultiExercise || isMultiSet ? t('summary.victory_workout_complete') : t('summary.victory_goal_reached')}
                         </h2>
                     </div>
                 )}
@@ -76,21 +78,22 @@ export function SummaryScreen({ newAchievements }: SummaryProps) {
                 {/* Regular header (non-victory) */}
                 {!goalReached && (
                     <h2 className="summary-title" role="status">
-                        {isMultiExercise ? 'Workout Complete' : isMultiSet ? 'Workout Complete' : 'Session Complete'}
+                        {(isMultiExercise || isMultiSet) ? t('summary.title_workout_complete') : t('summary.title_session_complete')}
                     </h2>
                 )}
 
-                {/* Quest completion banner(s) */}
+                {/* Quest completion banner(s) — quest titles translated alongside the
+                    quests/achievements def refactor in commit 3. */}
                 {questsCompleted.length > 0 && (
                     <div className="summary-quest-list">
                         {questsCompleted.map(quest => (
                             <div key={quest.id} className="summary-quest-banner">
                                 <span className="summary-quest-emoji" aria-hidden="true">{quest.emoji}</span>
                                 <div className="summary-quest-info">
-                                    <span className="summary-quest-label">Quest Complete!</span>
+                                    <span className="summary-quest-label">{t('summary.quest_complete_label')}</span>
                                     <span className="summary-quest-title">{quest.title}</span>
                                 </div>
-                                <span className="summary-quest-xp">+{quest.xpReward} XP</span>
+                                <span className="summary-quest-xp">{t('summary.quest_xp_reward', { xp: quest.xpReward })}</span>
                             </div>
                         ))}
                     </div>
@@ -98,13 +101,13 @@ export function SummaryScreen({ newAchievements }: SummaryProps) {
 
                 {isMultiExercise && (
                     <span className="summary-sets-badge">
-                        {workoutPlan.blocks.length} exercises · {completedSets?.length ?? 0} sets
+                        {t('summary.exercises_sets_badge', { exercises: workoutPlan.blocks.length, sets: completedSets?.length ?? 0 })}
                     </span>
                 )}
 
                 {!isMultiExercise && isMultiSet && (
                     <span className="summary-sets-badge">
-                        {completedSets.length} set{completedSets.length > 1 ? 's' : ''}
+                        {t('common:unit.set', { count: completedSets.length })}
                     </span>
                 )}
 
@@ -113,22 +116,22 @@ export function SummaryScreen({ newAchievements }: SummaryProps) {
                         <>
                             <div className="summary-stat summary-stat--wide">
                                 <span className="summary-value summary-value--duration">{formatElapsedTime(elapsedTime)}</span>
-                                <span className="summary-label">Duration</span>
+                                <span className="summary-label">{t('summary.stat_duration')}</span>
                             </div>
                             <div className="summary-stats-row">
                                 <div className="summary-stat">
                                     <span className="summary-value">{totalReps}</span>
-                                    <span className="summary-label">Total Reps</span>
+                                    <span className="summary-label">{t('summary.stat_total_reps')}</span>
                                 </div>
                                 <div className="summary-divider" />
                                 <div className="summary-stat">
                                     <ScoreGrade score={averageScore} />
-                                    <span className="summary-label">Grade</span>
+                                    <span className="summary-label">{t('summary.stat_grade')}</span>
                                 </div>
                                 <div className="summary-divider" />
                                 <div className="summary-stat">
                                     <span className="summary-value">{averageScore}</span>
-                                    <span className="summary-label">Avg Score</span>
+                                    <span className="summary-label">{t('summary.stat_avg_score')}</span>
                                 </div>
                             </div>
                         </>
@@ -136,22 +139,22 @@ export function SummaryScreen({ newAchievements }: SummaryProps) {
                         <>
                             <div className="summary-stat summary-stat--wide">
                                 <span className="summary-value summary-value--duration">{formatElapsedTime(elapsedTime)}</span>
-                                <span className="summary-label">Duration</span>
+                                <span className="summary-label">{t('summary.stat_duration')}</span>
                             </div>
                             <div className="summary-stats-row">
                                 <div className="summary-stat">
                                     <span className="summary-value">{totalReps}</span>
-                                    <span className="summary-label">{getExerciseLabel(exerciseType)}</span>
+                                    <span className="summary-label">{t(getExerciseLabelKey(exerciseType))}</span>
                                 </div>
                                 <div className="summary-divider" />
                                 <div className="summary-stat">
                                     <ScoreGrade score={averageScore} />
-                                    <span className="summary-label">Grade</span>
+                                    <span className="summary-label">{t('summary.stat_grade')}</span>
                                 </div>
                                 <div className="summary-divider" />
                                 <div className="summary-stat">
                                     <span className="summary-value">{averageScore}</span>
-                                    <span className="summary-label">Avg Score</span>
+                                    <span className="summary-label">{t('summary.stat_avg_score')}</span>
                                 </div>
                             </div>
                         </>
@@ -159,17 +162,17 @@ export function SummaryScreen({ newAchievements }: SummaryProps) {
                         <>
                             <div className="summary-stat">
                                 <span className="summary-value">{totalReps}</span>
-                                <span className="summary-label">{getExerciseLabel(exerciseType)}</span>
+                                <span className="summary-label">{t(getExerciseLabelKey(exerciseType))}</span>
                             </div>
                             <div className="summary-divider" />
                             <div className="summary-stat">
                                 <ScoreGrade score={averageScore} />
-                                <span className="summary-label">Grade</span>
+                                <span className="summary-label">{t('summary.stat_grade')}</span>
                             </div>
                             <div className="summary-divider" />
                             <div className="summary-stat">
                                 <span className="summary-value">{averageScore}</span>
-                                <span className="summary-label">Avg Score</span>
+                                <span className="summary-label">{t('summary.stat_avg_score')}</span>
                             </div>
                         </>
                     )}
@@ -178,10 +181,10 @@ export function SummaryScreen({ newAchievements }: SummaryProps) {
                 {/* ── XP Breakdown ─────────────────────────────────────── */}
                 {sessionXp && <XPBreakdown sessionXp={sessionXp} />}
 
-                {/* ── New Achievements ───────────────────────────────── */}
+                {/* ── New Achievements — titles translated in commit 3 alongside def refactor ── */}
                 {newAchievements && newAchievements.length > 0 && (
                     <div className="summary-achievements">
-                        <p className="summary-section-title">🏆 Achievements Unlocked</p>
+                        <p className="summary-section-title">{t('summary.achievements_unlocked')}</p>
                         <div className="summary-achievements-list">
                             {newAchievements.map(ach => (
                                 <div
@@ -199,10 +202,10 @@ export function SummaryScreen({ newAchievements }: SummaryProps) {
                     </div>
                 )}
 
-                {/* ── Broken Records ──────────────────────────────────── */}
+                {/* ── Broken Records — record def labels translated in commit 3 ── */}
                 {brokenRecords && brokenRecords.length > 0 && (
                     <div className="summary-records">
-                        <p className="summary-section-title">🏅 New Records</p>
+                        <p className="summary-section-title">{t('summary.new_records')}</p>
                         <div className="summary-records-list">
                             {brokenRecords.map(rec => {
                                 const def = RECORDS.find(r => r.key === rec.key);
@@ -240,7 +243,7 @@ export function SummaryScreen({ newAchievements }: SummaryProps) {
                         disabled={closing}
                         icon={<span aria-hidden="true">🔁</span>}
                     >
-                        Continue
+                        {t('summary.continue')}
                     </PrimaryCTA>
                 </div>
             </div>

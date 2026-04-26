@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import './ScreenHeader.scss';
 
 interface ScreenHeaderProps {
@@ -10,10 +11,11 @@ interface ScreenHeaderProps {
 }
 
 export function ScreenHeader({ kicker, title, onBack, rightSlot, align = 'center' }: ScreenHeaderProps) {
+    const { t } = useTranslation();
     return (
         <header className={`screen-header screen-header--${align}`}>
             {onBack ? (
-                <button type="button" className="screen-header-back" onClick={onBack} aria-label="Back">
+                <button type="button" className="screen-header-back" onClick={onBack} aria-label={t('common:action.back')}>
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <polyline points="15 18 9 12 15 6" />
                     </svg>

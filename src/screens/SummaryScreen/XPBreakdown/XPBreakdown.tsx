@@ -1,4 +1,5 @@
-import { getExerciseLabel } from '@exercises/types';
+import { useTranslation } from 'react-i18next';
+import { getExerciseLabelKey } from '@exercises/types';
 import type { SessionXpResult } from '@domain';
 import './XPBreakdown.scss';
 
@@ -7,10 +8,11 @@ interface XPBreakdownProps {
 }
 
 export function XPBreakdown({ sessionXp }: XPBreakdownProps) {
+    const { t } = useTranslation('workout');
     return (
         <div className="xp-breakdown">
             <div className="xp-breakdown-header">
-                <span className="xp-breakdown-total">+{sessionXp.totalXp.toLocaleString()} XP</span>
+                <span className="xp-breakdown-total">{t('summary.xp_total', { xp: sessionXp.totalXp.toLocaleString() })}</span>
                 {sessionXp.multiplier > 1 && (
                     <span className="xp-breakdown-multiplier">×{sessionXp.multiplier.toFixed(2)}</span>
                 )}
@@ -21,7 +23,7 @@ export function XPBreakdown({ sessionXp }: XPBreakdownProps) {
                 <div className="xp-breakdown-exercises">
                     {sessionXp.perExercise.map(ex => (
                         <span key={ex.exerciseType} className="xp-exercise-pill">
-                            {getExerciseLabel(ex.exerciseType)} +{ex.finalXp.toLocaleString()}
+                            {t('summary.xp_exercise_pill', { exercise: t(getExerciseLabelKey(ex.exerciseType)), xp: ex.finalXp.toLocaleString() })}
                             {ex.difficultyCoefficient > 1.0 && (
                                 <span className="xp-difficulty-badge">×{ex.difficultyCoefficient.toFixed(1)}</span>
                             )}
@@ -30,7 +32,7 @@ export function XPBreakdown({ sessionXp }: XPBreakdownProps) {
                 </div>
             )}
 
-            {/* Bonus tags */}
+            {/* Bonus tags — labels translated alongside the bonus engine in commit 6 */}
             {sessionXp.bonuses.length > 0 && (
                 <div className="xp-breakdown-bonuses">
                     {sessionXp.bonuses.map(b => (
@@ -44,7 +46,7 @@ export function XPBreakdown({ sessionXp }: XPBreakdownProps) {
             {/* Raw XP line */}
             {sessionXp.multiplier > 1 && (
                 <span className="xp-breakdown-raw">
-                    XP brute : {sessionXp.rawXp.toLocaleString()}
+                    {t('summary.xp_raw', { xp: sessionXp.rawXp.toLocaleString() })}
                 </span>
             )}
         </div>

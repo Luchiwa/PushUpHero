@@ -35,7 +35,10 @@ const META_MAP: Record<ExerciseType, ExerciseMeta> = Object.fromEntries(
     EXERCISE_META.map(m => [m.type, m]),
 ) as Record<ExerciseType, ExerciseMeta>;
 
-/** Human-readable label: 'Push-ups', 'Squats', 'Pull-ups' */
+/** Human-readable label: 'Push-ups', 'Squats', 'Pull-ups'.
+ *  Prefer `getExerciseLabelKey` + `t(...)` in UI for i18n. This raw-string
+ *  form is kept for callers that don't yet flow through useTranslation
+ *  (services, activity feed strings, achievement title interpolation). */
 export function getExerciseLabel(type: ExerciseType): string {
     return META_MAP[type].label;
 }
@@ -45,9 +48,34 @@ export function getExerciseEmoji(type: ExerciseType): string {
     return META_MAP[type].emoji;
 }
 
-/** Banner text when user leaves valid position: '⚠️ Get back into push-up position' etc. */
+/** Banner text when user leaves valid position: '⚠️ Get back into push-up position' etc.
+ *  Prefer `getInvalidPositionMessageKey` + `t(...)` in UI for i18n. */
 export function getInvalidPositionMessage(type: ExerciseType): string {
     return META_MAP[type].invalidPositionMessage;
+}
+
+// ── i18n keys (preferred for UI consumption) ─────────────────────
+
+const CATEGORY_KEY_MAP: Record<ExerciseType, string> = {
+    pushup:   'upper_body',
+    squat:    'lower_body',
+    pullup:   'pull',
+    legraise: 'core',
+};
+
+/** i18next key for the exercise display name. Use as `t(getExerciseLabelKey(type))`. */
+export function getExerciseLabelKey(type: ExerciseType): string {
+    return `common:exercise.${type}`;
+}
+
+/** i18next key for the exercise category tag (UI groupings like "Upper Body"). */
+export function getExerciseCategoryKey(type: ExerciseType): string {
+    return `common:exercise_category.${CATEGORY_KEY_MAP[type]}`;
+}
+
+/** i18next key for the "lost the pose" warning shown over the camera. */
+export function getInvalidPositionMessageKey(type: ExerciseType): string {
+    return `common:exercise_invalid_position.${type}`;
 }
 
 export type ExercisePhase = 'idle' | 'up' | 'down' | 'transition';

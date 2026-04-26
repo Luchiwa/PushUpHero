@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import { computeXpProgress, type AppUser, type DbUser } from '@domain';
 import { Avatar } from '@components/Avatar/Avatar';
 import { XPBar } from '@components/XPBar/XPBar';
@@ -61,7 +62,12 @@ export function PlayerHUD({
     onOpenProfile,
     onOpenAuth,
 }: PlayerHUDProps) {
-    const levelLabel = `LEVEL ${String(level).padStart(2, '0')} · ${xpIntoCurrentLevel.toLocaleString()}/${xpNeededForNextLevel.toLocaleString()}`;
+    const { t } = useTranslation('start');
+    const levelLabel = t('hud.level_kicker', {
+        level: String(level).padStart(2, '0'),
+        current: xpIntoCurrentLevel.toLocaleString(),
+        total: xpNeededForNextLevel.toLocaleString(),
+    });
     const { xpRemaining, progressRatio } = computeXpProgress(xpIntoCurrentLevel, xpNeededForNextLevel);
 
     return (
@@ -73,7 +79,7 @@ export function PlayerHUD({
                             type="button"
                             className={`hud-avatar-button tier-${tier}`}
                             onClick={onOpenProfile}
-                            aria-label="Open profile"
+                            aria-label={t('hud.open_profile')}
                         >
                             <div className="hud-avatar-wrap">
                                 <LevelRing progress={progressRatio} tier={tier} />
@@ -92,10 +98,10 @@ export function PlayerHUD({
 
                         <div className="hud-main">
                             <span className="hud-kicker">{levelLabel}</span>
-                            <span className="hud-name">{dbUser?.profile.displayName || 'Player'}</span>
+                            <span className="hud-name">{dbUser?.profile.displayName || t('hud.default_player_name')}</span>
                         </div>
 
-                        <div className="hud-total-xp" aria-label={`${totalXp} total XP`}>
+                        <div className="hud-total-xp" aria-label={t('hud.total_xp_aria', { xp: totalXp.toLocaleString() })}>
                             <span className="hud-total-xp-val">{totalXp.toLocaleString()}</span>
                             <span className="hud-total-xp-lbl">XP</span>
                         </div>
@@ -104,17 +110,17 @@ export function PlayerHUD({
                     <XPBar
                         current={xpIntoCurrentLevel}
                         next={xpNeededForNextLevel}
-                        rightLabel={`${xpRemaining.toLocaleString()} XP → LV ${level + 1}`}
+                        rightLabel={t('hud.xp_to_next_level', { xp: xpRemaining.toLocaleString(), level: level + 1 })}
                     />
                 </>
             ) : (
                 <div className="player-hud-guest">
                     <div className="hud-guest-info">
-                        <span className="hud-guest-kicker">Guest Profile</span>
-                        <span className="hud-guest-sub">Sign in to save your progress</span>
+                        <span className="hud-guest-kicker">{t('hud.guest_kicker')}</span>
+                        <span className="hud-guest-sub">{t('hud.guest_subtitle')}</span>
                     </div>
                     <PrimaryCTA variant="solid" size="md" onClick={onOpenAuth}>
-                        Sign in
+                        {t('hud.sign_in')}
                     </PrimaryCTA>
                 </div>
             )}

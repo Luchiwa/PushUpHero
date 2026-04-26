@@ -4,8 +4,9 @@
  * User can skip rest early.
  */
 import { useEffect, useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getGradeLetter, getGradeClass } from '@domain';
-import type { SetRecord } from '@exercises/types';
+import { getExerciseLabelKey, type ExerciseType, type SetRecord } from '@exercises/types';
 import { useWorkout } from '@app/WorkoutContext';
 import { useBackButton } from '@hooks/shared/useBackButton';
 import './RestScreen.scss';
@@ -21,12 +22,12 @@ interface RestScreenProps {
     lastSetResult: SetRecord;
     /** Called when rest is over (countdown ends or user skips) */
     onRestComplete: () => void;
-    /** Label for the current exercise (e.g. "Push-ups") */
-    exerciseLabel?: string;
+    /** Current exercise — drives the i18n label */
+    exerciseType?: ExerciseType;
     /** True when this rest is between two different exercises (not between sets) */
     isExerciseTransition?: boolean;
-    /** Label for the next exercise (e.g. "Squats") */
-    nextExerciseLabel?: string;
+    /** Next exercise — drives the i18n "Up next" label */
+    nextExerciseType?: ExerciseType;
 }
 
 export function RestScreen({
@@ -35,10 +36,11 @@ export function RestScreen({
     totalSets,
     lastSetResult,
     onRestComplete,
-    exerciseLabel,
+    exerciseType,
     isExerciseTransition = false,
-    nextExerciseLabel,
+    nextExerciseType,
 }: RestScreenProps) {
+    const { t } = useTranslation('workout');
     const [remaining, setRemaining] = useState(restDuration);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -74,6 +76,9 @@ export function RestScreen({
     const mins = Math.floor(remaining / 60);
     const secs = remaining % 60;
 
+    const exerciseLabel = exerciseType ? t(getExerciseLabelKey(exerciseType)) : null;
+    const nextExerciseLabel = nextExerciseType ? t(getExerciseLabelKey(nextExerciseType)) : null;
+
     return (
         <div className="rest-screen" role="status">
             <div className="rest-card">
@@ -81,8 +86,8 @@ export function RestScreen({
                 <div className="rest-set-feedback">
                     <span className="rest-set-badge">
                         {isExerciseTransition
-                            ? `✅ Exercise ${completedSet}/${totalSets} done`
-                            : `✅ Set ${completedSet}/${totalSets}`}
+                            ? t('rest.exercise_done', { current: completedSet, total: totalSets })
+                            : t('rest.set_done', { current: completedSet, total: totalSets })}
                     </span>
                     {exerciseLabel && (
                         <span className="rest-exercise-label">{exerciseLabel}</span>
@@ -90,19 +95,19 @@ export function RestScreen({
                     <div className="rest-set-stats">
                         <div className="rest-stat">
                             <span className="rest-stat-value">{lastSetResult.reps}</span>
-                            <span className="rest-stat-label">Reps</span>
+                            <span className="rest-stat-label">{t('rest.stat_reps')}</span>
                         </div>
                         <div className="rest-stat-divider" />
                         <div className="rest-stat">
                             <span className={`rest-stat-value grade ${getGradeClass(lastSetResult.averageScore)}`}>
                                 {getGradeLetter(lastSetResult.averageScore)}
                             </span>
-                            <span className="rest-stat-label">Grade</span>
+                            <span className="rest-stat-label">{t('rest.stat_grade')}</span>
                         </div>
                         <div className="rest-stat-divider" />
                         <div className="rest-stat">
                             <span className="rest-stat-value">{lastSetResult.averageScore}</span>
-                            <span className="rest-stat-label">Score</span>
+                            <span className="rest-stat-label">{t('rest.stat_score')}</span>
                         </div>
                     </div>
                 </div>
@@ -110,7 +115,7 @@ export function RestScreen({
                 {/* Countdown */}
                 <div className="rest-countdown-section">
                     <p className="rest-countdown-label">
-                        {isExerciseTransition ? 'Next exercise in' : 'Next set in'}
+                        {isExerciseTransition ? t('rest.next_exercise_in') : t('rest.next_set_in')}
                     </p>
                     <div className="rest-countdown-timer">
                         <span className="rest-countdown-digits" aria-hidden="true">
@@ -125,13 +130,13 @@ export function RestScreen({
                     </div>
                     <p className="rest-up-next">
                         {isExerciseTransition && nextExerciseLabel
-                            ? `Up next: ${nextExerciseLabel}`
-                            : `Up next: Set ${completedSet + 1}/${totalSets}`}
+                            ? t('rest.up_next_exercise', { exercise: nextExerciseLabel })
+                            : t('rest.up_next_set', { current: completedSet + 1, total: totalSets })}
                     </p>
                 </div>
 
                 <button type="button" className="btn-primary" onClick={onRestComplete}>
-                    ⏭ Skip Rest
+                    {t('rest.skip_rest')}
                 </button>
             </div>
         </div>

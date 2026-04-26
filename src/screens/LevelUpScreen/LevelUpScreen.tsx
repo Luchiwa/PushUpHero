@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useModalClose } from '@hooks/shared/useModalClose';
 import { ConfettiCanvas } from '@screens/SummaryScreen/ConfettiCanvas/ConfettiCanvas';
 import './LevelUpScreen.scss';
@@ -13,19 +14,12 @@ interface LevelUpScreenProps {
     xpToNextLevel?: number;
 }
 
-const MOTIVATIONAL_MESSAGES = [
-    'Keep pushing! 💪',
-    'You\'re on fire! 🔥',
-    'Unstoppable! 🚀',
-    'Beast mode activated! 🦾',
-    'Nothing can stop you now! ⚡',
-    'Legend in the making! 🏆',
-];
-
 export function LevelUpScreen({ previousLevel, newLevel, onContinue, xpEarned, xpToNextLevel }: LevelUpScreenProps) {
+    const { t } = useTranslation('workout');
     const [phase, setPhase] = useState<'enter' | 'roll' | 'land' | 'show'>('enter');
     const { closing, handleClose: handleContinue, handleAnimationEnd } = useModalClose(onContinue);
-    const message = MOTIVATIONAL_MESSAGES[(newLevel - 1) % MOTIVATIONAL_MESSAGES.length];
+    const messages = t('levelup.messages', { returnObjects: true }) as string[];
+    const message = messages[(newLevel - 1) % messages.length];
 
     // Animation sequence
     useEffect(() => {
@@ -59,7 +53,7 @@ export function LevelUpScreen({ previousLevel, newLevel, onContinue, xpEarned, x
 
             <div className={`levelup-card levelup-card--${phase}`}>
                 {/* Header */}
-                <p className="levelup-label">LEVEL UP</p>
+                <p className="levelup-label">{t('levelup.label')}</p>
 
                 {/* Rolling number slot */}
                 <div className="levelup-slot-viewport">
@@ -85,11 +79,11 @@ export function LevelUpScreen({ previousLevel, newLevel, onContinue, xpEarned, x
                 {(xpEarned !== undefined || xpToNextLevel !== undefined) && (
                     <div className={`levelup-xp-info levelup-xp-info--${phase}`}>
                         {xpEarned !== undefined && (
-                            <span className="levelup-xp-earned">+{xpEarned.toLocaleString()} XP</span>
+                            <span className="levelup-xp-earned">{t('levelup.xp_earned', { xp: xpEarned.toLocaleString() })}</span>
                         )}
                         {xpToNextLevel !== undefined && (
                             <span className="levelup-xp-next">
-                                {xpToNextLevel.toLocaleString()} XP → Level {newLevel + 1}
+                                {t('levelup.xp_to_next', { xp: xpToNextLevel.toLocaleString(), level: newLevel + 1 })}
                             </span>
                         )}
                     </div>
@@ -102,7 +96,7 @@ export function LevelUpScreen({ previousLevel, newLevel, onContinue, xpEarned, x
                     onClick={handleContinue}
                     disabled={closing}
                 >
-                    Continue
+                    {t('levelup.continue')}
                 </button>
             </div>
         </div>

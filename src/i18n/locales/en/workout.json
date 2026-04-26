@@ -1,1 +1,94 @@
-{}
+{
+    "config": {
+        "title": "Workout Setup",
+        "empty_title": "No exercises yet",
+        "empty_sub": "Add your first exercise to get started",
+        "add_exercise": "Add Exercise",
+        "summary_divider": "Summary",
+        "kpi_exercises": "Exercises",
+        "kpi_total_sets": "Total sets",
+        "kpi_estimated_reps": "Est. reps",
+        "start_workout": "Start Workout",
+        "getting_ready": "Getting Ready…",
+        "block_card": {
+            "details": "{{sets}} × {{goal}}",
+            "details_with_rest": "{{sets}} × {{goal}} · {{rest}} rest",
+            "time_goal": "{{minutes}}:{{seconds}}",
+            "rest_after": "⏸️ {{duration}} rest",
+            "move_up_aria": "Move up",
+            "move_down_aria": "Move down",
+            "edit_aria": "Edit",
+            "remove_aria": "Remove"
+        },
+        "editor": {
+            "add_title": "Add Exercise",
+            "edit_title": "Edit Exercise {{n}}",
+            "step_counter": "Step {{current}} of {{total}}",
+            "step_progress_aria": "Step {{current}} of {{total}}",
+            "exercise_title": "Choose exercise",
+            "exercise_subtitle": "Select the exercise for this block",
+            "sets_title": "How many sets?",
+            "sets_subtitle": "Number of sets for {{exercise}}",
+            "sets_unit": "sets",
+            "goal_title": "Set your goal",
+            "goal_subtitle": "Target for each set of {{exercise}}",
+            "session_mode_aria": "Session mode",
+            "goal_mode_reps": "Reps",
+            "goal_mode_time": "Time",
+            "rest_sets_title": "Rest between sets",
+            "rest_sets_subtitle": "How long between each set of {{exercise}}?",
+            "rest_exercise_title": "Rest before next exercise",
+            "rest_exercise_subtitle": "Recovery time after {{exercise}}"
+        }
+    },
+    "rest": {
+        "set_done": "✅ Set {{current}}/{{total}}",
+        "exercise_done": "✅ Exercise {{current}}/{{total}} done",
+        "stat_reps": "Reps",
+        "stat_grade": "Grade",
+        "stat_score": "Score",
+        "next_set_in": "Next set in",
+        "next_exercise_in": "Next exercise in",
+        "up_next_exercise": "Up next: {{exercise}}",
+        "up_next_set": "Up next: Set {{current}}/{{total}}",
+        "skip_rest": "⏭ Skip Rest"
+    },
+    "summary": {
+        "victory_workout_complete": "WORKOUT COMPLETE!",
+        "victory_goal_reached": "GOAL REACHED!",
+        "title_session_complete": "Session Complete",
+        "title_workout_complete": "Workout Complete",
+        "continue": "Continue",
+        "exercises_sets_badge": "{{exercises}} exercises · {{sets}} sets",
+        "stat_duration": "Duration",
+        "stat_total_reps": "Total Reps",
+        "stat_grade": "Grade",
+        "stat_avg_score": "Avg Score",
+        "achievements_unlocked": "🏆 Achievements Unlocked",
+        "new_records": "🏅 New Records",
+        "quest_complete_label": "Quest Complete!",
+        "quest_xp_reward": "+{{xp}} XP",
+        "sets_breakdown": "Sets breakdown",
+        "exercise_breakdown": "Exercise breakdown",
+        "set_n": "Set {{n}}",
+        "set_stats": "{{reps}} reps · {{score}}%",
+        "block_stats": "{{reps}} reps · {{sets}}",
+        "xp_total": "+{{xp}} XP",
+        "xp_raw": "Raw XP: {{xp}}",
+        "xp_exercise_pill": "{{exercise}} +{{xp}}"
+    },
+    "levelup": {
+        "label": "LEVEL UP",
+        "continue": "Continue",
+        "xp_earned": "+{{xp}} XP",
+        "xp_to_next": "{{xp}} XP → Level {{level}}",
+        "messages": [
+            "Keep pushing! 💪",
+            "You're on fire! 🔥",
+            "Unstoppable! 🚀",
+            "Beast mode activated! 🦾",
+            "Nothing can stop you now! ⚡",
+            "Legend in the making! 🏆"
+        ]
+    }
+}
