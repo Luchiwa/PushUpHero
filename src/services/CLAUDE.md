@@ -15,37 +15,15 @@ Pure functions with no React dependency. All Firestore/Auth/Storage mutations li
 | `achievementService.ts` | Achievement evaluation and unlocking |
 | `profileService.ts` | Profile field updates |
 | `deleteAccount.ts` | Account deletion orchestration |
-| `guestStatsStore.ts` | Guest mode persistence (localStorage) |
-| `guestMerge.ts` | Merge guest data to cloud on first login |
-| `clearLocalStorage.ts` | Central cleanup for all app localStorage keys |
-| `workoutCheckpointStore.ts` | Interrupted workout checkpoint persistence |
+| `guestStatsStore.ts` | Guest-mode achievement progress (storage via `@infra/storage`) |
+| `guestMerge.ts` | Merge guest data to cloud on first login (storage via `@infra/storage`) |
+| `workoutCheckpointStore.ts` | Interrupted workout checkpoint (storage via `@infra/storage`) |
 
-## localStorage Conventions
+## localStorage
 
-- **Key prefix**: `pushup_hero_` or `pushup-hero-` (legacy)
-- **Helper pattern** (from `guestStatsStore.ts`):
-  ```typescript
-  readJSON<T>(key, fallback): T    // JSON.parse with try/catch
-  writeJSON(key, value): void      // JSON.stringify with quota handling
-  readInt(key, fallback): number   // parseInt with fallback
-  writeInt(key, value): void       // toString with try/catch
-  ```
-- **All keys must be registered** in `clearLocalStorage.ts` `APP_STORAGE_KEYS` array
-- **Guest data**: Separate keys under `pushup_hero_guest_*`, merged on login via `guestMerge.ts`
+All localStorage operations go through `@infra/storage`. That module owns the typed `STORAGE_KEYS` registry, the `STORAGE_KEY_BUILDERS` for parameterized keys, and the `read`/`write`/`remove`/`clearAppKeys`/`clearAll` API. Services in this directory are wrappers that decide *what* to persist; they never decide *how*.
 
-### Known Keys
-```
-pushup-hero-body-profile        Body profile
-pushup-hero-quest-progress      Quest state
-pushup_hero_total_xp            Total XP
-pushup_hero_exercise_xp         Per-exercise XP map
-pushup-sessions                 Local session records
-pushup_game_total_sessions      Session count
-pushup_game_total_reps          Lifetime reps
-pushup_merge_in_progress        Merge lock flag
-pushup_hero_workout_checkpoint  Interrupted workout checkpoint
-feed_last_seen_{uid}            Dynamic per-user feed timestamp
-```
+The full layering rules (registry-only keys, no module-level mutable caches, prefix-based bulk clear) live in the root `CLAUDE.md` under "Storage isolation rules", and ESLint enforces no-direct-`localStorage` outside `src/infra/`.
 
 ## Firestore Atomic Save (`sessionService.ts`)
 
