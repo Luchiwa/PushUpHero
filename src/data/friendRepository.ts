@@ -9,8 +9,7 @@ import { documentId, getDocs, onSnapshot, query, where } from 'firebase/firestor
 import { usersCol, friendsCol, friendRequestsCol, sentRequestsCol } from '@infra/refs';
 import { isFriendRequest, tsToMs } from '@infra/firestoreValidators';
 import type { FriendRequest, OutgoingRequest } from '@services/friendService';
-import type { UserId } from '@domain';
-import { createUserId } from '@domain';
+import { createUserId, type UserId } from '@domain';
 
 /** Firestore `in` operator hard limit. */
 const IN_QUERY_CHUNK = 30;

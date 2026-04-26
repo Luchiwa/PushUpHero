@@ -9,11 +9,9 @@
  */
 import { useState, useCallback } from 'react';
 import { useAuthCore } from './useAuth';
-import { levelFromTotalXp, totalXpForLevel } from '@domain';
+import { createLevel, createXpAmount, levelFromTotalXp, totalXpForLevel, type XpAmount } from '@domain';
 import { read, write, STORAGE_KEYS } from '@infra/storage';
 import type { ExerciseType, ExerciseXpMap } from '@exercises/types';
-import type { XpAmount } from '@domain';
-import { createXpAmount, createLevel } from '@domain';
 
 export function useLevelSystem() {
     const { user } = useAuthCore();

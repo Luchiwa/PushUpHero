@@ -1,7 +1,6 @@
 import { AngleBasedExerciseDetector } from '../base/AngleBasedExerciseDetector';
 import type { ExerciseState, Landmark, RepFeedback } from '../types';
-import { getSquatThresholds } from '@domain';
-import type { SquatThresholds } from '@domain';
+import { getSquatThresholds, type SquatThresholds } from '@domain';
 
 const LM = {
     LEFT_SHOULDER: 11, RIGHT_SHOULDER: 12,

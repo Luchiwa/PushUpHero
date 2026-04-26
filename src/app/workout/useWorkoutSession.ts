@@ -11,16 +11,12 @@ import type { Dispatch } from 'react';
 import type { ExerciseType, SetRecord, WorkoutBlock, WorkoutPlan } from '@exercises/types';
 import type { CapturedRatios } from '@exercises/BaseExerciseDetector';
 import { useLevel } from '@hooks/useAuth';
-import { projectLiveXp } from '@domain';
-import type { SessionXpResult } from '@domain';
+import { projectLiveXp, type BodyProfile, type Level, type QuestDef, type QuestProgress, type SessionXpResult } from '@domain';
 import type { SaveSessionResult } from '@services/sessionService';
-import type { QuestDef, QuestProgress } from '@domain';
-import type { BodyProfile } from '@domain';
 import type { WorkoutAction } from './workoutReducer';
 import { useWorkoutSave } from './useWorkoutSave';
 import { useQuestEvaluation } from './useQuestEvaluation';
 import { maybeCaptureBodyProfile } from './bodyProfileCapture';
-import type { Level } from '@domain';
 
 interface UseWorkoutSessionProps {
     workoutPlan: WorkoutPlan;

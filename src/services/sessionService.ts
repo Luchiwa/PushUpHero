@@ -18,17 +18,10 @@ import {
 } from 'firebase/firestore';
 import { db } from '@infra/firebase';
 import { userRef, sessionRef, activityFeedCol } from '@infra/refs';
-import { FEED_PRUNE_AGE_MS, getGradeLetter } from '@domain';
-import { levelFromTotalXp } from '@domain';
+import { FEED_PRUNE_AGE_MS, buildSessionRepsMap, createXpAmount, emptyRecords, evaluateAchievements, evaluateRecords, getGradeLetter, levelFromTotalXp, type AchievementDef, type AchievementMap, type DbUser, type RecordUpdate, type RecordsMap, type UserId, type UserStats, type XpAmount } from '@domain';
 import type { SessionRecord } from '@exercises/types';
-import type { DbUser } from '@domain';
 import type { ExerciseType } from '@exercises/types';
 import { getExerciseLabel } from '@exercises/types';
-import { evaluateAchievements, evaluateRecords, emptyRecords, buildSessionRepsMap } from '@domain';
-import type { UserStats, AchievementMap, RecordsMap, RecordUpdate } from '@domain';
-import type { AchievementDef } from '@domain';
-import type { UserId, XpAmount } from '@domain';
-import { createXpAmount } from '@domain';
 
 // ─── Date helpers ────────────────────────────────────────────────────────────
 

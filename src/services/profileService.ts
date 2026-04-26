@@ -7,9 +7,7 @@
 
 import { updateDoc } from 'firebase/firestore';
 import { userRef } from '@infra/refs';
-import type { BodyProfile } from '@domain';
-import type { QuestProgress } from '@domain';
-import type { UserId, XpAmount } from '@domain';
+import type { BodyProfile, QuestProgress, UserId, XpAmount } from '@domain';
 
 export function updateBodyProfile(uid: UserId, profile: BodyProfile): Promise<void> {
     return updateDoc(userRef(uid), { bodyProfile: profile });

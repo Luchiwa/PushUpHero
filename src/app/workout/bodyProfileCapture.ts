@@ -7,10 +7,7 @@
  */
 import type { ExerciseType } from '@exercises/types';
 import type { CapturedRatios } from '@exercises/BaseExerciseDetector';
-import type { QuestDef } from '@domain';
-import { isBodyProfileQuest } from '@domain';
-import type { BodyProfile } from '@domain';
-import { BODY_PROFILE_VERSION } from '@domain';
+import { BODY_PROFILE_VERSION, isBodyProfileQuest, type BodyProfile, type QuestDef } from '@domain';
 import { BODY_PROFILE_MERGE } from '@exercises/registry';
 
 export interface CaptureBodyProfileInput {

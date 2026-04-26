@@ -11,8 +11,7 @@ import {
     removeFriend as removeFr,
 } from '@services/friendService';
 import type { Friend, FriendRequest, OutgoingRequest, SearchResult } from '@services/friendService';
-import type { UserId } from '@domain';
-import { createLevel } from '@domain';
+import { createLevel, type UserId } from '@domain';
 
 const STATS_DEBOUNCE_MS = 300;
 

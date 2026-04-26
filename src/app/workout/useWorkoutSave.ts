@@ -13,13 +13,11 @@ import type { ExerciseType, SetRecord, WorkoutBlock, WorkoutPlan } from '@exerci
 import { useSessionHistory } from '@hooks/useSessionHistory';
 import { useAuthCore, useLevel } from '@hooks/useAuth';
 import { useFriends } from '@hooks/useFriends';
-import type { SessionXpResult } from '@domain';
+import { createLevel, type Level, type SessionXpResult } from '@domain';
 import type { SaveSessionResult } from '@services/sessionService';
 import type { WorkoutAction } from './workoutReducer';
 import { durationToSeconds } from './workoutTypes';
 import { computeFinalXp, derivePrimaryExercise } from './xpProjection';
-import type { Level } from '@domain';
-import { createLevel } from '@domain';
 
 export interface SaveOutcome {
     primaryExercise: ExerciseType;

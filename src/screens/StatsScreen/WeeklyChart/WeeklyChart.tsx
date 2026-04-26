@@ -1,7 +1,6 @@
 import { useState, useRef, useMemo } from 'react';
 import type { SessionRecord } from '@exercises/types';
-import { buildDayTotals, buildDayTotalsXp, niceMax } from '@domain';
-import type { ExerciseFilter } from '@domain';
+import { buildDayTotals, buildDayTotalsXp, niceMax, type ExerciseFilter } from '@domain';
 import './WeeklyChart.scss';
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];

@@ -252,6 +252,20 @@ The rule is **one canonical import path per symbol**. Two patterns satisfy that,
 
 Heuristic: if the same symbol has two valid import paths and one of them isn't its source-of-truth module's barrel, you have a shim — delete it. The same rule applies to types you create *inside* a module (e.g. `firestoreValidators`'s `FlatUserDoc`) — consumers import from the source-of-truth module, not from a downstream module that happens to use the type.
 
+**One import statement per source module.** When a file pulls multiple symbols from the same module, consolidate them into a single `import` line using inline `type` modifiers — never split values and types into two separate statements from the same path.
+
+```ts
+// ❌ Two lines from the same module
+import type { DbUser } from '@domain';
+import type { UserId } from '@domain';
+import { createUserId } from '@domain';
+
+// ✅ One consolidated line
+import { createUserId, type DbUser, type UserId } from '@domain';
+```
+
+This is a hard rule the reviewer should flag: any file with two or more `from '<same-module>'` import statements is a defect, fix it on sight. Inline `type` modifiers (TS 4.5+) erase the same way `import type { … }` does, so consolidation is purely a readability win — no runtime cost, no bundler impact.
+
 ### Brand at module boundaries
 
 Identity strings and scalar metrics that flow across modules are branded in `@domain` (currently `UserId`, `Level`, `XpAmount` — see `src/domain/brands.ts`). This blocks two failure modes at compile time:

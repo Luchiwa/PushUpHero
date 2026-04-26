@@ -9,15 +9,11 @@ import {
 } from 'firebase/firestore';
 import { db } from '@infra/firebase';
 import { userRef, sessionRef } from '@infra/refs';
-import { levelFromTotalXp } from '@domain';
+import { bulkEvaluateRecords, computeLifetimeReps, countSGrades, createXpAmount, emptyRecords, evaluateAchievements, levelFromTotalXp, type AchievementMap, type UserId, type UserStats, type XpAmount } from '@domain';
 import type { SessionRecord } from '@exercises/types';
 import type { ExerciseType } from '@exercises/types';
-import { evaluateAchievements, emptyRecords, computeLifetimeReps, countSGrades, bulkEvaluateRecords } from '@domain';
-import type { UserStats, AchievementMap } from '@domain';
 import type { GuestStatsSnapshot } from './guestStatsStore';
 import { localDateString, yesterdayDateString } from './sessionService';
-import type { UserId, XpAmount } from '@domain';
-import { createXpAmount } from '@domain';
 
 // ─── Merge local guest data into Firestore on first login ────────────────────
 

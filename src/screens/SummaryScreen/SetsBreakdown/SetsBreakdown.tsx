@@ -1,7 +1,6 @@
 import type { SetRecord, WorkoutPlan } from '@exercises/types';
 import { getExerciseLabel } from '@exercises/types';
-import { getGradeLetter, getGradeClass } from '@domain';
-import { weightedAverageScore } from '@domain';
+import { getGradeClass, getGradeLetter, weightedAverageScore } from '@domain';
 import './SetsBreakdown.scss';
 
 function ScoreGrade({ score }: { score: number }) {

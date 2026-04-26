@@ -1,6 +1,5 @@
 import type { CSSProperties } from 'react';
-import type { AppUser, DbUser } from '@domain';
-import { computeXpProgress } from '@domain';
+import { computeXpProgress, type AppUser, type DbUser } from '@domain';
 import { Avatar } from '@components/Avatar/Avatar';
 import { XPBar } from '@components/XPBar/XPBar';
 import { PrimaryCTA } from '@components/PrimaryCTA/PrimaryCTA';

@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Friend } from '@services/friendService';
 import { Avatar } from '@components/Avatar/Avatar';
-import { ENCOURAGE_COOLDOWN_MS } from '@domain';
-import { getTier } from '@domain';
+import { ENCOURAGE_COOLDOWN_MS, getTier } from '@domain';
 import { read, write, STORAGE_KEY_BUILDERS } from '@infra/storage';
 import { TierBadge } from '../TierBadge/TierBadge';
 import './FriendCard.scss';

@@ -1,14 +1,12 @@
 import { useEffect } from 'react';
 import { useAuthCore } from './useAuth';
-import { totalXpForLevel } from '@domain';
+import { createLevel, createXpAmount, totalXpForLevel, type XpAmount } from '@domain';
 import { migrateLegacyXp } from '@services/profileService';
 import { mergeGuestDataToCloud } from '@services/guestMerge';
 import { read, STORAGE_KEYS } from '@infra/storage';
 import { onUserDoc } from '@data/userRepository';
 import { onRecentSessions } from '@data/sessionRepository';
 import type { SessionRecord, ExerciseXpMap } from '@exercises/types';
-import type { XpAmount } from '@domain';
-import { createXpAmount, createLevel } from '@domain';
 
 /**
  * useSyncCloud

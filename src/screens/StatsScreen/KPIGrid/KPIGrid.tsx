@@ -1,7 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { SessionRecord } from '@exercises/types';
-import { compactNum, pctChange } from '@domain';
-import type { ExerciseFilter } from '@domain';
+import { compactNum, pctChange, type ExerciseFilter } from '@domain';
 import type { MetricMode } from '../StatsScreen';
 import type { WeeklySummary } from './computeWeeklySummary';
 import './KPIGrid.scss';

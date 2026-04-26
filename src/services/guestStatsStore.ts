@@ -9,8 +9,7 @@
  */
 
 import type { ExerciseType } from '@exercises/types';
-import type { AchievementMap, RecordsMap } from '@domain';
-import { emptyRecords } from '@domain';
+import { emptyRecords, type AchievementMap, type RecordsMap } from '@domain';
 import { read, write, remove, STORAGE_KEYS } from '@infra/storage';
 
 // ── Read ─────────────────────────────────────────────────────────────────────

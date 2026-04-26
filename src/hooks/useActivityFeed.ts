@@ -5,7 +5,7 @@ import { getRecentActivity } from '@data/activityRepository';
 import type { Friend } from '@services/friendService';
 import type { ExerciseType } from '@exercises/types';
 import { getExerciseLabel } from '@exercises/types';
-import type { UserId } from '@domain';
+import { EVENTS_PER_FRIEND, getGradeLetter, type UserId } from '@domain';
 
 export interface ActivityEvent {
     id: string;
@@ -26,7 +26,6 @@ export interface ActivityEvent {
     createdAt: number; // Unix ms
 }
 
-import { EVENTS_PER_FRIEND, getGradeLetter } from '@domain';
 
 export function formatRelativeTime(ms: number): string {
     const diffSec = Math.floor((Date.now() - ms) / 1000);
