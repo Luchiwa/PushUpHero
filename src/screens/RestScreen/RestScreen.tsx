@@ -75,7 +75,7 @@ export function RestScreen({
     const secs = remaining % 60;
 
     return (
-        <div className="rest-screen" role="status" aria-live="polite">
+        <div className="rest-screen" role="status">
             <div className="rest-card">
                 {/* Set completed feedback */}
                 <div className="rest-set-feedback">

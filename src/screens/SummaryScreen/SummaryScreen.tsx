@@ -65,7 +65,7 @@ export function SummaryScreen({ newAchievements }: SummaryProps) {
             <div className="summary-card">
                 {/* Victory celebration header */}
                 {goalReached && (
-                    <div className="summary-victory-header" role="status" aria-live="polite">
+                    <div className="summary-victory-header" role="status">
                         <span className="summary-victory-emoji" aria-hidden="true">🏆</span>
                         <h2 className="summary-victory-title">
                             {isMultiExercise || isMultiSet ? 'WORKOUT COMPLETE!' : 'GOAL REACHED!'}
@@ -75,7 +75,7 @@ export function SummaryScreen({ newAchievements }: SummaryProps) {
 
                 {/* Regular header (non-victory) */}
                 {!goalReached && (
-                    <h2 className="summary-title" role="status" aria-live="polite">
+                    <h2 className="summary-title" role="status">
                         {isMultiExercise ? 'Workout Complete' : isMultiSet ? 'Workout Complete' : 'Session Complete'}
                     </h2>
                 )}
