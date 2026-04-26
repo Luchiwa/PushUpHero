@@ -17,6 +17,7 @@
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "noEmit": true,
@@ -42,7 +43,8 @@
       "@domain/*": ["src/domain/*"],
       "@services/*": ["src/services/*"],
       "@infra/*": ["src/infra/*"],
-      "@assets/*": ["src/assets/*"]
+      "@assets/*": ["src/assets/*"],
+      "@i18n/*": ["src/i18n/*"]
     }
   },
   "include": [

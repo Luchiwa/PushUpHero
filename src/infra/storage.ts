@@ -38,6 +38,10 @@ export const STORAGE_KEYS = {
     questProgress:      'pushup_hero_quest_progress',
     workoutCheckpoint:  'pushup_hero_workout_checkpoint',
     mergeLock:          'pushup_hero_merge_lock',
+    // Device-level UI preference. Wiped by `clearAppKeys` on logout, so a
+    // returning guest falls back to navigator.language until they re-pick;
+    // signed-in users get re-hydrated from Firestore by useSyncCloud.
+    preferredLanguage:  'pushup_hero_preferred_language',
 } as const;
 
 /** Builders for parameterized (per-user) keys. */
