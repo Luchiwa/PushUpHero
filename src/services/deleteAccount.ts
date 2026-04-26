@@ -8,6 +8,7 @@ import {
     sessionsCol, friendRequestsCol, sentRequestsCol, notificationsCol, activityFeedCol,
 } from '@infra/refs';
 import { clearAll } from '@infra/storage';
+import { createUserId } from '@domain/brands';
 
 /**
  * Deletes the current user's account and all associated Firestore data.
@@ -19,7 +20,7 @@ export async function deleteCurrentAccount(): Promise<void> {
     const user = auth.currentUser;
     if (!user) throw new Error('No authenticated user');
 
-    const uid = user.uid;
+    const uid = createUserId(user.uid);
 
     // ── 1. Release username claim ────────────────────────────────
     const userSnap = await getDoc(userRef(uid));
@@ -42,19 +43,19 @@ export async function deleteCurrentAccount(): Promise<void> {
     const crossBatch = writeBatch(db);
 
     for (const friendDoc of friendsSnap.docs) {
-        const friendUid = friendDoc.id;
+        const friendUid = createUserId(friendDoc.id);
         crossBatch.delete(friendRef(friendUid, uid));
         crossBatch.delete(friendRequestRef(friendUid, uid));
         crossBatch.delete(sentRequestRef(friendUid, uid));
     }
 
     for (const sentDoc of sentSnap.docs) {
-        const toUid = sentDoc.id;
+        const toUid = createUserId(sentDoc.id);
         crossBatch.delete(friendRequestRef(toUid, uid));
     }
 
     for (const receivedDoc of receivedSnap.docs) {
-        const fromUid = receivedDoc.id;
+        const fromUid = createUserId(receivedDoc.id);
         crossBatch.delete(sentRequestRef(fromUid, uid));
     }
 

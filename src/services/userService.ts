@@ -16,15 +16,17 @@ import { evaluateAchievements, emptyRecords, computeLifetimeReps, countSGrades, 
 import type { UserStats, AchievementMap } from '@domain/achievementEngine';
 import type { GuestStatsSnapshot } from './guestStatsStore';
 import { localDateString, yesterdayDateString } from './sessionService';
+import type { UserId, XpAmount, Level } from '@domain/brands';
+import { createXpAmount } from '@domain/brands';
 
 // ─── Merge local guest data into Firestore on first login ────────────────────
 
 export interface MergeLocalDataParams {
-    uid: string;
-    localXp: number;
+    uid: UserId;
+    localXp: XpAmount;
     localExerciseXp: Partial<Record<string, number>>;
     localSessions: SessionRecord[];
-    cloudXp: number;
+    cloudXp: XpAmount;
     cloudSessions: number;
     cloudExerciseXp: Partial<Record<string, number>>;
     /** Guest achievement stats accumulated while playing without an account */
@@ -43,8 +45,8 @@ export async function mergeLocalDataToCloud({
 }: MergeLocalDataParams): Promise<void> {
     const batch = writeBatch(db);
 
-    const newTotalXp = cloudXp + localXp;
-    const newLevel = levelFromTotalXp(newTotalXp);
+    const newTotalXp = createXpAmount(cloudXp + localXp);
+    const newLevel: Level = levelFromTotalXp(newTotalXp);
 
     // Merge per-exercise XP
     const mergedExerciseXp: Record<string, number> = {};
@@ -56,7 +58,7 @@ export async function mergeLocalDataToCloud({
     }
     const mergedExerciseLevels: Record<string, number> = {};
     for (const [type, xp] of Object.entries(mergedExerciseXp)) {
-        mergedExerciseLevels[type] = levelFromTotalXp(xp ?? 0);
+        mergedExerciseLevels[type] = levelFromTotalXp(createXpAmount(xp ?? 0));
     }
 
     // ── Compute streak from local sessions ─────────────────────────────────

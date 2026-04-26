@@ -11,16 +11,18 @@ import { read, write, remove, STORAGE_KEYS } from '@infra/storage';
 import { mergeLocalDataToCloud } from './userService';
 import type { SessionRecord } from '@exercises/types';
 import { getGuestStatsSnapshot, clearGuestStats } from './guestStatsStore';
+import type { UserId } from '@domain/brands';
+import { createXpAmount } from '@domain/brands';
 
 /**
  * Reads guest data from localStorage, claims a merge lock, clears local
  * storage, snapshots guest stats, and pushes everything to Firestore via
  * `mergeLocalDataToCloud`.
  */
-export async function mergeGuestDataToCloud(uid: string): Promise<void> {
+export async function mergeGuestDataToCloud(uid: UserId): Promise<void> {
     if (read<boolean>(STORAGE_KEYS.mergeLock, false) === true) return;
 
-    const localXp = read(STORAGE_KEYS.totalXp, 0);
+    const localXp = createXpAmount(read(STORAGE_KEYS.totalXp, 0));
     const localExerciseXp = read<Partial<Record<string, number>>>(STORAGE_KEYS.exerciseXp, {});
     const localSessions = read<SessionRecord[]>(STORAGE_KEYS.sessions, []);
 
@@ -38,7 +40,7 @@ export async function mergeGuestDataToCloud(uid: string): Promise<void> {
     if (localXp > 0 || localSessions.length > 0) {
         try {
             const userDoc = await getDoc(userRef(uid));
-            const cloudXp = userDoc.exists() ? (userDoc.data().totalXp || 0) : 0;
+            const cloudXp = createXpAmount(userDoc.exists() ? (userDoc.data().totalXp || 0) : 0);
             const cloudSessions = userDoc.exists() ? (userDoc.data().totalSessions || 0) : 0;
             const cloudExerciseXp = userDoc.exists() ? (userDoc.data().exerciseXp || {}) : {};
 

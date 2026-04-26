@@ -11,6 +11,8 @@ import {
     removeFriend as removeFr,
 } from '@services/friendService';
 import type { Friend, FriendRequest, OutgoingRequest, SearchResult } from '@services/friendService';
+import type { UserId } from '@domain/brands';
+import { createLevel } from '@domain/brands';
 
 // Re-export types for consumers that import from here
 export type { Friend, FriendRequest, OutgoingRequest, SearchResult } from '@services/friendService';
@@ -52,7 +54,7 @@ export function useFriends() {
                             photoURL: e.photoURL ?? existing.photoURL,
                         };
                     }
-                    return { ...e, level: 0, totalReps: 0, totalSessions: 0, streak: 0 };
+                    return { ...e, level: createLevel(0), totalReps: 0, totalSessions: 0, streak: 0 };
                 });
             });
 
@@ -103,7 +105,7 @@ export function useFriends() {
     }, [user, friends, outgoingRequests, incomingRequests]);
 
     // ── Thin wrappers (inject uid/displayName from auth context) ────
-    const sendFriendRequest = useCallback(async (toUid: string, toUsername: string) => {
+    const sendFriendRequest = useCallback(async (toUid: UserId, toUsername: string) => {
         if (!user || !dbUser) return;
         await sendRequest(user.uid, dbUser.profile.displayName, toUid, toUsername);
     }, [user, dbUser]);
@@ -113,22 +115,22 @@ export function useFriends() {
         await acceptRequest(user.uid, dbUser.profile.displayName, request);
     }, [user, dbUser]);
 
-    const declineFriendRequest = useCallback(async (fromUid: string) => {
+    const declineFriendRequest = useCallback(async (fromUid: UserId) => {
         if (!user) return;
         await declineRequest(user.uid, fromUid);
     }, [user]);
 
-    const cancelFriendRequest = useCallback(async (toUid: string) => {
+    const cancelFriendRequest = useCallback(async (toUid: UserId) => {
         if (!user) return;
         await cancelRequest(user.uid, toUid);
     }, [user]);
 
-    const sendEncouragement = useCallback(async (toUid: string) => {
+    const sendEncouragement = useCallback(async (toUid: UserId) => {
         if (!user || !dbUser) return;
         await sendEnc(user.uid, dbUser.profile.displayName, toUid);
     }, [user, dbUser]);
 
-    const removeFriend = useCallback(async (friendUid: string) => {
+    const removeFriend = useCallback(async (friendUid: UserId) => {
         if (!user) return;
         await removeFr(user.uid, friendUid);
     }, [user]);

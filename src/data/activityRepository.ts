@@ -8,13 +8,14 @@
 import { query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { activityFeedCol } from '@infra/refs';
 import { parseActivityFeedDoc, type ActivityFeedDoc } from '@infra/firestoreValidators';
+import type { UserId } from '@domain/brands';
 
 /**
  * Fetch the most recent activity events for a single user.
  * Malformed docs are skipped with a console.warn.
  */
 export async function getRecentActivity(
-    uid: string,
+    uid: UserId,
     count: number,
 ): Promise<ActivityFeedDoc[]> {
     const q = query(activityFeedCol(uid), orderBy('createdAt', 'desc'), limit(count));

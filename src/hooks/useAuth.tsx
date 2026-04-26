@@ -10,6 +10,8 @@ import { createContext, useContext } from 'react';
 import type { SessionRecord } from '@exercises/types';
 import type { ExerciseType, ExerciseXpMap } from '@exercises/types';
 import type { AppUser, DbUser } from '@domain/authTypes';
+import type { Level, XpAmount } from '@domain/brands';
+import { createLevel, createXpAmount } from '@domain/brands';
 
 // ── AuthContext (core auth only) ─────────────────────────────────
 
@@ -41,37 +43,43 @@ export function useAuthCore() {
 // ── LevelContext (XP & level system) ─────────────────────────────
 
 export interface LevelContextType {
-    level: number;
-    totalXp: number;
+    level: Level;
+    totalXp: XpAmount;
     xpIntoCurrentLevel: number;
     xpNeededForNextLevel: number;
     levelProgressPct: number;
     exerciseXp: ExerciseXpMap;
     setExerciseXp: (map: ExerciseXpMap) => void;
-    getExerciseLevel: (type: ExerciseType) => number;
+    getExerciseLevel: (type: ExerciseType) => Level;
     getExerciseXp: (type: ExerciseType) => number;
     getExerciseLevelProgress: (type: ExerciseType) => {
-        level: number;
-        xp: number;
+        level: Level;
+        xp: XpAmount;
         xpIntoLevel: number;
         xpNeeded: number;
         progressPct: number;
     };
     addGuestXp: (globalXp: number, perExercise: { exerciseType: ExerciseType; xp: number }[]) => void;
-    setTotalXp: (xp: number) => void;
+    setTotalXp: (xp: XpAmount) => void;
 }
 
 const LEVEL_DEFAULT: LevelContextType = {
-    level: 0,
-    totalXp: 0,
+    level: createLevel(0),
+    totalXp: createXpAmount(0),
     xpIntoCurrentLevel: 0,
     xpNeededForNextLevel: 1,
     levelProgressPct: 0,
     exerciseXp: {},
     setExerciseXp: () => {},
-    getExerciseLevel: () => 0,
+    getExerciseLevel: () => createLevel(0),
     getExerciseXp: () => 0,
-    getExerciseLevelProgress: () => ({ level: 0, xp: 0, xpIntoLevel: 0, xpNeeded: 1, progressPct: 0 }),
+    getExerciseLevelProgress: () => ({
+        level: createLevel(0),
+        xp: createXpAmount(0),
+        xpIntoLevel: 0,
+        xpNeeded: 1,
+        progressPct: 0,
+    }),
     addGuestXp: () => {},
     setTotalXp: () => {},
 };

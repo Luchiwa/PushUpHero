@@ -20,6 +20,7 @@ import type { WorkoutAction } from './workoutReducer';
 import { useWorkoutSave } from './useWorkoutSave';
 import { useQuestEvaluation } from './useQuestEvaluation';
 import { maybeCaptureBodyProfile } from './bodyProfileCapture';
+import type { Level } from '@domain/brands';
 
 interface UseWorkoutSessionProps {
     workoutPlan: WorkoutPlan;
@@ -42,11 +43,11 @@ interface UseWorkoutSessionProps {
 export interface UseWorkoutSessionReturn {
     lastSessionXp: (SessionXpResult & Partial<SaveSessionResult>) | null;
     questCompletedThisSession: QuestDef[];
-    savedLevel: number | null;
-    levelBefore: number;
+    savedLevel: Level | null;
+    levelBefore: Level;
     saveWorkoutSession: (allSets: SetRecord[]) => void;
     resetSessionState: () => void;
-    liveLevel: number;
+    liveLevel: Level;
 }
 
 export function useWorkoutSession(props: UseWorkoutSessionProps): UseWorkoutSessionReturn {

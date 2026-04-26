@@ -21,6 +21,7 @@ import type { SessionXpResult } from '@domain/xpSystem';
 import type { SaveSessionResult } from '@services/sessionService';
 import type { QuestDef } from '@domain/quests';
 import type { AppScreen, SessionMode } from './workout/workoutTypes';
+import type { Level } from '@domain/brands';
 
 export interface WorkoutContextType {
     // ── Screen state ──
@@ -53,9 +54,9 @@ export interface WorkoutContextType {
     activeExerciseType: ExerciseType;
 
     // ── Level & XP ──
-    liveLevel: number;
-    levelBefore: number;
-    savedLevel: number | null;
+    liveLevel: Level;
+    levelBefore: Level;
+    savedLevel: Level | null;
     lastSessionXp: (SessionXpResult & Partial<SaveSessionResult>) | null;
     goalReached: boolean;
     questCompletedThisSession: QuestDef[];

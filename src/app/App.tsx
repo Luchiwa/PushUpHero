@@ -15,6 +15,7 @@ import { WorkoutContext } from './WorkoutContext';
 import type { WorkoutContextType } from './WorkoutContext';
 import { ExerciseStateContext } from './ExerciseStateContext';
 import { totalXpForLevel } from '@domain/xpSystem';
+import { createLevel } from '@domain/brands';
 import { StartScreen } from '@screens/StartScreen/StartScreen';
 import { AppLoader } from '@components/AppLoader/AppLoader';
 import { Dashboard } from '@overlays/Dashboard/Dashboard';
@@ -268,7 +269,7 @@ function App() {
               onContinue={wm.handleLevelUpContinue}
               xpEarned={wm.lastSessionXp?.totalXp}
               xpToNextLevel={
-                totalXpForLevel((wm.savedLevel ?? wm.liveLevel) + 1)
+                totalXpForLevel(createLevel((wm.savedLevel ?? wm.liveLevel) + 1))
                 - totalXpForLevel(wm.savedLevel ?? wm.liveLevel)
               }
             />

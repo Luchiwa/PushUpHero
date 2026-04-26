@@ -5,10 +5,11 @@ import { getRecentActivity } from '@data/activityRepository';
 import type { Friend } from './useFriends';
 import type { ExerciseType } from '@exercises/types';
 import { getExerciseLabel } from '@exercises/types';
+import type { UserId } from '@domain/brands';
 
 export interface ActivityEvent {
     id: string;
-    uid: string;
+    uid: UserId;
     displayName: string;
     photoURL?: string;
     photoThumb?: string;

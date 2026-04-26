@@ -27,6 +27,8 @@ import { getExerciseLabel } from '@exercises/types';
 import { evaluateAchievements, evaluateRecords, emptyRecords, buildSessionRepsMap } from '@domain/achievementEngine';
 import type { UserStats, AchievementMap, RecordsMap, RecordUpdate } from '@domain/achievementEngine';
 import type { AchievementDef } from '@domain/achievements';
+import type { UserId, XpAmount } from '@domain/brands';
+import { createXpAmount } from '@domain/brands';
 
 // ─── Date helpers ────────────────────────────────────────────────────────────
 
@@ -58,12 +60,12 @@ export function computeNewStreak(dbUser: DbUser | null, todayLocal: string): num
 // ─── Core write: save a completed session ────────────────────────────────────
 
 export interface SaveSessionParams {
-    uid: string;
+    uid: UserId;
     session: SessionRecord;
     /** Lifetime total XP BEFORE this session */
-    currentTotalXp: number;
+    currentTotalXp: XpAmount;
     /** XP earned this session (after bonuses) */
-    sessionXp: number;
+    sessionXp: XpAmount;
     /** Per-exercise XP earned this session */
     exerciseXpDeltas: { exerciseType: string; xp: number }[];
     /** Current per-exercise XP BEFORE this session */
@@ -98,7 +100,7 @@ export async function saveSession({
     allSessions, friendsCount, currentTotalSessions,
 }: SaveSessionParams): Promise<SaveSessionResult> {
     const todayLocal = localDateString();
-    const newTotalXp = currentTotalXp + sessionXp;
+    const newTotalXp = createXpAmount(currentTotalXp + sessionXp);
     const newLevel = levelFromTotalXp(newTotalXp);
     const newStreak = computeNewStreak(dbUser, todayLocal);
     const newBestStreak = Math.max(dbUser?.stats.bestStreak ?? 0, newStreak);
@@ -113,7 +115,7 @@ export async function saveSession({
         newExerciseXp[exerciseType] = (newExerciseXp[exerciseType] ?? 0) + xp;
     }
     for (const [type, xp] of Object.entries(newExerciseXp)) {
-        newExerciseLevels[type] = levelFromTotalXp(xp ?? 0);
+        newExerciseLevels[type] = levelFromTotalXp(createXpAmount(xp ?? 0));
     }
 
     // ── Lifetime reps per exercise (for achievements) ────────────────────

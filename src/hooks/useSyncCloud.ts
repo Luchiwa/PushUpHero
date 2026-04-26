@@ -7,6 +7,8 @@ import { read, STORAGE_KEYS } from '@infra/storage';
 import { onUserDoc } from '@data/userRepository';
 import { onRecentSessions } from '@data/sessionRepository';
 import type { SessionRecord, ExerciseXpMap } from '@exercises/types';
+import type { XpAmount } from '@domain/brands';
+import { createXpAmount, createLevel } from '@domain/brands';
 
 /**
  * useSyncCloud
@@ -18,7 +20,7 @@ import type { SessionRecord, ExerciseXpMap } from '@exercises/types';
  *   - On logout: seeds state back from localStorage
  */
 export function useSyncCloud(
-    setTotalXp: (xp: number) => void,
+    setTotalXp: (xp: XpAmount) => void,
     setExerciseXp: (map: ExerciseXpMap) => void,
     setSessions: (sessions: SessionRecord[]) => void,
     setTotalSessionCount: (count: number) => void,
@@ -28,7 +30,7 @@ export function useSyncCloud(
     useEffect(() => {
         if (!user) {
             // Guest: seed state from localStorage
-            setTotalXp(read(STORAGE_KEYS.totalXp, 0));
+            setTotalXp(createXpAmount(read(STORAGE_KEYS.totalXp, 0)));
             setExerciseXp(read<ExerciseXpMap>(STORAGE_KEYS.exerciseXp, {}));
             setSessions(read<SessionRecord[]>(STORAGE_KEYS.sessions, []));
             setTotalSessionCount(read(STORAGE_KEYS.totalSessions, 0));
@@ -41,12 +43,12 @@ export function useSyncCloud(
         const unsubProfile = onUserDoc(user.uid, (data) => {
             // ── Legacy migration: user has a level but no totalXp yet ─────
             if (data.totalXp === undefined && typeof data.level === 'number' && data.level > 0) {
-                const seededXp = totalXpForLevel(data.level);
+                const seededXp = totalXpForLevel(createLevel(data.level));
                 migrateLegacyXp(user.uid, seededXp).catch(e => console.error('[useSyncCloud] Migration write failed:', e));
                 return;
             }
 
-            if (data.totalXp !== undefined) setTotalXp(data.totalXp);
+            if (data.totalXp !== undefined) setTotalXp(createXpAmount(data.totalXp));
             if (data.exerciseXp !== undefined) setExerciseXp(data.exerciseXp);
             if (data.totalSessions !== undefined) setTotalSessionCount(data.totalSessions);
         });

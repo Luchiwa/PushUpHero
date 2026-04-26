@@ -10,6 +10,7 @@ import { updateDoc } from 'firebase/firestore';
 import { auth, storage } from '@infra/firebase';
 import { userRef } from '@infra/refs';
 import { invalidateAvatarCache } from '@infra/avatarCache';
+import type { UserId } from '@domain/brands';
 
 const AVATAR_SIZE = 512;
 const THUMB_SIZE = 96;
@@ -17,7 +18,7 @@ const JPEG_QUALITY = 0.85;
 const THUMB_QUALITY = 0.7;
 
 /** Crop, resize, upload to Storage, and update the user doc with URL + base64 thumbnail. */
-export async function uploadAvatar(uid: string, file: File, currentPhotoURL?: string): Promise<{ photoURL: string; photoThumb: string }> {
+export async function uploadAvatar(uid: UserId, file: File, currentPhotoURL?: string): Promise<{ photoURL: string; photoThumb: string }> {
     const bitmap = await createImageBitmap(file);
     const srcSize = Math.min(bitmap.width, bitmap.height);
     const sx = (bitmap.width - srcSize) / 2;
