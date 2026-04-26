@@ -36,10 +36,14 @@
     },
     "settings": {
         "title": "Settings",
+        "section_language": "Language",
         "section_password": "Change Password",
         "section_delete": "Delete Account",
         "btn_signout": "Sign Out",
         "close_aria": "Close",
+        "language": {
+            "label_select": "Select language"
+        },
         "password": {
             "label_current": "Current password",
             "label_new": "New password",

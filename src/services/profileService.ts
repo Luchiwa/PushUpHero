@@ -21,3 +21,8 @@ export function updateQuestProgress(uid: UserId, progress: QuestProgress): Promi
 export function migrateLegacyXp(uid: UserId, totalXp: XpAmount): Promise<void> {
     return updateDoc(userRef(uid), { totalXp });
 }
+
+/** Persist the user's UI language preference (mirror of localStorage). */
+export function updatePreferredLanguage(uid: UserId, lang: 'fr' | 'en'): Promise<void> {
+    return updateDoc(userRef(uid), { preferredLanguage: lang });
+}

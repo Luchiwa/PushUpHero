@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import i18n from 'i18next';
 import { useAuthCore } from './useAuth';
 import { createLevel, createXpAmount, totalXpForLevel, type XpAmount } from '@domain';
 import { migrateLegacyXp } from '@services/profileService';
@@ -7,6 +8,8 @@ import { read, STORAGE_KEYS } from '@infra/storage';
 import { onUserDoc } from '@data/userRepository';
 import { onRecentSessions } from '@data/sessionRepository';
 import type { SessionRecord, ExerciseXpMap } from '@exercises/types';
+
+const SUPPORTED_UI_LANGS = ['fr', 'en'] as const;
 
 /**
  * useSyncCloud
@@ -49,6 +52,15 @@ export function useSyncCloud(
             if (data.totalXp !== undefined) setTotalXp(createXpAmount(data.totalXp));
             if (data.exerciseXp !== undefined) setExerciseXp(data.exerciseXp);
             if (data.totalSessions !== undefined) setTotalSessionCount(data.totalSessions);
+
+            // ── UI language preference: Firestore → client (one-way) ──
+            // The reverse direction is handled by useChangeLanguage at the
+            // moment of the click — no loop because we only switch when
+            // the cloud value differs from the active i18next.language.
+            const cloudLang = data.preferredLanguage;
+            if (cloudLang && (SUPPORTED_UI_LANGS as readonly string[]).includes(cloudLang) && i18n.language !== cloudLang) {
+                void i18n.changeLanguage(cloudLang);
+            }
         });
 
         // Sessions subcollection (last 5 — enough for the history panel)

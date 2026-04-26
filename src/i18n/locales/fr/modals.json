@@ -36,10 +36,14 @@
     },
     "settings": {
         "title": "Réglages",
+        "section_language": "Langue",
         "section_password": "Changer le mot de passe",
         "section_delete": "Supprimer le compte",
         "btn_signout": "Se déconnecter",
         "close_aria": "Fermer",
+        "language": {
+            "label_select": "Choisir la langue"
+        },
         "password": {
             "label_current": "Mot de passe actuel",
             "label_new": "Nouveau mot de passe",

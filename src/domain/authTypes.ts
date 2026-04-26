@@ -30,6 +30,9 @@ export interface DbUser {
         /** Base64 JPEG thumbnail (~96px) for instant avatar display */
         photoThumb?: string;
         createdAt?: number;
+        /** UI language preference (BCP-47 prefix). Mirrors localStorage; synced
+         *  Firestore → client at sign-in by useSyncCloud. */
+        preferredLanguage?: 'fr' | 'en';
     };
     stats: {
         level: Level;

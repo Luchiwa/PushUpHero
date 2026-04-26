@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuthCore } from '@hooks/useAuth';
 import { useModalClose } from '@hooks/shared/useModalClose';
 import { useFocusTrap } from '@hooks/shared/useFocusTrap';
+import { LanguagePreferenceSection } from './LanguagePreferenceSection/LanguagePreferenceSection';
 import { PasswordChangeSection } from './PasswordChangeSection/PasswordChangeSection';
 import { DeleteAccountSection } from './DeleteAccountSection/DeleteAccountSection';
 import './SettingsModal.scss';
@@ -76,6 +77,11 @@ export function SettingsModal({ onClose, onAccountDeleted }: SettingsModalProps)
                 </div>
 
                 <div className="settings-body">
+                    {/* ── Language ──────────────────────────────── */}
+                    <SettingsAccordion title={t('settings.section_language')} isOpen={openSection === 'language'} onToggle={() => toggleSection('language')}>
+                        <LanguagePreferenceSection />
+                    </SettingsAccordion>
+
                     {/* ── Change Password ───────────────────────── */}
                     {!isGoogleUser && (
                         <SettingsAccordion title={t('settings.section_password')} isOpen={openSection === 'password'} onToggle={() => toggleSection('password')}>

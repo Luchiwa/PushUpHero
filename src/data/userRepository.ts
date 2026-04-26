@@ -19,6 +19,13 @@ import { createUserId, createLevel, createXpAmount, type DbUser, type UserId } f
  * Also mints branded primitives (UserId, Level, XpAmount) — this is the
  * only mint point on the read path; everything downstream consumes brands.
  */
+const SUPPORTED_LANGUAGES = ['fr', 'en'] as const;
+type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
+
+function isSupportedLanguage(v: unknown): v is SupportedLanguage {
+    return typeof v === 'string' && (SUPPORTED_LANGUAGES as readonly string[]).includes(v);
+}
+
 function unfoldDbUser(flat: FlatUserDoc): DbUser {
     return {
         uid: createUserId(flat.uid),
@@ -27,6 +34,7 @@ function unfoldDbUser(flat: FlatUserDoc): DbUser {
             photoURL: flat.photoURL,
             photoThumb: flat.photoThumb,
             createdAt: flat.createdAt,
+            preferredLanguage: isSupportedLanguage(flat.preferredLanguage) ? flat.preferredLanguage : undefined,
         },
         stats: {
             level: createLevel(flat.level),
