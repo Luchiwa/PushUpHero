@@ -468,6 +468,19 @@ export function getQuestsByCategory(): Map<QuestCategory, QuestDef[]> {
     return map;
 }
 
+/**
+ * Quest progress as an integer percentage 0..100.
+ * Returns 0 for single-session quests (progress is all-or-nothing, not a bar).
+ */
+export function computeQuestProgressPct(
+    currentReps: number,
+    goalReps: number,
+    isCrossSession: boolean,
+): number {
+    if (!isCrossSession || goalReps <= 0) return 0;
+    return Math.min(100, Math.round((currentReps / goalReps) * 100));
+}
+
 // ── Quick-start & featured quest logic ──────────────────────────
 
 /** Maximum number of quests a user can have accepted at the same time */

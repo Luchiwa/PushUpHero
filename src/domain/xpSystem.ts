@@ -63,6 +63,23 @@ export function levelFromTotalXp(totalXp: number): number {
     return lvl;
 }
 
+// ─── Level progress (for HUD/level bars) ────────────────────────────────────
+
+export interface XpProgress {
+    /** XP still needed to reach the next level. */
+    xpRemaining: number;
+    /** Progress toward the next level as a 0..1 ratio. */
+    progressRatio: number;
+}
+
+/** XP remaining + progress ratio toward the next level. */
+export function computeXpProgress(xpInto: number, xpNeeded: number): XpProgress {
+    return {
+        xpRemaining: Math.max(0, xpNeeded - xpInto),
+        progressRatio: xpInto / Math.max(1, xpNeeded),
+    };
+}
+
 // ─── Tier (cosmetic rank) ───────────────────────────────────────────────────
 
 export type Tier = 'bronze' | 'silver' | 'gold' | 'platinum';
