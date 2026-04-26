@@ -39,4 +39,16 @@ export default defineConfig([
       }],
     },
   },
+  // Storage isolation: only src/infra/storage.ts may touch window.localStorage.
+  // Every other layer (services included) goes through @infra/storage's typed API.
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['src/infra/**'],
+    rules: {
+      'no-restricted-globals': ['error', {
+        name: 'localStorage',
+        message: 'localStorage access is restricted to src/infra/storage.ts. Import { read, write, remove, STORAGE_KEYS } from "@infra/storage" instead.',
+      }],
+    },
+  },
 ])
