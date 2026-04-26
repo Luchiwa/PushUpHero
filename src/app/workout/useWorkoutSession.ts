@@ -12,16 +12,16 @@ import type { CapturedRatios } from '@exercises/BaseExerciseDetector';
 import { useSessionHistory } from '@hooks/useSessionHistory';
 import { useAuthCore, useLevel } from '@hooks/useAuth';
 import { useFriends } from '@hooks/useFriends';
-import { levelFromTotalXp, calculateSessionXp, projectLiveXp } from '@domain/xpSystem';
-import type { BonusContext, SessionXpResult } from '@domain/xpSystem';
+import { projectLiveXp } from '@domain/xpSystem';
+import type { SessionXpResult } from '@domain/xpSystem';
 import type { SaveSessionResult } from '@services/sessionService';
 import type { QuestDef, QuestProgress } from '@domain/quests';
-import { isBodyProfileQuest, isSingleSessionQuest, getSessionQuestContribution } from '@domain/quests';
+import { isSingleSessionQuest, getSessionQuestContribution } from '@domain/quests';
 import type { BodyProfile } from '@domain/bodyProfile';
-import { BODY_PROFILE_VERSION } from '@domain/bodyProfile';
-import { BODY_PROFILE_MERGE } from '@exercises/registry';
 import type { WorkoutAction } from './workoutReducer';
 import { durationToSeconds } from './workoutTypes';
+import { computeFinalXp, derivePrimaryExercise } from './xpProjection';
+import { maybeCaptureBodyProfile } from './bodyProfileCapture';
 
 // ── Props ────────────────────────────────────────────────────────
 
@@ -104,39 +104,18 @@ export function useWorkoutSession({
     sessionSavedRef.current = true;
     dispatch({ type: 'SAVE_STARTED' });
 
-    // Compute XP for level-up detection
-    const streak = dbUser?.streak ?? 0;
     const totalWorkoutDuration = Math.round((Date.now() - workoutStartTimeRef.current) / 1000);
-    const weightedScoreSum = allSets.reduce((sum, s) => sum + s.averageScore * s.reps, 0);
-    const avgScore = totalReps > 0 ? Math.round(weightedScoreSum / totalReps) : 0;
-
-    const allGoalsMet = allSets.every(s => {
-      if (s.setMode === 'time') return true;
-      return s.goalReps !== undefined ? s.reps >= s.goalReps : true;
-    });
-
-    const bonusCtx: BonusContext = {
-      streak,
-      elapsedTime: totalWorkoutDuration,
-      averageScore: avgScore,
-      allGoalsMet,
+    const { bonusCtx, avgScore, computedLevel } = computeFinalXp({
+      allSets,
+      totalReps,
+      totalWorkoutDuration,
+      streak: dbUser?.streak ?? 0,
       isMultiExercise,
-    };
-
-    // Pre-calculate XP for level-up check
-    const xpResult = calculateSessionXp(allSets, bonusCtx);
-    const newTotalXp = totalXp + xpResult.totalXp;
-    const computedLevel = levelFromTotalXp(newTotalXp);
+      totalXp,
+    });
     setSavedLevel(computedLevel);
 
-    // Determine the primary exercise type
-    const repsByType: Record<string, number> = {};
-    for (const s of allSets) {
-      const t = s.exerciseType ?? 'pushup';
-      repsByType[t] = (repsByType[t] ?? 0) + s.reps;
-    }
-    const primaryExercise = (Object.entries(repsByType).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'pushup') as ExerciseType;
-    const hasMultipleExercises = Object.keys(repsByType).length > 1;
+    const { primaryExercise, repsByType, hasMultipleExercises } = derivePrimaryExercise(allSets);
 
     const restSeconds = isMultiExercise
       ? undefined
@@ -193,23 +172,13 @@ export function useWorkoutSession({
         setQuestCompletedThisSession(completedQuests);
       }
 
-      // ── Body profile capture (data-driven via BODY_PROFILE_MERGE) ──
-      const profileQuest = completedQuests.find(q => isBodyProfileQuest(q));
-      if (profileQuest) {
-        const captured = getCapturedRatios();
-        const mergeForExercise = BODY_PROFILE_MERGE[primaryExercise];
-        if (mergeForExercise) {
-          const patch = mergeForExercise(captured, captured.dynamicCalibration);
-          if (Object.keys(patch).length > 0) {
-            onSaveBodyProfile({
-              ...bodyProfile,
-              ...patch,
-              capturedAt: Date.now(),
-              version: BODY_PROFILE_VERSION,
-            });
-          }
-        }
-      }
+      const updatedProfile = maybeCaptureBodyProfile({
+        completedQuests,
+        primaryExercise,
+        bodyProfile,
+        getCapturedRatios,
+      });
+      if (updatedProfile) onSaveBodyProfile(updatedProfile);
     }).catch(err => {
       console.error('Failed to save session:', err);
       sessionSavedRef.current = false;
