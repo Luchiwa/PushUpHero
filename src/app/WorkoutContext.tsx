@@ -8,8 +8,7 @@
  *
  * Provider lives in App.tsx. Consumers call `useWorkout()`.
  */
-import { createContext, useContext } from 'react';
-import type { Dispatch, SetStateAction, MutableRefObject } from 'react';
+import { createContext, useContext, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import type {
     ExerciseType,
     SetRecord,
@@ -17,9 +16,8 @@ import type {
     WorkoutBlock,
     WorkoutPlan,
 } from '@exercises/types';
-import type { SessionXpResult } from '@domain/xpSystem';
+import type { Level, QuestDef, SessionXpResult } from '@domain';
 import type { SaveSessionResult } from '@services/sessionService';
-import type { QuestDef } from '@domain/quests';
 import type { AppScreen, SessionMode } from './workout/workoutTypes';
 
 export interface WorkoutContextType {
@@ -53,9 +51,9 @@ export interface WorkoutContextType {
     activeExerciseType: ExerciseType;
 
     // ── Level & XP ──
-    liveLevel: number;
-    levelBefore: number;
-    savedLevel: number | null;
+    liveLevel: Level;
+    levelBefore: Level;
+    savedLevel: Level | null;
     lastSessionXp: (SessionXpResult & Partial<SaveSessionResult>) | null;
     goalReached: boolean;
     questCompletedThisSession: QuestDef[];

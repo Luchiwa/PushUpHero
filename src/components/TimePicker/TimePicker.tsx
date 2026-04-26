@@ -3,7 +3,7 @@
  * Wraps two DragNumberPickers (min : sec) with shared clamping logic.
  */
 import { DragNumberPicker } from '@components/DragNumberPicker/DragNumberPicker';
-import { MIN_REST_SECONDS } from '@domain/constants';
+import { MIN_REST_SECONDS } from '@domain';
 import './TimePicker.scss';
 
 export interface TimeValue {

@@ -10,8 +10,7 @@
  */
 
 import type { ExerciseType, SessionRecord } from '@exercises/types';
-import type { AchievementDef } from './achievements';
-import { ACHIEVEMENTS } from './achievements';
+import { ACHIEVEMENTS, type AchievementDef } from './achievements';
 import { getGradeLetter } from './constants';
 
 // ─── Types ───────────────────────────────────────────────────────────────────

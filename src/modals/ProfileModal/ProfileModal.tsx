@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useAuthCore, useLevel } from '@hooks/useAuth';
-import { getTier } from '@domain/xpSystem';
+import { getTier } from '@domain';
 import { Avatar } from '@components/Avatar/Avatar';
 import { useSessionHistory } from '@hooks/useSessionHistory';
 import { useFriends } from '@hooks/useFriends';

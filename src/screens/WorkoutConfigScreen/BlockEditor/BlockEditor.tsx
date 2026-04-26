@@ -2,9 +2,8 @@ import { DragNumberPicker } from '@components/DragNumberPicker/DragNumberPicker'
 import { TimePicker } from '@components/TimePicker/TimePicker';
 import { ExercisePicker } from '@components/ExercisePicker/ExercisePicker';
 import { SegmentedToggle } from '@components/SegmentedToggle/SegmentedToggle';
-import { MIN_SETS, MAX_SETS, MAX_REST_SECONDS, MAX_EXERCISE_REST_SECONDS } from '@domain/constants';
-import { getExerciseLabel } from '@exercises/types';
-import type { WorkoutBlock } from '@exercises/types';
+import { MIN_SETS, MAX_SETS, MAX_REST_SECONDS, MAX_EXERCISE_REST_SECONDS } from '@domain';
+import { getExerciseLabel, type WorkoutBlock } from '@exercises/types';
 import { PageLayout } from '@components/PageLayout/PageLayout';
 import { PrimaryCTA } from '@components/PrimaryCTA/PrimaryCTA';
 import './BlockEditor.scss';

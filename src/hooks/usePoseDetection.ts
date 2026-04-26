@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import {
     PoseLandmarker,
     FilesetResolver,
+    type PoseLandmarkerResult,
 } from '@mediapipe/tasks-vision';
-import type { PoseLandmarkerResult } from '@mediapipe/tasks-vision';
 import type { Landmark } from '@exercises/types';
 import { isMobile } from '@infra/device';
 import { LandmarkSmoother } from '@infra/oneEuroFilter';

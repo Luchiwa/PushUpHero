@@ -7,19 +7,21 @@
 
 import { onSnapshot } from 'firebase/firestore';
 import { userRef } from '@infra/refs';
-import { isFlatUserDoc } from '@infra/firestoreValidators';
-import type { FlatUserDoc } from '@infra/firestoreValidators';
-import type { DbUser } from '@domain/authTypes';
+import { isFlatUserDoc, type FlatUserDoc } from '@infra/firestoreValidators';
+import { createUserId, createLevel, createXpAmount, type DbUser, type UserId } from '@domain';
 
 /**
  * Unfolds the flat Firestore wire shape into the nested domain `DbUser`.
  * Lives at the repo boundary so the rest of the app reasons about
  * `dbUser.profile.displayName`, `dbUser.stats.totalXp`, etc. while
  * Firestore continues to store flat fields (no migration required).
+ *
+ * Also mints branded primitives (UserId, Level, XpAmount) — this is the
+ * only mint point on the read path; everything downstream consumes brands.
  */
 function unfoldDbUser(flat: FlatUserDoc): DbUser {
     return {
-        uid: flat.uid,
+        uid: createUserId(flat.uid),
         profile: {
             displayName: flat.displayName,
             photoURL: flat.photoURL,
@@ -27,8 +29,8 @@ function unfoldDbUser(flat: FlatUserDoc): DbUser {
             createdAt: flat.createdAt,
         },
         stats: {
-            level: flat.level,
-            totalXp: flat.totalXp,
+            level: createLevel(flat.level),
+            totalXp: createXpAmount(flat.totalXp),
             totalReps: flat.totalReps,
             totalSessions: flat.totalSessions,
             streak: flat.streak,
@@ -58,7 +60,7 @@ function unfoldDbUser(flat: FlatUserDoc): DbUser {
  * Returns unsubscribe function.
  */
 export function onUserProfile(
-    uid: string,
+    uid: UserId,
     onData: (data: DbUser) => void,
     onMissing?: () => void,
 ): () => void {
@@ -85,7 +87,7 @@ export function onUserProfile(
  * Consumers are expected to be repo/sync code, not UI components.
  */
 export function onUserDoc(
-    uid: string,
+    uid: UserId,
     onData: (data: Partial<FlatUserDoc>) => void,
     onMissing?: () => void,
 ): () => void {

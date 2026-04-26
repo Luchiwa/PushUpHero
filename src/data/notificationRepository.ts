@@ -9,6 +9,7 @@
 import { query, where, onSnapshot, limit } from 'firebase/firestore';
 import { notificationsCol } from '@infra/refs';
 import { parseNotification, type NotificationEvent } from '@infra/firestoreValidators';
+import type { UserId } from '@domain';
 
 /**
  * Real-time listener on unread notifications (max 50).
@@ -17,7 +18,7 @@ import { parseNotification, type NotificationEvent } from '@infra/firestoreValid
  * Returns unsubscribe function.
  */
 export function onUnreadNotifications(
-    uid: string,
+    uid: UserId,
     onEvent: (event: NotificationEvent) => void,
 ): () => void {
     const q = query(notificationsCol(uid), where('read', '==', false), limit(50));

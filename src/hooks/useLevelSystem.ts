@@ -9,19 +9,17 @@
  */
 import { useState, useCallback } from 'react';
 import { useAuthCore } from './useAuth';
-import { levelFromTotalXp, totalXpForLevel } from '@domain/xpSystem';
+import { createLevel, createXpAmount, levelFromTotalXp, totalXpForLevel, type XpAmount } from '@domain';
 import { read, write, STORAGE_KEYS } from '@infra/storage';
 import type { ExerciseType, ExerciseXpMap } from '@exercises/types';
-
-// ─── Re-export pure functions & types so existing imports keep working ───────
-export { levelFromTotalXp, totalXpForLevel } from '@domain/xpSystem';
-export type { ExerciseXpMap } from '@exercises/types';
 
 export function useLevelSystem() {
     const { user } = useAuthCore();
 
     // ── Global XP ────────────────────────────────────────────────────────────
-    const [totalXp, setTotalXpState] = useState<number>(() => read(STORAGE_KEYS.totalXp, 0));
+    const [totalXp, setTotalXpState] = useState<XpAmount>(
+        () => createXpAmount(read(STORAGE_KEYS.totalXp, 0)),
+    );
 
     // ── Per-exercise XP ──────────────────────────────────────────────────────
     const [exerciseXp, setExerciseXpState] = useState<ExerciseXpMap>(
@@ -29,7 +27,7 @@ export function useLevelSystem() {
     );
 
     // Setters for useSyncCloud to wire into
-    const setTotalXp = useCallback((xp: number) => {
+    const setTotalXp = useCallback((xp: XpAmount) => {
         setTotalXpState(xp);
     }, []);
 
@@ -42,7 +40,7 @@ export function useLevelSystem() {
         if (user) return;
 
         setTotalXpState(prev => {
-            const next = prev + globalXp;
+            const next = createXpAmount(prev + globalXp);
             write(STORAGE_KEYS.totalXp, next);
             return next;
         });
@@ -62,7 +60,7 @@ export function useLevelSystem() {
     // (dbUser.stats.level is denormalised / may be stale from the old rep-based system)
     const level = levelFromTotalXp(totalXp);
     const currentLevelBaseXp = totalXpForLevel(level);
-    const nextLevelTotalReq = totalXpForLevel(level + 1);
+    const nextLevelTotalReq = totalXpForLevel(createLevel(level + 1));
     const xpIntoCurrentLevel = totalXp - currentLevelBaseXp;
     const xpNeededForNextLevel = nextLevelTotalReq - currentLevelBaseXp;
     const levelProgressPct = xpNeededForNextLevel > 0
@@ -71,7 +69,7 @@ export function useLevelSystem() {
 
     // ── Per-exercise derived levels ──────────────────────────────────────────
     const getExerciseLevel = useCallback((type: ExerciseType) => {
-        const xp = exerciseXp[type] ?? 0;
+        const xp = createXpAmount(exerciseXp[type] ?? 0);
         return levelFromTotalXp(xp);
     }, [exerciseXp]);
 
@@ -80,10 +78,10 @@ export function useLevelSystem() {
     }, [exerciseXp]);
 
     const getExerciseLevelProgress = useCallback((type: ExerciseType) => {
-        const xp = exerciseXp[type] ?? 0;
+        const xp = createXpAmount(exerciseXp[type] ?? 0);
         const lvl = levelFromTotalXp(xp);
         const base = totalXpForLevel(lvl);
-        const next = totalXpForLevel(lvl + 1);
+        const next = totalXpForLevel(createLevel(lvl + 1));
         const needed = next - base;
         return {
             level: lvl,

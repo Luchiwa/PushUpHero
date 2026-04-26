@@ -14,15 +14,16 @@ import type { ExerciseType, ExerciseXpMap } from '@exercises/types';
 import type { RecordsMap } from './achievementEngine';
 import type { BodyProfile } from './bodyProfile';
 import type { QuestProgress } from './quests';
+import type { UserId, Level, XpAmount } from './brands';
 
 /** Framework-agnostic user identity — decouples UI from Firebase Auth. */
 export interface AppUser {
-    uid: string;
+    uid: UserId;
     providerIds: string[];
 }
 
 export interface DbUser {
-    uid: string;
+    uid: UserId;
     profile: {
         displayName: string;
         photoURL?: string;
@@ -31,8 +32,8 @@ export interface DbUser {
         createdAt?: number;
     };
     stats: {
-        level: number;
-        totalXp: number;
+        level: Level;
+        totalXp: XpAmount;
         /** @deprecated Legacy field — use totalXp */
         totalReps?: number;
         totalSessions?: number;

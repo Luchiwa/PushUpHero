@@ -7,15 +7,13 @@
  * camera/pose/exercise-type around it.
  */
 import type { ExerciseState, ExerciseType } from '@exercises/types';
-import type { QuestDef, QuestProgress } from '@domain/quests';
-import type { BodyProfile } from '@domain/bodyProfile';
+import type { BodyProfile, QuestDef, QuestProgress } from '@domain';
 import type { CapturedRatios } from '@exercises/BaseExerciseDetector';
 import type { WorkoutMachineReturn } from '../WorkoutContext';
 import { useWorkoutMachineCore } from './useWorkoutMachineCore';
 import { useWorkoutExecution } from './useWorkoutExecution';
 
-export { durationToSeconds } from './workoutTypes';
-export type { AppScreen, SessionMode } from './workoutTypes';
+export { durationToSeconds, type AppScreen, type SessionMode } from './workoutTypes';
 
 interface UseWorkoutStateMachineProps {
     exerciseState: ExerciseState;

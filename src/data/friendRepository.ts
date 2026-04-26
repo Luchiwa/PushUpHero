@@ -9,26 +9,27 @@ import { documentId, getDocs, onSnapshot, query, where } from 'firebase/firestor
 import { usersCol, friendsCol, friendRequestsCol, sentRequestsCol } from '@infra/refs';
 import { isFriendRequest, tsToMs } from '@infra/firestoreValidators';
 import type { FriendRequest, OutgoingRequest } from '@services/friendService';
+import { createUserId, type UserId } from '@domain';
 
 /** Firestore `in` operator hard limit. */
 const IN_QUERY_CHUNK = 30;
 
 export interface FriendEntry {
-    uid: string;
+    uid: UserId;
     displayName: string;
     photoURL?: string;
 }
 
 /** Real-time listener on confirmed friends. Returns unsubscribe. */
 export function onFriendsList(
-    uid: string,
+    uid: UserId,
     callback: (entries: FriendEntry[]) => void,
 ): () => void {
     return onSnapshot(friendsCol(uid), snap => {
         callback(snap.docs.map(d => {
             const data = d.data() as { uid?: string; displayName?: string; photoURL?: string };
             return {
-                uid: data.uid ?? d.id,
+                uid: createUserId(data.uid ?? d.id),
                 displayName: data.displayName ?? '',
                 photoURL: data.photoURL,
             };
@@ -38,7 +39,7 @@ export function onFriendsList(
 
 /** Real-time listener on incoming friend requests. Returns unsubscribe. */
 export function onIncomingRequests(
-    uid: string,
+    uid: UserId,
     callback: (requests: FriendRequest[]) => void,
 ): () => void {
     return onSnapshot(friendRequestsCol(uid), snap => {
@@ -46,7 +47,9 @@ export function onIncomingRequests(
         for (const d of snap.docs) {
             const data = d.data();
             if (isFriendRequest(data)) {
-                requests.push(data);
+                // Mint UserId at the boundary — isFriendRequest only checks the
+                // raw string shape; the brand is applied as the value crosses out.
+                requests.push({ ...data, fromUid: createUserId(data.fromUid) });
             } else {
                 console.warn('[friendRepository] Invalid incoming request skipped', d.id);
             }
@@ -74,7 +77,7 @@ export function onIncomingRequests(
  * Returns unsubscribe.
  */
 export function onOutgoingRequests(
-    uid: string,
+    uid: UserId,
     callback: (requests: OutgoingRequest[]) => void,
 ): () => void {
     let cancelled = false;
@@ -85,7 +88,7 @@ export function onOutgoingRequests(
         const requests: OutgoingRequest[] = snap.docs.map(d => {
             const data = d.data() as { toUsername?: string; sentAt?: unknown };
             return {
-                toUid: d.id,
+                toUid: createUserId(d.id),
                 toUsername: data.toUsername || d.id,
                 sentAt: tsToMs(data.sentAt),
             };

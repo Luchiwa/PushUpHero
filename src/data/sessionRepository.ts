@@ -8,6 +8,7 @@ import { onSnapshot, query, orderBy, limit, where, getDocs } from 'firebase/fire
 import { sessionsCol } from '@infra/refs';
 import { isSessionRecord } from '@infra/firestoreValidators';
 import type { SessionRecord } from '@exercises/types';
+import type { UserId } from '@domain';
 
 function parseSessionDocs(rawDocs: { data: () => unknown }[], context: string): SessionRecord[] {
     const out: SessionRecord[] = [];
@@ -24,7 +25,7 @@ function parseSessionDocs(rawDocs: { data: () => unknown }[], context: string): 
 
 /** Real-time listener on the last N sessions (default 5). Returns unsubscribe. */
 export function onRecentSessions(
-    uid: string,
+    uid: UserId,
     callback: (sessions: SessionRecord[]) => void,
     count = 5,
 ): () => void {
@@ -36,7 +37,7 @@ export function onRecentSessions(
 
 /** Fetch sessions within a date range (ms timestamps), ordered by date desc. */
 export async function getSessionsByDateRange(
-    uid: string,
+    uid: UserId,
     startMs: number,
     endMs: number,
     maxResults = 200,
@@ -53,7 +54,7 @@ export async function getSessionsByDateRange(
 }
 
 /** Fetch the oldest session date (ms timestamp). Returns null if no valid sessions exist. */
-export async function getOldestSessionDate(uid: string): Promise<number | null> {
+export async function getOldestSessionDate(uid: UserId): Promise<number | null> {
     const q = query(sessionsCol(uid), orderBy('date', 'asc'), limit(1));
     const snap = await getDocs(q);
     if (snap.empty) return null;

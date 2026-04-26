@@ -9,8 +9,8 @@
 
 import type { ExerciseType, SetRecord } from '@exercises/types';
 import { EXERCISE_DIFFICULTY, difficultyFor } from '@exercises/exerciseDifficulty';
-import { getGradeLetter } from './constants';
-import type { GradeLetter } from './constants';
+import { getGradeLetter, type GradeLetter } from './constants';
+import { createLevel, createXpAmount, type Level, type XpAmount } from './brands';
 
 // ─── XP per rep, by grade ────────────────────────────────────────────────────
 
@@ -28,39 +28,34 @@ export function xpForRep(score: number): number {
     return XP_PER_GRADE[grade];
 }
 
-// ─── Exercise difficulty coefficients ────────────────────────────────────────
-// Re-exported from exercises/exerciseDifficulty.ts (canonical source).
-// Kept here for backward compatibility with existing imports.
-export { EXERCISE_DIFFICULTY, difficultyFor };
-
 // ─── Level curve ─────────────────────────────────────────────────────────────
 // Soft-exponential: XP_required(L) = 100 × L^1.5  (per level, cumulative)
 
 /** Total cumulative XP required to REACH a given level. Level 0 = 0 XP. */
-export function totalXpForLevel(level: number): number {
-    if (level <= 0) return 0;
+export function totalXpForLevel(level: Level): XpAmount {
+    if (level <= 0) return createXpAmount(0);
     // Sum of 100 * i^1.5 for i = 1..level
     let total = 0;
     for (let i = 1; i <= level; i++) {
         total += Math.round(100 * Math.pow(i, 1.5));
     }
-    return total;
+    return createXpAmount(total);
 }
 
 /** XP required for one specific level (i.e. the gap between level-1 and level). */
-export function xpForSingleLevel(level: number): number {
-    if (level <= 0) return 0;
-    return Math.round(100 * Math.pow(level, 1.5));
+export function xpForSingleLevel(level: Level): XpAmount {
+    if (level <= 0) return createXpAmount(0);
+    return createXpAmount(Math.round(100 * Math.pow(level, 1.5)));
 }
 
 /** Derive the level from a total cumulative XP amount. */
-export function levelFromTotalXp(totalXp: number): number {
-    if (totalXp <= 0) return 0;
+export function levelFromTotalXp(totalXp: XpAmount): Level {
+    if (totalXp <= 0) return createLevel(0);
     let lvl = 0;
-    while (totalXpForLevel(lvl + 1) <= totalXp) {
+    while (totalXpForLevel(createLevel(lvl + 1)) <= totalXp) {
         lvl++;
     }
-    return lvl;
+    return createLevel(lvl);
 }
 
 // ─── Level progress (for HUD/level bars) ────────────────────────────────────
@@ -85,7 +80,7 @@ export function computeXpProgress(xpInto: number, xpNeeded: number): XpProgress 
 export type Tier = 'bronze' | 'silver' | 'gold' | 'platinum';
 
 /** Cosmetic rank tier derived from the player's level. */
-export function getTier(level: number): Tier {
+export function getTier(level: Level): Tier {
     if (level >= 35) return 'platinum';
     if (level >= 20) return 'gold';
     if (level >= 10) return 'silver';
@@ -183,9 +178,9 @@ export interface XpPerExercise {
 
 export interface SessionXpResult {
     /** Raw XP before bonuses (sum of all reps) */
-    rawXp: number;
+    rawXp: XpAmount;
     /** Final XP after multiplier */
-    totalXp: number;
+    totalXp: XpAmount;
     /** Bonus breakdown */
     bonuses: XpBonusDetail[];
     /** Multiplier applied */
@@ -229,13 +224,13 @@ export function calculateSessionXp(sets: SetRecord[], bonusCtx: BonusContext): S
         weightedByType[type] = weighted;
         totalWeightedXp += weighted;
     }
-    const totalRawXp = Math.round(totalWeightedXp); // rawXp exposed in result = weighted sum
+    const totalRawXp = createXpAmount(Math.round(totalWeightedXp)); // rawXp exposed in result = weighted sum
 
     // 3. Calculate session bonuses on weighted XP
     const { bonuses, multiplier } = calculateBonuses(bonusCtx);
 
     // 4. Final XP = weighted × multiplier
-    const totalXp = Math.round(totalWeightedXp * multiplier);
+    const totalXp = createXpAmount(Math.round(totalWeightedXp * multiplier));
 
     // 5. Per-exercise breakdown
     const perExercise: XpPerExercise[] = (Object.entries(rawByType) as [ExerciseType, number][]).map(([type, raw]) => {
@@ -267,8 +262,8 @@ export function estimateCompletedXp(completedSets: Pick<SetRecord, 'reps' | 'ave
 }
 
 export interface LiveXpProjection {
-    liveXpEstimate: number;
-    liveLevel: number;
+    liveXpEstimate: XpAmount;
+    liveLevel: Level;
     liveProgressPct: number;
 }
 
@@ -277,7 +272,7 @@ export interface LiveXpProjection {
  * Uses actual per-rep scores for completed sets and a C-grade estimate for the current set.
  */
 export function projectLiveXp(
-    totalXp: number,
+    totalXp: XpAmount,
     completedSets: Pick<SetRecord, 'reps' | 'averageScore' | 'repHistory' | 'exerciseType'>[],
     currentSetReps: number,
     activeExerciseType: ExerciseType,
@@ -285,10 +280,10 @@ export function projectLiveXp(
     const completedXp = estimateCompletedXp(completedSets);
     const currentExDifficulty = EXERCISE_DIFFICULTY[activeExerciseType] ?? 1.0;
     const currentSetEstimate = currentSetReps * 10 * currentExDifficulty;
-    const liveXpEstimate = totalXp + Math.round(completedXp + currentSetEstimate);
+    const liveXpEstimate = createXpAmount(totalXp + Math.round(completedXp + currentSetEstimate));
     const liveLevel = levelFromTotalXp(liveXpEstimate);
     const liveLevelBase = totalXpForLevel(liveLevel);
-    const liveLevelNext = totalXpForLevel(liveLevel + 1);
+    const liveLevelNext = totalXpForLevel(createLevel(liveLevel + 1));
     const liveProgressPct = liveLevelNext > liveLevelBase
         ? ((liveXpEstimate - liveLevelBase) / (liveLevelNext - liveLevelBase)) * 100
         : 0;

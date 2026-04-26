@@ -2,13 +2,13 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAuthCore } from './useAuth';
 import { useFeedCache } from '@app/FeedCacheContext';
 import { getRecentActivity } from '@data/activityRepository';
-import type { Friend } from './useFriends';
-import type { ExerciseType } from '@exercises/types';
-import { getExerciseLabel } from '@exercises/types';
+import type { Friend } from '@services/friendService';
+import { getExerciseLabel, type ExerciseType } from '@exercises/types';
+import { EVENTS_PER_FRIEND, getGradeLetter, type UserId } from '@domain';
 
 export interface ActivityEvent {
     id: string;
-    uid: string;
+    uid: UserId;
     displayName: string;
     photoURL?: string;
     photoThumb?: string;
@@ -25,7 +25,6 @@ export interface ActivityEvent {
     createdAt: number; // Unix ms
 }
 
-import { EVENTS_PER_FRIEND, getGradeLetter } from '@domain/constants';
 
 export function formatRelativeTime(ms: number): string {
     const diffSec = Math.floor((Date.now() - ms) / 1000);

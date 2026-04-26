@@ -4,12 +4,18 @@
  */
 
 // Registry (single source of truth for exercise config)
-export { EXERCISE_REGISTRY, BODY_PROFILE_MERGE } from './registry';
-export type { ExerciseConfig, PositionGuideConfig } from './registry';
+export {
+    EXERCISE_REGISTRY, BODY_PROFILE_MERGE,
+    type ExerciseConfig, type PositionGuideConfig,
+} from './registry';
 
 // Types
-export type { ExerciseType, ExerciseState, ExercisePhase, Landmark, RepResult, RepFeedback, SetRecord, SessionRecord, TimeDuration, WorkoutBlock, WorkoutPlan } from './types';
-export { EXERCISE_TYPES, EXERCISE_META, getExerciseLabel, getInvalidPositionMessage, createDefaultBlock } from './types';
+export {
+    EXERCISE_TYPES, EXERCISE_META, getExerciseLabel, getInvalidPositionMessage, createDefaultBlock,
+    type ExerciseType, type ExerciseState, type ExercisePhase, type Landmark, type RepResult,
+    type RepFeedback, type SetRecord, type SessionRecord, type TimeDuration, type WorkoutBlock,
+    type WorkoutPlan,
+} from './types';
 
 // Difficulty
 export { EXERCISE_DIFFICULTY, difficultyFor } from './exerciseDifficulty';

@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
-import { useAuthCore, useLevel } from '@hooks/useAuth';
-import { useSessions } from '@hooks/useAuth';
+import { useAuthCore, useLevel, useSessions } from '@hooks/useAuth';
 import { InstallBanner } from '@overlays/InstallBanner/InstallBanner';
 import { PrimaryCTA } from '@components/PrimaryCTA/PrimaryCTA';
 
@@ -11,9 +10,7 @@ const QuickSessionModal = lazy(() => import('@modals/QuickSessionModal/QuickSess
 const StatsScreen = lazy(() => import('@screens/StatsScreen/StatsScreen').then(m => ({ default: m.StatsScreen })));
 const QuestsScreen = lazy(() => import('@screens/QuestsScreen/QuestsScreen').then(m => ({ default: m.QuestsScreen })));
 import { useWorkout } from '@app/WorkoutContext';
-import { getTier } from '@domain/xpSystem';
-import type { QuestDef, QuestProgress } from '@domain/quests';
-import { isQuestAccepted, QUEST_CATEGORY_META, getAvailableQuests, getAcceptedQuests } from '@domain/quests';
+import { QUEST_CATEGORY_META, getAcceptedQuests, getAvailableQuests, getTier, isQuestAccepted, type QuestDef, type QuestProgress } from '@domain';
 import { getWorkoutCheckpoint } from '@services/workoutCheckpointStore';
 import { PlayerHUD } from './PlayerHUD/PlayerHUD';
 import { QuestCard } from './QuestCard/QuestCard';

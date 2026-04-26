@@ -1,8 +1,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
-import type { BaseExerciseDetector } from '@exercises/BaseExerciseDetector';
-import type { CapturedRatios } from '@exercises/BaseExerciseDetector';
+import type { BaseExerciseDetector, CapturedRatios } from '@exercises/BaseExerciseDetector';
 import type { ExerciseState, Landmark } from '@exercises/types';
-import type { BodyProfile } from '@domain/bodyProfile';
+import type { BodyProfile } from '@domain';
 
 
 interface UseExerciseDetectorProps {

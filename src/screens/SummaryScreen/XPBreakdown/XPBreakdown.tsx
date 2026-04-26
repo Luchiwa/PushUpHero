@@ -1,5 +1,5 @@
 import { getExerciseLabel } from '@exercises/types';
-import type { SessionXpResult } from '@domain/xpSystem';
+import type { SessionXpResult } from '@domain';
 import './XPBreakdown.scss';
 
 interface XPBreakdownProps {

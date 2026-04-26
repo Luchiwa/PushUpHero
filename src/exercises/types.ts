@@ -21,16 +21,14 @@ export interface ExerciseMeta {
     category: string;
     /** Banner shown when user leaves the valid position mid-session */
     invalidPositionMessage: string;
-    /** Tagline for the share card */
-    shareTagline: string;
 }
 
 /** Display metadata per exercise — drives pickers, filters, etc. */
 export const EXERCISE_META: ExerciseMeta[] = [
-    { type: 'pushup',   label: 'Push-ups',   emoji: '💪', category: 'Upper Body', invalidPositionMessage: '⚠️ Get back into push-up position',  shareTagline: 'Track your push-ups with Push-Up Hero 💪' },
-    { type: 'squat',    label: 'Squats',     emoji: '🦵', category: 'Lower Body', invalidPositionMessage: '⚠️ Stand upright facing the camera',  shareTagline: 'Track your squats with Push-Up Hero 💪' },
-    { type: 'pullup',   label: 'Pull-ups',   emoji: '🏋️', category: 'Pull',       invalidPositionMessage: '⚠️ Get back into hang position',     shareTagline: 'Track your pull-ups with Push-Up Hero 💪' },
-    { type: 'legraise', label: 'Leg Raises', emoji: '🧘', category: 'Core',       invalidPositionMessage: '⚠️ Lie flat on your back',          shareTagline: 'Track your leg raises with Push-Up Hero 💪' },
+    { type: 'pushup',   label: 'Push-ups',   emoji: '💪', category: 'Upper Body', invalidPositionMessage: '⚠️ Get back into push-up position' },
+    { type: 'squat',    label: 'Squats',     emoji: '🦵', category: 'Lower Body', invalidPositionMessage: '⚠️ Stand upright facing the camera' },
+    { type: 'pullup',   label: 'Pull-ups',   emoji: '🏋️', category: 'Pull',       invalidPositionMessage: '⚠️ Get back into hang position' },
+    { type: 'legraise', label: 'Leg Raises', emoji: '🧘', category: 'Core',       invalidPositionMessage: '⚠️ Lie flat on your back' },
 ];
 
 const META_MAP: Record<ExerciseType, ExerciseMeta> = Object.fromEntries(
@@ -50,11 +48,6 @@ export function getExerciseEmoji(type: ExerciseType): string {
 /** Banner text when user leaves valid position: '⚠️ Get back into push-up position' etc. */
 export function getInvalidPositionMessage(type: ExerciseType): string {
     return META_MAP[type].invalidPositionMessage;
-}
-
-/** Tagline for share cards */
-export function getShareTagline(type: ExerciseType): string {
-    return META_MAP[type].shareTagline;
 }
 
 export type ExercisePhase = 'idle' | 'up' | 'down' | 'transition';

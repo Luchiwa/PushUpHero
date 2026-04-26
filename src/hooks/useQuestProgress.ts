@@ -6,8 +6,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuthCore } from './useAuth';
 import { updateQuestProgress } from '@services/profileService';
 import { read, write, STORAGE_KEYS } from '@infra/storage';
-import type { QuestProgress } from '@domain/quests';
-import { emptyQuestProgress } from '@domain/quests';
+import { emptyQuestProgress, type QuestProgress } from '@domain';
 
 function loadQuestProgress(): QuestProgress {
     const stored = read<QuestProgress | null>(STORAGE_KEYS.questProgress, null);

@@ -1,7 +1,6 @@
 import { BaseExerciseDetector } from '../BaseExerciseDetector';
 import type { ExerciseState, Landmark, RepFeedback } from '../types';
-import { getPullupThresholds } from '@domain/bodyProfile';
-import type { PullupThresholds } from '@domain/bodyProfile';
+import { getPullupThresholds, type PullupThresholds } from '@domain';
 
 const LM = {
     LEFT_SHOULDER: 11, RIGHT_SHOULDER: 12,

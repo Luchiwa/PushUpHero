@@ -2,6 +2,12 @@
 
 Pure logic layer. Zero side effects, zero Firebase/browser API imports. Safe to import anywhere.
 
+## Public API (`index.ts`)
+
+`src/domain/index.ts` is the canonical entry point for the domain module. **Consumers outside `src/domain/` import only from `@domain`** — never from `@domain/<file>` directly. Inside the domain folder, file-to-file imports stay normal (no barrel hop). This keeps the public surface explicit: a symbol that's not in the barrel is internal, and "find references" lands on the source-of-truth module instead of a passthrough. See the root `CLAUDE.md` "Module boundaries: barrels vs. shims" rule.
+
+When adding a new public symbol, export it from its source file *and* re-export it from `index.ts`. When making something internal, leave it un-listed in the barrel.
+
 ## XP System (`xpSystem.ts`)
 
 ### Per-Rep XP (by grade)
@@ -50,6 +56,11 @@ Static `ACHIEVEMENTS` array with categories and tiers (bronze/silver/gold/platin
 
 ## Types (`authTypes.ts`)
 `AppUser` (Firebase Auth user wrapper), `DbUser` (nested domain shape: `{ uid, profile, stats, progression, achievements?, records?, bodyProfile?, questProgress? }`). The Firestore wire format is the flat `FlatUserDoc` (in `infra/firestoreValidators.ts`); `userRepository` unfolds flat → nested at the read boundary. Components reach for `dbUser.stats.bestStreak`, `dbUser.profile.displayName`, etc. — never flat keys.
+
+The identity/scalar fields on these shapes are **branded** primitives (`UserId`, `Level`, `XpAmount`) — see `brands.ts` and the root CLAUDE.md "Brand at module boundaries" section. The unfold mapper mints them at the read boundary; downstream code receives branded values and pipes them through.
+
+## Brands (`brands.ts`)
+`UserId`, `Level`, `XpAmount` — nominal types over `string`/`number` that prevent primitive-confusion bugs at compile time. Factories `createUserId` / `createLevel` / `createXpAmount` validate inputs and are the only legitimate way to construct a branded value. Mint at boundaries (Firebase Auth, Firestore unfold, localStorage seed); re-mint inline after arithmetic that strips the brand.
 
 ## Stats helpers (`stats.ts`)
 Pure helpers for the StatsScreen: `buildDayTotals`, `buildDayTotalsXp` (Sunday-anchored weekly aggregations, exercise-filterable), `niceMax` (axis tick rounding), `pctChange` (delta with null/100 edge cases), `compactNum` (>10k → "Nk"). Plus the `ExerciseFilter = 'all' | ExerciseType` type used by chart/KPI components.

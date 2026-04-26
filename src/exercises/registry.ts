@@ -11,7 +11,7 @@
  */
 import type { ExerciseType } from './types';
 import type { BaseExerciseDetector, CapturedRatios } from './BaseExerciseDetector';
-import type { BodyProfile } from '@domain/bodyProfile';
+import type { BodyProfile } from '@domain';
 import { PushUpDetector } from './pushup/PushUpDetector';
 import { SquatDetector } from './squat/SquatDetector';
 import { PullUpDetector } from './pullup/PullUpDetector';

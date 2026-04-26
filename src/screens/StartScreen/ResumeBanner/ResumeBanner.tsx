@@ -1,5 +1,4 @@
-import type { WorkoutCheckpoint } from '@services/workoutCheckpointStore';
-import { deriveResumePosition } from '@services/workoutCheckpointStore';
+import { deriveResumePosition, type WorkoutCheckpoint } from '@services/workoutCheckpointStore';
 import { getExerciseLabel } from '@exercises/types';
 import './ResumeBanner.scss';
 

@@ -21,14 +21,14 @@ import {
 import { runTransaction } from 'firebase/firestore';
 import { auth, db } from '@infra/firebase';
 import { userRef, usernameRef } from '@infra/refs';
-import type { AppUser } from '@domain/authTypes';
+import { createUserId, type AppUser } from '@domain';
 
 // ── Domain mapping ───────────────────────────────────────────────────────────
 
 /** Maps a Firebase Auth User to the framework-agnostic AppUser domain type. */
 function toAppUser(user: User | null): AppUser | null {
     if (!user) return null;
-    return { uid: user.uid, providerIds: user.providerData.map(p => p.providerId) };
+    return { uid: createUserId(user.uid), providerIds: user.providerData.map(p => p.providerId) };
 }
 
 // ── Auth state subscription ──────────────────────────────────────────────────
@@ -116,13 +116,14 @@ export async function registerWithEmail(
         // Create the user in Auth
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
+        const uid = createUserId(user.uid);
 
         // Claim username
-        transaction.set(uRef, { uid: user.uid });
+        transaction.set(uRef, { uid });
 
         // Create base DB profile
-        transaction.set(userRef(user.uid), {
-            uid: user.uid,
+        transaction.set(userRef(uid), {
+            uid,
             displayName: username.trim(),
             level: 0,
             totalXp: 0,

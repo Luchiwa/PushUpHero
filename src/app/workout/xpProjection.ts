@@ -5,21 +5,19 @@
  * orchestration. No state, no React, no Firebase.
  */
 import type { ExerciseType, SetRecord } from '@exercises/types';
-import { calculateSessionXp, levelFromTotalXp } from '@domain/xpSystem';
-import type { BonusContext } from '@domain/xpSystem';
-import { weightedAverageScore } from '@domain/scoring';
+import { calculateSessionXp, createXpAmount, levelFromTotalXp, weightedAverageScore, type BonusContext, type Level, type XpAmount } from '@domain';
 
 export interface FinalXpInput {
     allSets: SetRecord[];
     totalWorkoutDuration: number;
     streak: number;
     isMultiExercise: boolean;
-    totalXp: number;
+    totalXp: XpAmount;
 }
 
 export interface FinalXpResult {
     bonusCtx: BonusContext;
-    computedLevel: number;
+    computedLevel: Level;
     avgScore: number;
 }
 
@@ -43,7 +41,7 @@ export function computeFinalXp(input: FinalXpInput): FinalXpResult {
     };
 
     const { totalXp: sessionXp } = calculateSessionXp(allSets, bonusCtx);
-    const computedLevel = levelFromTotalXp(totalXp + sessionXp);
+    const computedLevel = levelFromTotalXp(createXpAmount(totalXp + sessionXp));
 
     return { bonusCtx, computedLevel, avgScore };
 }

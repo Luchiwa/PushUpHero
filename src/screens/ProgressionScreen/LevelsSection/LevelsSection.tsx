@@ -1,6 +1,5 @@
 import type { CSSProperties } from 'react';
-import { getExerciseLabel, EXERCISE_TYPES, EXERCISE_META } from '@exercises/types';
-import type { ExerciseType } from '@exercises/types';
+import { EXERCISE_META, EXERCISE_TYPES, getExerciseLabel, type ExerciseType } from '@exercises/types';
 import './LevelsSection.scss';
 
 const EXERCISE_EMOJIS: Record<ExerciseType, string> = Object.fromEntries(

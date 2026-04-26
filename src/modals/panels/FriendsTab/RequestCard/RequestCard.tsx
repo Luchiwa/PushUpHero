@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { FriendRequest, OutgoingRequest } from '@hooks/useFriends';
+import type { FriendRequest, OutgoingRequest } from '@services/friendService';
 import { Avatar } from '@components/Avatar/Avatar';
 import './RequestCard.scss';
 

@@ -10,11 +10,8 @@
  */
 
 import { Timestamp } from 'firebase/firestore';
-import type { ExerciseType, ExerciseXpMap, SessionRecord } from '@exercises/types';
-import { EXERCISE_TYPES } from '@exercises/types';
-import type { RecordsMap } from '@domain/achievementEngine';
-import type { BodyProfile } from '@domain/bodyProfile';
-import type { QuestProgress } from '@domain/quests';
+import { EXERCISE_TYPES, type ExerciseType, type ExerciseXpMap, type SessionRecord } from '@exercises/types';
+import { createUserId, type BodyProfile, type QuestProgress, type RecordsMap, type UserId } from '@domain';
 import type { FriendRequest } from '@services/friendService';
 
 const isObj = (v: unknown): v is Record<string, unknown> =>
@@ -105,18 +102,18 @@ export function isFriendRequest(v: unknown): v is FriendRequest {
 export interface NotificationEvent {
     id: string;
     type: string;
-    fromUid: string;
+    fromUid: UserId;
     fromUsername: string;
     sentAtMs: number;
 }
 
 export function parseNotification(id: string, data: unknown): NotificationEvent | null {
     if (!isObj(data)) return null;
-    if (typeof data.type !== 'string' || typeof data.fromUid !== 'string') return null;
+    if (typeof data.type !== 'string' || typeof data.fromUid !== 'string' || !data.fromUid) return null;
     return {
         id,
         type: data.type,
-        fromUid: data.fromUid,
+        fromUid: createUserId(data.fromUid),
         fromUsername: typeof data.fromUsername === 'string' ? data.fromUsername : '',
         sentAtMs: tsToMs(data.sentAt),
     };

@@ -7,13 +7,12 @@
  * guests), and exposes the post-save metadata the orchestrator needs to
  * drive quest evaluation and body-profile capture.
  */
-import { useState, useRef, useCallback } from 'react';
-import type { Dispatch } from 'react';
+import { useCallback, useRef, useState, type Dispatch } from 'react';
 import type { ExerciseType, SetRecord, WorkoutBlock, WorkoutPlan } from '@exercises/types';
 import { useSessionHistory } from '@hooks/useSessionHistory';
 import { useAuthCore, useLevel } from '@hooks/useAuth';
 import { useFriends } from '@hooks/useFriends';
-import type { SessionXpResult } from '@domain/xpSystem';
+import { createLevel, type Level, type SessionXpResult } from '@domain';
 import type { SaveSessionResult } from '@services/sessionService';
 import type { WorkoutAction } from './workoutReducer';
 import { durationToSeconds } from './workoutTypes';
@@ -38,10 +37,10 @@ interface UseWorkoutSaveProps {
 
 export interface UseWorkoutSaveReturn {
     lastSessionXp: (SessionXpResult & Partial<SaveSessionResult>) | null;
-    savedLevel: number | null;
-    levelBefore: number;
+    savedLevel: Level | null;
+    levelBefore: Level;
     save: (allSets: SetRecord[]) => Promise<SaveOutcome | null>;
-    resetSaveState: (liveLevel: number) => void;
+    resetSaveState: (liveLevel: Level) => void;
 }
 
 export function useWorkoutSave({
@@ -57,8 +56,8 @@ export function useWorkoutSave({
     const { friends } = useFriends();
 
     const [lastSessionXp, setLastSessionXp] = useState<(SessionXpResult & Partial<SaveSessionResult>) | null>(null);
-    const [savedLevel, setSavedLevel] = useState<number | null>(null);
-    const [levelBefore, setLevelBefore] = useState(0);
+    const [savedLevel, setSavedLevel] = useState<Level | null>(null);
+    const [levelBefore, setLevelBefore] = useState<Level>(createLevel(0));
     const sessionSavedRef = useRef(false);
 
     const save = useCallback(async (allSets: SetRecord[]): Promise<SaveOutcome | null> => {
@@ -110,7 +109,7 @@ export function useWorkoutSave({
         }
     }, [addSession, currentBlock, isMultiExercise, workoutPlan.blocks, totalXp, dbUser, friends.length, workoutStartTimeRef, dispatch]);
 
-    const resetSaveState = useCallback((liveLevel: number) => {
+    const resetSaveState = useCallback((liveLevel: Level) => {
         sessionSavedRef.current = false;
         setSavedLevel(null);
         setLevelBefore(liveLevel);

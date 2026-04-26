@@ -1,4 +1,4 @@
-import type { QuestDef } from '@domain/quests';
+import type { QuestDef } from '@domain';
 import './QuestWidget.scss';
 
 interface QuestWidgetProps {

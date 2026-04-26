@@ -15,26 +15,27 @@ import {
     friendRef, friendRequestRef, sentRequestRef,
     notificationsCol,
 } from '@infra/refs';
+import { createLevel, createUserId, type Level, type UserId } from '@domain';
 
 // ── Types (re-exported for consumers that only need types) ──────────────────
 
 export interface FriendRequest {
-    fromUid: string;
+    fromUid: UserId;
     fromUsername: string;
     status: 'pending';
     sentAt: number;
 }
 
 export interface OutgoingRequest {
-    toUid: string;
+    toUid: UserId;
     toUsername: string;
     sentAt: number;
 }
 
 export interface Friend {
-    uid: string;
+    uid: UserId;
     displayName: string;
-    level: number;
+    level: Level;
     totalReps: number;
     totalSessions: number;
     photoURL?: string;
@@ -45,9 +46,9 @@ export interface Friend {
 export type FriendStats = Pick<Friend, 'level' | 'totalReps' | 'totalSessions' | 'photoURL' | 'photoThumb' | 'streak'>;
 
 export type SearchResult = {
-    uid: string;
+    uid: UserId;
     displayName: string;
-    level: number;
+    level: Level;
     totalReps: number;
     totalSessions: number;
     relation: 'none' | 'friend' | 'request_sent' | 'request_received' | 'self';
@@ -57,16 +58,16 @@ export type SearchResult = {
 
 const STATS_BATCH_SIZE = 30;
 
-export async function batchFetchProfileStats(uids: string[]): Promise<Map<string, FriendStats>> {
-    const stats = new Map<string, FriendStats>();
+export async function batchFetchProfileStats(uids: UserId[]): Promise<Map<UserId, FriendStats>> {
+    const stats = new Map<UserId, FriendStats>();
     for (let i = 0; i < uids.length; i += STATS_BATCH_SIZE) {
         const batch = uids.slice(i, i + STATS_BATCH_SIZE);
         const q = query(usersCol(), where(documentId(), 'in', batch));
         const snap = await getDocs(q);
         for (const d of snap.docs) {
             const data = d.data();
-            stats.set(d.id, {
-                level: data.level ?? 0,
+            stats.set(createUserId(d.id), {
+                level: createLevel(data.level ?? 0),
                 totalReps: data.totalReps ?? 0,
                 totalSessions: data.totalSessions ?? 0,
                 photoURL: data.photoURL ?? undefined,
@@ -82,13 +83,13 @@ export async function batchFetchProfileStats(uids: string[]): Promise<Map<string
 
 /** Search a user by username. Returns profile data (without relation). */
 export async function searchUserByUsername(
-    username: string, currentUid: string,
-): Promise<{ uid: string; displayName: string; level: number; totalReps: number; totalSessions: number } | null> {
+    username: string, currentUid: UserId,
+): Promise<{ uid: UserId; displayName: string; level: Level; totalReps: number; totalSessions: number } | null> {
     const cleanUsername = username.trim().toLowerCase();
     const usernameDoc = await getDoc(usernameRef(cleanUsername));
     if (!usernameDoc.exists()) return null;
 
-    const targetUid = usernameDoc.data().uid as string;
+    const targetUid = createUserId(usernameDoc.data().uid as string);
     if (targetUid === currentUid) return null;
 
     const profileDoc = await getDoc(userRef(targetUid));
@@ -98,7 +99,7 @@ export async function searchUserByUsername(
     return {
         uid: targetUid,
         displayName: profile.displayName || username,
-        level: profile.level || 0,
+        level: createLevel(profile.level || 0),
         totalReps: profile.totalReps || 0,
         totalSessions: profile.totalSessions || 0,
     };
@@ -107,7 +108,7 @@ export async function searchUserByUsername(
 // ── Friend request operations ───────────────────────────────────────────────
 
 export async function sendFriendRequest(
-    uid: string, displayName: string, toUid: string, toUsername: string,
+    uid: UserId, displayName: string, toUid: UserId, toUsername: string,
 ): Promise<void> {
     await setDoc(friendRequestRef(toUid, uid), {
         fromUid: uid, fromUsername: displayName, status: 'pending', sentAt: Date.now(),
@@ -121,7 +122,7 @@ export async function sendFriendRequest(
 }
 
 export async function acceptFriendRequest(
-    uid: string, displayName: string, request: FriendRequest,
+    uid: UserId, displayName: string, request: FriendRequest,
 ): Promise<void> {
     await setDoc(friendRef(uid, request.fromUid), {
         uid: request.fromUid, displayName: request.fromUsername,
@@ -133,17 +134,17 @@ export async function acceptFriendRequest(
     await deleteDoc(sentRequestRef(request.fromUid, uid));
 }
 
-export async function declineFriendRequest(uid: string, fromUid: string): Promise<void> {
+export async function declineFriendRequest(uid: UserId, fromUid: UserId): Promise<void> {
     await deleteDoc(friendRequestRef(uid, fromUid));
     await deleteDoc(sentRequestRef(fromUid, uid));
 }
 
-export async function cancelFriendRequest(uid: string, toUid: string): Promise<void> {
+export async function cancelFriendRequest(uid: UserId, toUid: UserId): Promise<void> {
     await deleteDoc(friendRequestRef(toUid, uid));
     await deleteDoc(sentRequestRef(uid, toUid));
 }
 
-export async function removeFriend(uid: string, friendUid: string): Promise<void> {
+export async function removeFriend(uid: UserId, friendUid: UserId): Promise<void> {
     await deleteDoc(friendRef(uid, friendUid));
     await deleteDoc(friendRef(friendUid, uid));
 }
@@ -151,7 +152,7 @@ export async function removeFriend(uid: string, friendUid: string): Promise<void
 // ── Social actions ──────────────────────────────────────────────────────────
 
 export async function sendEncouragement(
-    uid: string, displayName: string, toUid: string,
+    uid: UserId, displayName: string, toUid: UserId,
 ): Promise<void> {
     await addDoc(notificationsCol(toUid), {
         type: 'encouragement', fromUid: uid, fromUsername: displayName, sentAt: serverTimestamp(), read: false,

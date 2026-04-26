@@ -7,8 +7,7 @@
  * @see ACHIEVEMENTS.md for the full design document.
  */
 
-import type { ExerciseType } from '@exercises/types';
-import { getExerciseLabel, getExerciseEmoji, EXERCISE_TYPES } from '@exercises/types';
+import { EXERCISE_TYPES, getExerciseEmoji, getExerciseLabel, type ExerciseType } from '@exercises/types';
 
 // ─── Rarity tiers ────────────────────────────────────────────────────────────
 

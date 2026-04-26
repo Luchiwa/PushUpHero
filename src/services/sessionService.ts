@@ -18,15 +18,8 @@ import {
 } from 'firebase/firestore';
 import { db } from '@infra/firebase';
 import { userRef, sessionRef, activityFeedCol } from '@infra/refs';
-import { FEED_PRUNE_AGE_MS, getGradeLetter } from '@domain/constants';
-import { levelFromTotalXp } from '@domain/xpSystem';
-import type { SessionRecord } from '@exercises/types';
-import type { DbUser } from '@domain/authTypes';
-import type { ExerciseType } from '@exercises/types';
-import { getExerciseLabel } from '@exercises/types';
-import { evaluateAchievements, evaluateRecords, emptyRecords, buildSessionRepsMap } from '@domain/achievementEngine';
-import type { UserStats, AchievementMap, RecordsMap, RecordUpdate } from '@domain/achievementEngine';
-import type { AchievementDef } from '@domain/achievements';
+import { FEED_PRUNE_AGE_MS, buildSessionRepsMap, createXpAmount, emptyRecords, evaluateAchievements, evaluateRecords, getGradeLetter, levelFromTotalXp, type AchievementDef, type AchievementMap, type DbUser, type RecordUpdate, type RecordsMap, type UserId, type UserStats, type XpAmount } from '@domain';
+import { getExerciseLabel, type ExerciseType, type SessionRecord } from '@exercises/types';
 
 // ─── Date helpers ────────────────────────────────────────────────────────────
 
@@ -58,12 +51,12 @@ export function computeNewStreak(dbUser: DbUser | null, todayLocal: string): num
 // ─── Core write: save a completed session ────────────────────────────────────
 
 export interface SaveSessionParams {
-    uid: string;
+    uid: UserId;
     session: SessionRecord;
     /** Lifetime total XP BEFORE this session */
-    currentTotalXp: number;
+    currentTotalXp: XpAmount;
     /** XP earned this session (after bonuses) */
-    sessionXp: number;
+    sessionXp: XpAmount;
     /** Per-exercise XP earned this session */
     exerciseXpDeltas: { exerciseType: string; xp: number }[];
     /** Current per-exercise XP BEFORE this session */
@@ -98,7 +91,7 @@ export async function saveSession({
     allSessions, friendsCount, currentTotalSessions,
 }: SaveSessionParams): Promise<SaveSessionResult> {
     const todayLocal = localDateString();
-    const newTotalXp = currentTotalXp + sessionXp;
+    const newTotalXp = createXpAmount(currentTotalXp + sessionXp);
     const newLevel = levelFromTotalXp(newTotalXp);
     const newStreak = computeNewStreak(dbUser, todayLocal);
     const newBestStreak = Math.max(dbUser?.stats.bestStreak ?? 0, newStreak);
@@ -113,7 +106,7 @@ export async function saveSession({
         newExerciseXp[exerciseType] = (newExerciseXp[exerciseType] ?? 0) + xp;
     }
     for (const [type, xp] of Object.entries(newExerciseXp)) {
-        newExerciseLevels[type] = levelFromTotalXp(xp ?? 0);
+        newExerciseLevels[type] = levelFromTotalXp(createXpAmount(xp ?? 0));
     }
 
     // ── Lifetime reps per exercise (for achievements) ────────────────────

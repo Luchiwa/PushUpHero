@@ -1,10 +1,9 @@
-import { getTier } from '@domain/xpSystem';
-import type { Tier } from '@domain/xpSystem';
+import { getTier, type Level, type Tier } from '@domain';
 import './TierBadge.scss';
 
 const TIER_ICON: Record<Tier, string> = { bronze: '🥉', silver: '🥈', gold: '🥇', platinum: '💎' };
 
-export function TierBadge({ level }: { level: number }) {
+export function TierBadge({ level }: { level: Level }) {
     const tier = getTier(level);
     return (
         <span className={`friend-tier-badge friend-tier-badge--${tier}`} title={`${tier} tier`}>

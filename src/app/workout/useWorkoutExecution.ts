@@ -8,12 +8,10 @@
  * the ref-synced config setters that keep handleStart safe from stale
  * closures.
  */
-import { useRef, useEffect, useCallback } from 'react';
-import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
+import { useCallback, useEffect, useRef, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import { useRefSync } from '@hooks/shared/useRefSync';
 import { useSoundEffect } from '@hooks/useSoundEffect';
-import type { ExerciseState, ExerciseType, SetRecord, TimeDuration, WorkoutBlock } from '@exercises/types';
-import { createDefaultBlock } from '@exercises/types';
+import { createDefaultBlock, type ExerciseState, type ExerciseType, type SetRecord, type TimeDuration, type WorkoutBlock } from '@exercises/types';
 import { warmUpSpeech } from '@infra/speechEngine';
 import {
     saveWorkoutCheckpoint,

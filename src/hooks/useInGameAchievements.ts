@@ -8,10 +8,7 @@
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { ExerciseType, ExerciseState } from '@exercises/types';
-import type { AchievementDef } from '@domain/achievements';
-import { ACHIEVEMENTS } from '@domain/achievements';
-import type { AchievementMap, UserStats } from '@domain/achievementEngine';
-import { getStatValue, isLiveStatKey } from '@domain/achievementEngine';
+import { ACHIEVEMENTS, getStatValue, isLiveStatKey, type AchievementDef, type AchievementMap, type UserStats } from '@domain';
 import { useAuthCore } from './useAuth';
 import { playAchievementSound } from '@infra/soundEngine';
 import { getGuestAchievements, getGuestLifetimeReps } from '@services/guestStatsStore';

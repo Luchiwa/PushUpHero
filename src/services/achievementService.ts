@@ -8,12 +8,10 @@
 
 import { updateDoc } from 'firebase/firestore';
 import { userRef } from '@infra/refs';
-import { evaluateAchievements } from '@domain/achievementEngine';
-import type { UserStats, AchievementMap } from '@domain/achievementEngine';
-import type { AchievementDef } from '@domain/achievements';
+import { evaluateAchievements, type AchievementDef, type AchievementMap, type UserId, type UserStats } from '@domain';
 
 export async function checkLiveAchievements(
-    uid: string,
+    uid: UserId,
     stats: UserStats,
     currentAchievements: AchievementMap,
 ): Promise<AchievementDef[]> {

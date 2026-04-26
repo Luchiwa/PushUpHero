@@ -9,22 +9,19 @@ import {
 } from 'firebase/firestore';
 import { db } from '@infra/firebase';
 import { userRef, sessionRef } from '@infra/refs';
-import { levelFromTotalXp } from '@domain/xpSystem';
-import type { SessionRecord } from '@exercises/types';
-import type { ExerciseType } from '@exercises/types';
-import { evaluateAchievements, emptyRecords, computeLifetimeReps, countSGrades, bulkEvaluateRecords } from '@domain/achievementEngine';
-import type { UserStats, AchievementMap } from '@domain/achievementEngine';
+import { bulkEvaluateRecords, computeLifetimeReps, countSGrades, createXpAmount, emptyRecords, evaluateAchievements, levelFromTotalXp, type AchievementMap, type UserId, type UserStats, type XpAmount } from '@domain';
+import type { ExerciseType, SessionRecord } from '@exercises/types';
 import type { GuestStatsSnapshot } from './guestStatsStore';
 import { localDateString, yesterdayDateString } from './sessionService';
 
 // ─── Merge local guest data into Firestore on first login ────────────────────
 
 export interface MergeLocalDataParams {
-    uid: string;
-    localXp: number;
+    uid: UserId;
+    localXp: XpAmount;
     localExerciseXp: Partial<Record<string, number>>;
     localSessions: SessionRecord[];
-    cloudXp: number;
+    cloudXp: XpAmount;
     cloudSessions: number;
     cloudExerciseXp: Partial<Record<string, number>>;
     /** Guest achievement stats accumulated while playing without an account */
@@ -43,7 +40,7 @@ export async function mergeLocalDataToCloud({
 }: MergeLocalDataParams): Promise<void> {
     const batch = writeBatch(db);
 
-    const newTotalXp = cloudXp + localXp;
+    const newTotalXp = createXpAmount(cloudXp + localXp);
     const newLevel = levelFromTotalXp(newTotalXp);
 
     // Merge per-exercise XP
@@ -56,7 +53,7 @@ export async function mergeLocalDataToCloud({
     }
     const mergedExerciseLevels: Record<string, number> = {};
     for (const [type, xp] of Object.entries(mergedExerciseXp)) {
-        mergedExerciseLevels[type] = levelFromTotalXp(xp ?? 0);
+        mergedExerciseLevels[type] = levelFromTotalXp(createXpAmount(xp ?? 0));
     }
 
     // ── Compute streak from local sessions ─────────────────────────────────

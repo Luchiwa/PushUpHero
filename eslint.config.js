@@ -19,6 +19,12 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // One import statement per source module — collapse split value/type
+      // imports into a single line using inline `type` modifiers.
+      // See root CLAUDE.md "Module boundaries" → "One import statement per source module".
+      'no-duplicate-imports': ['error', { includeExports: true }],
+    },
   },
   // Firebase isolation: only src/infra, src/services, src/data may import firebase/*.
   // Every other layer (including src/main.tsx, src/sw.ts at the root) goes through

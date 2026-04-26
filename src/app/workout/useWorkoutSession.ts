@@ -6,16 +6,12 @@
  * and the live XP projection. Public surface unchanged so useWorkoutStateMachine
  * keeps its existing call site.
  */
-import { useCallback } from 'react';
-import type { Dispatch } from 'react';
+import { useCallback, type Dispatch } from 'react';
 import type { ExerciseType, SetRecord, WorkoutBlock, WorkoutPlan } from '@exercises/types';
 import type { CapturedRatios } from '@exercises/BaseExerciseDetector';
 import { useLevel } from '@hooks/useAuth';
-import { projectLiveXp } from '@domain/xpSystem';
-import type { SessionXpResult } from '@domain/xpSystem';
+import { projectLiveXp, type BodyProfile, type Level, type QuestDef, type QuestProgress, type SessionXpResult } from '@domain';
 import type { SaveSessionResult } from '@services/sessionService';
-import type { QuestDef, QuestProgress } from '@domain/quests';
-import type { BodyProfile } from '@domain/bodyProfile';
 import type { WorkoutAction } from './workoutReducer';
 import { useWorkoutSave } from './useWorkoutSave';
 import { useQuestEvaluation } from './useQuestEvaluation';
@@ -42,11 +38,11 @@ interface UseWorkoutSessionProps {
 export interface UseWorkoutSessionReturn {
     lastSessionXp: (SessionXpResult & Partial<SaveSessionResult>) | null;
     questCompletedThisSession: QuestDef[];
-    savedLevel: number | null;
-    levelBefore: number;
+    savedLevel: Level | null;
+    levelBefore: Level;
     saveWorkoutSession: (allSets: SetRecord[]) => void;
     resetSessionState: () => void;
-    liveLevel: number;
+    liveLevel: Level;
 }
 
 export function useWorkoutSession(props: UseWorkoutSessionProps): UseWorkoutSessionReturn {

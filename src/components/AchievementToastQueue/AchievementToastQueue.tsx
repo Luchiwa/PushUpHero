@@ -4,7 +4,7 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 import { AchievementToast } from '../AchievementToast/AchievementToast';
-import type { AchievementDef } from '@domain/achievements';
+import type { AchievementDef } from '@domain';
 
 interface AchievementToastQueueProps {
     achievements: AchievementDef[];

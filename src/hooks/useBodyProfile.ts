@@ -6,8 +6,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useAuthCore } from './useAuth';
 import { updateBodyProfile } from '@services/profileService';
 import { read, write, STORAGE_KEYS } from '@infra/storage';
-import type { BodyProfile } from '@domain/bodyProfile';
-import { emptyBodyProfile, BODY_PROFILE_VERSION } from '@domain/bodyProfile';
+import { BODY_PROFILE_VERSION, emptyBodyProfile, type BodyProfile } from '@domain';
 
 function loadProfile(): BodyProfile {
     const stored = read<BodyProfile | null>(STORAGE_KEYS.bodyProfile, null);
