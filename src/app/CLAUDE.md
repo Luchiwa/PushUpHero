@@ -14,8 +14,8 @@ workout/
   useQuestEvaluation.ts      Owns questCompletedThisSession + per-session eval
   xpProjection.ts            Pure helpers: computeFinalXp, derivePrimaryExercise
   bodyProfileCapture.ts      Pure helper: maybeCaptureBodyProfile
-  useWorkoutMachineCore.ts   Reducer + plan + session + trivial dispatch handlers
-  useWorkoutExecution.ts     12 side-effect handlers + 2 effects + 3 setter wrappers
+  useWorkoutMachineCore.ts   Reducer + plan + session + dispatch-only handlers
+  useWorkoutExecution.ts     Side-effect handlers + effects + ref-synced setters
   useWorkoutStateMachine.ts  Top-level orchestrator (core + execution → public API)
 WorkoutContext.tsx           Explicit WorkoutContextType interface, consumed via useWorkout()
 ```

@@ -54,7 +54,6 @@ export interface WorkoutContextType {
 
     // ── Level & XP ──
     liveLevel: number;
-    liveProgressPct: number;
     levelBefore: number;
     savedLevel: number | null;
     lastSessionXp: (SessionXpResult & Partial<SaveSessionResult>) | null;

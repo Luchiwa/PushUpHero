@@ -47,7 +47,6 @@ export interface UseWorkoutSessionReturn {
     saveWorkoutSession: (allSets: SetRecord[]) => void;
     resetSessionState: () => void;
     liveLevel: number;
-    liveProgressPct: number;
 }
 
 export function useWorkoutSession(props: UseWorkoutSessionProps): UseWorkoutSessionReturn {
@@ -58,7 +57,7 @@ export function useWorkoutSession(props: UseWorkoutSessionProps): UseWorkoutSess
     } = props;
 
     const { totalXp } = useLevel();
-    const { liveLevel, liveProgressPct } = projectLiveXp(
+    const { liveLevel } = projectLiveXp(
         totalXp, completedSets, currentSetReps, activeExerciseType,
     );
 
@@ -103,6 +102,5 @@ export function useWorkoutSession(props: UseWorkoutSessionProps): UseWorkoutSess
         saveWorkoutSession,
         resetSessionState,
         liveLevel,
-        liveProgressPct,
     };
 }

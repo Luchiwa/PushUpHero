@@ -6,7 +6,7 @@
  */
 import type { ExerciseType, SetRecord } from '@exercises/types';
 import { calculateSessionXp, levelFromTotalXp } from '@domain/xpSystem';
-import type { BonusContext, SessionXpResult } from '@domain/xpSystem';
+import type { BonusContext } from '@domain/xpSystem';
 
 export interface FinalXpInput {
     allSets: SetRecord[];
@@ -19,7 +19,6 @@ export interface FinalXpInput {
 
 export interface FinalXpResult {
     bonusCtx: BonusContext;
-    xpResult: SessionXpResult;
     computedLevel: number;
     avgScore: number;
 }
@@ -44,10 +43,10 @@ export function computeFinalXp(input: FinalXpInput): FinalXpResult {
         isMultiExercise,
     };
 
-    const xpResult = calculateSessionXp(allSets, bonusCtx);
-    const computedLevel = levelFromTotalXp(totalXp + xpResult.totalXp);
+    const { totalXp: sessionXp } = calculateSessionXp(allSets, bonusCtx);
+    const computedLevel = levelFromTotalXp(totalXp + sessionXp);
 
-    return { bonusCtx, xpResult, computedLevel, avgScore };
+    return { bonusCtx, computedLevel, avgScore };
 }
 
 export interface PrimaryExerciseResult {

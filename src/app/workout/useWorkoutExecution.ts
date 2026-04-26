@@ -3,12 +3,13 @@
  *
  * Receives the core (state + dispatch + plan + session) and the platform
  * orchestration props (camera, detector, exercise-type sync, sound) and
- * exposes the 12 handlers that coordinate camera / detector / checkpoint
- * / sound around reducer dispatches, plus the 2 effects (level-up sound,
- * auto-complete on rep goal) and the 3 ref-synced config setters that
- * keep handleStart safe from stale closures.
+ * exposes the handlers that coordinate camera / detector / checkpoint /
+ * sound around reducer dispatches, the level-up + rep-goal effects, and
+ * the ref-synced config setters that keep handleStart safe from stale
+ * closures.
  */
 import { useRef, useEffect, useCallback } from 'react';
+import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
 import { useRefSync } from '@hooks/shared/useRefSync';
 import { useSoundEffect } from '@hooks/useSoundEffect';
 import type { ExerciseState, ExerciseType, SetRecord, TimeDuration, WorkoutBlock } from '@exercises/types';
@@ -32,12 +33,11 @@ interface UseWorkoutExecutionProps {
 }
 
 export interface UseWorkoutExecutionReturn {
-    setGoalReps: (v: number | ((prev: number) => number)) => void;
-    setSessionMode: (v: SessionMode | ((prev: SessionMode) => SessionMode)) => void;
-    setTimeGoal: (v: TimeDuration | ((prev: TimeDuration) => TimeDuration)) => void;
+    setGoalReps: Dispatch<SetStateAction<number>>;
+    setSessionMode: Dispatch<SetStateAction<SessionMode>>;
+    setTimeGoal: Dispatch<SetStateAction<TimeDuration>>;
     handleStart: (exerciseTypeOverride?: ExerciseType) => void;
     handleWorkoutStart: () => void;
-    handleSetComplete: () => void;
     handleStop: () => void;
     handleTimerEnd: () => void;
     handleRestComplete: () => void;
@@ -47,6 +47,25 @@ export interface UseWorkoutExecutionReturn {
     handleLevelUpContinue: () => void;
     handleResumeWorkout: () => void;
     handleDiscardCheckpoint: () => void;
+}
+
+/** Wrap a setState so each write also lands in `ref` synchronously. */
+function useRefSyncedSetter<T>(
+    setState: Dispatch<SetStateAction<T>>,
+    ref: MutableRefObject<T>,
+): (v: SetStateAction<T>) => void {
+    return useCallback((v: SetStateAction<T>) => {
+        if (typeof v === 'function') {
+            setState((prev) => {
+                const next = (v as (prev: T) => T)(prev);
+                ref.current = next;
+                return next;
+            });
+        } else {
+            ref.current = v;
+            setState(v);
+        }
+    }, [setState, ref]);
 }
 
 export function useWorkoutExecution({
@@ -66,46 +85,9 @@ export function useWorkoutExecution({
     const sessionModeRef = useRefSync(plan.sessionMode);
     const timeGoalRef = useRefSync(plan.timeGoal);
 
-    const { setGoalReps: planSetGoalReps, setSessionMode: planSetSessionMode, setTimeGoal: planSetTimeGoal } = plan;
-
-    const setGoalReps = useCallback((v: number | ((prev: number) => number)) => {
-        if (typeof v === 'function') {
-            planSetGoalReps((prev) => {
-                const next = v(prev);
-                goalRepsRef.current = next;
-                return next;
-            });
-        } else {
-            goalRepsRef.current = v;
-            planSetGoalReps(v);
-        }
-    }, [planSetGoalReps, goalRepsRef]);
-
-    const setSessionMode = useCallback((v: SessionMode | ((prev: SessionMode) => SessionMode)) => {
-        if (typeof v === 'function') {
-            planSetSessionMode((prev) => {
-                const next = v(prev);
-                sessionModeRef.current = next;
-                return next;
-            });
-        } else {
-            sessionModeRef.current = v;
-            planSetSessionMode(v);
-        }
-    }, [planSetSessionMode, sessionModeRef]);
-
-    const setTimeGoal = useCallback((v: TimeDuration | ((prev: TimeDuration) => TimeDuration)) => {
-        if (typeof v === 'function') {
-            planSetTimeGoal((prev) => {
-                const next = v(prev);
-                timeGoalRef.current = next;
-                return next;
-            });
-        } else {
-            timeGoalRef.current = v;
-            planSetTimeGoal(v);
-        }
-    }, [planSetTimeGoal, timeGoalRef]);
+    const setGoalReps = useRefSyncedSetter(plan.setGoalReps, goalRepsRef);
+    const setSessionMode = useRefSyncedSetter(plan.setSessionMode, sessionModeRef);
+    const setTimeGoal = useRefSyncedSetter(plan.setTimeGoal, timeGoalRef);
 
     // ── Handlers ───────────────────────────────────────────────
 
@@ -335,7 +317,6 @@ export function useWorkoutExecution({
 
     // ── Effects ─────────────────────────────────────────────────
 
-    // Level-up sound during active sessions
     useEffect(() => {
         if (state.screen === 'active' && session.liveLevel > prevLevelRef.current) {
             initAudio();
@@ -344,7 +325,6 @@ export function useWorkoutExecution({
         prevLevelRef.current = session.liveLevel;
     }, [session.liveLevel, state.screen, plan.soundEnabled, playLevelUpSound, initAudio]);
 
-    // Auto-complete set when rep goal reached
     useEffect(() => {
         if (
             state.screen === 'active'
@@ -361,7 +341,6 @@ export function useWorkoutExecution({
         setTimeGoal,
         handleStart,
         handleWorkoutStart,
-        handleSetComplete,
         handleStop,
         handleTimerEnd,
         handleRestComplete,

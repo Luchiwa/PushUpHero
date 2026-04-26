@@ -37,8 +37,6 @@ export interface UseWorkoutMachineCoreReturn {
     dispatch: Dispatch<WorkoutAction>;
     plan: UseWorkoutPlanReturn;
     session: UseWorkoutSessionReturn;
-    /** Live reps in the current set (0 outside the active screen). */
-    currentSetReps: number;
     /** Latest elapsedTime mirrored into a ref for timer callbacks. */
     elapsedTimeRef: React.MutableRefObject<number>;
     handleOpenConfig: () => void;
@@ -98,7 +96,6 @@ export function useWorkoutMachineCore({
         dispatch,
         plan,
         session,
-        currentSetReps,
         elapsedTimeRef,
         handleOpenConfig,
         handleBackToIdle,

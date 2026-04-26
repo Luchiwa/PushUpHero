@@ -1,10 +1,10 @@
 /**
  * useWorkoutStateMachine — Thin orchestrator.
  *
- * Composes useWorkoutMachineCore (reducer + plan + session + simple
- * dispatch handlers) and useWorkoutExecution (side-effect handlers, refs,
- * sound, effects), then recomposes the 37-property public API consumed
- * by WorkoutContext. App.tsx wires camera/pose/exercise-type around it.
+ * Composes useWorkoutMachineCore (reducer + plan + session + dispatch-only
+ * handlers) and useWorkoutExecution (side-effect handlers, refs, sound,
+ * effects), then recomposes the public WorkoutContext shape. App.tsx wires
+ * camera/pose/exercise-type around it.
  */
 import type { ExerciseState, ExerciseType } from '@exercises/types';
 import type { QuestDef, QuestProgress } from '@domain/quests';
@@ -65,8 +65,7 @@ export function useWorkoutStateMachine({
         onExerciseTypeChange,
     });
 
-    const { state, plan, session, currentSetReps: _csr, elapsedTimeRef, handleOpenConfig, handleBackToIdle } = core;
-    void _csr;
+    const { state, plan, session, elapsedTimeRef, handleOpenConfig, handleBackToIdle } = core;
 
     return {
         // ── Screen ──
@@ -87,7 +86,7 @@ export function useWorkoutStateMachine({
         flatSetIndex: plan.flatSetIndex,
         activeExerciseType: plan.activeExerciseType,
         // ── Level & XP ──
-        liveLevel: session.liveLevel, liveProgressPct: session.liveProgressPct,
+        liveLevel: session.liveLevel,
         levelBefore: session.levelBefore,
         savedLevel: session.savedLevel,
         lastSessionXp: session.lastSessionXp,
