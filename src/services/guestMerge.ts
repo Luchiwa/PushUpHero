@@ -30,7 +30,6 @@ export async function mergeGuestDataToCloud(uid: string): Promise<void> {
     remove(STORAGE_KEYS.exerciseXp);
     remove(STORAGE_KEYS.sessions);
     remove(STORAGE_KEYS.totalSessions);
-    remove(STORAGE_KEYS.totalReps);
 
     // Snapshot guest achievement stats before clearing
     const guestStats = getGuestStatsSnapshot();

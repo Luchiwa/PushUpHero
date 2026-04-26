@@ -12,16 +12,18 @@
 
 // ── Key registry ─────────────────────────────────────────────────────────────
 
-/** Static (non-parameterized) localStorage keys. */
+/**
+ * Static (non-parameterized) localStorage keys.
+ *
+ * All keys are prefixed `pushup_hero_` for grep-ability and to avoid
+ * collisions with anything a third-party script might write.
+ */
 export const STORAGE_KEYS = {
     // Guest XP / sessions (consumed & cleared on first cloud login)
     totalXp:            'pushup_hero_total_xp',
     exerciseXp:         'pushup_hero_exercise_xp',
-    sessions:           'pushup-sessions',
-    totalSessions:      'pushup_game_total_sessions',
-    // Legacy cleanup only — no current writer. Kept so older installs get
-    // wiped via clearAppKeys / mergeGuestDataToCloud.
-    totalReps:          'pushup_game_total_reps',
+    sessions:           'pushup_hero_sessions',
+    totalSessions:      'pushup_hero_total_sessions',
     // Guest stats (per-device accumulators while not logged in)
     guestAchievements:  'pushup_hero_guest_achievements',
     guestRecords:       'pushup_hero_guest_records',
@@ -32,20 +34,23 @@ export const STORAGE_KEYS = {
     guestSGradeCount:   'pushup_hero_guest_s_grade_count',
     guestTrainingTime:  'pushup_hero_guest_training_time',
     // System / per-device
-    bodyProfile:        'pushup-hero-body-profile',
-    questProgress:      'pushup-hero-quest-progress',
+    bodyProfile:        'pushup_hero_body_profile',
+    questProgress:      'pushup_hero_quest_progress',
     workoutCheckpoint:  'pushup_hero_workout_checkpoint',
-    mergeLock:          'pushup_merge_in_progress',
+    mergeLock:          'pushup_hero_merge_lock',
 } as const;
 
 /** Builders for parameterized (per-user) keys. */
 export const STORAGE_KEY_BUILDERS = {
-    feedLastSeen:   (uid: string) => `feed_last_seen_${uid}`,
-    encouragement:  (friendUid: string) => `pushup_encourage_${friendUid}`,
+    feedLastSeen:   (uid: string) => `pushup_hero_feed_last_seen_${uid}`,
+    encouragement:  (friendUid: string) => `pushup_hero_encouragement_${friendUid}`,
 } as const;
 
 /** Prefixes used by parameterized keys — drives `clearAppKeys` bulk wipe. */
-const DYNAMIC_KEY_PREFIXES = ['feed_last_seen_', 'pushup_encourage_'] as const;
+const DYNAMIC_KEY_PREFIXES = [
+    'pushup_hero_feed_last_seen_',
+    'pushup_hero_encouragement_',
+] as const;
 
 // ── API ──────────────────────────────────────────────────────────────────────
 
