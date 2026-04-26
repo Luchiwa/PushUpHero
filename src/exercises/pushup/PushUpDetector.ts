@@ -1,4 +1,4 @@
-import { BaseExerciseDetector } from '../BaseExerciseDetector';
+import { AngleBasedExerciseDetector } from '../base/AngleBasedExerciseDetector';
 import type { ExerciseState, Landmark, RepFeedback } from '../types';
 import { getPushupThresholds } from '@domain/bodyProfile';
 import type { PushupThresholds } from '@domain/bodyProfile';
@@ -28,7 +28,7 @@ const MIN_REP_INTERVAL_MS = 500;
 // which would reject frames at the exact moment the UP phase should trigger.
 const KEY_LANDMARKS = [LM.LEFT_SHOULDER, LM.RIGHT_SHOULDER, LM.LEFT_HIP, LM.RIGHT_HIP];
 
-export class PushUpDetector extends BaseExerciseDetector {
+export class PushUpDetector extends AngleBasedExerciseDetector {
     private worstHipDeviation = 0;
     private worstArmAsymmetry = 0;
     private thresholds: PushupThresholds;
@@ -98,7 +98,7 @@ export class PushUpDetector extends BaseExerciseDetector {
                 this.calibrationFrames.push({ spread: bodyVerticalSpread, wristOffset, armLen, bodySpread, torsoLen, elbowAngle: smoothedAngle });
             } else if (status === 'completed') {
                 this.calibrationFrames.push({ spread: bodyVerticalSpread, wristOffset, armLen, bodySpread, torsoLen, elbowAngle: smoothedAngle });
-                this.finalizeCalibration(landmarks);
+                this.runFinalizeCalibration(landmarks);
             }
             return this.getState();
         }
@@ -145,23 +145,28 @@ export class PushUpDetector extends BaseExerciseDetector {
 
     // ── Calibration finalization ─────────────────────────────────
 
-    private finalizeCalibration(landmarks: Landmark[]): void {
-        this.finalizeCalibrationLifecycle(this.calibrationFrames, landmarks, (med) => {
-            this.calibratedMaxBodyVerticalSpread = med(f => f.spread) + 0.30;
-            this.calibratedWristBelowShoulderMargin = med(f => f.wristOffset) + 0.15;
+    protected getCalibrationFrames(): unknown[] {
+        return this.calibrationFrames;
+    }
 
-            const medTorso = med(f => f.torsoLen);
-            // In plank position, shoulder–hip Y distance is small. Allow generous margin
-            // but reject clearly upright/leaning poses (e.g. getting up after push-ups).
-            this.calibratedMaxTorsoTilt = medTorso + 0.15;
-            if (medTorso > 0.01) {
-                this._capturedRatios.pushup = {
-                    armToTorsoRatio: med(f => f.armLen) / medTorso,
-                    bodySpreadRatio: med(f => f.bodySpread) / medTorso,
-                    naturalElbowExtension: Math.round(med(f => f.elbowAngle)),
-                };
-            }
-        });
+    protected captureCalibrationRatios(medUntyped: (extractor: (f: unknown) => number) => number): void {
+        type Frame = (typeof this.calibrationFrames)[number];
+        const med = medUntyped as (extractor: (f: Frame) => number) => number;
+
+        this.calibratedMaxBodyVerticalSpread = med(f => f.spread) + 0.30;
+        this.calibratedWristBelowShoulderMargin = med(f => f.wristOffset) + 0.15;
+
+        const medTorso = med(f => f.torsoLen);
+        // In plank position, shoulder–hip Y distance is small. Allow generous margin
+        // but reject clearly upright/leaning poses (e.g. getting up after push-ups).
+        this.calibratedMaxTorsoTilt = medTorso + 0.15;
+        if (medTorso > 0.01) {
+            this._capturedRatios.pushup = {
+                armToTorsoRatio: med(f => f.armLen) / medTorso,
+                bodySpreadRatio: med(f => f.bodySpread) / medTorso,
+                naturalElbowExtension: Math.round(med(f => f.elbowAngle)),
+            };
+        }
     }
 
     // ── Scoring ─────────────────────────────────────────────────

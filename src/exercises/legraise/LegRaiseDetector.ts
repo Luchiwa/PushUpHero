@@ -127,7 +127,7 @@ export class LegRaiseDetector extends BaseExerciseDetector {
                     hipAngle: smoothedAngle, baselineShoulderY: midShoulderY,
                 });
             }
-            if (status === 'completed') this.finalizeCalibration(landmarks);
+            if (status === 'completed') this.runFinalizeCalibration(landmarks);
             return this.getState();
         }
 
@@ -220,20 +220,25 @@ export class LegRaiseDetector extends BaseExerciseDetector {
 
     // ── Calibration finalization ─────────────────────────────────
 
-    private finalizeCalibration(landmarks: Landmark[]): void {
-        this.finalizeCalibrationLifecycle(this.calibrationFrames, landmarks, (med) => {
-            this.calibratedMaxBodyVerticalSpread = med(f => f.spread) + 0.35;
-            this.calibratedMaxTorsoTilt = med(f => f.torsoTilt) + 0.20;
-            this.calibratedBaselineShoulderY = med(f => f.baselineShoulderY);
+    protected getCalibrationFrames(): unknown[] {
+        return this.calibrationFrames;
+    }
 
-            const medTorso = med(f => f.torsoLen);
-            if (medTorso > 0.005) {
-                this._capturedRatios.legraise = {
-                    legToTorsoRatio: med(f => f.legLen) / medTorso,
-                    naturalHipExtension: Math.round(med(f => f.hipAngle)),
-                };
-            }
-        });
+    protected captureCalibrationRatios(medUntyped: (extractor: (f: unknown) => number) => number): void {
+        type Frame = (typeof this.calibrationFrames)[number];
+        const med = medUntyped as (extractor: (f: Frame) => number) => number;
+
+        this.calibratedMaxBodyVerticalSpread = med(f => f.spread) + 0.35;
+        this.calibratedMaxTorsoTilt = med(f => f.torsoTilt) + 0.20;
+        this.calibratedBaselineShoulderY = med(f => f.baselineShoulderY);
+
+        const medTorso = med(f => f.torsoLen);
+        if (medTorso > 0.005) {
+            this._capturedRatios.legraise = {
+                legToTorsoRatio: med(f => f.legLen) / medTorso,
+                naturalHipExtension: Math.round(med(f => f.hipAngle)),
+            };
+        }
     }
 
     // ── Scoring ─────────────────────────────────────────────────

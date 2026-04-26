@@ -103,6 +103,19 @@ export abstract class BaseExerciseDetector {
     /** Process a new pose frame. Returns updated exercise state. */
     abstract processPose(landmarks: Landmark[]): ExerciseState;
 
+    /** Subclass exposes its (typed) calibration-frame collection so the base can build the `med` closure. */
+    protected abstract getCalibrationFrames(): unknown[];
+
+    /**
+     * Subclass populates `_capturedRatios.<exerciseType>` and any `calibratedXxx` fields from `med`.
+     * Called once per session by `runFinalizeCalibration`. `landmarks` is the frame at finalisation
+     * (used by the subclass for any landmark-driven calibration; bbox lock is handled by the base).
+     */
+    protected abstract captureCalibrationRatios(
+        med: (extractor: (f: unknown) => number) => number,
+        landmarks: Landmark[],
+    ): void;
+
     /** Reset all state (called on "Try Again"). */
     reset(): void {
         this.state = this.initialState();
@@ -267,68 +280,6 @@ export abstract class BaseExerciseDetector {
     }
 
     // ── Angle-Based Phase Machine ───────────────────────────────
-    // Template method for exercises that use simple angle thresholds
-    // to detect up/down phases (pushup, squat). Pull-up uses a custom
-    // dual-condition approach and does not use this method.
-
-    /**
-     * Common up/down/transition state machine for angle-threshold exercises.
-     *
-     * @param smoothedAngle  Current smoothed joint angle
-     * @param angleUp        Threshold above which the phase is "up"
-     * @param angleDown      Threshold below which the phase is "down"
-     * @param isPositionValid Whether the body is in valid exercise position
-     * @param minRepIntervalMs Minimum ms between reps (debounce)
-     * @param onCountRep     Callback invoked when a rep should be counted.
-     *                       Must return `{ amplitudeScore, alignmentScore, feedback }`.
-     * @param onRepReset     Optional callback for detector-specific cleanup after rep tracking reset.
-     */
-    protected processAngleBasedPhase(
-        smoothedAngle: number,
-        angleUp: number,
-        angleDown: number,
-        _isPositionValid: boolean,
-        minRepIntervalMs: number,
-        onCountRep: (repDuration: number) => { amplitudeScore: number; alignmentScore: number; feedback: RepFeedback },
-        onRepReset?: () => void,
-    ): void {
-        const prevPhase = this.state.currentPhase;
-        this.state.incompleteRepFeedback = null;
-
-        if (smoothedAngle >= angleUp) {
-            this._downConfirmCount = 0;
-            if (this.wasDescending && !this.hasReachedValidDown && this.minAngleThisRep < 170) {
-                this.state.incompleteRepFeedback = 'go_lower';
-            }
-            this.wasDescending = false;
-
-            if (this.hasReachedValidDown) {
-                const now = Date.now();
-                const repDuration = this.lastRepTimestamp > 0 ? now - this.lastRepTimestamp : 2000;
-                if (repDuration >= minRepIntervalMs) {
-                    const { amplitudeScore, alignmentScore, feedback } = onCountRep(repDuration);
-                    const repScore = this.computeRepScore(amplitudeScore, alignmentScore);
-                    this.lastRepTimestamp = now;
-                    this.recordRep(repScore, amplitudeScore, alignmentScore, this.minAngleThisRep, feedback);
-                    this.captureDynamicCalibration(this.minAngleThisRep, 'min');
-                }
-                this.resetRepTracking();
-                onRepReset?.();
-            }
-            this.state.currentPhase = 'up';
-        } else if (smoothedAngle <= angleDown) {
-            this._downConfirmCount++;
-            if (this._downConfirmCount >= 2) {
-                this.hasReachedValidDown = true;
-            }
-            this.wasDescending = true;
-            this.state.currentPhase = 'down';
-        } else {
-            if (prevPhase === 'up' || prevPhase === 'idle') this.wasDescending = true;
-            this.state.currentPhase = 'transition';
-        }
-    }
-
     // ── Bounding Box Lock ───────────────────────────────────────
 
     protected computeBoundingBox(landmarks: Landmark[]): BoundingBox {
@@ -455,14 +406,16 @@ export abstract class BaseExerciseDetector {
         return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
     }
 
-    /** Shared scaffolding for each detector's finalizeCalibration: builds `med`, runs the capture callback, then locks the bbox. */
-    protected finalizeCalibrationLifecycle<F>(
-        frames: F[],
-        landmarks: Landmark[],
-        capture: (med: (extractor: (f: F) => number) => number) => void,
-    ): void {
-        const med = (extractor: (f: F) => number) => this.medianOf(frames.map(extractor));
-        capture(med);
+    /**
+     * Template for the calibration-finalization step. Each detector calls this from its
+     * processPose() once `calibrationFrameCount` reaches the threshold. The base owns the
+     * `med` closure and the bbox lock; the subclass only carries per-exercise threshold
+     * computation and ratio shape inside `captureCalibrationRatios`.
+     */
+    protected runFinalizeCalibration(landmarks: Landmark[]): void {
+        const frames = this.getCalibrationFrames();
+        const med = (extractor: (f: unknown) => number) => this.medianOf(frames.map(extractor));
+        this.captureCalibrationRatios(med, landmarks);
         this.lockBoundingBox(landmarks);
     }
 

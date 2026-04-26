@@ -27,9 +27,24 @@ Inside the detector, `smoothAngle()` applies a **second One Euro Filter** (minCu
 4. **Scoring**: Each rep scored 0-100 (60% amplitude + 40% alignment).
 5. **Dynamic calibration**: First 5 reps capture the user's natural movement range for adaptive thresholds on future sessions.
 
+## Detector class hierarchy
+
+Two base classes pick the contract you inherit:
+
+- **`BaseExerciseDetector`** — owns calibration lifecycle, bbox lock, dynamic calibration, scoring helpers, and the `runFinalizeCalibration` template. Subclass it directly when your exercise needs a **custom phase machine** (`PullUpDetector`, `LegRaiseDetector`).
+- **`AngleBasedExerciseDetector` extends `BaseExerciseDetector`** — adds `processAngleBasedPhase`, the standard "REST-counted" state machine. Subclass it when reps count at the return-to-rest (`PushUpDetector`, `SquatDetector`).
+
+Choosing wrong leaks a method you can't use into your IDE. The hierarchy split is the contract — don't bypass it.
+
+Each subclass MUST implement two `protected abstract` hooks (declared on `BaseExerciseDetector`):
+- `getCalibrationFrames(): unknown[]` — return your typed `calibrationFrames` array (the cast back to your concrete frame type happens inside `captureCalibrationRatios`).
+- `captureCalibrationRatios(med, landmarks)` — populate `calibratedXxx` fields and `_capturedRatios.<exerciseType>` from `med`. Cast `med` once at the top: `const med = medUntyped as (extractor: (f: Frame) => number) => number;` where `Frame = (typeof this.calibrationFrames)[number]`.
+
+The base owns the `med` closure construction over your frames + the trailing `lockBoundingBox` call.
+
 ## CRITICAL: When Reps Are Counted
 
-### `processAngleBasedPhase` (template method in BaseExerciseDetector)
+### `processAngleBasedPhase` (template method on AngleBasedExerciseDetector)
 
 Counts reps when `smoothedAngle >= angleUp` (the REST/high-angle position). Flow:
 
@@ -46,7 +61,7 @@ DOWN phase (angle <= angleDown, 2 frames) -> latch hasReachedValidDown
 
 ### When to NOT use the template method
 
-If the exercise should count at the PEAK (low angle) instead of REST (high angle), you MUST write a custom phase machine. The template method CANNOT be inverted by swapping thresholds.
+If the exercise should count at the PEAK (low angle) instead of REST (high angle), you MUST write a custom phase machine and `extends BaseExerciseDetector` directly (not `AngleBasedExerciseDetector`). The template method CANNOT be inverted by swapping thresholds.
 
 - **Leg raises**: Custom inverted machine. Rep counts when legs are RAISED (low hip angle). Latch at REST (legs flat, high angle), count at PEAK (legs raised, low angle).
 - **Pull-ups**: Custom dual-condition machine. Rep counts at TOP (high shoulder rise + bent elbows). Uses both shoulder Y displacement AND elbow angle.
@@ -54,9 +69,9 @@ If the exercise should count at the PEAK (low angle) instead of REST (high angle
 ### Rule of thumb for new exercises
 
 Ask: "When does the user feel the rep is done?"
-- If at the return to starting position -> use `processAngleBasedPhase`
-- If at the peak of effort -> write a custom phase machine (see LegRaiseDetector as template)
-- If it needs multiple signals -> write a custom machine (see PullUpDetector as template)
+- If at the return to starting position -> `extends AngleBasedExerciseDetector` and call `this.processAngleBasedPhase(...)`
+- If at the peak of effort -> `extends BaseExerciseDetector` and write a custom phase machine (see LegRaiseDetector as template)
+- If it needs multiple signals -> `extends BaseExerciseDetector` and write a custom machine (see PullUpDetector as template)
 
 ## KEY_LANDMARKS: What to Include and Exclude
 
@@ -115,7 +130,7 @@ Grade mapping: S >= 90, A >= 75, B >= 60, C >= 45, D < 45.
 
 ## Adding a New Exercise (Checklist)
 
-1. **Decide phase machine type**: REST-counted (template) or PEAK-counted (custom)?
+1. **Decide phase machine type**: REST-counted (`extends AngleBasedExerciseDetector`) or PEAK-counted (`extends BaseExerciseDetector` + custom machine)?
 2. **Create detector** in `exercises/<name>/<Name>Detector.ts`:
    - Choose landmarks and joint angle
    - Define calibration criteria (what position? how strict?)
@@ -123,6 +138,8 @@ Grade mapping: S >= 90, A >= 75, B >= 60, C >= 45, D < 45.
    - Set angle thresholds (mind the smoothing lag and hysteresis gap)
    - Implement scoring (amplitude + alignment)
    - Map feedback types
+   - **Implement the abstracts**: `getCalibrationFrames()` returns `this.calibrationFrames`; `captureCalibrationRatios(med, landmarks)` populates `_capturedRatios.<exerciseType>` + any `calibratedXxx` fields. Cast `med` to your typed `Frame` once at the top.
+   - **Trigger finalisation**: when `calibrationFrameCount` reaches the threshold, call `this.runFinalizeCalibration(landmarks)` (do not write your own `finalizeCalibration` method — the base owns that template).
 3. **Update types.ts**: Add to `ExerciseType`, `EXERCISE_TYPES`, `EXERCISE_META`, and new `RepFeedback` values
 4. **Update bodyProfile.ts**: Add profile interface + threshold function (with safe defaults)
 5. **Update BaseExerciseDetector.ts**: Add to `CapturedRatios` interface
