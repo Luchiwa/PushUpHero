@@ -60,6 +60,8 @@ export function DeleteAccountSection({ onAccountDeleted }: DeleteAccountSectionP
                     onChange={e => setDeleteInput(e.target.value)}
                     placeholder="DELETE"
                     className={deleteInput === 'DELETE' ? 'input--danger-ready' : ''}
+                    aria-describedby={deleteError ? 'delete-account-error' : undefined}
+                    aria-invalid={!!deleteError || undefined}
                 />
             </div>
             {isEmailUser && deleteInput === 'DELETE' && (
@@ -72,10 +74,12 @@ export function DeleteAccountSection({ onAccountDeleted }: DeleteAccountSectionP
                         onChange={e => setPassword(e.target.value)}
                         placeholder="Your password"
                         autoComplete="current-password"
+                        aria-describedby={deleteError ? 'delete-account-error' : undefined}
+                        aria-invalid={!!deleteError || undefined}
                     />
                 </div>
             )}
-            {deleteError && <p className="settings-feedback settings-feedback--error">{deleteError}</p>}
+            {deleteError && <p id="delete-account-error" className="settings-feedback settings-feedback--error" role="alert">{deleteError}</p>}
             <button
                 type="button"
                 className="btn-danger"

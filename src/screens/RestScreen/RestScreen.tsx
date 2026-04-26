@@ -75,7 +75,7 @@ export function RestScreen({
     const secs = remaining % 60;
 
     return (
-        <div className="rest-screen">
+        <div className="rest-screen" role="status">
             <div className="rest-card">
                 {/* Set completed feedback */}
                 <div className="rest-set-feedback">
@@ -113,7 +113,7 @@ export function RestScreen({
                         {isExerciseTransition ? 'Next exercise in' : 'Next set in'}
                     </p>
                     <div className="rest-countdown-timer">
-                        <span className="rest-countdown-digits">
+                        <span className="rest-countdown-digits" aria-hidden="true">
                             {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
                         </span>
                     </div>

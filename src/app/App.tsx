@@ -25,6 +25,7 @@ const LevelUpScreen = lazy(() => import('@screens/LevelUpScreen/LevelUpScreen').
 import { PoseOverlay, type PoseOverlayHandle } from '@components/PoseOverlay/PoseOverlay';
 import { PositionGuide } from '@components/PositionGuide/PositionGuide';
 import { ReloadPrompt } from '@components/ReloadPrompt/ReloadPrompt';
+import { ModalFallback } from '@components/ModalFallback/ModalFallback';
 import { ErrorBoundary } from '@components/ErrorBoundary/ErrorBoundary';
 import { useInGameAchievements } from '@hooks/useInGameAchievements';
 import { useBodyProfile } from '@hooks/useBodyProfile';
@@ -157,6 +158,7 @@ function App() {
         playsInline
       />
 
+      <main className="app-main">
       {wm.screen === 'active' && (
         <ErrorBoundary fallback="section">
           <PoseOverlay ref={poseOverlayRef} videoRef={videoRef} exerciseType={exerciseType} />
@@ -204,7 +206,7 @@ function App() {
           )
       )}
 
-      <Suspense fallback={null}>
+      <Suspense fallback={<ModalFallback />}>
         {wm.screen === 'config' && (
           <WorkoutConfigScreen
             plan={wm.workoutPlan}
@@ -270,6 +272,7 @@ function App() {
           </ErrorBoundary>
         )}
       </Suspense>
+      </main>
 
       <ReloadPrompt />
     </div>

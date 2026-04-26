@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react
 import { useAuthCore, useLevel, useSessions } from '@hooks/useAuth';
 import { InstallBanner } from '@overlays/InstallBanner/InstallBanner';
 import { PrimaryCTA } from '@components/PrimaryCTA/PrimaryCTA';
+import { ModalFallback } from '@components/ModalFallback/ModalFallback';
 
 // Lazy-loaded modals/screens (only parsed when opened)
 const AuthModal = lazy(() => import('@modals/AuthModal/AuthModal').then(m => ({ default: m.AuthModal })));
@@ -252,7 +253,7 @@ export function StartScreen({
                 )}
             </div>
 
-            <Suspense fallback={null}>
+            <Suspense fallback={<ModalFallback />}>
                 {activeModal?.type === 'quickSession' && (
                     <QuickSessionModal onClose={closeModal} />
                 )}

@@ -50,6 +50,8 @@ export function PasswordChangeSection() {
                     placeholder="••••••••"
                     required
                     autoComplete="current-password"
+                    aria-describedby={pwdError ? 'password-change-error' : undefined}
+                    aria-invalid={!!pwdError || undefined}
                 />
             </div>
             <div className="input-group">
@@ -62,6 +64,8 @@ export function PasswordChangeSection() {
                     placeholder="••••••••"
                     required
                     autoComplete="new-password"
+                    aria-describedby={pwdError ? 'password-change-error' : undefined}
+                    aria-invalid={!!pwdError || undefined}
                 />
             </div>
             <div className="input-group">
@@ -74,9 +78,11 @@ export function PasswordChangeSection() {
                     placeholder="••••••••"
                     required
                     autoComplete="new-password"
+                    aria-describedby={pwdError ? 'password-change-error' : undefined}
+                    aria-invalid={!!pwdError || undefined}
                 />
             </div>
-            {pwdError && <p className="settings-feedback settings-feedback--error">{pwdError}</p>}
+            {pwdError && <p id="password-change-error" className="settings-feedback settings-feedback--error" role="alert">{pwdError}</p>}
             {pwdSuccess && <p className="settings-feedback settings-feedback--success">Password updated successfully!</p>}
             <button type="submit" className="btn-primary settings-submit" disabled={pwdLoading}>
                 {pwdLoading ? 'Updating…' : 'Update Password'}
