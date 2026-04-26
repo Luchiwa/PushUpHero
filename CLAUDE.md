@@ -188,6 +188,10 @@ The agent's job is to chase the downstream consumers and surface dead branches t
 
 Skip this only for pure additions (new file, new branch of a switch, new prop that nothing else touches) — those don't widen existing invariants.
 
+### No barrel re-exports
+
+When a type or function moves to a new module, **update the imports in every consumer** rather than adding `export type { Foo } from '@new/location'` in the old module. A re-export is a back-compat shim: it hides where the symbol actually lives, makes "find references" misleading, and decays into permanent indirection. Touching N import lines is cheap; carrying a stale re-export forever is not. The same rule applies to types you create *inside* a module (e.g. `firestoreValidators`) — consumers import from the source-of-truth module, not from a downstream module that happens to use the type.
+
 ## Skills (Claude Code)
 
 Custom skills in `.claude/skills/`:

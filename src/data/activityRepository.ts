@@ -9,8 +9,6 @@ import { query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { activityFeedCol } from '@infra/refs';
 import { parseActivityFeedDoc, type ActivityFeedDoc } from '@infra/firestoreValidators';
 
-export type { ActivityFeedDoc } from '@infra/firestoreValidators';
-
 /**
  * Fetch the most recent activity events for a single user.
  * Malformed docs are skipped with a console.warn.

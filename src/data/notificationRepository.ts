@@ -10,8 +10,6 @@ import { query, where, onSnapshot, limit } from 'firebase/firestore';
 import { notificationsCol } from '@infra/refs';
 import { parseNotification, type NotificationEvent } from '@infra/firestoreValidators';
 
-export type { NotificationEvent } from '@infra/firestoreValidators';
-
 /**
  * Real-time listener on unread notifications (max 50).
  * Calls `onEvent` for each newly added document, after parsing it into a
