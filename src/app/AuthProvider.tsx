@@ -17,6 +17,7 @@ import { useLevelSystem } from '@hooks/useLevelSystem';
 import { useNotifications } from '@hooks/useNotifications';
 import { useSyncCloud } from '@hooks/useSyncCloud';
 import { clearAppKeys } from '@infra/storage';
+import { FeedCacheProvider } from './FeedCacheContext';
 import type { SessionRecord } from '@exercises/types';
 
 // ── Inner provider: Level + Sessions (mounts expensive hooks once) ──
@@ -68,7 +69,9 @@ function LevelAndSessionProvider({ children }: { children: React.ReactNode }) {
     return (
         <LevelContext.Provider value={levelValue}>
             <SessionContext.Provider value={sessionValue}>
-                {children}
+                <FeedCacheProvider>
+                    {children}
+                </FeedCacheProvider>
             </SessionContext.Provider>
         </LevelContext.Provider>
     );
