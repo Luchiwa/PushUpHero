@@ -31,14 +31,13 @@ export function useNotifications() {
     useEffect(() => {
         if (!user) return;
 
-        const unsub = onUnreadNotifications(user.uid, async (change) => {
-            const data = change.doc.data();
-            const sentAt = data.sentAt?.toMillis?.() ?? data.sentAt ?? 0;
-            const age = Date.now() - sentAt;
+        const unsub = onUnreadNotifications(user.uid, (event) => {
+            const age = Date.now() - event.sentAtMs;
 
             // Only auto-delete fresh notifications (< 30s)
             if (age < 30_000) {
-                await dismissNotification(user.uid, change.doc.id);
+                dismissNotification(user.uid, event.id).catch(err =>
+                    console.error('[useNotifications] dismiss failed', err));
             }
         });
 

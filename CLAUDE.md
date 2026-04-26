@@ -143,11 +143,21 @@ Browser APIs, Firebase init, Firestore refs. No business logic.
 
 - `firebase.ts` — Firebase app initialization, exports `auth`, `db`, `storage` singletons.
 - `refs.ts` — Centralized Firestore document/collection reference builders (`userRef(uid)`, `sessionsCol(uid)`, `friendRef(uid, friendId)`, etc.).
+- `firestoreValidators.ts` — Type guards (`isDbUser`, `isSessionRecord`, …) and parsers (`parseNotification`, `parseActivityFeedDoc`, `tsToMs`) used by repositories before casting raw Firestore data.
 - `device.ts` — Platform detection (`isMobile()`, `isIos()`).
 - `avatarCache.ts` — Avatar URL caching via Cache API.
 - `soundEngine.ts` — Web Audio API sound effects.
 - `speechEngine.ts` — Web Speech API wrapper.
 - `coachEngine.ts` — Coaching phrase selection + speech dispatch.
+
+### Firebase isolation rules (enforced by ESLint + reviewers)
+
+These rules are non-negotiable. They were violated repeatedly before PUS-12 and earned the codebase a 5/10 score on the Firebase boundary.
+
+- **Imports from `firebase/*` are allowed only in `src/infra/`, `src/services/`, and `src/data/`.** Any other layer (`src/app/`, `src/hooks/`, `src/screens/`, `src/components/`, `src/modals/`, `src/overlays/`) must go through a service or repo. ESLint blocks violations at lint time.
+- **Repositories must never expose Firestore SDK types in public signatures.** No `DocumentData`, `Timestamp`, `DocumentChange`, `QuerySnapshot`, `DocumentSnapshot`, `DocumentReference` in exported function params or return types. Map to a domain shape and use `tsToMs` to coerce timestamps before they leave the repo.
+- **Cast only after a guard.** Every `as DbUser` / `as SessionRecord` / `as FriendRequest` in `src/data/` must be preceded by the matching `isXxx(...)` guard from `firestoreValidators`. A doc that fails validation is filtered with `console.warn` — never propagated to the UI.
+- **`onSnapshot` callbacks are synchronous.** No `getDoc`/`getDocs` inside the callback. If a join is needed, denormalize at write time, or batch via `where(documentId(), 'in', chunk)` outside the callback (chunks of 30, the Firestore hard limit).
 
 ### Cloud Functions
 
@@ -177,6 +187,10 @@ After any refactor that widens an invariant — a prop becomes constant, a condi
 The agent's job is to chase the downstream consumers and surface dead branches the refactor left behind (`disabled={!flag}` gates where `flag` is now always `true`, label toggles whose false branch can't fire, `?:` optional props that every caller still passes, etc.). Without this pass, dead code leaks into PRs and the reviewer has to catch it — which defeats the point of the refactor being "clean".
 
 Skip this only for pure additions (new file, new branch of a switch, new prop that nothing else touches) — those don't widen existing invariants.
+
+### No barrel re-exports
+
+When a type or function moves to a new module, **update the imports in every consumer** rather than adding `export type { Foo } from '@new/location'` in the old module. A re-export is a back-compat shim: it hides where the symbol actually lives, makes "find references" misleading, and decays into permanent indirection. Touching N import lines is cheap; carrying a stale re-export forever is not. The same rule applies to types you create *inside* a module (e.g. `firestoreValidators`) — consumers import from the source-of-truth module, not from a downstream module that happens to use the type.
 
 ## Skills (Claude Code)
 

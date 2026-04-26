@@ -2,35 +2,31 @@
  * activityRepository — Firestore read operations for the activity feed.
  *
  * Encapsulates activity feed queries so hooks never import firebase/firestore.
+ * Returns parsed domain shapes (`ActivityFeedDoc`) — no DocumentData / Timestamp leakage.
  */
 
 import { query, orderBy, limit, getDocs } from 'firebase/firestore';
-import type { Timestamp, DocumentData } from 'firebase/firestore';
 import { activityFeedCol } from '@infra/refs';
-
-export interface RawActivityDoc {
-    id: string;
-    data: DocumentData;
-    createdAtMs: number;
-}
+import { parseActivityFeedDoc, type ActivityFeedDoc } from '@infra/firestoreValidators';
 
 /**
  * Fetch the most recent activity events for a single user.
- * Returns raw document data — the caller maps to domain types.
+ * Malformed docs are skipped with a console.warn.
  */
 export async function getRecentActivity(
     uid: string,
     count: number,
-): Promise<RawActivityDoc[]> {
+): Promise<ActivityFeedDoc[]> {
     const q = query(activityFeedCol(uid), orderBy('createdAt', 'desc'), limit(count));
     const snap = await getDocs(q);
-    return snap.docs.map(d => {
-        const data = d.data();
-        const ts = data.createdAt as Timestamp | null;
-        return {
-            id: d.id,
-            data,
-            createdAtMs: ts ? ts.toMillis() : Date.now(),
-        };
-    });
+    const out: ActivityFeedDoc[] = [];
+    for (const d of snap.docs) {
+        const parsed = parseActivityFeedDoc(d.id, d.data());
+        if (parsed) {
+            out.push(parsed);
+        } else {
+            console.warn('[activityRepository] Invalid activity doc skipped', d.id);
+        }
+    }
+    return out;
 }

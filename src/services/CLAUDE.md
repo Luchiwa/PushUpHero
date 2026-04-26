@@ -6,7 +6,7 @@ Pure functions with no React dependency. All Firestore/Auth/Storage mutations li
 
 | File | Responsibility |
 |------|---------------|
-| `authService.ts` | Firebase Auth operations, shared `translateAuthError()`. UI never imports `firebase/auth` directly. |
+| `authService.ts` | All Firebase Auth operations: `subscribeAuthState`, `signInWithGoogle`, `loginWithEmail`, `logoutSession`, `registerWithEmail`, `changePassword`, `reauthenticate*`, `translateAuthError`. Maps `firebase/auth.User` → `AppUser` at the boundary. **Sole authorized importer of `firebase/auth` outside `src/infra/`.** |
 | `userService.ts` | Profile writes. Does NOT handle sessions (see `sessionService`). |
 | `sessionService.ts` | `saveSession()` — atomic Firestore batch: session doc + profile update + activity feed + achievements + records |
 | `friendService.ts` | Friend request lifecycle, `batchFetchProfileStats()` |

@@ -8,8 +8,7 @@
  *         └─ SessionContext.Provider  (sessions, count)
  */
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { auth } from '@infra/firebase';
+import { subscribeAuthState, signInWithGoogle, logoutSession } from '@services/authService';
 import { uploadAvatar as uploadAvatarService } from '@services/avatarService';
 import { onUserProfile } from '@data/userRepository';
 import { AuthCoreContext, LevelContext, SessionContext } from '@hooks/useAuth';
@@ -78,15 +77,15 @@ function LevelAndSessionProvider({ children }: { children: React.ReactNode }) {
 // ── Outer provider: Auth core ───────────────────────────────────
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [user, setUser] = useState(null as import('firebase/auth').User | null);
+    const [user, setUser] = useState<AppUser | null>(null);
     const [dbUser, setDbUser] = useState<DbUser | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        let prevUser: import('firebase/auth').User | null = null;
+        let prevUser: AppUser | null = null;
         let unsubUserDoc: (() => void) | undefined;
 
-        const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        const unsubscribe = subscribeAuthState((appUser) => {
             // Tear down the previous user's Firestore listener first
             if (unsubUserDoc) {
                 unsubUserDoc();
@@ -95,15 +94,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             // If user was logged in and is now null → logout or account deletion
             // Clear localStorage synchronously BEFORE React re-renders child hooks
-            if (prevUser && !firebaseUser) {
+            if (prevUser && !appUser) {
                 clearAllLocalStorage();
             }
-            prevUser = firebaseUser;
+            prevUser = appUser;
 
-            setUser(firebaseUser);
-            if (firebaseUser) {
+            setUser(appUser);
+            if (appUser) {
                 unsubUserDoc = onUserProfile(
-                    firebaseUser.uid,
+                    appUser.uid,
                     (data) => { setDbUser(data); setLoading(false); },
                     () => { setDbUser(null); setLoading(false); },
                 );
@@ -122,9 +121,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const loginWithGoogle = useCallback(async () => {
-        const provider = new GoogleAuthProvider();
         try {
-            await signInWithPopup(auth, provider);
+            await signInWithGoogle();
         } catch (error) {
             console.error('Google sign in failed', error);
             throw error;
@@ -138,17 +136,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, [user, dbUser?.photoURL]);
 
     const logout = useCallback(async () => {
-        await signOut(auth);
-        // localStorage is cleared in the onAuthStateChanged handler above
+        await logoutSession();
+        // localStorage is cleared inside subscribeAuthState's callback when user → null
     }, []);
 
-    const appUser = useMemo<AppUser | null>(() =>
-        user ? { uid: user.uid, providerIds: user.providerData.map(p => p.providerId) } : null,
-    [user]);
-
     const authCoreValue = useMemo<AuthCoreContextType>(() => ({
-        user: appUser, dbUser, loading, loginWithGoogle, logout, uploadAvatar,
-    }), [appUser, dbUser, loading, loginWithGoogle, logout, uploadAvatar]);
+        user, dbUser, loading, loginWithGoogle, logout, uploadAvatar,
+    }), [user, dbUser, loading, loginWithGoogle, logout, uploadAvatar]);
 
     return (
         <AuthCoreContext.Provider value={authCoreValue}>
