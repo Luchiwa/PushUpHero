@@ -61,6 +61,7 @@ export function DeleteAccountSection({ onAccountDeleted }: DeleteAccountSectionP
                     placeholder="DELETE"
                     className={deleteInput === 'DELETE' ? 'input--danger-ready' : ''}
                     aria-describedby={deleteError ? 'delete-account-error' : undefined}
+                    aria-invalid={!!deleteError || undefined}
                 />
             </div>
             {isEmailUser && deleteInput === 'DELETE' && (

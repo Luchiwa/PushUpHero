@@ -51,6 +51,7 @@ export function PasswordChangeSection() {
                     required
                     autoComplete="current-password"
                     aria-describedby={pwdError ? 'password-change-error' : undefined}
+                    aria-invalid={!!pwdError || undefined}
                 />
             </div>
             <div className="input-group">
@@ -64,6 +65,7 @@ export function PasswordChangeSection() {
                     required
                     autoComplete="new-password"
                     aria-describedby={pwdError ? 'password-change-error' : undefined}
+                    aria-invalid={!!pwdError || undefined}
                 />
             </div>
             <div className="input-group">
@@ -77,6 +79,7 @@ export function PasswordChangeSection() {
                     required
                     autoComplete="new-password"
                     aria-describedby={pwdError ? 'password-change-error' : undefined}
+                    aria-invalid={!!pwdError || undefined}
                 />
             </div>
             {pwdError && <p id="password-change-error" className="settings-feedback settings-feedback--error" role="alert">{pwdError}</p>}

@@ -105,8 +105,9 @@ export function AuthModal({ onClose, onSuccess, initialMode = 'login', promoBann
                 <form onSubmit={handleEmailAuth} className="auth-form">
                     {mode === 'register' && (
                         <div className="input-group">
-                            <label>Username</label>
+                            <label htmlFor="auth-username">Username</label>
                             <input
+                                id="auth-username"
                                 ref={usernameInputRef}
                                 type="text"
                                 value={username}
@@ -116,12 +117,14 @@ export function AuthModal({ onClose, onSuccess, initialMode = 'login', promoBann
                                 minLength={3}
                                 maxLength={20}
                                 aria-describedby={error ? 'auth-form-error' : undefined}
+                                aria-invalid={!!error || undefined}
                             />
                         </div>
                     )}
                     <div className="input-group">
-                        <label>Email</label>
+                        <label htmlFor="auth-email">Email</label>
                         <input
+                            id="auth-email"
                             ref={emailInputRef}
                             type="email"
                             value={email}
@@ -129,11 +132,13 @@ export function AuthModal({ onClose, onSuccess, initialMode = 'login', promoBann
                             placeholder="hero@example.com"
                             required
                             aria-describedby={error ? 'auth-form-error' : undefined}
+                            aria-invalid={!!error || undefined}
                         />
                     </div>
                     <div className="input-group">
-                        <label>Password</label>
+                        <label htmlFor="auth-password">Password</label>
                         <input
+                            id="auth-password"
                             type="password"
                             value={password}
                             onChange={e => setPassword(e.target.value)}
@@ -141,6 +146,7 @@ export function AuthModal({ onClose, onSuccess, initialMode = 'login', promoBann
                             required
                             minLength={6}
                             aria-describedby={error ? 'auth-form-error' : undefined}
+                            aria-invalid={!!error || undefined}
                         />
                     </div>
 

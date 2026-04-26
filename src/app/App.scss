@@ -15,14 +15,6 @@
     padding-right: env(safe-area-inset-right);
 }
 
-// <main> landmark wrapping screen content. display: contents removes the
-// element from layout so existing flow (video / overlays / screens absolutely
-// positioned inside the container) is unaffected, while the role stays
-// exposed to screen readers and Lighthouse.
-.app-main {
-    display: contents;
-}
-
 // ── Fullscreen video ─────────────────────────────────────────────
 .video-fullscreen {
     @include fill;

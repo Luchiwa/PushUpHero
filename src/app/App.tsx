@@ -149,7 +149,7 @@ function App() {
   return (
     <WorkoutContext.Provider value={workoutCtx}>
     <ExerciseStateContext.Provider value={exerciseState}>
-    <div className="app-container">
+    <main className="app-container">
       <video
         ref={videoRef}
         className={`video-fullscreen ${wm.screen !== 'active' ? 'video-hidden' : ''} ${facingMode === 'environment' ? 'video-no-mirror' : ''}`}
@@ -157,7 +157,6 @@ function App() {
         playsInline
       />
 
-      <main className="app-main">
       {wm.screen === 'active' && (
         <ErrorBoundary fallback="section">
           <PoseOverlay ref={poseOverlayRef} videoRef={videoRef} exerciseType={exerciseType} />
@@ -271,10 +270,9 @@ function App() {
           </ErrorBoundary>
         )}
       </Suspense>
-      </main>
 
       <ReloadPrompt />
-    </div>
+    </main>
     </ExerciseStateContext.Provider>
     </WorkoutContext.Provider>
   );
