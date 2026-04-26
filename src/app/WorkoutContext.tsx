@@ -6,7 +6,7 @@
  */
 import { createContext, useContext } from 'react';
 import type { ExerciseType } from '@exercises/types';
-import type { WorkoutMachineReturn } from './useWorkoutStateMachine';
+import type { WorkoutMachineReturn } from './workout/useWorkoutStateMachine';
 
 export interface WorkoutContextType extends WorkoutMachineReturn {
   exerciseType: ExerciseType;
