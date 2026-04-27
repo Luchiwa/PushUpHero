@@ -19,7 +19,7 @@ import {
 import { db } from '@infra/firebase';
 import { userRef, sessionRef, activityFeedCol } from '@infra/refs';
 import { FEED_PRUNE_AGE_MS, buildSessionRepsMap, createXpAmount, emptyRecords, evaluateAchievements, evaluateRecords, getGradeLetter, levelFromTotalXp, type AchievementDef, type AchievementMap, type DbUser, type RecordUpdate, type RecordsMap, type UserId, type UserStats, type XpAmount } from '@domain';
-import { getExerciseLabel, type ExerciseType, type SessionRecord } from '@exercises/types';
+import type { ExerciseType, SessionRecord } from '@exercises/types';
 
 // ─── Date helpers ────────────────────────────────────────────────────────────
 
@@ -190,16 +190,17 @@ export async function saveSession({
     if (session.exerciseType) feedEvent.exerciseType = session.exerciseType;
     if (session.isMultiExercise) {
         feedEvent.isMultiExercise = true;
-        // Build lightweight per-block summaries for the feed
+        // Build lightweight per-block summaries for the feed.
+        // Persist `exerciseType` (the canonical literal) so the consumer
+        // translates with the *reader's* locale — not the writer's.
         if (session.blocks && session.sets) {
             let si = 0;
-            const summaries: { label: string; reps: number }[] = [];
+            const summaries: { exerciseType: ExerciseType; reps: number }[] = [];
             for (const block of session.blocks) {
                 const blockSets = session.sets.slice(si, si + block.numberOfSets);
                 si += block.numberOfSets;
                 const reps = blockSets.reduce((s, st) => s + st.reps, 0);
-                const label = getExerciseLabel(block.exerciseType);
-                summaries.push({ label, reps });
+                summaries.push({ exerciseType: block.exerciseType, reps });
             }
             feedEvent.blockSummaries = summaries;
         }

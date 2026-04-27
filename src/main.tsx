@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles/main.scss'
+import './i18n'
 import App from '@app/App'
 import { AuthProvider } from '@app/AuthProvider'
 import { ErrorBoundary } from '@components/ErrorBoundary/ErrorBoundary'

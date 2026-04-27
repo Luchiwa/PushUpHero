@@ -64,6 +64,8 @@ export interface FlatUserDoc {
     records?: RecordsMap;
     bodyProfile?: BodyProfile;
     questProgress?: QuestProgress;
+    /** Persisted UI language preference (e.g. `'fr'`, `'en'`). */
+    preferredLanguage?: string;
 }
 
 // ── Required-field guards ────────────────────────────────────────────────────
@@ -136,7 +138,12 @@ export interface ActivityFeedDoc {
     numberOfSets?: number;
     exerciseType?: ExerciseType;
     isMultiExercise?: boolean;
-    blockSummaries?: { label: string; reps: number }[];
+    /**
+     * Per-block summaries for multi-exercise feed events. New writers persist
+     * `exerciseType` (translated at render). Legacy docs persisted `label`
+     * (writer-locale text); the consumer falls back to it for back-compat.
+     */
+    blockSummaries?: { exerciseType?: ExerciseType; label?: string; reps: number }[];
 }
 
 export function parseActivityFeedDoc(id: string, data: unknown): ActivityFeedDoc | null {
@@ -155,8 +162,14 @@ export function parseActivityFeedDoc(id: string, data: unknown): ActivityFeedDoc
         exerciseType: isKnownExerciseType(data.exerciseType) ? data.exerciseType : undefined,
         isMultiExercise: typeof data.isMultiExercise === 'boolean' ? data.isMultiExercise : undefined,
         blockSummaries: Array.isArray(data.blockSummaries)
-            ? data.blockSummaries.filter((b): b is { label: string; reps: number } =>
-                isObj(b) && typeof b.label === 'string' && typeof b.reps === 'number')
+            ? data.blockSummaries
+                .filter((b): b is Record<string, unknown> => isObj(b) && typeof b.reps === 'number')
+                .map(b => ({
+                    exerciseType: isKnownExerciseType(b.exerciseType) ? b.exerciseType : undefined,
+                    label: typeof b.label === 'string' ? b.label : undefined,
+                    reps: b.reps as number,
+                }))
+                .filter(b => b.exerciseType !== undefined || b.label !== undefined)
             : undefined,
     };
 }

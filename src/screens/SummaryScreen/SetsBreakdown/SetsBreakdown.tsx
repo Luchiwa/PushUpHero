@@ -1,4 +1,5 @@
-import { getExerciseLabel, type SetRecord, type WorkoutPlan } from '@exercises/types';
+import { useTranslation } from 'react-i18next';
+import { getExerciseLabelKey, type SetRecord, type WorkoutPlan } from '@exercises/types';
 import { getGradeClass, getGradeLetter, weightedAverageScore } from '@domain';
 import './SetsBreakdown.scss';
 
@@ -14,6 +15,7 @@ interface SetsBreakdownProps {
 }
 
 export function SetsBreakdown({ isMultiExercise, isMultiSet, workoutPlan, completedSets }: SetsBreakdownProps) {
+    const { t } = useTranslation('workout');
     if (!isMultiSet) return null;
 
     if (isMultiExercise) {
@@ -26,16 +28,16 @@ export function SetsBreakdown({ isMultiExercise, isMultiSet, workoutPlan, comple
         }
         return (
             <div className="sets-breakdown">
-                <p className="sets-breakdown-title">Exercise breakdown</p>
+                <p className="sets-breakdown-title">{t('summary.exercise_breakdown')}</p>
                 {blockGroups.map((group, bi) => {
                     const blockReps = group.sets.reduce((s, set) => s + set.reps, 0);
                     const blockAvg = weightedAverageScore(group.sets);
                     return (
                         <div key={`block-${group.block.exerciseType}-${bi}`} className="set-item">
                             <div className="set-item-header">
-                                <span className="set-item-num">{getExerciseLabel(group.block.exerciseType)}</span>
+                                <span className="set-item-num">{t(getExerciseLabelKey(group.block.exerciseType))}</span>
                                 <span className="set-item-stats">
-                                    {blockReps} reps · {group.sets.length} set{group.sets.length > 1 ? 's' : ''} · <ScoreGrade score={blockAvg} />
+                                    {t('common:unit.rep', { count: blockReps })} · {t('common:unit.set', { count: group.sets.length })} · <ScoreGrade score={blockAvg} />
                                 </span>
                             </div>
                         </div>
@@ -47,13 +49,13 @@ export function SetsBreakdown({ isMultiExercise, isMultiSet, workoutPlan, comple
 
     return (
         <div className="sets-breakdown">
-            <p className="sets-breakdown-title">Sets breakdown</p>
+            <p className="sets-breakdown-title">{t('summary.sets_breakdown')}</p>
             {completedSets.map((set, i) => (
                 <div key={`set-${set.reps}-${i}`} className="set-item">
                     <div className="set-item-header">
-                        <span className="set-item-num">Set {i + 1}</span>
+                        <span className="set-item-num">{t('summary.set_n', { n: i + 1 })}</span>
                         <span className="set-item-stats">
-                            {set.reps} reps · <ScoreGrade score={set.averageScore} /> · {set.averageScore}%
+                            {t('common:unit.rep', { count: set.reps })} · <ScoreGrade score={set.averageScore} /> · {set.averageScore}%
                         </span>
                     </div>
                 </div>

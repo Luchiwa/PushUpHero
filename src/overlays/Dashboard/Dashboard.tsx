@@ -1,6 +1,7 @@
 import { memo, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import './Dashboard.scss';
-import { getExerciseLabel, getInvalidPositionMessage } from '@exercises/types';
+import { getExerciseLabelKey, getInvalidPositionMessageKey } from '@exercises/types';
 import { useWorkout } from '@app/WorkoutContext';
 import { useExerciseState } from '@app/ExerciseStateContext';
 import { useBackButton } from '@hooks/shared/useBackButton';
@@ -19,6 +20,7 @@ interface DashboardProps {
 }
 
 export const Dashboard = memo(function Dashboard({ facingMode, onFlipCamera }: DashboardProps) {
+    const { t } = useTranslation('dashboard');
     const {
         exerciseType, goalReps, sessionMode, timeGoal,
         handleStop, handleTimerEnd, elapsedTimeRef, soundEnabled, setSoundEnabled,
@@ -75,13 +77,13 @@ export const Dashboard = memo(function Dashboard({ facingMode, onFlipCamera }: D
                     <div className="hud-rep-block" aria-live="polite" aria-atomic="true">
                         <FloatyNumbers repCount={repCount} />
                         <span className="hud-rep-count">{repCount}</span>
-                        <span className="hud-rep-label">{getExerciseLabel(exerciseType)}</span>
+                        <span className="hud-rep-label">{t(getExerciseLabelKey(exerciseType))}</span>
                     </div>
 
                     {isCalibrated && (
                         <div className="hud-avg">
                             <ScoreRing score={averageScore} />
-                            <span className="hud-avg-label">AVG</span>
+                            <span className="hud-avg-label">{t('average_label')}</span>
                         </div>
                     )}
                 </div>
@@ -92,8 +94,8 @@ export const Dashboard = memo(function Dashboard({ facingMode, onFlipCamera }: D
                     {totalSets != null && totalSets > 1 && currentSet != null && (
                         <span className="set-indicator">
                             {currentBlock != null && displayTotalBlocks != null && displayTotalBlocks > 1
-                                ? `${currentBlock}/${displayTotalBlocks} · ${currentSet}/${totalSets}`
-                                : `Set ${currentSet}/${totalSets}`}
+                                ? t('set_indicator_block', { block: currentBlock, totalBlocks: displayTotalBlocks, set: currentSet, totalSets })
+                                : t('set_indicator', { current: currentSet, total: totalSets })}
                         </span>
                     )}
 
@@ -122,7 +124,7 @@ export const Dashboard = memo(function Dashboard({ facingMode, onFlipCamera }: D
                             type="button"
                             className="btn-icon"
                             onClick={onFlipCamera}
-                            title={facingMode === 'user' ? 'Switch to rear camera' : 'Switch to front camera'}
+                            title={facingMode === 'user' ? t('flip_camera_to_rear') : t('flip_camera_to_front')}
                         >
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                                 <path d="M11 19H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h1l2-3h6l2 3h1a2 2 0 0 1 2 2v1" />
@@ -134,7 +136,7 @@ export const Dashboard = memo(function Dashboard({ facingMode, onFlipCamera }: D
                             type="button"
                             className={`btn-icon ${soundEnabled ? '' : 'btn-icon--muted'}`}
                             onClick={() => setSoundEnabled(s => !s)}
-                            title={soundEnabled ? 'Mute' : 'Unmute'}
+                            title={soundEnabled ? t('mute') : t('unmute')}
                         >
                             {soundEnabled ? (
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -149,7 +151,7 @@ export const Dashboard = memo(function Dashboard({ facingMode, onFlipCamera }: D
                                 </svg>
                             )}
                         </button>
-                        <button className="btn-stop" onClick={handleStop} type="button" aria-label="Stop workout">■</button>
+                        <button className="btn-stop" onClick={handleStop} type="button" aria-label={t('stop_workout_aria')}>■</button>
                     </div>
                 </div>
             </div>
@@ -169,8 +171,8 @@ export const Dashboard = memo(function Dashboard({ facingMode, onFlipCamera }: D
                 {showInvalidBanner && (
                     <div className={`invalid-position-banner${poseRejectedByLock ? ' invalid-position-banner--lock' : ''}`} role="alert">
                         {poseRejectedByLock
-                            ? '👤 Wrong person detected — get back in frame'
-                            : getInvalidPositionMessage(exerciseType)}
+                            ? t('wrong_person_banner')
+                            : t(getInvalidPositionMessageKey(exerciseType))}
                     </div>
                 )}
             </div>

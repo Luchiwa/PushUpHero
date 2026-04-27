@@ -15,39 +15,51 @@ export const EXERCISE_TYPES: ExerciseType[] = ['pushup', 'squat', 'pullup', 'leg
 
 export interface ExerciseMeta {
     type: ExerciseType;
-    label: string;
     emoji: string;
-    /** Short editorial tag shown under the label in pickers, e.g. 'UPPER BODY' */
-    category: string;
-    /** Banner shown when user leaves the valid position mid-session */
-    invalidPositionMessage: string;
 }
 
-/** Display metadata per exercise — drives pickers, filters, etc. */
+/** Display metadata per exercise — drives pickers, filters, etc.
+ *  Display strings (label, category, invalid-position message) live in
+ *  `common.json` / `dashboard.json` and are reached via the `*Key`
+ *  helpers below. */
 export const EXERCISE_META: ExerciseMeta[] = [
-    { type: 'pushup',   label: 'Push-ups',   emoji: '💪', category: 'Upper Body', invalidPositionMessage: '⚠️ Get back into push-up position' },
-    { type: 'squat',    label: 'Squats',     emoji: '🦵', category: 'Lower Body', invalidPositionMessage: '⚠️ Stand upright facing the camera' },
-    { type: 'pullup',   label: 'Pull-ups',   emoji: '🏋️', category: 'Pull',       invalidPositionMessage: '⚠️ Get back into hang position' },
-    { type: 'legraise', label: 'Leg Raises', emoji: '🧘', category: 'Core',       invalidPositionMessage: '⚠️ Lie flat on your back' },
+    { type: 'pushup',   emoji: '💪' },
+    { type: 'squat',    emoji: '🦵' },
+    { type: 'pullup',   emoji: '🏋️' },
+    { type: 'legraise', emoji: '🧘' },
 ];
 
 const META_MAP: Record<ExerciseType, ExerciseMeta> = Object.fromEntries(
     EXERCISE_META.map(m => [m.type, m]),
 ) as Record<ExerciseType, ExerciseMeta>;
 
-/** Human-readable label: 'Push-ups', 'Squats', 'Pull-ups' */
-export function getExerciseLabel(type: ExerciseType): string {
-    return META_MAP[type].label;
-}
-
 /** Emoji for an exercise: '💪', '🦵', '🏋️' */
 export function getExerciseEmoji(type: ExerciseType): string {
     return META_MAP[type].emoji;
 }
 
-/** Banner text when user leaves valid position: '⚠️ Get back into push-up position' etc. */
-export function getInvalidPositionMessage(type: ExerciseType): string {
-    return META_MAP[type].invalidPositionMessage;
+// ── i18n keys (preferred for UI consumption) ─────────────────────
+
+const CATEGORY_KEY_MAP: Record<ExerciseType, string> = {
+    pushup:   'upper_body',
+    squat:    'lower_body',
+    pullup:   'pull',
+    legraise: 'core',
+};
+
+/** i18next key for the exercise display name. Use as `t(getExerciseLabelKey(type))`. */
+export function getExerciseLabelKey(type: ExerciseType): string {
+    return `common:exercise.${type}`;
+}
+
+/** i18next key for the exercise category tag (UI groupings like "Upper Body"). */
+export function getExerciseCategoryKey(type: ExerciseType): string {
+    return `common:exercise_category.${CATEGORY_KEY_MAP[type]}`;
+}
+
+/** i18next key for the "lost the pose" warning shown over the camera. */
+export function getInvalidPositionMessageKey(type: ExerciseType): string {
+    return `common:exercise_invalid_position.${type}`;
 }
 
 export type ExercisePhase = 'idle' | 'up' | 'down' | 'transition';
@@ -159,7 +171,7 @@ export interface SessionRecord {
     xpEarned?: number;             // Total XP earned (after bonuses)
     xpRaw?: number;                // XP before bonuses
     xpMultiplier?: number;         // Multiplier applied
-    xpBonuses?: { key: string; label: string; emoji: string; pct: number }[];
+    xpBonuses?: { key: string; labelKey: string; labelParams?: Record<string, string | number>; emoji: string; pct: number }[];
     xpPerExercise?: { exerciseType: string; rawXp: number; finalXp: number }[];
 }
 

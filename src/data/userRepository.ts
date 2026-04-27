@@ -9,6 +9,7 @@ import { onSnapshot } from 'firebase/firestore';
 import { userRef } from '@infra/refs';
 import { isFlatUserDoc, type FlatUserDoc } from '@infra/firestoreValidators';
 import { createUserId, createLevel, createXpAmount, type DbUser, type UserId } from '@domain';
+import { isSupportedLanguage } from '@i18n/types';
 
 /**
  * Unfolds the flat Firestore wire shape into the nested domain `DbUser`.
@@ -27,6 +28,7 @@ function unfoldDbUser(flat: FlatUserDoc): DbUser {
             photoURL: flat.photoURL,
             photoThumb: flat.photoThumb,
             createdAt: flat.createdAt,
+            preferredLanguage: isSupportedLanguage(flat.preferredLanguage) ? flat.preferredLanguage : undefined,
         },
         stats: {
             level: createLevel(flat.level),

@@ -1,16 +1,17 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import { QuestCard as ArenaQuestCard } from '@components/QuestCard/QuestCard';
 import { PrimaryCTA } from '@components/PrimaryCTA/PrimaryCTA';
 import { ExercisePicker } from '@components/ExercisePicker/ExercisePicker';
-import { computeQuestProgressPct, getQuestProgressCount, isSingleSessionQuest, type QuestCategory, type QuestDef, type QuestProgress } from '@domain';
-import { getExerciseLabel, type ExerciseType } from '@exercises/types';
+import { computeQuestProgressPct, getQuestProgressCount, getQuestTitle, getQuestDescription, isSingleSessionQuest, type QuestCategory, type QuestDef, type QuestProgress } from '@domain';
+import { getExerciseLabelKey, type ExerciseType } from '@exercises/types';
 import './QuestCard.scss';
 
 interface QuestCardProps {
     activeQuest: QuestDef;
     questAccepted: boolean;
     questProgress: QuestProgress;
-    catMeta: { label: string; color: string } | null;
+    catMeta: { labelKey: string; color: string } | null;
     exerciseType: ExerciseType;
     changeExerciseType: (type: ExerciseType) => void;
     onAcceptQuest: () => void;
@@ -38,6 +39,7 @@ export function QuestCard({
     onAcceptQuest,
     onQuestStart,
 }: QuestCardProps) {
+    const { t } = useTranslation('quests');
     const tone: Tone = CATEGORY_TONE[activeQuest.category] ?? 'ember';
     const rewardNode = (
         <span className="home-quest-reward">
@@ -46,14 +48,16 @@ export function QuestCard({
             <span className="home-quest-reward-unit">XP</span>
         </span>
     );
-    const kicker = catMeta?.label?.toUpperCase();
+    const kicker = catMeta ? t(catMeta.labelKey).toUpperCase() : t('summary_card.kicker_default');
+    const questTitle = getQuestTitle(activeQuest, t);
+    const questDescription = getQuestDescription(activeQuest, t);
 
     if (!questAccepted) {
         return (
             <ArenaQuestCard
                 kicker={kicker}
-                title={<><span className="home-quest-emoji" aria-hidden="true">{activeQuest.emoji}</span>{activeQuest.title}</>}
-                description={activeQuest.description}
+                title={<><span className="home-quest-emoji" aria-hidden="true">{activeQuest.emoji}</span>{questTitle}</>}
+                description={questDescription}
                 reward={rewardNode}
                 tone={tone}
                 footer={
@@ -64,7 +68,7 @@ export function QuestCard({
                         icon="✨"
                         onClick={onAcceptQuest}
                     >
-                        Accept Quest
+                        {t('summary_card.accept')}
                     </PrimaryCTA>
                 }
             />
@@ -78,19 +82,19 @@ export function QuestCard({
     const remaining = Math.max(0, goalReps - currentReps);
 
     const repsLabel = hasSpecificExercise
-        ? getExerciseLabel(activeQuest.goal.exerciseType!)
-        : 'reps';
+        ? t(getExerciseLabelKey(activeQuest.goal.exerciseType!))
+        : t('summary_card.reps_label');
     const startLabel = isCrossSession && currentReps > 0
-        ? `Start — ${remaining} ${repsLabel} left`
-        : `Start — ${goalReps} ${repsLabel}`;
+        ? t('summary_card.start_remaining', { count: remaining, exercise: repsLabel })
+        : t('summary_card.start_total', { count: goalReps, exercise: repsLabel });
 
     const progressPct = computeQuestProgressPct(currentReps, goalReps, isCrossSession);
 
     return (
         <ArenaQuestCard
             kicker={kicker}
-            title={<><span className="home-quest-emoji" aria-hidden="true">{activeQuest.emoji}</span>{activeQuest.title}</>}
-            description={activeQuest.description}
+            title={<><span className="home-quest-emoji" aria-hidden="true">{activeQuest.emoji}</span>{questTitle}</>}
+            description={questDescription}
             reward={rewardNode}
             tone={tone}
             footer={
@@ -114,7 +118,7 @@ export function QuestCard({
                         <span className="home-quest-progress-fill" />
                     </div>
                     <span className="home-quest-progress-label">
-                        {currentReps}/{goalReps} {repsLabel}
+                        {t('summary_card.progress_count', { current: currentReps, goal: goalReps, exercise: repsLabel })}
                     </span>
                 </div>
             )}

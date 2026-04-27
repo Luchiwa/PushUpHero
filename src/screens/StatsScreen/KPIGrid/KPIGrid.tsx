@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { SessionRecord } from '@exercises/types';
 import { compactNum, pctChange, type ExerciseFilter } from '@domain';
 import type { MetricMode } from '../StatsScreen';
@@ -23,6 +24,7 @@ interface KPIGridProps {
 }
 
 export function KPIGrid({ summary, prevSummary, filteredSessions, exerciseFilter, metric, loading }: KPIGridProps) {
+    const { t } = useTranslation('stats');
     if (loading) {
         return (
             <div className="stats-summary-grid">
@@ -36,8 +38,8 @@ export function KPIGrid({ summary, prevSummary, filteredSessions, exerciseFilter
     interface KpiDef { icon: string; iconColor: keyof typeof KPI_COLOR; label: string; value: string; change: number | null }
     const kpis: KpiDef[] = metric === 'xp'
         ? [
-            { icon: '⚡', iconColor: 'accent', label: 'XP', value: compactNum(summary.totalXp), change: pctChange(summary.totalXp, prevSummary.totalXp) },
-            { icon: '🏆', iconColor: 'amber', label: 'Best', value: compactNum(Math.max(0, ...filteredSessions.map(s => {
+            { icon: '⚡', iconColor: 'accent', label: t('screen.kpi_xp'), value: compactNum(summary.totalXp), change: pctChange(summary.totalXp, prevSummary.totalXp) },
+            { icon: '🏆', iconColor: 'amber', label: t('screen.kpi_best'), value: compactNum(Math.max(0, ...filteredSessions.map(s => {
                 if (exerciseFilter !== 'all' && s.xpPerExercise) {
                     const m = s.xpPerExercise.find(e => e.exerciseType === exerciseFilter);
                     return m ? m.finalXp : 0;
@@ -46,13 +48,13 @@ export function KPIGrid({ summary, prevSummary, filteredSessions, exerciseFilter
             }))), change: null },
         ]
         : [
-            { icon: '💪', iconColor: 'accent', label: 'Reps', value: compactNum(summary.totalReps), change: pctChange(summary.totalReps, prevSummary.totalReps) },
-            { icon: '🏆', iconColor: 'amber', label: 'Best', value: compactNum(summary.bestSession), change: null },
+            { icon: '💪', iconColor: 'accent', label: t('screen.kpi_reps'), value: compactNum(summary.totalReps), change: pctChange(summary.totalReps, prevSummary.totalReps) },
+            { icon: '🏆', iconColor: 'amber', label: t('screen.kpi_best'), value: compactNum(summary.bestSession), change: null },
         ];
 
     kpis.push(
-        { icon: '📋', iconColor: 'indigo', label: 'Sessions', value: String(summary.sessionCount), change: pctChange(summary.sessionCount, prevSummary.sessionCount) },
-        { icon: '🔥', iconColor: 'orange', label: 'Active', value: `${summary.activeDays}/7`, change: null },
+        { icon: '📋', iconColor: 'indigo', label: t('screen.kpi_sessions'), value: String(summary.sessionCount), change: pctChange(summary.sessionCount, prevSummary.sessionCount) },
+        { icon: '🔥', iconColor: 'orange', label: t('screen.kpi_active'), value: `${summary.activeDays}/7`, change: null },
     );
 
     return (

@@ -19,6 +19,7 @@ import {
     type User,
 } from 'firebase/auth';
 import { runTransaction } from 'firebase/firestore';
+import i18n from 'i18next';
 import { auth, db } from '@infra/firebase';
 import { userRef, usernameRef } from '@infra/refs';
 import { createUserId, type AppUser } from '@domain';
@@ -50,18 +51,31 @@ export async function logoutSession(): Promise<void> {
 
 // ── Error translation ────────────────────────────────────────────────────────
 
-/** Translates Firebase Auth error codes into user-friendly messages. */
+/**
+ * Translates a Firebase Auth error into a localized message in the active
+ * UI language. Maps known error codes to `errors:auth.<code>` keys;
+ * thrown errors that already carry a key in `.message` (e.g.
+ * `errors:auth.username_taken`) are resolved verbatim; unknown errors
+ * fall back to `errors:auth.unknown`. The i18next lookup happens here so
+ * call sites can `setError(translateAuthError(err))` directly.
+ */
 export function translateAuthError(err: unknown): string {
     const code = (err as { code?: string }).code;
+    let key: string;
     switch (code) {
-        case 'auth/email-already-in-use': return 'This email is already in use.';
+        case 'auth/email-already-in-use':  key = 'errors:auth.email_already_in_use'; break;
         case 'auth/invalid-credential':
-        case 'auth/wrong-password': return 'Incorrect email or password.';
-        case 'auth/requires-recent-login': return 'Session expired. Please sign out and sign in again.';
-        case 'auth/user-not-found': return 'No account found with this email.';
-        case 'auth/too-many-requests': return 'Too many attempts. Please try again later.';
-        default: return (err as Error).message || 'An error occurred.';
+        case 'auth/wrong-password':        key = 'errors:auth.invalid_credential';   break;
+        case 'auth/requires-recent-login': key = 'errors:auth.requires_recent_login'; break;
+        case 'auth/user-not-found':        key = 'errors:auth.user_not_found';       break;
+        case 'auth/too-many-requests':     key = 'errors:auth.too_many_requests';    break;
+        default: {
+            const message = (err as Error).message;
+            // Pre-keyed errors (thrown by us) carry the i18n key in their message.
+            key = message?.startsWith('errors:') ? message : 'errors:auth.unknown';
+        }
     }
+    return i18n.t(key);
 }
 
 // ── Sign-in ──────────────────────────────────────────────────────────────────
@@ -110,7 +124,7 @@ export async function registerWithEmail(
         const usernameDoc = await transaction.get(uRef);
 
         if (usernameDoc.exists()) {
-            throw new Error('This username is already taken!');
+            throw new Error('errors:auth.username_taken');
         }
 
         // Create the user in Auth

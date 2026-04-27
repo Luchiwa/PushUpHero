@@ -1,0 +1,127 @@
+{
+    "screen": {
+        "title": "Quêtes",
+        "header_title": "Progression des quêtes",
+        "all_completed": "Toutes les quêtes terminées ! 🎉",
+        "active_remaining": "{{active}}/{{max}} active(s) · {{remaining}} restante(s)",
+        "remaining_one": "{{count}} quête restante",
+        "remaining_other": "{{count}} quêtes restantes"
+    },
+    "card": {
+        "active_badge": "Active",
+        "level_required": "Niveau {{level}} requis",
+        "complete_first": "Termine d'abord « {{title}} »",
+        "locked": "Verrouillée",
+        "completed_on": "Terminée le {{date}}",
+        "max_active": "Maximum {{max}} quêtes actives",
+        "accept": "✨ Accepter",
+        "abandon": "Abandonner",
+        "start_with_exercise": "🚀 Démarrer — {{count}} {{exercise}}",
+        "start_with_reps": "🚀 Démarrer — {{count}} reps",
+        "progress": "{{current}}/{{goal}}"
+    },
+    "category": {
+        "onboarding": "Premiers pas",
+        "exercise": "Exercice",
+        "mastery": "Maîtrise",
+        "endurance": "Endurance",
+        "variety": "Variété"
+    },
+    "complex_hint": {
+        "multi_exercise": "Utilise un workout multi-sets avec 2 exercices ou plus",
+        "multi_set": "Utilise un workout multi-sets avec 2 sets ou plus"
+    },
+    "widget": {
+        "title": "Quêtes",
+        "all_done": "✓ Toutes terminées",
+        "active_and_available": "{{active}} actives · {{available}} disponibles",
+        "available_compact": "{{count}} nouvelle(s)",
+        "active_only_one": "{{count}} active",
+        "active_only_other": "{{count}} actives",
+        "available_only_one": "{{count}} disponible",
+        "available_only_other": "{{count}} disponibles",
+        "completed_summary_one": "🏆 {{count}} quête conquise",
+        "completed_summary_other": "🏆 {{count}} quêtes conquises",
+        "browse": "Voir les quêtes disponibles →",
+        "more_count": "+{{count}} autre(s)",
+        "in_progress": "En cours"
+    },
+    "summary_card": {
+        "accept": "Accepter la quête",
+        "kicker_default": "QUÊTE",
+        "start_remaining": "Démarrer — {{count}} {{exercise}} restant(e)s",
+        "start_total": "Démarrer — {{count}} {{exercise}}",
+        "reps_label": "reps",
+        "progress_count": "{{current}}/{{goal}} {{exercise}}"
+    },
+    "def": {
+        "first_steps": {
+            "title": "Premiers pas",
+            "description": "Fais 5 reps de n'importe quel exercice pour calibrer ton profil corporel."
+        },
+        "warm_up": {
+            "title": "Échauffement",
+            "description": "Fais 10 reps de n'importe quel exercice."
+        },
+        "pushup_initiate": {
+            "title": "Initié(e) Pompes",
+            "description": "Fais 15 pompes."
+        },
+        "squat_initiate": {
+            "title": "Initié(e) Squats",
+            "description": "Fais 15 squats."
+        },
+        "legraise_initiate": {
+            "title": "Initié(e) Levés de jambes",
+            "description": "Fais 15 levés de jambes."
+        },
+        "pullup_initiate": {
+            "title": "Initié(e) Tractions",
+            "description": "Fais 5 tractions."
+        },
+        "quality_over_quantity": {
+            "title": "La qualité avant tout",
+            "description": "Fais 10 reps avec un score moyen de A (75+)."
+        },
+        "perfect_ten": {
+            "title": "Dix parfaits",
+            "description": "Fais 10 reps avec un score moyen de S (90+)."
+        },
+        "pushup_master": {
+            "title": "Maître des pompes",
+            "description": "Fais 30 pompes avec un grade moyen A."
+        },
+        "legraise_master": {
+            "title": "Maître des levés de jambes",
+            "description": "Fais 30 levés de jambes avec un grade moyen A."
+        },
+        "squat_master": {
+            "title": "Maître des squats",
+            "description": "Fais 30 squats avec un grade moyen A."
+        },
+        "marathon_starter": {
+            "title": "Marathonien débutant",
+            "description": "Fais 25 reps en une seule session."
+        },
+        "iron_will": {
+            "title": "Volonté de fer",
+            "description": "Fais 50 reps en une seule session."
+        },
+        "centurion": {
+            "title": "Centurion",
+            "description": "Fais 100 reps en une seule session."
+        },
+        "multi_set_warrior": {
+            "title": "Guerrier multi-sets",
+            "description": "Termine un workout multi-sets (2+ sets)."
+        },
+        "cross_trainer": {
+            "title": "Cross-trainer",
+            "description": "Termine un workout multi-exercices."
+        },
+        "versatile_athlete": {
+            "title": "Athlète polyvalent(e)",
+            "description": "Fais 20+ reps dans un workout multi-exercices avec un grade A."
+        }
+    }
+}

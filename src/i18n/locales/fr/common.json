@@ -1,0 +1,53 @@
+{
+    "exercise": {
+        "pushup": "Pompes",
+        "squat": "Squats",
+        "pullup": "Tractions",
+        "legraise": "Levés de jambes"
+    },
+    "exercise_category": {
+        "upper_body": "Haut du corps",
+        "lower_body": "Bas du corps",
+        "pull": "Tirage",
+        "core": "Sangle abdominale"
+    },
+    "exercise_invalid_position": {
+        "pushup": "⚠️ Reprends la position de pompe",
+        "squat": "⚠️ Tiens-toi droit face à la caméra",
+        "pullup": "⚠️ Reprends la position suspendue",
+        "legraise": "⚠️ Allonge-toi à plat sur le dos"
+    },
+    "action": {
+        "back": "Retour",
+        "continue": "Continuer",
+        "done": "Terminé",
+        "next": "Suivant",
+        "skip": "Passer",
+        "edit": "Modifier",
+        "remove": "Supprimer",
+        "dismiss": "Ignorer",
+        "retry": "Réessayer"
+    },
+    "reload_prompt": {
+        "title": "Nouvelle version disponible !",
+        "subtitle": "Recharge pour profiter des dernières fonctionnalités",
+        "btn_update": "Mettre à jour"
+    },
+    "error": {
+        "section_message": "Une erreur est survenue dans cette section.",
+        "root_title": "😵 Oups, une erreur est survenue",
+        "root_default": "Une erreur inattendue s'est produite.",
+        "btn_try_again": "Réessayer"
+    },
+    "aria": {
+        "choose_exercise": "Sélection d'exercice"
+    },
+    "unit": {
+        "rep_one": "{{count}} rep",
+        "rep_other": "{{count}} reps",
+        "set_one": "{{count}} set",
+        "set_other": "{{count}} sets",
+        "day_one": "{{count}} jour",
+        "day_other": "{{count}} jours"
+    }
+}

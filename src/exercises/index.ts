@@ -11,7 +11,7 @@ export {
 
 // Types
 export {
-    EXERCISE_TYPES, EXERCISE_META, getExerciseLabel, getInvalidPositionMessage, createDefaultBlock,
+    EXERCISE_TYPES, EXERCISE_META, createDefaultBlock,
     type ExerciseType, type ExerciseState, type ExercisePhase, type Landmark, type RepResult,
     type RepFeedback, type SetRecord, type SessionRecord, type TimeDuration, type WorkoutBlock,
     type WorkoutPlan,
