@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { useSessionHistory } from '@hooks/useSessionHistory';
 import { EXERCISE_META, getExerciseLabelKey, type SessionRecord, type TimeDuration } from '@exercises/types';
-import { formatDate, formatTime, getGradeLetter, getGradeClass, getGradeColor, formatElapsedTime } from '@domain';
+import { formatDate, formatNumber, formatTime, getGradeLetter, getGradeClass, getGradeColor, formatElapsedTime } from '@domain';
 import './SessionHistoryPanel.scss';
 
 const EXERCISE_EMOJI: Record<string, string> = Object.fromEntries(
@@ -39,11 +39,6 @@ function formatRelativeDay(ts: number, t: TFunction<'modals'>): string {
 
     // Older → "12 APR"
     return formatDate(d, { day: 'numeric', month: 'short' }).toUpperCase();
-}
-
-/** 24h time, e.g. "14:30" — locale-aware via the format helper's default options. */
-function formatTimeOfDay(ts: number): string {
-    return formatTime(ts, { hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
 /** Format a TimeDuration object to a compact string, e.g. "1min30s" */
@@ -133,7 +128,7 @@ export function SessionHistoryPanel({ sessions: sessionsProp, title, onViewAll }
                                 <div className="session-card__identity">
                                     <span className="session-card__icon" aria-hidden="true">{exerciseEmoji}</span>
                                     <span className="session-card__day">{formatRelativeDay(s.date, t)}</span>
-                                    <span className="session-card__time">{formatTimeOfDay(s.date)}</span>
+                                    <span className="session-card__time">{formatTime(s.date, { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
                                 </div>
 
                                 {/* ── Zone 2 — Metrics ──────────────────────────── */}
@@ -182,7 +177,7 @@ export function SessionHistoryPanel({ sessions: sessionsProp, title, onViewAll }
                                         {gradeLetter}
                                     </span>
                                     {s.xpEarned != null && s.xpEarned > 0 && (
-                                        <span className="session-card__xp">+{s.xpEarned.toLocaleString()} XP</span>
+                                        <span className="session-card__xp">+{formatNumber(s.xpEarned)} XP</span>
                                     )}
                                     {isMulti && (
                                         <span className={`session-card__chevron${isExpanded ? ' session-card__chevron--open' : ''}`} aria-hidden="true">▾</span>

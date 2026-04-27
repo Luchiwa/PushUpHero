@@ -71,7 +71,7 @@ export function LevelsSection({
                                 <div className="level-progress-fill" style={{ width: `${prog.progressPct}%` }} />
                             </div>
                             <span className="level-progress-text">
-                                {t('progression.xp_progress', { current: prog.xpIntoLevel.toLocaleString(), total: prog.xpNeeded.toLocaleString() })}
+                                {t('progression.xp_progress', { current: formatNumber(prog.xpIntoLevel), total: formatNumber(prog.xpNeeded) })}
                             </span>
                         </div>
                     );

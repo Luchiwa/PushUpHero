@@ -22,7 +22,8 @@ export interface ActivityEvent {
     numberOfSets?: number;
     exerciseType?: ExerciseType;
     isMultiExercise?: boolean;
-    blockSummaries?: { label: string; reps: number }[];
+    /** New writers persist `exerciseType`; older docs may still have `label`. */
+    blockSummaries?: { exerciseType?: ExerciseType; label?: string; reps: number }[];
     createdAt: number; // Unix ms
 }
 
@@ -51,8 +52,13 @@ export function buildEventMessage(event: ActivityEvent, t: TFunction<'modals'>):
     // ── Multi-exercise workout ──
     if (event.isMultiExercise) {
         const duration = formatDurationCompact(event.elapsedTime);
-        const breakdown = event.blockSummaries?.map(b => t('feed.msg_block_pair', { count: b.reps, label: b.label })).join(' + ')
-            ?? `${event.reps} ${t('feed.fallback_reps')}`;
+        // Translate per-block labels in the *reader's* locale: prefer the
+        // typed `exerciseType` (translated here); legacy docs that only carry
+        // a writer-locale `label` string degrade gracefully to that string.
+        const breakdown = event.blockSummaries?.map(b => {
+            const label = b.exerciseType ? t(getExerciseLabelKey(b.exerciseType)) : b.label ?? '';
+            return t('feed.msg_block_pair', { count: b.reps, label });
+        }).join(' + ') ?? `${event.reps} ${t('feed.fallback_reps')}`;
         return t('feed.msg_multi_exercise', { duration, breakdown, grade });
     }
 

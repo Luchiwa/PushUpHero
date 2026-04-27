@@ -8,8 +8,7 @@ import { read, STORAGE_KEYS } from '@infra/storage';
 import { onUserDoc } from '@data/userRepository';
 import { onRecentSessions } from '@data/sessionRepository';
 import type { SessionRecord, ExerciseXpMap } from '@exercises/types';
-
-const SUPPORTED_UI_LANGS = ['fr', 'en'] as const;
+import { isSupportedLanguage } from '@i18n/types';
 
 /**
  * useSyncCloud
@@ -56,9 +55,11 @@ export function useSyncCloud(
             // ── UI language preference: Firestore → client (one-way) ──
             // The reverse direction is handled by useChangeLanguage at the
             // moment of the click — no loop because we only switch when
-            // the cloud value differs from the active i18next.language.
+            // the cloud value differs from the active i18next language
+            // (compared at prefix granularity: detector may have left the
+            // active value as `'en-US'` while Firestore stores `'en'`).
             const cloudLang = data.preferredLanguage;
-            if (cloudLang && (SUPPORTED_UI_LANGS as readonly string[]).includes(cloudLang) && i18n.language !== cloudLang) {
+            if (isSupportedLanguage(cloudLang) && i18n.language.split('-')[0] !== cloudLang) {
                 void i18n.changeLanguage(cloudLang);
             }
         });

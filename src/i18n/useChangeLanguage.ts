@@ -15,8 +15,9 @@ import { useCallback } from 'react';
 import i18n from 'i18next';
 import { useAuthCore } from '@hooks/useAuth';
 import { updatePreferredLanguage } from '@services/profileService';
+import type { SupportedLanguage } from './types';
 
-export type SupportedLanguage = 'fr' | 'en';
+export type { SupportedLanguage };
 
 export function useChangeLanguage(): (lang: SupportedLanguage) => Promise<void> {
     const { user } = useAuthCore();

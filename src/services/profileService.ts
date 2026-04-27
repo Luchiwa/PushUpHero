@@ -8,6 +8,7 @@
 import { updateDoc } from 'firebase/firestore';
 import { userRef } from '@infra/refs';
 import type { BodyProfile, QuestProgress, UserId, XpAmount } from '@domain';
+import type { SupportedLanguage } from '@i18n/types';
 
 export function updateBodyProfile(uid: UserId, profile: BodyProfile): Promise<void> {
     return updateDoc(userRef(uid), { bodyProfile: profile });
@@ -23,6 +24,6 @@ export function migrateLegacyXp(uid: UserId, totalXp: XpAmount): Promise<void> {
 }
 
 /** Persist the user's UI language preference (mirror of localStorage). */
-export function updatePreferredLanguage(uid: UserId, lang: 'fr' | 'en'): Promise<void> {
+export function updatePreferredLanguage(uid: UserId, lang: SupportedLanguage): Promise<void> {
     return updateDoc(userRef(uid), { preferredLanguage: lang });
 }

@@ -34,7 +34,7 @@ export function PasswordChangeSection() {
             setNewPwd('');
             setConfirmPwd('');
         } catch (err: unknown) {
-            setPwdError(t(translateAuthError(err)));
+            setPwdError(translateAuthError(err));
         } finally {
             setPwdLoading(false);
         }

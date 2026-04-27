@@ -15,43 +15,27 @@ export const EXERCISE_TYPES: ExerciseType[] = ['pushup', 'squat', 'pullup', 'leg
 
 export interface ExerciseMeta {
     type: ExerciseType;
-    label: string;
     emoji: string;
-    /** Short editorial tag shown under the label in pickers, e.g. 'UPPER BODY' */
-    category: string;
-    /** Banner shown when user leaves the valid position mid-session */
-    invalidPositionMessage: string;
 }
 
-/** Display metadata per exercise — drives pickers, filters, etc. */
+/** Display metadata per exercise — drives pickers, filters, etc.
+ *  Display strings (label, category, invalid-position message) live in
+ *  `common.json` / `dashboard.json` and are reached via the `*Key`
+ *  helpers below. */
 export const EXERCISE_META: ExerciseMeta[] = [
-    { type: 'pushup',   label: 'Push-ups',   emoji: '💪', category: 'Upper Body', invalidPositionMessage: '⚠️ Get back into push-up position' },
-    { type: 'squat',    label: 'Squats',     emoji: '🦵', category: 'Lower Body', invalidPositionMessage: '⚠️ Stand upright facing the camera' },
-    { type: 'pullup',   label: 'Pull-ups',   emoji: '🏋️', category: 'Pull',       invalidPositionMessage: '⚠️ Get back into hang position' },
-    { type: 'legraise', label: 'Leg Raises', emoji: '🧘', category: 'Core',       invalidPositionMessage: '⚠️ Lie flat on your back' },
+    { type: 'pushup',   emoji: '💪' },
+    { type: 'squat',    emoji: '🦵' },
+    { type: 'pullup',   emoji: '🏋️' },
+    { type: 'legraise', emoji: '🧘' },
 ];
 
 const META_MAP: Record<ExerciseType, ExerciseMeta> = Object.fromEntries(
     EXERCISE_META.map(m => [m.type, m]),
 ) as Record<ExerciseType, ExerciseMeta>;
 
-/** Human-readable label: 'Push-ups', 'Squats', 'Pull-ups'.
- *  Prefer `getExerciseLabelKey` + `t(...)` in UI for i18n. This raw-string
- *  form is kept for callers that don't yet flow through useTranslation
- *  (services, activity feed strings, achievement title interpolation). */
-export function getExerciseLabel(type: ExerciseType): string {
-    return META_MAP[type].label;
-}
-
 /** Emoji for an exercise: '💪', '🦵', '🏋️' */
 export function getExerciseEmoji(type: ExerciseType): string {
     return META_MAP[type].emoji;
-}
-
-/** Banner text when user leaves valid position: '⚠️ Get back into push-up position' etc.
- *  Prefer `getInvalidPositionMessageKey` + `t(...)` in UI for i18n. */
-export function getInvalidPositionMessage(type: ExerciseType): string {
-    return META_MAP[type].invalidPositionMessage;
 }
 
 // ── i18n keys (preferred for UI consumption) ─────────────────────

@@ -9,6 +9,7 @@ import { onSnapshot } from 'firebase/firestore';
 import { userRef } from '@infra/refs';
 import { isFlatUserDoc, type FlatUserDoc } from '@infra/firestoreValidators';
 import { createUserId, createLevel, createXpAmount, type DbUser, type UserId } from '@domain';
+import { isSupportedLanguage } from '@i18n/types';
 
 /**
  * Unfolds the flat Firestore wire shape into the nested domain `DbUser`.
@@ -19,13 +20,6 @@ import { createUserId, createLevel, createXpAmount, type DbUser, type UserId } f
  * Also mints branded primitives (UserId, Level, XpAmount) — this is the
  * only mint point on the read path; everything downstream consumes brands.
  */
-const SUPPORTED_LANGUAGES = ['fr', 'en'] as const;
-type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
-
-function isSupportedLanguage(v: unknown): v is SupportedLanguage {
-    return typeof v === 'string' && (SUPPORTED_LANGUAGES as readonly string[]).includes(v);
-}
-
 function unfoldDbUser(flat: FlatUserDoc): DbUser {
     return {
         uid: createUserId(flat.uid),

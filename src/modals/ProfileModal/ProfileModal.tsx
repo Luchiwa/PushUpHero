@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuthCore, useLevel } from '@hooks/useAuth';
-import { formatDate, getTier } from '@domain';
+import { formatDate, formatNumber, getTier } from '@domain';
 import { Avatar } from '@components/Avatar/Avatar';
 import { useSessionHistory } from '@hooks/useSessionHistory';
 import { useFriends } from '@hooks/useFriends';
@@ -144,8 +144,8 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
                             ))}
                         </div>
                         <div className="player-card-xp-label">
-                            <span>{xpIntoCurrentLevel.toLocaleString()} XP</span>
-                            <span className="player-card-xp-next">{t('profile.xp_label_next', { level: level + 1, remaining: (xpNeededForNextLevel - xpIntoCurrentLevel).toLocaleString() })}</span>
+                            <span>{formatNumber(xpIntoCurrentLevel)} XP</span>
+                            <span className="player-card-xp-next">{t('profile.xp_label_next', { level: level + 1, remaining: formatNumber(xpNeededForNextLevel - xpIntoCurrentLevel) })}</span>
                         </div>
                         <div className="player-card-xp-cta">
                             <span>🏆</span>
@@ -160,7 +160,7 @@ export function ProfileModal({ onClose, initialTab }: ProfileModalProps) {
                             <svg className="player-card-stat-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
                             </svg>
-                            <span className="player-card-stat-val">{totalXp.toLocaleString()}</span>
+                            <span className="player-card-stat-val">{formatNumber(totalXp)}</span>
                             <span className="player-card-stat-lbl">{t('profile.stat_total_xp')}</span>
                         </div>
                         <div className="player-card-stat">

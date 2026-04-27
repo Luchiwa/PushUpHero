@@ -30,9 +30,13 @@ const MAX_CONSECUTIVE_FAILURES = 3;
 
 // ── Lang mapping ─────────────────────────────────────────────────
 
-/** Map an i18next lang code (`'fr'`, `'en'`) to a BCP-47 tag for the speech engine. */
+/** Map an i18next lang code (`'fr'`, `'en'`) to a BCP-47 tag for the speech engine.
+ *  Add a branch + voice preferences when introducing a new locale — the
+ *  warning surfaces the omission instead of silently falling back to EN. */
 function mapToBcp47(lang: string): string {
     if (lang.startsWith('fr')) return 'fr-FR';
+    if (lang.startsWith('en')) return 'en-US';
+    console.warn('[speechEngine] No BCP-47 mapping for lang:', lang, '— defaulting to en-US');
     return 'en-US';
 }
 

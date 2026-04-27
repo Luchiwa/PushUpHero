@@ -3,6 +3,7 @@
  * No React, no Firebase. Testable with simple assert().
  */
 import type { ExerciseType, SessionRecord } from '@exercises/types';
+import { formatNumber } from './format';
 
 export type ExerciseFilter = 'all' | ExerciseType;
 
@@ -106,5 +107,5 @@ export function pctChange(current: number, previous: number): number | null {
 /** Compact a number for KPI tile display. >= 10k uses one decimal + "k". */
 export function compactNum(n: number): string {
     if (n >= 10_000) return `${(n / 1000).toFixed(1)}k`;
-    return n.toLocaleString();
+    return formatNumber(n);
 }

@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { formatNumber } from '@domain';
 import './StatsWidget.scss';
 
 interface StatsWidgetProps {
@@ -39,7 +40,7 @@ export function StatsWidget({
                         <svg className="stats-widget-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" />
                         </svg>
-                        <span className="stats-widget-val">{totalLifetimeReps.toLocaleString()}</span>
+                        <span className="stats-widget-val">{formatNumber(totalLifetimeReps)}</span>
                         <span className="stats-widget-lbl">{t('widget.unit_reps')}</span>
                     </div>
                     <div className="stats-widget-stat">

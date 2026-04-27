@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import { RECORDS, formatDate, formatElapsedTime, getGradeLetter, getRecordLabel, type RecordsMap } from '@domain';
+import { RECORDS, formatDate, formatElapsedTime, formatNumber, getGradeLetter, getRecordLabel, type RecordsMap } from '@domain';
 import type { ExerciseType } from '@exercises/types';
 import './RecordsSection.scss';
 
@@ -73,7 +73,7 @@ function formatRecordValue(value: number, unit: string, t: TFunction<'stats'>): 
             const grade = getGradeLetter(value);
             return `${grade} (${Math.round(value)}%)`;
         }
-        case 'xp': return t('records.value_xp', { xp: value.toLocaleString() });
+        case 'xp': return t('records.value_xp', { xp: formatNumber(value) });
         case 'days': return t('common:unit.day', { count: value });
         case 'reps': return t('common:unit.rep', { count: value });
         case 'count': return value.toString();

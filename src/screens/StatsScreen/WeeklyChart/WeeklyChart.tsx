@@ -1,7 +1,7 @@
 import { useState, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { SessionRecord } from '@exercises/types';
-import { buildDayTotals, buildDayTotalsXp, niceMax, type ExerciseFilter } from '@domain';
+import { buildDayTotals, buildDayTotalsXp, formatNumber, niceMax, type ExerciseFilter } from '@domain';
 import './WeeklyChart.scss';
 
 // Day labels stay as English short codes for the chart axis — keeping a
@@ -110,7 +110,7 @@ export function WeeklyChart({ sessions, weekOffset, exerciseFilter = 'all', metr
             <div className="stats-chart-card__header">
                 <span className="stats-chart-card__label">{headerLabel}</span>
                 <span className="stats-chart-card__total">
-                    {hasAnyData ? `${totalForWeek.toLocaleString()} ${metricLabel}` : '—'}
+                    {hasAnyData ? `${formatNumber(totalForWeek)} ${metricLabel}` : '—'}
                 </span>
             </div>
 
@@ -249,7 +249,7 @@ export function WeeklyChart({ sessions, weekOffset, exerciseFilter = 'all', metr
                                 dominantBaseline="central"
                                 className="chart-tooltip-value"
                             >
-                                {tooltip.value.toLocaleString()} {metricLabel}
+                                {formatNumber(tooltip.value)} {metricLabel}
                             </text>
                         </g>
                     );
