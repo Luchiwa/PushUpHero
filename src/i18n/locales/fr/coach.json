@@ -1,54 +1,312 @@
 {
     "feedback": {
-        "perfect":            ["Parfait !", "Impeccable !", "Top !"],
-        "good":               ["Beau rep", "Bien joué", "Solide"],
-        "go_lower":           ["Plus bas", "Plus profond !", "Amplitude complète"],
-        "arms_uneven":        ["Bras à niveau", "Équilibre tes bras"],
-        "body_sagging":       ["Hanches en haut !", "Gaine ton corps"],
-        "body_piking":        ["Baisse les hanches", "À plat"],
-        "too_fast":           ["Ralentis", "Contrôle le rep"],
-        "lean_forward":       ["Redresse-toi", "Buste droit !"],
-        "knees_caving":       ["Genoux vers l'extérieur", "Genoux au-dessus des pieds"],
-        "torso_lean":         ["Garde le buste droit", "Reste vertical"],
-        "kipping":             ["Pas de kipping", "Forme stricte !"],
-        "body_sway":          ["Reste immobile", "Pas de balancement"],
-        "raise_higher":       ["Plus haut", "Jambes en l'air !", "Plus haut !"],
-        "keep_legs_straight": ["Tends les jambes", "Garde les jambes droites"],
-        "keep_back_flat":     ["Garde le dos plat", "Dos au sol"]
+        "perfect": [
+            "Parfait !",
+            "Impeccable !",
+            "Top !",
+            "Magnifique !",
+            "Sublime !",
+            "Du grand art !",
+            "Niveau pro !",
+            "Net !",
+            "Précis !",
+            "Sans bavure !",
+            "Comme dans le manuel !",
+            "Parfait, encore !"
+        ],
+        "good": [
+            "Beau rep",
+            "Bien joué",
+            "Solide",
+            "Joli",
+            "Continue",
+            "Tu gères",
+            "Belle exécution",
+            "Propre",
+            "Du bon boulot",
+            "Joli rep",
+            "Carré",
+            "Validé"
+        ],
+        "go_lower": [
+            "Plus bas",
+            "Plus profond !",
+            "Amplitude complète",
+            "Descends plus",
+            "Tout en bas",
+            "Plonge",
+            "Va chercher !",
+            "Encore plus bas",
+            "Casse l'angle",
+            "Touche le sol",
+            "Descente complète",
+            "Engage la profondeur"
+        ],
+        "arms_uneven": [
+            "Bras à niveau",
+            "Équilibre tes bras",
+            "Symétrise",
+            "Aligne les bras",
+            "Garde-les parallèles",
+            "Pas un avant l'autre",
+            "Bras synchronisés",
+            "Reste équilibré"
+        ],
+        "body_sagging": [
+            "Hanches en haut !",
+            "Gaine ton corps",
+            "Le bassin remonte",
+            "Fais bloc",
+            "Ne t'effondre pas",
+            "Engage les abdos",
+            "Reste droit",
+            "Hanches alignées"
+        ],
+        "body_piking": [
+            "Baisse les hanches",
+            "À plat",
+            "Le bassin descend",
+            "Aligne le corps",
+            "Pas de pique",
+            "Reste horizontal",
+            "Hanches en ligne",
+            "Corps droit"
+        ],
+        "too_fast": [
+            "Ralentis",
+            "Contrôle le rep",
+            "Plus lentement",
+            "Maîtrise le tempo",
+            "Pas de précipitation",
+            "Posément",
+            "Cadence stable",
+            "Prends ton temps"
+        ],
+        "lean_forward": [
+            "Redresse-toi",
+            "Buste droit !",
+            "Ne te penche pas",
+            "Garde la poitrine haute",
+            "Reste droit",
+            "Le buste vertical",
+            "Tête haute",
+            "Pas vers l'avant"
+        ],
+        "knees_caving": [
+            "Genoux vers l'extérieur",
+            "Genoux au-dessus des pieds",
+            "Pousse les genoux",
+            "Pas vers l'intérieur",
+            "Genoux ouverts",
+            "Aligne les genoux",
+            "Reste large",
+            "Genoux alignés sur les pieds"
+        ],
+        "torso_lean": [
+            "Garde le buste droit",
+            "Reste vertical",
+            "Pas vers l'avant",
+            "Buste haut",
+            "Tronc stable",
+            "Reste droit",
+            "Pas de bascule",
+            "Aligne le tronc"
+        ],
+        "kipping": [
+            "Pas de kipping",
+            "Forme stricte !",
+            "Sans élan",
+            "Pas de balancement",
+            "Tire avec les bras",
+            "Reste calme",
+            "Force pure",
+            "Pas de hanches"
+        ],
+        "body_sway": [
+            "Reste immobile",
+            "Pas de balancement",
+            "Stabilise-toi",
+            "Stop, contrôle",
+            "Pas de mouvement",
+            "Reste fixe",
+            "Bouge moins",
+            "Maîtrise le corps"
+        ],
+        "raise_higher": [
+            "Plus haut",
+            "Jambes en l'air !",
+            "Plus haut !",
+            "Monte plus",
+            "Tout en haut",
+            "Tire fort",
+            "Engage le haut",
+            "Au-dessus de la barre",
+            "Tout là-haut",
+            "Encore plus haut",
+            "Force vers le haut",
+            "Va chercher la hauteur"
+        ],
+        "keep_legs_straight": [
+            "Tends les jambes",
+            "Garde les jambes droites",
+            "Pas de flexion",
+            "Jambes tendues",
+            "Genoux verrouillés",
+            "Reste rigide",
+            "Pas de pliage",
+            "Étire les jambes"
+        ],
+        "keep_back_flat": [
+            "Garde le dos plat",
+            "Dos au sol",
+            "Pas d'arche",
+            "Plaque le bas du dos",
+            "Reste à plat",
+            "Engage les abdos",
+            "Pas de courbure",
+            "Dos collé au sol"
+        ]
     },
     "encouragement": [
         "Continue !",
         "Tu es en feu !",
         "Belle série !",
-        "T'as l'air fort(e) !",
-        "Mode bête !"
+        "Tu gères !",
+        "Mode bête !",
+        "T'es chaud !",
+        "Tu tiens le rythme !",
+        "Quelle constance !",
+        "Ça envoie !",
+        "Plus rien ne t'arrête !",
+        "Tu deviens machine !",
+        "Bravo, ça paie !"
     ],
     "calibration": {
         "pushup": [
             "Mets-toi en position de planche",
             "Place ton téléphone pour voir tout ton corps",
-            "Bras tendus, corps horizontal"
+            "Bras tendus, corps horizontal",
+            "Le téléphone doit voir ton dos entier",
+            "Recule un peu si tu sors du cadre",
+            "Mains sous les épaules",
+            "Aligne tête, dos et talons",
+            "Prêt ? La caméra te suit"
         ],
         "squat": [
             "Tiens-toi face à la caméra",
             "Recule pour que ton corps entier soit visible",
-            "Tiens-toi droit, pieds écartés"
+            "Tiens-toi droit, pieds écartés",
+            "Pieds à largeur d'épaules",
+            "Bras le long du corps ou devant",
+            "La caméra doit voir tes genoux",
+            "Garde les talons au sol",
+            "Prêt à descendre ? On y va"
         ],
         "pullup": [
             "Suspends-toi à la barre",
             "Laisse la caméra voir ton corps entier",
-            "Bras complètement tendus"
+            "Bras complètement tendus",
+            "Mains à largeur d'épaules",
+            "Place le téléphone en hauteur",
+            "Le cadre doit voir ta tête en bas",
+            "Détends les jambes",
+            "Prêt à tirer ? On y va"
         ],
         "legraise": [
             "Allonge-toi sur le dos",
             "Garde les jambes tendues",
-            "Laisse la caméra voir ton corps entier"
+            "Laisse la caméra voir ton corps entier",
+            "Place le téléphone sur le côté",
+            "Bras le long du corps",
+            "La caméra doit voir tes pieds",
+            "Plaque le bas du dos au sol",
+            "Prêt à monter les jambes ? On y va"
         ]
     },
     "incomplete_rep": {
-        "pushup":   ["Plus bas !", "Plus profond !", "Amplitude complète"],
-        "squat":    ["Plus profond !", "Plus bas !", "Casse la parallèle"],
-        "pullup":   ["Plus haut !", "Menton au-dessus de la barre !", "Jusqu'en haut !"],
-        "legraise": ["Plus haut !", "Jambes en l'air !", "Jusqu'en haut !"]
-    }
+        "pushup": [
+            "Plus bas !",
+            "Plus profond !",
+            "Amplitude complète",
+            "Descends jusqu'en bas",
+            "Touche presque le sol",
+            "Engage la descente",
+            "Va chercher !",
+            "Casse l'angle"
+        ],
+        "squat": [
+            "Plus profond !",
+            "Plus bas !",
+            "Casse la parallèle",
+            "Cuisses sous les genoux",
+            "Descends franchement",
+            "Va chercher la profondeur",
+            "Pas à mi-chemin",
+            "Tout en bas"
+        ],
+        "pullup": [
+            "Plus haut !",
+            "Menton au-dessus de la barre !",
+            "Jusqu'en haut !",
+            "Tire à fond",
+            "Engage les bras",
+            "Plus de hauteur",
+            "Va chercher la barre",
+            "Au-dessus !"
+        ],
+        "legraise": [
+            "Plus haut !",
+            "Jambes en l'air !",
+            "Jusqu'en haut !",
+            "Va chercher la verticale",
+            "Force jusqu'au bout",
+            "Plus de hauteur",
+            "Tout là-haut",
+            "Pas à moitié"
+        ]
+    },
+    "set_complete": [
+        "Set bouclé !",
+        "Bien joué, série terminée !",
+        "Et de un, dans la poche !",
+        "Belle série, repose-toi !",
+        "Joli boulot, c'est plié !",
+        "Set validé !",
+        "Excellent, on continue !",
+        "C'est dans la boîte !",
+        "Bien terminé !",
+        "Solide, fin de série !",
+        "Une de faite, prends ton temps !",
+        "C'était propre, set fini !"
+    ],
+    "rest_start": [
+        "Repose-toi un instant",
+        "Bien joué, récupère",
+        "Souffle un coup",
+        "Profite de la pause",
+        "Récupère bien",
+        "Tu l'as mérité, repose-toi",
+        "Détends-toi quelques secondes",
+        "Prends ta respiration"
+    ],
+    "rest_ending": [
+        "Prêt à reprendre ?",
+        "On y retourne dans cinq",
+        "Concentre-toi",
+        "C'est reparti dans cinq",
+        "Place-toi",
+        "Reprends position",
+        "Le set arrive, prêt",
+        "Allez, on y va"
+    ],
+    "level_up": [
+        "Niveau supérieur !",
+        "Tu grimpes !",
+        "Tu passes au niveau suivant !",
+        "Bravo, nouveau niveau !",
+        "Tu progresses !",
+        "Niveau débloqué !",
+        "Tu montes en grade !",
+        "Promotion bien méritée !"
+    ]
 }
