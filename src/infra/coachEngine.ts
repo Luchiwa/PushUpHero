@@ -143,3 +143,38 @@ export function processIncompleteRep(exerciseType: ExerciseType): string | null 
     lastVocalTimestamp = now;
     return phrase;
 }
+
+// ── Milestone speech (set boundary, rest boundary, level-up) ─────
+//
+// These fire on user-visible state transitions, not per-rep — they're
+// inherently spaced by gameplay, so they bypass the 5 s vocal cooldown
+// (don't touch lastVocalTimestamp). Each picks anti-repeat from its
+// own pool and uses prosody tuned to the moment.
+
+export function speakSetComplete(): string | null {
+    const phrase = pickFromPool('coach:set_complete');
+    if (!phrase) return null;
+    speak(phrase);
+    return phrase;
+}
+
+export function speakRestStart(): string | null {
+    const phrase = pickFromPool('coach:rest_start');
+    if (!phrase) return null;
+    speak(phrase, { rate: 0.95 }); // calmer pace for a recovery cue
+    return phrase;
+}
+
+export function speakRestEnding(): string | null {
+    const phrase = pickFromPool('coach:rest_ending');
+    if (!phrase) return null;
+    speak(phrase, { rate: 1.15, pitch: 1.05 }); // punchier "get ready"
+    return phrase;
+}
+
+export function speakLevelUp(): string | null {
+    const phrase = pickFromPool('coach:level_up');
+    if (!phrase) return null;
+    speak(phrase, { pitch: 1.2 }); // celebratory
+    return phrase;
+}

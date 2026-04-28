@@ -9,7 +9,11 @@ import { getGradeLetter, getGradeClass } from '@domain';
 import { getExerciseLabelKey, type ExerciseType, type SetRecord } from '@exercises/types';
 import { useWorkout } from '@app/WorkoutContext';
 import { useBackButton } from '@hooks/shared/useBackButton';
+import { speakRestStart, speakRestEnding } from '@infra/coachEngine';
 import './RestScreen.scss';
+
+/** Fire `speakRestEnding` when N seconds remain (gives the user time to hear it). */
+const REST_ENDING_AT_REMAINING = 5;
 
 interface RestScreenProps {
     /** Duration of rest in seconds */
@@ -45,10 +49,19 @@ export function RestScreen({
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     // Android / system back button → stops the workout, mirroring the active screen.
-    const { handleStop } = useWorkout();
+    const { handleStop, soundEnabled } = useWorkout();
     useBackButton(true, handleStop);
 
     const progressPct = ((restDuration - remaining) / restDuration) * 100;
+
+    // ── Coach speech: rest_start once on mount, rest_ending once at the 5 s mark ──
+    const restEndingFiredRef = useRef(false);
+
+    useEffect(() => {
+        if (soundEnabled) speakRestStart();
+        // Mount-only: a mid-rest sound toggle does not re-fire the cue.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     useEffect(() => {
         intervalRef.current = setInterval(() => {
@@ -66,12 +79,20 @@ export function RestScreen({
         };
     }, []);
 
-    // Trigger next set when countdown reaches 0
+    // rest_ending cue + rest_complete dispatch driven by the countdown
     useEffect(() => {
+        if (
+            remaining === REST_ENDING_AT_REMAINING
+            && !restEndingFiredRef.current
+            && soundEnabled
+        ) {
+            restEndingFiredRef.current = true;
+            speakRestEnding();
+        }
         if (remaining === 0) {
             onRestComplete();
         }
-    }, [remaining, onRestComplete]);
+    }, [remaining, onRestComplete, soundEnabled]);
 
     const mins = Math.floor(remaining / 60);
     const secs = remaining % 60;

@@ -8,7 +8,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSoundEffect } from '@hooks/useSoundEffect';
 import type { RepResult, ExerciseType, RepFeedback } from '@exercises/types';
-import { processRepFeedback, resetCoach, speakCalibrationGuide, processIncompleteRep } from '@infra/coachEngine';
+import { processRepFeedback, speakCalibrationGuide, processIncompleteRep } from '@infra/coachEngine';
 
 interface UseDashboardLogicProps {
     exerciseType: ExerciseType;
@@ -45,15 +45,14 @@ export function useDashboardLogic({
     const [coachPhrase, setCoachPhrase] = useState<string | null>(null);
 
     // ── Calibration vocal guidance ───────────────────────────────
+    // The coach rotation tracker is reset at workout start (handleStart in
+    // useWorkoutExecution), not here — resetting per Dashboard mount would
+    // wipe feedback/encouragement memory mid-workout in multi-exercise plans.
     useEffect(() => {
-        if (isCalibrated || !soundEnabled) {
-            resetCoach();
-            return;
-        }
+        if (isCalibrated || !soundEnabled) return;
 
         // Cancel any lingering speech from a previous mount (StrictMode)
         speechSynthesis.cancel();
-        resetCoach();
 
         // Small delay so the cancel() fully clears the queue before we enqueue
         const firstTimeout = setTimeout(() => {
