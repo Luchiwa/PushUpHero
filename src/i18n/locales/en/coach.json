@@ -1,54 +1,312 @@
 {
     "feedback": {
-        "perfect":            ["Perfect!", "Flawless!", "Nailed it!"],
-        "good":               ["Nice rep", "Good one", "Solid"],
-        "go_lower":           ["Go lower", "Deeper!", "Full range"],
-        "arms_uneven":        ["Even arms", "Balance your arms"],
-        "body_sagging":       ["Hips up!", "Tighten your core"],
-        "body_piking":        ["Lower your hips", "Flatten out"],
-        "too_fast":           ["Slow down", "Control the rep"],
-        "lean_forward":       ["Stay upright", "Chest up!"],
-        "knees_caving":       ["Push knees out", "Knees over toes"],
-        "torso_lean":         ["Keep your torso up", "Stay vertical"],
-        "kipping":            ["No kipping", "Strict form!"],
-        "body_sway":          ["Stay still", "Minimize sway"],
-        "raise_higher":       ["Raise higher", "Legs up!", "Higher!"],
-        "keep_legs_straight": ["Straighten your legs", "Keep legs straight"],
-        "keep_back_flat":     ["Keep your back flat", "Back on the ground"]
+        "perfect": [
+            "Perfect!",
+            "Flawless!",
+            "Nailed it!",
+            "Beautiful!",
+            "Picture-perfect!",
+            "Textbook form!",
+            "Pro-level!",
+            "Crisp!",
+            "Spotless!",
+            "Clean as it gets!",
+            "By the book!",
+            "That's how it's done!"
+        ],
+        "good": [
+            "Nice rep",
+            "Good one",
+            "Solid",
+            "Clean",
+            "Keep going",
+            "You got it",
+            "Nice form",
+            "Smooth",
+            "Looking good",
+            "Good work",
+            "Steady",
+            "Locked in"
+        ],
+        "go_lower": [
+            "Go lower",
+            "Deeper!",
+            "Full range",
+            "Drop more",
+            "All the way down",
+            "Dive",
+            "Sink it",
+            "Lower still",
+            "Break the angle",
+            "Almost to the ground",
+            "Full depth",
+            "Find the bottom"
+        ],
+        "arms_uneven": [
+            "Even arms",
+            "Balance your arms",
+            "Symmetric form",
+            "Align your arms",
+            "Keep them parallel",
+            "No arm leading",
+            "Sync your arms",
+            "Stay balanced"
+        ],
+        "body_sagging": [
+            "Hips up!",
+            "Tighten your core",
+            "Lift the hips",
+            "Brace hard",
+            "Don't sag",
+            "Engage your abs",
+            "Stay rigid",
+            "Hips in line"
+        ],
+        "body_piking": [
+            "Lower your hips",
+            "Flatten out",
+            "Hips down",
+            "Body in line",
+            "No piking",
+            "Stay horizontal",
+            "Hips level",
+            "Straight body"
+        ],
+        "too_fast": [
+            "Slow down",
+            "Control the rep",
+            "Slower",
+            "Master the tempo",
+            "No rushing",
+            "Steady pace",
+            "Stable cadence",
+            "Take your time"
+        ],
+        "lean_forward": [
+            "Stay upright",
+            "Chest up!",
+            "Don't lean",
+            "Keep chest high",
+            "Stay tall",
+            "Torso vertical",
+            "Head up",
+            "Don't dive"
+        ],
+        "knees_caving": [
+            "Push knees out",
+            "Knees over toes",
+            "Drive knees out",
+            "No knees in",
+            "Wide knees",
+            "Track the knees",
+            "Stay wide",
+            "Knees aligned with toes"
+        ],
+        "torso_lean": [
+            "Keep your torso up",
+            "Stay vertical",
+            "Don't tip forward",
+            "Chest tall",
+            "Stable trunk",
+            "Stay upright",
+            "No tipping",
+            "Torso aligned"
+        ],
+        "kipping": [
+            "No kipping",
+            "Strict form!",
+            "No swing",
+            "No momentum",
+            "Pull with arms",
+            "Stay still",
+            "Pure strength",
+            "No hip drive"
+        ],
+        "body_sway": [
+            "Stay still",
+            "Minimize sway",
+            "Stabilize",
+            "Lock in, control",
+            "No movement",
+            "Stay fixed",
+            "Less swing",
+            "Body still"
+        ],
+        "raise_higher": [
+            "Raise higher",
+            "Legs up!",
+            "Higher!",
+            "Lift more",
+            "All the way up",
+            "Pull harder",
+            "Drive up",
+            "Above the bar",
+            "Reach the top",
+            "Even higher",
+            "Push for the top",
+            "Find the height"
+        ],
+        "keep_legs_straight": [
+            "Straighten your legs",
+            "Keep legs straight",
+            "No bending",
+            "Legs locked",
+            "Lock the knees",
+            "Stay rigid",
+            "No fold",
+            "Stretch the legs"
+        ],
+        "keep_back_flat": [
+            "Keep your back flat",
+            "Back on the ground",
+            "No arching",
+            "Press low back down",
+            "Stay flat",
+            "Engage your abs",
+            "No curve",
+            "Back glued to floor"
+        ]
     },
     "encouragement": [
         "Keep it up!",
         "You're on fire!",
         "Great streak!",
         "Looking strong!",
-        "Beast mode!"
+        "Beast mode!",
+        "You're crushing it!",
+        "Stay locked in!",
+        "What a rhythm!",
+        "Pure power!",
+        "Unstoppable!",
+        "You're a machine!",
+        "Hard work pays!"
     ],
     "calibration": {
         "pushup": [
             "Get in plank position",
             "Place your phone to see your full body",
-            "Arms straight, body horizontal"
+            "Arms straight, body horizontal",
+            "The phone needs to see your whole back",
+            "Step back if you're out of frame",
+            "Hands under shoulders",
+            "Align head, back, and heels",
+            "Ready? The camera's tracking"
         ],
         "squat": [
             "Stand facing the camera",
             "Step back so your full body is visible",
-            "Stand tall, feet shoulder width"
+            "Stand tall, feet shoulder width",
+            "Feet shoulder-width apart",
+            "Arms by your side or in front",
+            "The camera needs to see your knees",
+            "Keep your heels on the ground",
+            "Ready to drop? Let's go"
         ],
         "pullup": [
             "Hang from the bar",
             "Let the camera see your full body",
-            "Arms fully extended"
+            "Arms fully extended",
+            "Hands shoulder-width apart",
+            "Position the phone up high",
+            "The frame should see your head at the bottom",
+            "Relax your legs",
+            "Ready to pull? Let's go"
         ],
         "legraise": [
             "Lie on your back",
             "Keep your legs straight",
-            "Let the camera see your full body"
+            "Let the camera see your full body",
+            "Place the phone to the side",
+            "Arms by your side",
+            "The camera needs to see your feet",
+            "Press your low back into the ground",
+            "Ready to lift? Let's go"
         ]
     },
     "incomplete_rep": {
-        "pushup":   ["Go lower!", "Deeper!", "Full range of motion"],
-        "squat":    ["Go deeper!", "Lower!", "Break parallel"],
-        "pullup":   ["Pull higher!", "Chin over bar!", "All the way up!"],
-        "legraise": ["Raise higher!", "Legs up!", "All the way up!"]
-    }
+        "pushup": [
+            "Go lower!",
+            "Deeper!",
+            "Full range of motion",
+            "Drop all the way",
+            "Almost to the ground",
+            "Engage the descent",
+            "Find the bottom",
+            "Break the angle"
+        ],
+        "squat": [
+            "Go deeper!",
+            "Lower!",
+            "Break parallel",
+            "Thighs below knees",
+            "Drop lower",
+            "Find the depth",
+            "Not halfway",
+            "All the way down"
+        ],
+        "pullup": [
+            "Pull higher!",
+            "Chin over bar!",
+            "All the way up!",
+            "Pull all the way",
+            "Engage the arms",
+            "More height",
+            "Reach the bar",
+            "Above it!"
+        ],
+        "legraise": [
+            "Raise higher!",
+            "Legs up!",
+            "All the way up!",
+            "Find the vertical",
+            "Push to the top",
+            "More height",
+            "Reach the top",
+            "Not halfway"
+        ]
+    },
+    "set_complete": [
+        "Set complete!",
+        "Nice work, set done!",
+        "One down, take a breath!",
+        "Set in the bag!",
+        "Clean set!",
+        "Set crushed!",
+        "Excellent, keep going!",
+        "That's a wrap!",
+        "Solid set!",
+        "Strong finish!",
+        "One done, recover up!",
+        "Smooth set, done!"
+    ],
+    "rest_start": [
+        "Rest a moment",
+        "Nice work, recover",
+        "Catch your breath",
+        "Enjoy the break",
+        "Recover well",
+        "You earned it, rest up",
+        "Relax for a few",
+        "Take a breath"
+    ],
+    "rest_ending": [
+        "Ready to go again?",
+        "Back at it in five",
+        "Focus up",
+        "Coming up in five",
+        "Get into position",
+        "Reset your stance",
+        "Set incoming, get ready",
+        "Here we go"
+    ],
+    "level_up": [
+        "Level up!",
+        "You're climbing!",
+        "Next level reached!",
+        "Congrats, new level!",
+        "You're progressing!",
+        "New level unlocked!",
+        "Moving up the ranks!",
+        "Promotion well earned!"
+    ]
 }

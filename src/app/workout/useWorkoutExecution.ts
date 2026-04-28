@@ -13,6 +13,7 @@ import { useRefSync } from '@hooks/shared/useRefSync';
 import { useSoundEffect } from '@hooks/useSoundEffect';
 import { createDefaultBlock, type ExerciseState, type ExerciseType, type SetRecord, type TimeDuration, type WorkoutBlock } from '@exercises/types';
 import { warmUpSpeech } from '@infra/speechEngine';
+import { resetCoach, speakSetComplete, speakLevelUp } from '@infra/coachEngine';
 import {
     saveWorkoutCheckpoint,
     clearWorkoutCheckpoint,
@@ -95,6 +96,7 @@ export function useWorkoutExecution({
         session.resetSessionState();
         plan.resetTimingRefs();
         warmUpSpeech();
+        resetCoach();
         const resolvedExercise = exerciseTypeOverride ?? plan.workoutPlan.blocks[0]?.exerciseType ?? 'pushup';
         const block: WorkoutBlock = {
             ...createDefaultBlock(resolvedExercise),
@@ -115,6 +117,7 @@ export function useWorkoutExecution({
         session.resetSessionState();
         plan.resetTimingRefs();
         warmUpSpeech();
+        resetCoach();
         const firstBlock = plan.workoutPlan.blocks[0];
         plan.syncConfigFromBlock(firstBlock);
         onExerciseTypeChange(firstBlock.exerciseType);
@@ -151,6 +154,12 @@ export function useWorkoutExecution({
             elapsedTime,
             totalReps,
         });
+
+        // speakSetComplete only at workout end — for non-final sets, RestScreen's
+        // speakRestStart owns the boundary cue (Chrome's speechSynthesis cancels
+        // the in-flight utterance on the next speak(), so back-to-back calls
+        // silence the first).
+        if (plan.soundEnabled && isLastSetInBlock && isLastBlock) speakSetComplete();
 
         if (!(isLastSetInBlock && isLastBlock)) {
             saveWorkoutCheckpoint({
@@ -278,6 +287,7 @@ export function useWorkoutExecution({
         stampSetStartTime();
 
         warmUpSpeech();
+        resetCoach();
         startCamera();
 
         const elapsedTimeSec = Math.round(checkpoint.elapsedMs / 1000);
@@ -318,7 +328,10 @@ export function useWorkoutExecution({
     useEffect(() => {
         if (state.screen === 'active' && session.liveLevel > prevLevelRef.current) {
             initAudio();
-            if (plan.soundEnabled) playLevelUpSound();
+            if (plan.soundEnabled) {
+                playLevelUpSound();
+                speakLevelUp();
+            }
         }
         prevLevelRef.current = session.liveLevel;
     }, [session.liveLevel, state.screen, plan.soundEnabled, playLevelUpSound, initAudio]);
