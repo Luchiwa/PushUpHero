@@ -8,8 +8,9 @@
  * 4. Priority: corrective feedback > encouragement > silence
  *
  * Phrases live in the `coach` i18n namespace. Anti-repeat rotation tracks
- * by category key (RepFeedback / ExerciseType), so it survives a language
- * switch mid-session.
+ * the last-picked phrase per i18n key, so it survives a language switch
+ * mid-session and never plays the same phrase twice in a row within a
+ * category. Memory is cleared at workout start via `resetCoach()`.
  */
 
 import i18n from 'i18next';
@@ -33,22 +34,29 @@ function getPhrasePool(key: string): string[] {
 
 // ── Internal state ───────────────────────────────────────────────
 let lastVocalTimestamp = 0;
-let goodStreak = 0;
-const phraseIndex: Partial<Record<RepFeedback, number>> = {};
-let encourageIndex = 0;
-const calibrationPhraseIndex: Partial<Record<ExerciseType, number>> = {};
 let lastCalibrationVocalTimestamp = 0;
-const incompleteRepPhraseIndex: Partial<Record<ExerciseType, number>> = {};
+let goodStreak = 0;
+/** Last phrase picked per i18n key — guarantees no adjacent duplicate. */
+const lastPicked = new Map<string, string>();
 
-/** Reset coach state (call on session start / exercise change). */
+/** Pick a non-repeating random phrase from the pool at `key`. */
+function pickFromPool(key: string): string | null {
+    const pool = getPhrasePool(key);
+    if (pool.length === 0) return null;
+    if (pool.length === 1) return pool[0];
+    const last = lastPicked.get(key);
+    const candidates = last ? pool.filter(p => p !== last) : pool;
+    const next = candidates[Math.floor(Math.random() * candidates.length)];
+    lastPicked.set(key, next);
+    return next;
+}
+
+/** Reset coach state (call on workout start). */
 export function resetCoach(): void {
     lastVocalTimestamp = 0;
-    goodStreak = 0;
-    for (const k of Object.keys(phraseIndex)) delete phraseIndex[k as RepFeedback];
-    encourageIndex = 0;
-    for (const k of Object.keys(calibrationPhraseIndex)) delete calibrationPhraseIndex[k as ExerciseType];
     lastCalibrationVocalTimestamp = 0;
-    for (const k of Object.keys(incompleteRepPhraseIndex)) delete incompleteRepPhraseIndex[k as ExerciseType];
+    goodStreak = 0;
+    lastPicked.clear();
 }
 
 /**
@@ -71,7 +79,7 @@ export function processRepFeedback(feedback: RepFeedback, repScore: number): str
     // ── 1. Corrective feedback (always takes priority if cooldown allows) ──
     const isCorrective = feedback !== 'good' && feedback !== 'perfect';
     if (isCorrective && cooldownOk) {
-        const phrase = pickPhrase(feedback);
+        const phrase = pickFromPool(`coach:feedback.${feedback}`);
         if (phrase) {
             speak(phrase);
             lastVocalTimestamp = now;
@@ -81,7 +89,7 @@ export function processRepFeedback(feedback: RepFeedback, repScore: number): str
 
     // ── 2. Perfect rep — occasional praise (every other perfect, if cooldown ok) ──
     if (feedback === 'perfect' && cooldownOk && repScore >= 90) {
-        const phrase = pickPhrase('perfect');
+        const phrase = pickFromPool('coach:feedback.perfect');
         if (phrase) {
             speak(phrase, { pitch: 1.15 });
             lastVocalTimestamp = now;
@@ -91,10 +99,8 @@ export function processRepFeedback(feedback: RepFeedback, repScore: number): str
 
     // ── 3. Streak encouragement ──
     if (goodStreak > 0 && goodStreak % ENCOURAGEMENT_STREAK === 0 && cooldownOk) {
-        const encouragements = getPhrasePool('coach:encouragement');
-        if (encouragements.length === 0) return null;
-        const phrase = encouragements[encourageIndex % encouragements.length];
-        encourageIndex++;
+        const phrase = pickFromPool('coach:encouragement');
+        if (!phrase) return null;
         speak(phrase, { rate: 1.15 });
         lastVocalTimestamp = now;
         return phrase;
@@ -112,12 +118,8 @@ export function speakCalibrationGuide(exerciseType: ExerciseType): string | null
     const now = Date.now();
     if (now - lastCalibrationVocalTimestamp < CALIBRATION_COOLDOWN_MS) return null;
 
-    const phrases = getPhrasePool(`coach:calibration.${exerciseType}`);
-    if (phrases.length === 0) return null;
-
-    const idx = calibrationPhraseIndex[exerciseType] ?? 0;
-    const phrase = phrases[idx % phrases.length];
-    calibrationPhraseIndex[exerciseType] = idx + 1;
+    const phrase = pickFromPool(`coach:calibration.${exerciseType}`);
+    if (!phrase) return null;
 
     speak(phrase, { rate: 1.0, pitch: 1.05 }); // calm, instructional tone
     lastCalibrationVocalTimestamp = now;
@@ -134,24 +136,10 @@ export function processIncompleteRep(exerciseType: ExerciseType): string | null 
     const now = Date.now();
     if (now - lastVocalTimestamp < VOCAL_COOLDOWN_MS) return null;
 
-    const phrases = getPhrasePool(`coach:incomplete_rep.${exerciseType}`);
-    if (phrases.length === 0) return null;
-
-    const idx = incompleteRepPhraseIndex[exerciseType] ?? 0;
-    const phrase = phrases[idx % phrases.length];
-    incompleteRepPhraseIndex[exerciseType] = idx + 1;
+    const phrase = pickFromPool(`coach:incomplete_rep.${exerciseType}`);
+    if (!phrase) return null;
 
     speak(phrase);
     lastVocalTimestamp = now;
-    return phrase;
-}
-
-// ── Helpers ──────────────────────────────────────────────────────
-function pickPhrase(feedback: RepFeedback): string | null {
-    const phrases = getPhrasePool(`coach:feedback.${feedback}`);
-    if (phrases.length === 0) return null;
-    const idx = phraseIndex[feedback] ?? 0;
-    const phrase = phrases[idx % phrases.length];
-    phraseIndex[feedback] = idx + 1;
     return phrase;
 }
