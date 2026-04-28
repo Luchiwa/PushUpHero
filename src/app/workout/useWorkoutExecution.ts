@@ -155,7 +155,11 @@ export function useWorkoutExecution({
             totalReps,
         });
 
-        if (plan.soundEnabled) speakSetComplete();
+        // speakSetComplete only at workout end — for non-final sets, RestScreen's
+        // speakRestStart owns the boundary cue (Chrome's speechSynthesis cancels
+        // the in-flight utterance on the next speak(), so back-to-back calls
+        // silence the first).
+        if (plan.soundEnabled && isLastSetInBlock && isLastBlock) speakSetComplete();
 
         if (!(isLastSetInBlock && isLastBlock)) {
             saveWorkoutCheckpoint({

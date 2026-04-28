@@ -55,9 +55,13 @@ export function RestScreen({
     const progressPct = ((restDuration - remaining) / restDuration) * 100;
 
     // ── Coach speech: rest_start once on mount, rest_ending once at the 5 s mark ──
+    const restStartFiredRef = useRef(false);
     const restEndingFiredRef = useRef(false);
 
     useEffect(() => {
+        // Ref guards against StrictMode double-invocation in dev.
+        if (restStartFiredRef.current) return;
+        restStartFiredRef.current = true;
         if (soundEnabled) speakRestStart();
         // Mount-only: a mid-rest sound toggle does not re-fire the cue.
         // eslint-disable-next-line react-hooks/exhaustive-deps

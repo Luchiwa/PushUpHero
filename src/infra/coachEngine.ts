@@ -35,9 +35,19 @@ function getPhrasePool(key: string): string[] {
 // ── Internal state ───────────────────────────────────────────────
 let lastVocalTimestamp = 0;
 let lastCalibrationVocalTimestamp = 0;
+let lastLevelUpTimestamp = 0;
 let goodStreak = 0;
 /** Last phrase picked per i18n key — guarantees no adjacent duplicate. */
 const lastPicked = new Map<string, string>();
+
+/**
+ * Window after a level_up cue during which set_complete is suppressed.
+ * The Chrome speechSynthesis workaround in `speak()` cancels any in-flight
+ * utterance, so back-to-back milestone calls would silence whichever
+ * fires second. The level_up celebration outranks set_complete here —
+ * if both want to play within this window, set_complete yields.
+ */
+const POST_LEVELUP_GUARD_MS = 3_000;
 
 /** Pick a non-repeating random phrase from the pool at `key`. */
 function pickFromPool(key: string): string | null {
@@ -55,6 +65,7 @@ function pickFromPool(key: string): string | null {
 export function resetCoach(): void {
     lastVocalTimestamp = 0;
     lastCalibrationVocalTimestamp = 0;
+    lastLevelUpTimestamp = 0;
     goodStreak = 0;
     lastPicked.clear();
 }
@@ -152,6 +163,8 @@ export function processIncompleteRep(exerciseType: ExerciseType): string | null 
 // own pool and uses prosody tuned to the moment.
 
 export function speakSetComplete(): string | null {
+    // Yield to a recent level_up cue — speak()'s forceReset would cancel it.
+    if (Date.now() - lastLevelUpTimestamp < POST_LEVELUP_GUARD_MS) return null;
     const phrase = pickFromPool('coach:set_complete');
     if (!phrase) return null;
     speak(phrase);
@@ -176,5 +189,6 @@ export function speakLevelUp(): string | null {
     const phrase = pickFromPool('coach:level_up');
     if (!phrase) return null;
     speak(phrase, { pitch: 1.2 }); // celebratory
+    lastLevelUpTimestamp = Date.now();
     return phrase;
 }
