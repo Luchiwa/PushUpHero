@@ -29,6 +29,4 @@ dist-ssr
 # Firebase — secrets & local cache
 firebase-service-account.json
 .firebase/
-
-# Claude Code session artifacts
-.claude/
+.claude/scheduled_tasks.lock
