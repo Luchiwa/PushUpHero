@@ -202,6 +202,18 @@
     color: $dim;
 }
 
+// Gold glow on the XP KPI — mirrors PlayerHUD `.hud-total-xp-val` exactly.
+.wc-summary-kpi--xp .wc-summary-kpi-value {
+    text-shadow: 0 0 14px color-mix(in srgb, #{$gold} 35%, transparent);
+}
+
+.wc-summary-xp-partial-note {
+    @include caption;
+    color: $dim;
+    text-align: center;
+    margin-top: $space-xs;
+}
+
 // ── Bottom action bar ───────────────────────────────────────────────────────
 .wc-bottom-bar {
     flex-shrink: 0;

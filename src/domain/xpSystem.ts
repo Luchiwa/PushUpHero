@@ -7,7 +7,7 @@
  * See LEVEL_DESIGN.md in this folder for the full design document.
  */
 
-import type { ExerciseType, SetRecord } from '@exercises/types';
+import type { ExerciseType, SetRecord, WorkoutPlan } from '@exercises/types';
 import { EXERCISE_DIFFICULTY, difficultyFor } from '@exercises/exerciseDifficulty';
 import { getGradeLetter, type GradeLetter } from './constants';
 import { createLevel, createXpAmount, type Level, type XpAmount } from './brands';
@@ -250,6 +250,37 @@ export function calculateSessionXp(sets: SetRecord[], bonusCtx: BonusContext): S
     });
 
     return { rawXp: totalRawXp, totalXp, bonuses, multiplier, perExercise };
+}
+
+// ─── Plan baseline XP estimate (pre-workout) ───────────────────────────────
+
+export interface PlanXpBaseline {
+    /** Sum of grade-C XP × difficulty across rep-mode blocks. */
+    baselineXp: number;
+    /** True when at least one block is in time mode and was excluded from the sum. */
+    isPartial: boolean;
+}
+
+/**
+ * Pre-workout estimate of the minimum XP a user will earn for completing
+ * a plan. Assumes grade C (10 XP/rep) for every rep × per-exercise difficulty.
+ * Time-mode blocks are excluded — they raise `isPartial` instead of being
+ * extrapolated from a rep/sec assumption.
+ *
+ * No session bonuses (streak, duration, perfection, multi-exercise) — those
+ * are surfaced on the SummaryScreen as a positive surprise.
+ */
+export function estimatePlanXpBaseline(plan: WorkoutPlan): PlanXpBaseline {
+    let baselineXp = 0;
+    let isPartial = false;
+    for (const block of plan.blocks) {
+        if (block.sessionMode !== 'reps') {
+            isPartial = true;
+            continue;
+        }
+        baselineXp += block.numberOfSets * block.goalReps * 10 * difficultyFor(block.exerciseType);
+    }
+    return { baselineXp: Math.round(baselineXp), isPartial };
 }
 
 // ─── Live XP Projection ────────────────────────────────────────────────────

@@ -28,6 +28,7 @@ export {
     calculateSessionXp,
     estimateCompletedXp,
     projectLiveXp,
+    estimatePlanXpBaseline,
     computeXpProgress,
     type Tier,
     type XpBonusDetail,
@@ -36,6 +37,7 @@ export {
     type XpPerExercise,
     type SessionXpResult,
     type LiveXpProjection,
+    type PlanXpBaseline,
     type XpProgress,
 } from './xpSystem';
 
