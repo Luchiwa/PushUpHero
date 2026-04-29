@@ -6,6 +6,7 @@ import {
     userRef, usernameRef,
     friendsCol, friendRef, friendRequestRef, sentRequestRef,
     sessionsCol, friendRequestsCol, sentRequestsCol, notificationsCol, activityFeedCol,
+    savedWorkoutsCol,
 } from '@infra/refs';
 import { clearAll } from '@infra/storage';
 import { createUserId } from '@domain';
@@ -69,6 +70,7 @@ export async function deleteCurrentAccount(): Promise<void> {
         sentRequestsCol(uid),
         notificationsCol(uid),
         activityFeedCol(uid),
+        savedWorkoutsCol(uid),
     ];
 
     for (const colRef of subcollectionRefs) {
