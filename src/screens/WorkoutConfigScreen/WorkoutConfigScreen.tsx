@@ -8,6 +8,7 @@
 import { useCallback, useMemo, useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { createDefaultBlock, type WorkoutBlock, type WorkoutPlan } from '@exercises/types';
+import { estimatePlanXpBaseline, formatNumber } from '@domain';
 import { PageLayout } from '@components/PageLayout/PageLayout';
 import { PrimaryCTA } from '@components/PrimaryCTA/PrimaryCTA';
 import { BlockCard } from './BlockCard/BlockCard';
@@ -145,6 +146,17 @@ export function WorkoutConfigScreen({
         }
     }, [editingBlockIndex, handleBlockBack, onBack]);
 
+    // ── Summary KPIs (block-list mode) ────────────────────────────
+
+    const totalSets = useMemo(
+        () => blocks.reduce((sum, b) => sum + b.numberOfSets, 0),
+        [blocks],
+    );
+    const { baselineXp, isPartial } = useMemo(
+        () => estimatePlanXpBaseline({ blocks }),
+        [blocks],
+    );
+
     // ── Render: Block Editor ──────────────────────────────────────
 
     if (editingBlock && editingBlockIndex !== null) {
@@ -163,13 +175,6 @@ export function WorkoutConfigScreen({
     }
 
     // ── Render: Block List ────────────────────────────────────────
-
-    const totalSets = blocks.reduce((sum, b) => sum + b.numberOfSets, 0);
-    const totalRepsEstimate = blocks.reduce((sum, b) => {
-        if (b.sessionMode === 'reps') return sum + b.goalReps * b.numberOfSets;
-        return sum;
-    }, 0);
-    const allReps = blocks.every(b => b.sessionMode === 'reps');
 
     return (
         <PageLayout title={t('config.title')} onClose={handleTopBack} zIndex={200} bodyClassName="wc-layout" transition="sheet">
@@ -211,22 +216,32 @@ export function WorkoutConfigScreen({
                     <div className="wc-summary-divider"><span>{t('config.summary_divider')}</span></div>
                 )}
                 {blocks.length > 0 && (
-                    <div className="wc-summary-grid">
-                        <div className="wc-summary-kpi" style={{ '--kpi-color': KPI_COLOR.ember } as CSSProperties}>
-                            <span className="wc-summary-kpi-value">{blocks.length}</span>
-                            <span className="wc-summary-kpi-label">{t('config.kpi_exercises')}</span>
-                        </div>
-                        <div className="wc-summary-kpi" style={{ '--kpi-color': KPI_COLOR.ice } as CSSProperties}>
-                            <span className="wc-summary-kpi-value">{totalSets}</span>
-                            <span className="wc-summary-kpi-label">{t('config.kpi_total_sets')}</span>
-                        </div>
-                        {allReps && totalRepsEstimate > 0 && (
-                            <div className="wc-summary-kpi" style={{ '--kpi-color': KPI_COLOR.gold } as CSSProperties}>
-                                <span className="wc-summary-kpi-value">{totalRepsEstimate}</span>
-                                <span className="wc-summary-kpi-label">{t('config.kpi_estimated_reps')}</span>
+                    <>
+                        <div className="wc-summary-grid">
+                            <div className="wc-summary-kpi" style={{ '--kpi-color': KPI_COLOR.ember } as CSSProperties}>
+                                <span className="wc-summary-kpi-value">{blocks.length}</span>
+                                <span className="wc-summary-kpi-label">{t('config.kpi_exercises')}</span>
                             </div>
+                            <div className="wc-summary-kpi" style={{ '--kpi-color': KPI_COLOR.ice } as CSSProperties}>
+                                <span className="wc-summary-kpi-value">{totalSets}</span>
+                                <span className="wc-summary-kpi-label">{t('config.kpi_total_sets')}</span>
+                            </div>
+                            <div
+                                className="wc-summary-kpi wc-summary-kpi--xp"
+                                style={{ '--kpi-color': KPI_COLOR.gold } as CSSProperties}
+                                aria-label={t('config.kpi_baseline_xp_aria', { xp: baselineXp })}
+                            >
+                                <span className="wc-summary-kpi-value">
+                                    {formatNumber(baselineXp)}
+                                    {isPartial && <span aria-hidden="true">*</span>}
+                                </span>
+                                <span className="wc-summary-kpi-label">{t('config.kpi_baseline_xp')}</span>
+                            </div>
+                        </div>
+                        {isPartial && (
+                            <p className="wc-summary-xp-partial-note">{t('config.kpi_xp_partial_note')}</p>
                         )}
-                    </div>
+                    </>
                 )}
             </div>
 

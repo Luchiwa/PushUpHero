@@ -7,7 +7,9 @@
         "summary_divider": "Summary",
         "kpi_exercises": "Exercises",
         "kpi_total_sets": "Total sets",
-        "kpi_estimated_reps": "Est. reps",
+        "kpi_baseline_xp": "BASELINE XP",
+        "kpi_baseline_xp_aria": "Estimated minimum XP: {{xp}}",
+        "kpi_xp_partial_note": "* Time blocks excluded",
         "start_workout": "Start Workout",
         "getting_ready": "Getting Ready…",
         "block_card": {

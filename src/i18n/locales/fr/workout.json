@@ -7,7 +7,9 @@
         "summary_divider": "Récapitulatif",
         "kpi_exercises": "Exercices",
         "kpi_total_sets": "Sets totaux",
-        "kpi_estimated_reps": "Reps estimés",
+        "kpi_baseline_xp": "XP DE BASE",
+        "kpi_baseline_xp_aria": "XP minimum estimé : {{xp}}",
+        "kpi_xp_partial_note": "* Hors blocks chrono",
         "start_workout": "Démarrer le workout",
         "getting_ready": "Préparation…",
         "block_card": {
