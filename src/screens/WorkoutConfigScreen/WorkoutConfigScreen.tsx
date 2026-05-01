@@ -8,7 +8,7 @@
 import { lazy, Suspense, useCallback, useMemo, useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { createDefaultBlock, type WorkoutBlock, type WorkoutPlan } from '@exercises/types';
-import { estimatePlanXpBaseline, formatNumber } from '@domain';
+import { estimatePlanXpBaseline, formatNumber, getTotalSets } from '@domain';
 import { useAuthCore } from '@hooks/useAuth';
 import { PageLayout } from '@components/PageLayout/PageLayout';
 import { PrimaryCTA } from '@components/PrimaryCTA/PrimaryCTA';
@@ -158,10 +158,7 @@ export function WorkoutConfigScreen({
 
     // ── Summary KPIs (block-list mode) ────────────────────────────
 
-    const totalSets = useMemo(
-        () => blocks.reduce((sum, b) => sum + b.numberOfSets, 0),
-        [blocks],
-    );
+    const totalSets = useMemo(() => getTotalSets({ blocks }), [blocks]);
     const { baselineXp, isPartial } = useMemo(
         () => estimatePlanXpBaseline({ blocks }),
         [blocks],

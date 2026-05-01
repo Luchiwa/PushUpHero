@@ -177,3 +177,6 @@ export {
     validateSavedWorkoutName,
     type SavedWorkout,
 } from './savedWorkout';
+
+// ── Workout plan structural helpers ────────────────────────────────────────
+export { getTotalSets } from './workoutPlan';

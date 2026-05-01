@@ -9,7 +9,7 @@
  */
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { formatDate, type SavedWorkout } from '@domain';
+import { formatDate, getTotalSets, type SavedWorkout } from '@domain';
 import { getExerciseEmoji, type ExerciseType } from '@exercises/types';
 import './SavedWorkoutCard.scss';
 
@@ -35,10 +35,7 @@ export function SavedWorkoutCard({ workout, onLoad, onActions }: SavedWorkoutCar
         return out;
     }, [workout.plan.blocks]);
 
-    const totalSets = useMemo(
-        () => workout.plan.blocks.reduce((sum, b) => sum + b.numberOfSets, 0),
-        [workout.plan.blocks],
-    );
+    const totalSets = useMemo(() => getTotalSets(workout.plan), [workout.plan]);
 
     const lastUsedLabel = workout.lastUsedAt
         ? t('last_used', { date: formatDate(workout.lastUsedAt) })
