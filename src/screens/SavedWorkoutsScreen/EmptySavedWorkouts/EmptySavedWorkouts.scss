@@ -1,0 +1,57 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+.saved-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-sm;
+    padding: $space-4xl $space-lg;
+    background: $card;
+    border: 1.5px dashed color-mix(in srgb, #{$ember} 28%, transparent);
+    border-radius: $radius-lg;
+    text-align: center;
+}
+
+.saved-empty-icon {
+    font-size: 2.6rem;
+    line-height: 1;
+    margin-bottom: 0.4rem;
+    filter: drop-shadow(0 0 12px color-mix(in srgb, #{$ember} 35%, transparent));
+}
+
+.saved-empty-title {
+    @include title-m;
+    color: $text;
+    margin: 0;
+}
+
+.saved-empty-sub {
+    @include caption;
+    color: $dim;
+    margin: 0;
+}
+
+.saved-empty-cta {
+    margin-top: $space-md;
+    min-height: $hit-target-min;
+    padding: $space-sm $space-xl;
+    border: none;
+    border-radius: $radius-lg;
+    background: $ember;
+    color: $obsidian;
+    font-family: $font-mono;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    @include ember-glow;
+    transition: transform 180ms $ease-arena, box-shadow 180ms $ease-arena;
+    @include focus-visible;
+
+    &:hover {
+        transform: translateY(-2px);
+        @include ember-glow-lg;
+    }
+}

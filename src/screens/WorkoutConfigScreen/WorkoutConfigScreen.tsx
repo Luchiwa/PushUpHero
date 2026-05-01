@@ -5,15 +5,22 @@
  * 1. Block list — shows all added exercise blocks, can add/remove/reorder
  * 2. Block editor — step-by-step wizard for one block (exercise → sets → goal → rest)
  */
-import { useCallback, useMemo, useState, type CSSProperties } from 'react';
+import { lazy, Suspense, useCallback, useMemo, useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { createDefaultBlock, type WorkoutBlock, type WorkoutPlan } from '@exercises/types';
 import { estimatePlanXpBaseline, formatNumber } from '@domain';
+import { useAuthCore } from '@hooks/useAuth';
 import { PageLayout } from '@components/PageLayout/PageLayout';
 import { PrimaryCTA } from '@components/PrimaryCTA/PrimaryCTA';
+import { ModalFallback } from '@components/ModalFallback/ModalFallback';
 import { BlockCard } from './BlockCard/BlockCard';
 import { BlockEditor } from './BlockEditor/BlockEditor';
 import './WorkoutConfigScreen.scss';
+
+// Lazy: only parsed when the user opens the saved workouts overlay.
+const SavedWorkoutsScreen = lazy(() =>
+    import('@screens/SavedWorkoutsScreen/SavedWorkoutsScreen').then(m => ({ default: m.SavedWorkoutsScreen })),
+);
 
 // ── Props ────────────────────────────────────────────────────────
 
@@ -52,11 +59,14 @@ export function WorkoutConfigScreen({
     isReady,
 }: WorkoutConfigScreenProps) {
     const { t } = useTranslation('workout');
+    const { user } = useAuthCore();
     // null = block list mode, number = editing block at that index
     const [editingBlockIndex, setEditingBlockIndex] = useState<number | null>(null);
     const [blockStep, setBlockStep] = useState<BlockStep>('exercise');
     // Track if we're adding a new block (vs editing existing)
     const [isAddingNew, setIsAddingNew] = useState(false);
+    // Saved workouts overlay (auth-only). Entry point will move to ProfileScreen in PUS-22.
+    const [loadOpen, setLoadOpen] = useState(false);
 
     const blocks = plan.blocks;
 
@@ -177,8 +187,20 @@ export function WorkoutConfigScreen({
     // ── Render: Block List ────────────────────────────────────────
 
     return (
+        <>
         <PageLayout title={t('config.title')} onClose={handleTopBack} zIndex={200} bodyClassName="wc-layout" transition="sheet">
             <div className="wc-body wc-body--list">
+                {/* Saved workouts entry point (auth-only). */}
+                {user && (
+                    <button
+                        type="button"
+                        className="wc-load-saved-btn"
+                        onClick={() => setLoadOpen(true)}
+                    >
+                        <span>{t('config.load_saved')}</span>
+                    </button>
+                )}
+
                 {/* Block cards */}
                 {blocks.length === 0 && (
                     <div className="wc-empty-state">
@@ -260,5 +282,18 @@ export function WorkoutConfigScreen({
                 </PrimaryCTA>
             </div>
         </PageLayout>
+        <Suspense fallback={<ModalFallback />}>
+            {loadOpen && user && (
+                <SavedWorkoutsScreen
+                    uid={user.uid}
+                    onClose={() => setLoadOpen(false)}
+                    onPick={(plan) => {
+                        onPlanChange(plan);
+                        setLoadOpen(false);
+                    }}
+                />
+            )}
+        </Suspense>
+        </>
     );
 }

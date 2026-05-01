@@ -1,0 +1,38 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+// Body container — flex column so the stub list / empty state can stretch.
+.saved-body {
+    display: flex;
+    flex-direction: column;
+    gap: $space-md;
+    padding-top: $space-lg;
+    padding-bottom: $space-lg;
+}
+
+// Temporary stub list rendered in commit 1 when there are saved workouts.
+// Replaced by <SavedWorkoutCard /> grid in commit 2 — keep this scoped.
+.saved-list-stub {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: $space-sm;
+
+    li {
+        margin: 0;
+    }
+
+    button {
+        width: 100%;
+        text-align: left;
+        padding: $space-md;
+        background: $card;
+        border: 1px solid $line;
+        border-radius: $radius-lg;
+        color: $text;
+        cursor: pointer;
+        @include focus-visible;
+    }
+}

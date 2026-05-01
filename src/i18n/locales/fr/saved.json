@@ -1,0 +1,8 @@
+{
+    "title": "Mes workouts",
+    "empty": {
+        "title": "Aucun workout sauvegardé",
+        "sub": "Crée ton premier workout pour le retrouver ici"
+    },
+    "create_first": "Créer mon premier workout"
+}

@@ -4,6 +4,7 @@
         "empty_title": "Aucun exercice pour le moment",
         "empty_sub": "Ajoute ton premier exercice pour commencer",
         "add_exercise": "Ajouter un exercice",
+        "load_saved": "Charger un workout",
         "summary_divider": "Récapitulatif",
         "kpi_exercises": "Exercices",
         "kpi_total_sets": "Sets totaux",
