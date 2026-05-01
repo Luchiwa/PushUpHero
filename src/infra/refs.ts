@@ -67,3 +67,12 @@ export const notificationsCol = (uid: UserId) => collection(db, 'users', uid, 'n
 /** `users/{uid}/notifications/{notifId}` document ref */
 export const notificationRef = (uid: UserId, notifId: string) =>
     doc(db, 'users', uid, 'notifications', notifId);
+
+// ── Saved Workouts ──────────────────────────────────────────────────────────
+
+/** `users/{uid}/savedWorkouts` collection ref */
+export const savedWorkoutsCol = (uid: UserId) => collection(db, 'users', uid, 'savedWorkouts');
+
+/** `users/{uid}/savedWorkouts/{id}` document ref */
+export const savedWorkoutRef = (uid: UserId, id: string) =>
+    doc(db, 'users', uid, 'savedWorkouts', id);

@@ -8,5 +8,9 @@
         "username_taken": "This username is already taken!",
         "no_authenticated_user": "No authenticated user.",
         "unknown": "An error occurred."
+    },
+    "savedWorkout": {
+        "auth_required": "You must be signed in to save workouts.",
+        "invalid_name": "Workout name must be 1–50 characters."
     }
 }

@@ -169,3 +169,11 @@ export {
     formatTime,
     formatNumber,
 } from './format';
+
+// ── Saved workouts (named templates) ───────────────────────────────────────
+export {
+    SAVED_WORKOUT_NAME_MIN,
+    SAVED_WORKOUT_NAME_MAX,
+    validateSavedWorkoutName,
+    type SavedWorkout,
+} from './savedWorkout';

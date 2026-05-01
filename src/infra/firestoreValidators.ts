@@ -10,8 +10,8 @@
  */
 
 import { Timestamp } from 'firebase/firestore';
-import { EXERCISE_TYPES, type ExerciseType, type ExerciseXpMap, type SessionRecord } from '@exercises/types';
-import { createUserId, type BodyProfile, type QuestProgress, type RecordsMap, type UserId } from '@domain';
+import { EXERCISE_TYPES, type ExerciseType, type ExerciseXpMap, type SessionRecord, type WorkoutBlock } from '@exercises/types';
+import { createUserId, type BodyProfile, type QuestProgress, type RecordsMap, type SavedWorkout, type UserId } from '@domain';
 import type { FriendRequest } from '@services/friendService';
 
 const isObj = (v: unknown): v is Record<string, unknown> =>
@@ -93,6 +93,54 @@ export function isFriendRequest(v: unknown): v is FriendRequest {
         && typeof v.fromUsername === 'string'
         && v.status === 'pending'
         && typeof v.sentAt === 'number';
+}
+
+// ── Saved workouts (Firestore wire format, flat) ────────────────────────────
+
+/**
+ * The shape Firestore stores for a saved workout doc body. The doc id lives
+ * outside the body — the parser stitches it back in to produce the domain
+ * `SavedWorkout`.
+ */
+export interface FlatSavedWorkout {
+    name: string;
+    plan: { blocks: WorkoutBlock[] };
+    createdAt: number;
+    lastUsedAt: number | null;
+    version: 1;
+}
+
+function isWorkoutBlock(v: unknown): v is WorkoutBlock {
+    return isObj(v)
+        && isKnownExerciseType(v.exerciseType)
+        && typeof v.numberOfSets === 'number'
+        && (v.sessionMode === 'reps' || v.sessionMode === 'time')
+        && typeof v.goalReps === 'number'
+        && isObj(v.timeGoal)
+        && isObj(v.restBetweenSets)
+        && isObj(v.restAfterBlock);
+}
+
+export function isFlatSavedWorkout(v: unknown): v is FlatSavedWorkout {
+    return isObj(v)
+        && typeof v.name === 'string'
+        && isObj(v.plan)
+        && Array.isArray(v.plan.blocks)
+        && v.plan.blocks.every(isWorkoutBlock)
+        && (v.lastUsedAt === null || typeof v.lastUsedAt === 'number' || v.lastUsedAt instanceof Timestamp)
+        && v.version === 1;
+}
+
+export function parseSavedWorkout(id: string, data: unknown): SavedWorkout | null {
+    if (!isFlatSavedWorkout(data)) return null;
+    return {
+        id,
+        name: data.name,
+        plan: data.plan,
+        createdAt: tsToMs(data.createdAt),
+        lastUsedAt: data.lastUsedAt === null ? null : tsToMs(data.lastUsedAt),
+        version: 1,
+    };
 }
 
 // ── Parsed event types (read-side only) ──────────────────────────────────────
