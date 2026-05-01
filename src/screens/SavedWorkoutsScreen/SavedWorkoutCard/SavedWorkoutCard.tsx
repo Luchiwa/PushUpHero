@@ -16,9 +16,10 @@ import './SavedWorkoutCard.scss';
 interface SavedWorkoutCardProps {
     workout: SavedWorkout;
     onLoad: () => void;
+    onActions: (returnFocusEl: HTMLButtonElement) => void;
 }
 
-export function SavedWorkoutCard({ workout, onLoad }: SavedWorkoutCardProps) {
+export function SavedWorkoutCard({ workout, onLoad, onActions }: SavedWorkoutCardProps) {
     const { t } = useTranslation('saved');
 
     // Unique exercise types in the order they appear in the plan.
@@ -66,7 +67,7 @@ export function SavedWorkoutCard({ workout, onLoad }: SavedWorkoutCardProps) {
                 type="button"
                 className="saved-card-kebab"
                 aria-label={t('actions_label', { name: workout.name })}
-                onClick={() => { /* PUS-20 commit 3 wires the actions sheet here */ }}
+                onClick={(e) => onActions(e.currentTarget)}
             >
                 <span aria-hidden="true">⋯</span>
             </button>

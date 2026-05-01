@@ -9,5 +9,24 @@
     "last_used": "Last used: {{date}}",
     "sets_count_one": "{{count}} set",
     "sets_count_other": "{{count}} sets",
-    "actions_label": "Actions for {{name}}"
+    "actions_label": "Actions for {{name}}",
+    "actions": {
+        "title": "Actions",
+        "rename": "Rename",
+        "delete": "Delete"
+    },
+    "rename": {
+        "title": "Rename",
+        "label": "New name",
+        "placeholder": "My workout",
+        "submit": "Save",
+        "cancel": "Cancel"
+    },
+    "delete": {
+        "title": "Delete this workout?",
+        "body": "\"{{name}}\" will be deleted permanently.",
+        "confirm": "Delete",
+        "cancel": "Cancel"
+    },
+    "deleted": "\"{{name}}\" deleted"
 }

@@ -21,3 +21,8 @@
     flex-direction: column;
     gap: $space-md;
 }
+
+// Visually-hidden polite live region for delete announcements.
+.saved-live {
+    @include visually-hidden;
+}
