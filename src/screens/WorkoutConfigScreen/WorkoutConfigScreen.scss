@@ -59,10 +59,16 @@
     margin: 0;
 }
 
-// ── Load saved workouts entry point ─────────────────────────────────────────
-// Neutral surface (not ember) — keeps the ember-affordance budget for the
-// dashed Add Exercise button + the solid Start CTA below.
-.wc-load-saved-btn {
+// ── Saved-templates entry actions (Load / Save) ─────────────────────────────
+// Ember-glass treatment — distinct from the dashed `wc-add-block-btn`
+// (create-draft) and the solid ember + glow `Start workout` CTA. Three
+// ember intensities form a coherent button family:
+//   • glass-ember (6% bg / 28% border) → "manage saved templates"
+//   • dashed-ember                     → "create draft / add inline"
+//   • solid-ember + glow               → "go / primary action"
+// See `src/styles/CLAUDE.md` Gotcha "Don't reach for $obsidian-2 + $line".
+.wc-load-saved-btn,
+.wc-save-current-btn {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -70,26 +76,33 @@
     width: 100%;
     min-height: $hit-target-min;
     padding: $space-md;
-    border: 1px solid $line;
+    background: color-mix(in srgb, #{$ember} 6%, transparent);
+    border: 1px solid color-mix(in srgb, #{$ember} 28%, transparent);
     border-radius: $radius-lg;
-    background: $obsidian-2;
-    color: $text;
+    color: $ember;
     font-family: $font-mono;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 2px;
     text-transform: uppercase;
     cursor: pointer;
-    transition: border-color 180ms $ease-arena,
-                background 180ms $ease-arena,
-                transform 180ms $ease-arena;
+    transition: background 180ms $ease-arena,
+                border-color 180ms $ease-arena,
+                transform 180ms $ease-arena,
+                box-shadow 180ms $ease-arena;
     @include focus-visible;
 
     &:hover {
-        border-color: $dim;
-        background: color-mix(in srgb, #{$obsidian-2} 60%, #{$line});
+        background: color-mix(in srgb, #{$ember} 12%, transparent);
+        border-color: $ember;
         transform: translateY(-1px);
+        box-shadow: 0 4px 14px color-mix(in srgb, #{$ember} 18%, transparent);
     }
+}
+
+.wc-saved-action-icon {
+    flex-shrink: 0;
+    color: inherit;
 }
 
 // ── Add exercise button ─────────────────────────────────────────────────────

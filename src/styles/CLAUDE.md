@@ -176,6 +176,13 @@ Key Arena keyframes (in `_animations.scss`):
 
 ## Gotchas — don't repeat these mistakes
 
+- **Don't reach for `$obsidian-2 + $line` for action buttons.** Arena's identity is ember-saturated; a flat neutral surface reads as generic Material/iOS dark-mode and breaks the look. When adding a button, default to an ember variant — the project already has three coherent treatments forming a button family:
+    - **Dashed ember** (`wc-add-block-btn` pattern) → "create draft / add inline"
+    - **Glass ember** (`color-mix(in srgb, $ember 6%, transparent)` bg + `color-mix($ember 28%, transparent)` 1px border, ember text) → "manage / saved templates"
+    - **Solid ember + glow** (`ember-glow` mixin) → "go / primary action"
+
+    Vary intensity within the family rather than reaching for neutral. Reserve `$obsidian-2` for **inert surfaces** — input fields, secondary card backgrounds, dividers — never for clickable affordances.
+
 - **`overflow: hidden` on a card clips ember text-shadow glows.** If your card has an ember title with `text-shadow: 0 0 12px`, don't put `overflow: hidden` on the card just to contain a decorative `::before`. `position: absolute; inset: 0` on the `::before` is already self-clamped — the parent doesn't need `overflow: hidden`.
 - **Children of `.page-body` (flex-column) compress without `flex-shrink: 0`.** PageLayout's body is `flex: 1; display: flex; flex-direction: column`. Hero cards, sticky headers, and category sections inside a scrollable quest list must set `flex-shrink: 0` or they shrink below natural height on short viewports.
 - **Screen titles must use `@include title-screen`.** Don't hand-roll — letter-spacing, uppercase, ember color, and line-height are a spec.
