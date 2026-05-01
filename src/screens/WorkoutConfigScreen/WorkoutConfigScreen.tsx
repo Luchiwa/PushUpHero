@@ -21,6 +21,9 @@ import './WorkoutConfigScreen.scss';
 const SavedWorkoutsScreen = lazy(() =>
     import('@screens/SavedWorkoutsScreen/SavedWorkoutsScreen').then(m => ({ default: m.SavedWorkoutsScreen })),
 );
+const SaveWorkoutSheet = lazy(() =>
+    import('./SaveWorkoutSheet/SaveWorkoutSheet').then(m => ({ default: m.SaveWorkoutSheet })),
+);
 
 // ── Props ────────────────────────────────────────────────────────
 
@@ -67,6 +70,8 @@ export function WorkoutConfigScreen({
     const [isAddingNew, setIsAddingNew] = useState(false);
     // Saved workouts overlay (auth-only). Entry point will move to ProfileScreen in PUS-22.
     const [loadOpen, setLoadOpen] = useState(false);
+    const [saveOpen, setSaveOpen] = useState(false);
+    const [savedMessage, setSavedMessage] = useState('');
 
     const blocks = plan.blocks;
 
@@ -156,6 +161,13 @@ export function WorkoutConfigScreen({
         }
     }, [editingBlockIndex, handleBlockBack, onBack]);
 
+    const handleSaved = useCallback((name: string) => {
+        setSaveOpen(false);
+        // Toggle through empty so SR re-announces if user saves twice with same name.
+        setSavedMessage('');
+        setTimeout(() => setSavedMessage(t('config.saved', { name })), 50);
+    }, [t]);
+
     // ── Summary KPIs (block-list mode) ────────────────────────────
 
     const totalSets = useMemo(() => getTotalSets({ blocks }), [blocks]);
@@ -187,16 +199,30 @@ export function WorkoutConfigScreen({
         <>
         <PageLayout title={t('config.title')} onClose={handleTopBack} zIndex={200} bodyClassName="wc-layout" transition="sheet">
             <div className="wc-body wc-body--list">
-                {/* Saved workouts entry point (auth-only). */}
+                {/* Saved templates entry actions (auth-only). Save is also gated
+                    on having at least one block so the button never invites
+                    persisting an empty plan. */}
                 {user && (
                     <button
                         type="button"
                         className="wc-load-saved-btn"
                         onClick={() => setLoadOpen(true)}
                     >
+                        <FolderOpenIcon />
                         <span>{t('config.load_saved')}</span>
                     </button>
                 )}
+                {user && blocks.length > 0 && (
+                    <button
+                        type="button"
+                        className="wc-save-current-btn"
+                        onClick={() => setSaveOpen(true)}
+                    >
+                        <BookmarkIcon />
+                        <span>{t('config.save_current')}</span>
+                    </button>
+                )}
+                <div role="status" aria-live="polite" className="wc-live-region">{savedMessage}</div>
 
                 {/* Block cards */}
                 {blocks.length === 0 && (
@@ -284,13 +310,38 @@ export function WorkoutConfigScreen({
                 <SavedWorkoutsScreen
                     uid={user.uid}
                     onClose={() => setLoadOpen(false)}
-                    onPick={(plan) => {
-                        onPlanChange(plan);
+                    onPick={(loadedPlan) => {
+                        onPlanChange(loadedPlan);
                         setLoadOpen(false);
                     }}
                 />
             )}
+            {saveOpen && user && (
+                <SaveWorkoutSheet
+                    uid={user.uid}
+                    plan={plan}
+                    onClose={() => setSaveOpen(false)}
+                    onSaved={handleSaved}
+                />
+            )}
         </Suspense>
         </>
+    );
+}
+
+// ── Icons (inline SVG, currentColor) ─────────────────────────────
+function FolderOpenIcon() {
+    return (
+        <svg className="wc-saved-action-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M6 14l1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.55 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H18a2 2 0 0 1 2 2v2" />
+        </svg>
+    );
+}
+
+function BookmarkIcon() {
+    return (
+        <svg className="wc-saved-action-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+        </svg>
     );
 }

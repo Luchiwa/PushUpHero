@@ -5,6 +5,15 @@
         "empty_sub": "Ajoute ton premier exercice pour commencer",
         "add_exercise": "Ajouter un exercice",
         "load_saved": "Charger un workout",
+        "save_current": "Sauvegarder ce workout",
+        "save": {
+            "title": "Sauvegarder le workout",
+            "label": "Nom du workout",
+            "placeholder": "Mon workout",
+            "submit": "Sauvegarder",
+            "cancel": "Annuler"
+        },
+        "saved": "« {{name}} » sauvegardé",
         "summary_divider": "Récapitulatif",
         "kpi_exercises": "Exercices",
         "kpi_total_sets": "Sets totaux",
