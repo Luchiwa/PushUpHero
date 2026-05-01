@@ -4,5 +4,10 @@
         "title": "Aucun workout sauvegardé",
         "sub": "Crée ton premier workout pour le retrouver ici"
     },
-    "create_first": "Créer mon premier workout"
+    "create_first": "Créer mon premier workout",
+    "never_used": "Jamais lancé",
+    "last_used": "Dernier lancement : {{date}}",
+    "sets_count_one": "{{count}} set",
+    "sets_count_other": "{{count}} sets",
+    "actions_label": "Actions pour {{name}}"
 }

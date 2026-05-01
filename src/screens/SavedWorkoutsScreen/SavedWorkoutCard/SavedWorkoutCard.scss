@@ -1,0 +1,110 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+// ── Card shell ──────────────────────────────────────────────────────────────
+.saved-card {
+    display: flex;
+    align-items: stretch;
+    background: $card;
+    border: 1px solid $line;
+    border-radius: $radius-2xl;
+    flex-shrink: 0;
+    overflow: hidden; // contain the inner buttons' rounded corners on hover
+    transition: transform 180ms $ease-arena,
+                border-color 180ms $ease-arena,
+                box-shadow 180ms $ease-arena;
+
+    &:hover,
+    &:focus-within {
+        transform: translateY(-2px);
+        border-color: color-mix(in srgb, #{$ember} 40%, transparent);
+        box-shadow: 0 6px 18px color-mix(in srgb, #{$ember} 18%, transparent);
+    }
+}
+
+// ── Primary "load" button — covers most of the card ─────────────────────────
+.saved-card-load {
+    flex: 1;
+    min-width: 0; // allow the title's ellipsis to kick in
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: $space-md;
+    background: transparent;
+    border: none;
+    text-align: left;
+    color: $text;
+    cursor: pointer;
+    @include focus-visible;
+
+    &:hover .saved-card-name {
+        color: $ember;
+    }
+}
+
+.saved-card-name {
+    @include title-m;
+    color: $text;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+    transition: color 180ms $ease-arena;
+}
+
+.saved-card-meta {
+    display: flex;
+    align-items: center;
+    gap: $space-xs;
+    @include caption;
+    color: $dim;
+    flex-wrap: wrap;
+}
+
+.saved-card-emojis {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.saved-card-emoji {
+    display: inline-block;
+}
+
+.saved-card-dot {
+    color: color-mix(in srgb, #{$dim} 60%, transparent);
+}
+
+.saved-card-sets {
+    font-variant-numeric: tabular-nums;
+}
+
+.saved-card-last-used {
+    @include caption;
+    color: $dim;
+}
+
+// ── Kebab "actions" button — narrow column on the right ─────────────────────
+.saved-card-kebab {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    min-height: 44px;
+    background: transparent;
+    border: none;
+    border-left: 1px solid $line;
+    color: $dim;
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: color 180ms $ease-arena, background 180ms $ease-arena;
+    @include focus-visible;
+
+    &:hover {
+        color: $text;
+        background: color-mix(in srgb, #{$ember} 6%, transparent);
+    }
+}

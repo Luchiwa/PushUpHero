@@ -4,5 +4,10 @@
         "title": "No saved workouts yet",
         "sub": "Create your first workout to find it here"
     },
-    "create_first": "Create my first workout"
+    "create_first": "Create my first workout",
+    "never_used": "Never used",
+    "last_used": "Last used: {{date}}",
+    "sets_count_one": "{{count}} set",
+    "sets_count_other": "{{count}} sets",
+    "actions_label": "Actions for {{name}}"
 }
