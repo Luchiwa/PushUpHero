@@ -13,6 +13,7 @@
  */
 import { useId, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Button } from '@components/Button/Button';
 import { PageLayout } from '@components/PageLayout/PageLayout';
 import { SAVED_WORKOUT_NAME_MAX, validateSavedWorkoutName, type UserId } from '@domain';
 import { createSavedWorkout } from '@services/savedWorkoutService';
@@ -78,12 +79,12 @@ export function SaveWorkoutSheet({ uid, plan, onClose, onSaved }: SaveWorkoutShe
                 </div>
                 {error && <span id={errorId} role="alert" className="save-sheet-error">{error}</span>}
                 <div className="save-sheet-cta-row">
-                    <button type="button" className="save-sheet-cta save-sheet-cta--ghost" onClick={onClose} disabled={busy}>
+                    <Button variant="ghost" size="md" onClick={onClose} disabled={busy}>
                         {t('config.save.cancel')}
-                    </button>
-                    <button type="submit" className="save-sheet-cta save-sheet-cta--ember" disabled={busy || value.trim().length === 0}>
+                    </Button>
+                    <Button variant="primary" size="md" type="submit" disabled={busy || value.trim().length === 0}>
                         {t('config.save.submit')}
-                    </button>
+                    </Button>
                 </div>
             </form>
         </PageLayout>

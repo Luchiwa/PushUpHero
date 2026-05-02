@@ -12,6 +12,7 @@
 import { useId, useRef, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
+import { Button } from '@components/Button/Button';
 import { PageLayout } from '@components/PageLayout/PageLayout';
 import { useFocusTrap } from '@hooks/shared/useFocusTrap';
 import {
@@ -145,8 +146,8 @@ function RenameForm({ workout, uid, t, onCancel, onDone }: {
             </div>
             {error && <span id={errorId} role="alert" className="actions-rename-error">{error}</span>}
             <div className="actions-sheet-cta-row">
-                <button type="button" className="actions-cta actions-cta--ghost" onClick={onCancel} disabled={busy}>{t('rename.cancel')}</button>
-                <button type="submit" className="actions-cta actions-cta--ember" disabled={busy}>{t('rename.submit')}</button>
+                <Button variant="ghost" size="md" onClick={onCancel} disabled={busy}>{t('rename.cancel')}</Button>
+                <Button variant="primary" size="md" type="submit" disabled={busy}>{t('rename.submit')}</Button>
             </div>
         </form>
     );
@@ -174,8 +175,8 @@ function DeleteConfirm({ workout, uid, t, onCancel, onDone }: {
         <div ref={ref} className="actions-sheet-delete" role="alertdialog" aria-modal="true">
             <p className="actions-delete-body">{t('delete.body', { name: workout.name })}</p>
             <div className="actions-sheet-cta-row">
-                <button type="button" className="actions-cta actions-cta--ghost" onClick={onCancel} disabled={busy}>{t('delete.cancel')}</button>
-                <button type="button" className="actions-cta actions-cta--blood" onClick={handleConfirm} disabled={busy}>{t('delete.confirm')}</button>
+                <Button variant="ghost" size="md" onClick={onCancel} disabled={busy}>{t('delete.cancel')}</Button>
+                <Button variant="danger" size="md" onClick={handleConfirm} disabled={busy}>{t('delete.confirm')}</Button>
             </div>
         </div>
     );

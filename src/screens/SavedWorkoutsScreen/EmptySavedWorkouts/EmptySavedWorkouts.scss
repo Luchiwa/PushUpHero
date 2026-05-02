@@ -32,26 +32,8 @@
     margin: 0;
 }
 
-.saved-empty-cta {
+// Button itself is the canonical `<Button />` — this wrapper just spaces it
+// from the title/subtitle above.
+.saved-empty-cta-wrap {
     margin-top: $space-md;
-    min-height: $hit-target-min;
-    padding: $space-sm $space-xl;
-    border: none;
-    border-radius: $radius-lg;
-    background: $ember;
-    color: $obsidian;
-    font-family: $font-mono;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    cursor: pointer;
-    @include ember-glow;
-    transition: transform 180ms $ease-arena, box-shadow 180ms $ease-arena;
-    @include focus-visible;
-
-    &:hover {
-        transform: translateY(-2px);
-        @include ember-glow-lg;
-    }
 }

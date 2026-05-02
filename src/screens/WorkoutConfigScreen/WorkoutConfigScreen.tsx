@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { createDefaultBlock, type WorkoutBlock, type WorkoutPlan } from '@exercises/types';
 import { estimatePlanXpBaseline, formatNumber, getTotalSets } from '@domain';
 import { useAuthCore } from '@hooks/useAuth';
+import { Button } from '@components/Button/Button';
 import { PageLayout } from '@components/PageLayout/PageLayout';
 import { PrimaryCTA } from '@components/PrimaryCTA/PrimaryCTA';
 import { ModalFallback } from '@components/ModalFallback/ModalFallback';
@@ -203,24 +204,24 @@ export function WorkoutConfigScreen({
                     on having at least one block so the button never invites
                     persisting an empty plan. */}
                 {user && (
-                    <button
-                        type="button"
-                        className="wc-load-saved-btn"
+                    <Button
+                        variant="secondary"
+                        size="md"
+                        icon={<FolderOpenIcon />}
                         onClick={() => setLoadOpen(true)}
                     >
-                        <FolderOpenIcon />
-                        <span>{t('config.load_saved')}</span>
-                    </button>
+                        {t('config.load_saved')}
+                    </Button>
                 )}
                 {user && blocks.length > 0 && (
-                    <button
-                        type="button"
-                        className="wc-save-current-btn"
+                    <Button
+                        variant="secondary"
+                        size="md"
+                        icon={<BookmarkIcon />}
                         onClick={() => setSaveOpen(true)}
                     >
-                        <BookmarkIcon />
-                        <span>{t('config.save_current')}</span>
-                    </button>
+                        {t('config.save_current')}
+                    </Button>
                 )}
                 <div role="status" aria-live="polite" className="wc-live-region">{savedMessage}</div>
 
@@ -332,7 +333,7 @@ export function WorkoutConfigScreen({
 // ── Icons (inline SVG, currentColor) ─────────────────────────────
 function FolderOpenIcon() {
     return (
-        <svg className="wc-saved-action-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M6 14l1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.55 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H18a2 2 0 0 1 2 2v2" />
         </svg>
     );
@@ -340,7 +341,7 @@ function FolderOpenIcon() {
 
 function BookmarkIcon() {
     return (
-        <svg className="wc-saved-action-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
         </svg>
     );

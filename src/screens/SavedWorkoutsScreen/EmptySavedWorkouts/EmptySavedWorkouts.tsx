@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { Button } from '@components/Button/Button';
 import './EmptySavedWorkouts.scss';
 
 interface EmptySavedWorkoutsProps {
@@ -12,9 +13,11 @@ export function EmptySavedWorkouts({ onCreate }: EmptySavedWorkoutsProps) {
             <span className="saved-empty-icon" aria-hidden="true">📚</span>
             <p className="saved-empty-title">{t('empty.title')}</p>
             <p className="saved-empty-sub">{t('empty.sub')}</p>
-            <button type="button" className="saved-empty-cta" onClick={onCreate}>
-                {t('create_first')}
-            </button>
+            <div className="saved-empty-cta-wrap">
+                <Button variant="primary" size="lg" onClick={onCreate}>
+                    {t('create_first')}
+                </Button>
+            </div>
         </div>
     );
 }

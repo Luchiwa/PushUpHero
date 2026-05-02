@@ -163,62 +163,12 @@
 }
 
 // ── CTA row (shared by rename + delete) ─────────────────────────────────────
+// Buttons themselves are the canonical `<Button />` component — this row is
+// just a flex container so the CTAs split the available width evenly.
 .actions-sheet-cta-row {
     display: flex;
     gap: $space-sm;
     margin-top: $space-sm;
-}
 
-.actions-cta {
-    flex: 1;
-    min-height: $hit-target-min;
-    padding: $space-sm $space-lg;
-    border-radius: $radius-lg;
-    font-family: $font-mono;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: transform 180ms $ease-arena,
-                box-shadow 180ms $ease-arena,
-                background 180ms $ease-arena;
-    @include focus-visible;
-
-    &:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    &--ghost {
-        background: transparent;
-        border: 1px solid $line;
-        color: $text;
-
-        &:hover:not(:disabled) {
-            border-color: $dim;
-            background: color-mix(in srgb, #{$obsidian-2} 60%, #{$line});
-        }
-    }
-
-    &--ember {
-        background: $ember-solid;
-        border: none;
-        color: $obsidian;
-        @include ember-glow;
-
-        &:hover:not(:disabled) {
-            transform: translateY(-1px);
-            @include ember-glow-lg;
-        }
-    }
-
-    &--blood {
-        background: $blood;
-        border: none;
-        color: $obsidian;
-        box-shadow: 0 6px 20px color-mix(in srgb, #{$blood} 35%, transparent);
-
-        &:hover:not(:disabled) {
-            transform: translateY(-1px);
-            box-shadow: 0 10px 28px color-mix(in srgb, #{$blood} 50%, transparent);
-        }
-    }
+    > * { flex: 1; }
 }
