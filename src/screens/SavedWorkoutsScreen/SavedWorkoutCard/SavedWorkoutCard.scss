@@ -19,7 +19,9 @@
         $card;
     border: 1px solid $line;
     border-radius: $radius-2xl;
-    overflow: hidden;
+    // No `overflow: hidden` — would clip the title's hover text-shadow and the
+    // blade's hover halo. `::before`/`::after` are self-clamped via explicit
+    // edges/`inset: 0`; the background obeys `border-radius` automatically.
     isolation: isolate;
     flex-shrink: 0;
     transition: transform 180ms $ease-arena,
@@ -44,7 +46,7 @@
                     bottom 180ms $ease-arena,
                     width 180ms $ease-arena,
                     box-shadow 180ms $ease-arena;
-        z-index: 1;
+        z-index: $z-base;
     }
 
     // Top inner-glow that fades in on hover.
@@ -58,7 +60,7 @@
             transparent 60%);
         opacity: 0;
         transition: opacity 180ms $ease-arena;
-        z-index: 0;
+        z-index: $z-base;
     }
 
     &:hover,
@@ -83,7 +85,7 @@
 // ── Primary load button — covers most of the card ──────────────────────────
 .saved-card-load {
     position: relative;
-    z-index: 2;
+    z-index: $z-content;
     flex: 1;
     min-width: 0;
     display: grid;
@@ -201,7 +203,7 @@
 // ── Kebab — its own column with an ember-bordered pill ─────────────────────
 .saved-card-kebab {
     position: relative;
-    z-index: 2;
+    z-index: $z-content;
     flex: 0 0 auto;
     width: 52px;             // 44px hit-target + 8px breathing room
     display: flex;

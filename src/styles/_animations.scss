@@ -466,6 +466,7 @@
     *::before,
     *::after {
         animation-duration: 0.01ms !important;
+        animation-delay: 0ms !important;        // staggered entries land at once
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
     }
