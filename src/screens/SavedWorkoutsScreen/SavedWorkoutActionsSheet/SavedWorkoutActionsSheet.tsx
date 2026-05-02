@@ -80,22 +80,14 @@ export function SavedWorkoutActionsSheet({
 
 function Menu({ t, onRename, onDelete }: { t: TFunction<'saved'>; onRename: () => void; onDelete: () => void }) {
     return (
-        <ul className="actions-sheet-menu" role="list">
-            <li>
-                <button type="button" className="actions-row" onClick={onRename}>
-                    <PencilIcon />
-                    <span className="actions-row-name">{t('actions.rename')}</span>
-                    <ChevronIcon />
-                </button>
-            </li>
-            <li>
-                <button type="button" className="actions-row actions-row--danger" onClick={onDelete}>
-                    <TrashIcon />
-                    <span className="actions-row-name">{t('actions.delete')}</span>
-                    <ChevronIcon />
-                </button>
-            </li>
-        </ul>
+        <div className="actions-sheet-menu">
+            <Button variant="secondary" size="lg" icon={<PencilIcon />} onClick={onRename}>
+                {t('actions.rename')}
+            </Button>
+            <Button variant="danger" size="lg" icon={<TrashIcon />} onClick={onDelete}>
+                {t('actions.delete')}
+            </Button>
+        </div>
     );
 }
 
@@ -184,11 +176,8 @@ function DeleteConfirm({ workout, uid, t, onCancel, onDone }: {
 
 // ── Icons (inline SVG, currentColor) ───────────────────────────
 function PencilIcon() {
-    return (<svg className="actions-row-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z" /></svg>);
+    return (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z" /></svg>);
 }
 function TrashIcon() {
-    return (<svg className="actions-row-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6M14 11v6" /></svg>);
-}
-function ChevronIcon() {
-    return (<svg className="actions-row-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>);
+    return (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6M14 11v6" /></svg>);
 }

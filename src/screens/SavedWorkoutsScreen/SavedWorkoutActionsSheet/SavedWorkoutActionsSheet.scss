@@ -15,74 +15,13 @@
 }
 
 // ── Menu rows ───────────────────────────────────────────────────────────────
+// Two stacked `<Button />` CTAs (rename = secondary, delete = danger).
 .actions-sheet-menu {
-    list-style: none;
-    margin: 0;
-    padding: 0;
     display: flex;
     flex-direction: column;
-    gap: $space-xs;
-}
+    gap: $space-sm;
 
-// Sideways lift on hover suggests "advance into" rather than "raise up" —
-// different motion vocabulary from the cards above.
-.actions-row {
-    display: flex;
-    align-items: center;
-    gap: $space-md;
-    width: 100%;
-    min-height: 60px;
-    padding: $space-sm $space-md;
-    background: transparent;
-    border: 1px solid $line;
-    border-radius: $radius-lg;
-    color: $text;
-    cursor: pointer;
-    text-align: left;
-    transition: background 180ms $ease-arena,
-                border-color 180ms $ease-arena,
-                transform 180ms $ease-arena;
-    @include focus-visible;
-
-    &:hover:not(:disabled) {
-        background: color-mix(in srgb, #{$ember} 6%, transparent);
-        border-color: color-mix(in srgb, #{$ember} 30%, transparent);
-        transform: translateX(2px);
-
-        .actions-row-icon { color: $text; }
-        .actions-row-chev {
-            color: $ember;
-            transform: translateX(4px);
-        }
-    }
-
-    &--danger:hover:not(:disabled) {
-        background: color-mix(in srgb, #{$blood} 8%, transparent);
-        border-color: color-mix(in srgb, #{$blood} 30%, transparent);
-
-        .actions-row-icon { color: $blood; }
-        .actions-row-chev { color: $blood; }
-    }
-}
-
-.actions-row-icon {
-    flex-shrink: 0;
-    color: $dim;
-    transition: color 180ms $ease-arena;
-}
-
-.actions-row-name {
-    @include title-m;
-    flex: 1;
-    min-width: 0;
-    color: inherit;
-    font-size: 16px; // tighter than the screen-title `title-m` default
-}
-
-.actions-row-chev {
-    flex-shrink: 0;
-    color: $dim;
-    transition: transform 180ms $ease-arena, color 180ms $ease-arena;
+    > * { width: 100%; }
 }
 
 // ── Rename form ─────────────────────────────────────────────────────────────
