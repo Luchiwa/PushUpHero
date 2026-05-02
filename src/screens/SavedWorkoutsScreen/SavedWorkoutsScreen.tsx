@@ -72,10 +72,11 @@ export function SavedWorkoutsScreen({ uid, onClose, onPick }: SavedWorkoutsScree
                 )}
                 {!loading && workouts.length > 0 && (
                     <div className="saved-list">
-                        {workouts.map(w => (
+                        {workouts.map((w, i) => (
                             <SavedWorkoutCard
                                 key={w.id}
                                 workout={w}
+                                index={i + 1}
                                 onLoad={() => handleLoad(w)}
                                 onActions={(el) => setActiveActions({ workout: w, returnFocusEl: el })}
                             />

@@ -1,110 +1,265 @@
 @use 'tokens' as *;
 @use 'mixins' as *;
 
-// ── Card shell ──────────────────────────────────────────────────────────────
+// ── Card shell — "fight gym dossier" ────────────────────────────────────────
+// Three signature elements: a vertical ember blade on the leading edge, a
+// mono kicker / Oswald title / mono stat sheet stack inside the load
+// button, and an ember-bordered pill kebab in its own column.
+@keyframes saved-card-rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
 .saved-card {
+    position: relative;
     display: flex;
     align-items: stretch;
-    background: $card;
+    background:
+        linear-gradient(180deg, color-mix(in srgb, #{$ember} 4%, transparent), transparent 38%),
+        $card;
     border: 1px solid $line;
     border-radius: $radius-2xl;
+    overflow: hidden;
+    isolation: isolate;
     flex-shrink: 0;
-    overflow: hidden; // contain the inner buttons' rounded corners on hover
     transition: transform 180ms $ease-arena,
                 border-color 180ms $ease-arena,
-                box-shadow 180ms $ease-arena;
+                box-shadow 180ms $ease-arena,
+                background 180ms $ease-arena;
+    animation: saved-card-rise 0.45s $ease-arena both;
+    animation-delay: calc(var(--i, 0) * 60ms);
+
+    // Ember blade on the leading edge — the signature element.
+    &::before {
+        content: '';
+        position: absolute;
+        top: $space-md;
+        bottom: $space-md;
+        left: 0;
+        width: 3px;
+        background: $gradient-ember-cta;
+        border-radius: 0 2px 2px 0;
+        box-shadow: 0 0 10px color-mix(in srgb, #{$ember} 40%, transparent);
+        transition: top 180ms $ease-arena,
+                    bottom 180ms $ease-arena,
+                    width 180ms $ease-arena,
+                    box-shadow 180ms $ease-arena;
+        z-index: 1;
+    }
+
+    // Top inner-glow that fades in on hover.
+    &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(ellipse 60% 40% at 60% -10%,
+            color-mix(in srgb, #{$ember} 18%, transparent),
+            transparent 60%);
+        opacity: 0;
+        transition: opacity 180ms $ease-arena;
+        z-index: 0;
+    }
 
     &:hover,
     &:focus-within {
         transform: translateY(-2px);
-        border-color: color-mix(in srgb, #{$ember} 40%, transparent);
-        box-shadow: 0 6px 18px color-mix(in srgb, #{$ember} 18%, transparent);
+        border-color: color-mix(in srgb, #{$ember} 55%, transparent);
+        box-shadow: 0 10px 28px color-mix(in srgb, #{$ember} 18%, transparent),
+                    0 0 0 1px color-mix(in srgb, #{$ember} 14%, transparent);
+
+        &::before {
+            top: $space-sm;
+            bottom: $space-sm;
+            width: 4px;
+            box-shadow: 0 0 16px color-mix(in srgb, #{$ember} 60%, transparent),
+                        0 0 4px $ember;
+        }
+
+        &::after { opacity: 1; }
     }
 }
 
-// ── Primary "load" button — covers most of the card ─────────────────────────
+// ── Primary load button — covers most of the card ──────────────────────────
 .saved-card-load {
+    position: relative;
+    z-index: 2;
     flex: 1;
-    min-width: 0; // allow the title's ellipsis to kick in
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding: $space-md;
+    min-width: 0;
+    display: grid;
+    grid-template-rows: auto auto auto;
+    row-gap: 6px;
+    padding: $space-md $space-md $space-md $space-lg;  // +4 left for the blade
     background: transparent;
-    border: none;
+    border: 0;
     text-align: left;
-    color: $text;
+    color: inherit;
     cursor: pointer;
-    @include focus-visible;
 
-    &:hover .saved-card-name {
-        color: $ember;
+    &:focus-visible {
+        outline: 2px solid $ember;
+        outline-offset: -3px;
+        border-radius: $radius-2xl 0 0 $radius-2xl;
     }
 }
 
-.saved-card-name {
-    @include title-m;
-    color: $text;
-    overflow: hidden;
-    text-overflow: ellipsis;
+// ── Kicker row — mono dim with ember tag ───────────────────────────────────
+.saved-card-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-sm;
+    @include kicker;
+    letter-spacing: 2.5px;
     white-space: nowrap;
-    max-width: 100%;
-    transition: color 180ms $ease-arena;
+    min-width: 0;
 }
 
+.saved-card-kicker-tag {
+    color: $ember;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.saved-card-kicker-sep {
+    color: color-mix(in srgb, #{$dim} 45%, transparent);
+}
+
+// ── Title — Oswald display, ellipsis if long ───────────────────────────────
+.saved-card-name {
+    font-family: $font-display;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: $text;
+    line-height: 1.05;
+    margin: 0;
+    @include text-truncate;
+    max-width: 100%;
+    transition: color 180ms $ease-arena, text-shadow 180ms $ease-arena;
+}
+
+.saved-card:hover .saved-card-name,
+.saved-card:focus-within .saved-card-name {
+    color: $ember;
+    text-shadow: 0 0 18px color-mix(in srgb, #{$ember} 35%, transparent);
+}
+
+// ── Meta row — mono stat sheet ─────────────────────────────────────────────
 .saved-card-meta {
     display: flex;
     align-items: center;
-    gap: $space-xs;
-    @include caption;
+    gap: $space-sm;
+    @include micro;
+    font-size: 10px;
     color: $dim;
-    flex-wrap: wrap;
+    min-width: 0;
 }
 
 .saved-card-emojis {
     display: inline-flex;
     align-items: center;
-    gap: 2px;
-    font-size: 1rem;
+    gap: 3px;
+    font-size: 16px;
     line-height: 1;
+    flex-shrink: 0;
+    margin-bottom: 1px;  // visually align with the mono baseline
 }
 
-.saved-card-emoji {
-    display: inline-block;
-}
+.saved-card-emoji { display: inline-block; }
 
-.saved-card-dot {
-    color: color-mix(in srgb, #{$dim} 60%, transparent);
+.saved-card-meta-sep {
+    flex-shrink: 0;
+    width: 1px;
+    height: 9px;
+    background: rgba(255, 255, 255, 0.14);
 }
 
 .saved-card-sets {
+    flex-shrink: 0;
+    white-space: nowrap;
+    color: $ember;
+    font-weight: 600;
     font-variant-numeric: tabular-nums;
 }
 
-.saved-card-last-used {
-    @include caption;
+.saved-card-last {
     color: $dim;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
 }
 
-// ── Kebab "actions" button — narrow column on the right ─────────────────────
+// "Never used" — gold lift to mark the empty state without screaming.
+.saved-card-last--never {
+    color: $gold;
+    font-weight: 600;
+    letter-spacing: 2.5px;
+}
+
+// ── Kebab — its own column with an ember-bordered pill ─────────────────────
 .saved-card-kebab {
+    position: relative;
+    z-index: 2;
     flex: 0 0 auto;
+    width: 52px;             // 44px hit-target + 8px breathing room
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 44px;
-    min-height: 44px;
     background: transparent;
-    border: none;
+    border: 0;
     border-left: 1px solid $line;
-    color: $dim;
-    font-size: 1.4rem;
     cursor: pointer;
-    transition: color 180ms $ease-arena, background 180ms $ease-arena;
-    @include focus-visible;
+    color: $dim;
+    transition: color 180ms $ease-arena,
+                background 180ms $ease-arena,
+                border-color 180ms $ease-arena;
+}
 
-    &:hover {
-        color: $text;
-        background: color-mix(in srgb, #{$ember} 6%, transparent);
+.saved-card-kebab-glyph {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    width: 32px;
+    height: 32px;
+    border-radius: $radius-pill;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid $line;
+    transition: background 180ms $ease-arena,
+                border-color 180ms $ease-arena,
+                color 180ms $ease-arena,
+                transform 180ms $ease-arena,
+                box-shadow 180ms $ease-arena;
+
+    > span {
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+}
+
+.saved-card-kebab:hover {
+    color: $ember;
+    background: color-mix(in srgb, #{$ember} 6%, transparent);
+    border-left-color: color-mix(in srgb, #{$ember} 40%, transparent);
+
+    .saved-card-kebab-glyph {
+        border-color: color-mix(in srgb, #{$ember} 60%, transparent);
+        background: color-mix(in srgb, #{$ember} 10%, transparent);
+        transform: scale(1.05);
+    }
+}
+
+.saved-card-kebab:focus-visible {
+    outline: none;
+    color: $ember;
+
+    .saved-card-kebab-glyph {
+        border-color: $ember;
+        box-shadow: 0 0 0 2px $ember, 0 0 0 4px $obsidian;
     }
 }

@@ -6,9 +6,10 @@
     },
     "create_first": "Create my first workout",
     "never_used": "Never used",
-    "last_used": "Last used: {{date}}",
     "sets_count_one": "{{count}} set",
     "sets_count_other": "{{count}} sets",
+    "exercises_count_one": "{{count}} exercise",
+    "exercises_count_other": "{{count}} exercises",
     "actions_label": "Actions for {{name}}",
     "actions": {
         "title": "Actions",
