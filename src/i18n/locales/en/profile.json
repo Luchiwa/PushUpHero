@@ -1,0 +1,26 @@
+{
+    "title": "Profile",
+    "settings_aria": "Settings",
+    "default_user_name": "User",
+    "member_since": "Member since {{date}}",
+    "stat_total_xp": "Total XP",
+    "stat_sessions": "Sessions",
+    "stat_friends": "Friends",
+    "xp_label_next": "→ LV{{level}} in {{remaining}} XP",
+    "progression_cta": "Progression",
+    "hub": {
+        "featured_stamp": "FEATURED",
+        "saved_workouts": "My Workouts",
+        "saved_workouts_count_one": "{{count}} · workout saved",
+        "saved_workouts_count_other": "{{count}} · workouts saved",
+        "saved_workouts_aria": "Open my saved workouts",
+        "friends": "Friends",
+        "friends_aria_with_pending_one": "Friends — {{count}} pending request",
+        "friends_aria_with_pending_other": "Friends — {{count}} pending requests",
+        "feed": "Activity Feed",
+        "feed_aria_unread": "Activity Feed — new activity",
+        "stats": "Stats",
+        "quests": "Quests",
+        "achievements": "Achievements"
+    }
+}

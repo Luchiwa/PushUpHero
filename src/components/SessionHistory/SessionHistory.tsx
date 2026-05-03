@@ -1,5 +1,5 @@
 /**
- * SessionHistoryPanel — displays sessions list.
+ * SessionHistory — displays sessions list.
  * When `sessions` prop is provided, renders that list directly.
  * Otherwise falls back to useSessionHistory() (last 5 sessions).
  */
@@ -9,13 +9,13 @@ import type { TFunction } from 'i18next';
 import { useSessionHistory } from '@hooks/useSessionHistory';
 import { EXERCISE_META, getExerciseLabelKey, type SessionRecord, type TimeDuration } from '@exercises/types';
 import { formatDate, formatNumber, formatTime, getGradeLetter, getGradeClass, getGradeColor, formatElapsedTime } from '@domain';
-import './SessionHistoryPanel.scss';
+import './SessionHistory.scss';
 
 const EXERCISE_EMOJI: Record<string, string> = Object.fromEntries(
     EXERCISE_META.map(m => [m.type, m.emoji]),
 );
 
-interface SessionHistoryPanelProps {
+interface SessionHistoryProps {
     sessions?: SessionRecord[];
     title?: string;
     onViewAll?: () => void;
@@ -65,7 +65,7 @@ function getSessionDuration(s: SessionRecord): string {
     return '';
 }
 
-export function SessionHistoryPanel({ sessions: sessionsProp, title, onViewAll }: SessionHistoryPanelProps) {
+export function SessionHistory({ sessions: sessionsProp, title, onViewAll }: SessionHistoryProps) {
     const { t } = useTranslation('modals');
     const { sessions: hookSessions, totalSessionCount } = useSessionHistory();
     const [expandedId, setExpandedId] = useState<string | null>(null);

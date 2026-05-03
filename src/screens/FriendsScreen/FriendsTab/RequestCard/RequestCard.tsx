@@ -11,7 +11,7 @@ export interface RequestCardProps {
 }
 
 export function RequestCard({ request, onAccept, onDecline }: RequestCardProps) {
-    const { t } = useTranslation('modals');
+    const { t } = useTranslation('friends');
     const [loading, setLoading] = useState(false);
 
     const handle = async (fn: () => void) => {
@@ -25,7 +25,7 @@ export function RequestCard({ request, onAccept, onDecline }: RequestCardProps) 
             <Avatar photoURL={undefined} initials={request.fromUsername} size={40} />
             <div className="friend-info">
                 <span className="friend-name">{request.fromUsername}</span>
-                <span className="friend-request-label">{t('friends.request_label')}</span>
+                <span className="friend-request-label">{t('request_label')}</span>
             </div>
             <div className="friend-request-actions">
                 <button
@@ -33,7 +33,7 @@ export function RequestCard({ request, onAccept, onDecline }: RequestCardProps) 
                     className="btn-accept"
                     disabled={loading}
                     onClick={() => handle(onAccept)}
-                    title={t('friends.accept_aria')}
+                    title={t('accept_aria')}
                 >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
                 </button>
@@ -42,7 +42,7 @@ export function RequestCard({ request, onAccept, onDecline }: RequestCardProps) 
                     className="btn-decline"
                     disabled={loading}
                     onClick={() => handle(onDecline)}
-                    title={t('friends.decline_aria')}
+                    title={t('decline_aria')}
                 >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                 </button>
@@ -57,7 +57,7 @@ export interface OutgoingRequestCardProps {
 }
 
 export function OutgoingRequestCard({ request, onCancel }: OutgoingRequestCardProps) {
-    const { t } = useTranslation('modals');
+    const { t } = useTranslation('friends');
     const [loading, setLoading] = useState(false);
 
     const handle = async (fn: () => void) => {
@@ -71,7 +71,7 @@ export function OutgoingRequestCard({ request, onCancel }: OutgoingRequestCardPr
             <Avatar photoURL={undefined} initials={request.toUsername} size={40} />
             <div className="friend-info">
                 <span className="friend-name">{request.toUsername}</span>
-                <span className="friend-pending-label">{t('friends.request_sent_label')}</span>
+                <span className="friend-pending-label">{t('request_sent_label')}</span>
             </div>
             <div className="friend-search-action">
                 <button
@@ -80,7 +80,7 @@ export function OutgoingRequestCard({ request, onCancel }: OutgoingRequestCardPr
                     disabled={loading}
                     onClick={() => handle(onCancel)}
                 >
-                    {loading ? t('friends.search_loading') : t('friends.cancel_request')}
+                    {loading ? t('search_loading') : t('cancel_request')}
                 </button>
             </div>
         </div>

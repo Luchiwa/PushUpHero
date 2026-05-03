@@ -37,7 +37,7 @@ const StatsScreen = lazy(() => import('@screens/StatsScreen/StatsScreen').then(m
 ```
 
 - **App.tsx** lazy-loads: WorkoutConfigScreen, RestScreen, SummaryScreen, LevelUpScreen
-- **StartScreen** lazy-loads: AuthModal, ProfileModal, QuickSessionModal, StatsScreen, QuestsScreen
+- **StartScreen** lazy-loads: AuthModal, ProfileScreen, FriendsScreen, SavedWorkoutsScreen, QuickSessionModal, StatsScreen, QuestsScreen
 
 ## Animation Pattern
 
@@ -71,6 +71,9 @@ Or they delegate to `<PageLayout>` which handles this internally.
 | RestScreen | Between-set rest timer | SET_COMPLETE (not last) |
 | SummaryScreen | Post-workout results | MANUAL_STOP / workout complete |
 | LevelUpScreen | Level-up celebration | After summary if level increased |
-| StatsScreen | Detailed statistics | Stats widget |
-| QuestsScreen | Quest journal | Quest widget |
-| ProgressionScreen | Achievements & levels | Profile modal |
+| StatsScreen | Detailed statistics | Stats widget / ProfileScreen hub |
+| QuestsScreen | Quest journal | Quest widget / ProfileScreen hub |
+| ProgressionScreen | Achievements & levels | ProfileScreen hub |
+| ProfileScreen | Auth-only navigation hub (PlayerCard hero + menu) | Avatar tap on PlayerHUD |
+| FriendsScreen | Friends list + Activity Feed (2 internal tabs) | ProfileScreen hub items / `#friends` deep-link |
+| SavedWorkoutsScreen | Saved workout templates (load → config) | ProfileScreen hub featured card / WorkoutConfigScreen |

@@ -1,0 +1,26 @@
+{
+    "title": "Profil",
+    "settings_aria": "Réglages",
+    "default_user_name": "Joueur",
+    "member_since": "Membre depuis {{date}}",
+    "stat_total_xp": "XP total",
+    "stat_sessions": "Sessions",
+    "stat_friends": "Amis",
+    "xp_label_next": "→ NV{{level}} dans {{remaining}} XP",
+    "progression_cta": "Progression",
+    "hub": {
+        "featured_stamp": "FEATURED",
+        "saved_workouts": "Mes workouts",
+        "saved_workouts_count_one": "{{count}} · workout sauvegardé",
+        "saved_workouts_count_other": "{{count}} · workouts sauvegardés",
+        "saved_workouts_aria": "Voir mes workouts sauvegardés",
+        "friends": "Amis",
+        "friends_aria_with_pending_one": "Amis — {{count}} demande en attente",
+        "friends_aria_with_pending_other": "Amis — {{count}} demandes en attente",
+        "feed": "Activité",
+        "feed_aria_unread": "Activité — nouvelles activités",
+        "stats": "Stats",
+        "quests": "Quêtes",
+        "achievements": "Succès"
+    }
+}

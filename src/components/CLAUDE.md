@@ -13,6 +13,7 @@ Reusable UI components used across multiple screens. Each has co-located `.tsx` 
 | `ExercisePicker` | Exercise type selector | `value`, `onChange` |
 | `TimePicker` | Duration input (minutes:seconds) | `value`, `onChange` |
 | `Avatar` | User avatar display with fallback | `user`, `size` |
+| `SessionHistory` | Sessions list (used in Stats) — falls back to `useSessionHistory()` if no `sessions` prop | `sessions?`, `title?`, `onViewAll?` |
 | `PoseOverlay` | Skeleton visualization on OffscreenCanvas | `canvas`, `landmarks` |
 | `PositionGuide` | Calibration position guide | `exerciseType`, `isCalibrating` |
 | `FloatyNumbers` | Animated floating score numbers | `score`, `position` |

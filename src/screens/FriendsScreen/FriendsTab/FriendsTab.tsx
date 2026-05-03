@@ -10,7 +10,7 @@ import { SearchResultCard } from './SearchResultCard/SearchResultCard';
 // ── Main FriendsTab ──────────────────────────────────────────────
 
 export function FriendsTab() {
-    const { t } = useTranslation('modals');
+    const { t } = useTranslation('friends');
     const {
         friends,
         incomingRequests,
@@ -70,23 +70,23 @@ export function FriendsTab() {
                         ref={inputRef}
                         className="friends-search-input"
                         type="text"
-                        placeholder={t('friends.search_placeholder')}
+                        placeholder={t('search_placeholder')}
                         value={query}
                         onChange={e => { setQuery(e.target.value); setSearchResult(null); }}
                         autoComplete="off"
                         autoCapitalize="none"
                     />
                     {query && (
-                        <button type="button" className="friends-search-clear" onClick={clearSearch} aria-label={t('friends.search_clear_aria')}>✕</button>
+                        <button type="button" className="friends-search-clear" onClick={clearSearch} aria-label={t('search_clear_aria')}>✕</button>
                     )}
                 </div>
                 <button type="submit" className="btn-primary-sm" disabled={searching || !query.trim()}>
-                    {searching ? t('friends.search_loading') : t('friends.search_btn')}
+                    {searching ? t('search_loading') : t('search_btn')}
                 </button>
             </form>
             {/* Search result */}
             {searchResult === 'not_found' && (
-                <p className="friends-empty-msg">{t('friends.not_found')}</p>
+                <p className="friends-empty-msg">{t('not_found')}</p>
             )}
             {searchResult && searchResult !== 'not_found' && (
                 <div className="friends-section">
@@ -108,7 +108,7 @@ export function FriendsTab() {
                 <div className="friends-section">
                     <h3 className="friends-section-title friends-section-title--accent">
                         <span className="friends-section-title-dot" />
-                        {t('friends.section_requests')}
+                        {t('section_requests')}
                         <span className="friends-badge">{incomingRequests.length}</span>
                     </h3>
                     {incomingRequests.map(req => (
@@ -126,7 +126,7 @@ export function FriendsTab() {
             {outgoingRequests.length > 0 && (
                 <div className="friends-section">
                     <h3 className="friends-section-title">
-                        {t('friends.section_pending')}
+                        {t('section_pending')}
                         <span className="friends-badge">{outgoingRequests.length}</span>
                     </h3>
                     {outgoingRequests.map(req => (
@@ -144,8 +144,8 @@ export function FriendsTab() {
                 {friends.length === 0 && incomingRequests.length === 0 && outgoingRequests.length === 0 && !searchResult ? (
                     <div className="friends-empty-state">
                         <span className="friends-empty-icon">👥</span>
-                        <p className="friends-empty-title">{t('friends.empty_title')}</p>
-                        <p className="friends-empty-msg">{t('friends.empty_subtitle')}</p>
+                        <p className="friends-empty-title">{t('empty_title')}</p>
+                        <p className="friends-empty-msg">{t('empty_subtitle')}</p>
                     </div>
                 ) : friends.length > 0 ? (
                     <>
@@ -154,7 +154,7 @@ export function FriendsTab() {
                                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
                                 <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
                             </svg>
-                            {t('friends.section_allies', { count: friends.length })}
+                            {t('section_allies', { count: friends.length })}
                         </h3>
                         {friends.map(f => (
                             <FriendCard
@@ -180,9 +180,9 @@ export function FriendsTab() {
                 onKeyDown={e => e.key === 'Escape' && !removing && setConfirmRemove(null)}
             >
                 <div className="friend-confirm-card" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()} onKeyDown={e => e.stopPropagation()}>
-                    <p className="friend-confirm-title">{t('friends.remove_confirm_title')}</p>
+                    <p className="friend-confirm-title">{t('remove_confirm_title')}</p>
                     <p className="friend-confirm-body">
-                        {t('friends.remove_confirm_body_prefix')} <strong>{confirmRemove?.displayName}</strong> {t('friends.remove_confirm_body_suffix')}
+                        {t('remove_confirm_body_prefix')} <strong>{confirmRemove?.displayName}</strong> {t('remove_confirm_body_suffix')}
                     </p>
                     <div className="friend-confirm-actions">
                         <button
@@ -191,7 +191,7 @@ export function FriendsTab() {
                             onClick={() => setConfirmRemove(null)}
                             disabled={removing}
                         >
-                            {t('friends.remove_confirm_cancel')}
+                            {t('remove_confirm_cancel')}
                         </button>
                         <button
                             type="button"
@@ -199,7 +199,7 @@ export function FriendsTab() {
                             onClick={handleConfirmRemove}
                             disabled={removing}
                         >
-                            {removing ? t('friends.remove_loading') : t('friends.remove_confirm_remove')}
+                            {removing ? t('remove_loading') : t('remove_confirm_remove')}
                         </button>
                     </div>
                 </div>

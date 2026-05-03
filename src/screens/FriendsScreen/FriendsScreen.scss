@@ -1,0 +1,83 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+// ── Body — flex column so tabs sit above scrollable panel ────────
+.friends-body {
+    gap: $space-md;
+}
+
+// ── Tabs pill — ember-bordered, sliding ember indicator ─────────
+.friends-tabs {
+    position: relative;
+    display: flex;
+    gap: 0;
+    background: $obsidian-2;
+    border: 1px solid color-mix(in srgb, #{$ember} 22%, transparent);
+    border-radius: $radius-pill;
+    padding: 4px;
+    flex-shrink: 0;
+    overflow: hidden;
+    box-shadow: inset 0 1px 0 color-mix(in srgb, #{$ember} 8%, transparent);
+}
+
+.friends-tabs-indicator {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    width: calc(50% - 6px);
+    background: $gradient-ember-cta;
+    border-radius: $radius-pill;
+    box-shadow: $shadow-ember-glow;
+    transition: left 0.28s $ease-out-expo;
+    pointer-events: none;
+    z-index: $z-base;
+}
+
+.friends-tab {
+    position: relative;
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px $space-md;
+    background: none;
+    border: none;
+    font-family: $font-mono;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: $dim;
+    cursor: pointer;
+    transition: color 0.2s $ease-arena;
+    z-index: $z-content;
+    border-radius: $radius-pill;
+
+    svg {
+        transition: opacity 0.2s $ease-arena;
+        opacity: 0.55;
+    }
+
+    &:hover:not(&--active) {
+        color: $text;
+        svg { opacity: 0.85; }
+    }
+
+    &--active {
+        color: $text;
+
+        svg {
+            opacity: 1;
+            color: $text;
+        }
+    }
+}
+
+// ── Tab panel — fills remaining vertical space ─────────────────
+.friends-tab-panel {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
