@@ -1,0 +1,13 @@
+{
+    "title": "Profil",
+    "settings_aria": "Réglages",
+    "default_user_name": "Joueur",
+    "member_since": "Membre depuis {{date}}",
+    "stat_total_xp": "XP total",
+    "stat_sessions": "Sessions",
+    "stat_friends": "Amis",
+    "xp_label_next": "→ NV{{level}} dans {{remaining}} XP",
+    "progression_cta": "Progression",
+    "tab_friends": "Amis",
+    "tab_feed": "Activité"
+}

@@ -1,0 +1,39 @@
+{
+    "search_placeholder": "Recherche par nom d'utilisateur…",
+    "search_clear_aria": "Effacer",
+    "search_btn": "Rechercher",
+    "search_loading": "…",
+    "not_found": "Aucun utilisateur trouvé avec ce nom.",
+    "section_requests": "Demandes d'amis",
+    "section_pending": "Demandes envoyées",
+    "section_allies": "Alliés — {{count}}",
+    "empty_title": "Pas encore d'allié",
+    "empty_subtitle": "Cherche un nom d'utilisateur ci-dessus pour ajouter ton premier partenaire d'entraînement !",
+    "remove_confirm_title": "Retirer cet ami ?",
+    "remove_confirm_body_prefix": "Retirer",
+    "remove_confirm_body_suffix": "de ta liste d'amis ?",
+    "remove_confirm_cancel": "Annuler",
+    "remove_confirm_remove": "Retirer",
+    "remove_loading": "…",
+    "request_label": "⚔️ Veut te défier !",
+    "accept_aria": "Accepter",
+    "decline_aria": "Refuser",
+    "request_sent_label": "Demande envoyée — en attente",
+    "cancel_request": "Annuler",
+    "card": {
+        "remove_aria": "Retirer cet ami",
+        "remove_title": "Retirer cet ami",
+        "encourage_aria": "Encourager",
+        "encourage_title": "Envoyer un encouragement",
+        "encourage_cooldown_title": "Renvoyer dans {{count}} min",
+        "stat_reps_one": "{{count}} rep",
+        "stat_reps_other": "{{count}} reps",
+        "stat_sessions_one": "{{count}} session",
+        "stat_sessions_other": "{{count}} sessions"
+    },
+    "search": {
+        "already_friends": "Amis",
+        "pending": "En attente",
+        "add": "+ Ajouter"
+    }
+}
