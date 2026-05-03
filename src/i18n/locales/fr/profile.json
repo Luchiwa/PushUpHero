@@ -1,5 +1,6 @@
 {
     "title": "Profil",
+    "settings_aria": "Réglages",
     "default_user_name": "Joueur",
     "member_since": "Membre depuis {{date}}",
     "stat_total_xp": "XP total",
@@ -20,8 +21,6 @@
         "feed_aria_unread": "Activité — nouvelles activités",
         "stats": "Stats",
         "quests": "Quêtes",
-        "achievements": "Succès",
-        "settings": "Réglages",
-        "signout": "Déconnexion"
+        "achievements": "Succès"
     }
 }

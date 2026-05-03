@@ -1,5 +1,6 @@
 {
     "title": "Profile",
+    "settings_aria": "Settings",
     "default_user_name": "User",
     "member_since": "Member since {{date}}",
     "stat_total_xp": "Total XP",
@@ -20,8 +21,6 @@
         "feed_aria_unread": "Activity Feed — new activity",
         "stats": "Stats",
         "quests": "Quests",
-        "achievements": "Achievements",
-        "settings": "Settings",
-        "signout": "Sign out"
+        "achievements": "Achievements"
     }
 }

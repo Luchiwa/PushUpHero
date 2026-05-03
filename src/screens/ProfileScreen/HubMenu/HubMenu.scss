@@ -1,24 +1,12 @@
 @use 'tokens' as *;
 @use 'mixins' as *;
 
-// ── Hub menu — vertical list of nav items + sign out ─────────────
+// ── Hub menu — vertical list of nav items ────────────────────────
 .hub-menu {
     display: flex;
     flex-direction: column;
     gap: $space-sm + 2;  // 10px — slightly looser than $space-md (12) for breathing
     width: 100%;
-
-    // Sign-out Button at the bottom takes full width
-    > .btn {
-        width: 100%;
-    }
-}
-
-.hub-divider {
-    height: 1px;
-    background: $line;
-    border: none;
-    margin: 4px 0;
 }
 
 // ══════════════════════════════════════════════════════════════════

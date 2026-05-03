@@ -10,3 +10,14 @@
     gap: $space-lg;
     overflow-y: auto;
 }
+
+// ── Settings gear in the topbar right slot — rotates on hover ────
+.profile-settings-btn {
+    transition: transform 0.25s $ease-arena, color 0.25s $ease-arena;
+
+    &:hover,
+    &:focus-visible {
+        transform: rotate(30deg);
+        color: $ember;
+    }
+}
