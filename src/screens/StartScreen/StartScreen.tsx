@@ -7,12 +7,15 @@ import { ModalFallback } from '@components/ModalFallback/ModalFallback';
 
 // Lazy-loaded modals/screens (only parsed when opened)
 const AuthModal = lazy(() => import('@modals/AuthModal/AuthModal').then(m => ({ default: m.AuthModal })));
-const ProfileModal = lazy(() => import('@modals/ProfileModal/ProfileModal').then(m => ({ default: m.ProfileModal })));
+const ProfileScreen = lazy(() => import('@screens/ProfileScreen/ProfileScreen').then(m => ({ default: m.ProfileScreen })));
+const FriendsScreen = lazy(() => import('@screens/FriendsScreen/FriendsScreen').then(m => ({ default: m.FriendsScreen })));
+const SavedWorkoutsScreen = lazy(() => import('@screens/SavedWorkoutsScreen/SavedWorkoutsScreen').then(m => ({ default: m.SavedWorkoutsScreen })));
 const QuickSessionModal = lazy(() => import('@modals/QuickSessionModal/QuickSessionModal').then(m => ({ default: m.QuickSessionModal })));
 const StatsScreen = lazy(() => import('@screens/StatsScreen/StatsScreen').then(m => ({ default: m.StatsScreen })));
 const QuestsScreen = lazy(() => import('@screens/QuestsScreen/QuestsScreen').then(m => ({ default: m.QuestsScreen })));
 import { useWorkout } from '@app/WorkoutContext';
 import { QUEST_CATEGORY_META, getAcceptedQuests, getAvailableQuests, getTier, isQuestAccepted, type QuestDef, type QuestProgress } from '@domain';
+import type { WorkoutPlan } from '@exercises/types';
 import { getWorkoutCheckpoint } from '@services/workoutCheckpointStore';
 import { PlayerHUD } from './PlayerHUD/PlayerHUD';
 import { QuestCard } from './QuestCard/QuestCard';
@@ -50,7 +53,7 @@ export function StartScreen({
     const { t } = useTranslation('start');
     const {
         exerciseType, changeExerciseType,
-        setGoalReps, setSessionMode,
+        setGoalReps, setSessionMode, setWorkoutPlan,
         handleStart, handleOpenConfig,
         handleResumeWorkout, handleDiscardCheckpoint,
     } = useWorkout();
@@ -62,14 +65,16 @@ export function StartScreen({
     type ActiveModal =
         | null
         | { type: 'auth'; signupPromo?: boolean }
-        | { type: 'profile'; initialTab: 'friends' | 'feed' }
+        | { type: 'profileScreen' }
+        | { type: 'friendsScreen'; initialTab: 'friends' | 'feed' }
+        | { type: 'savedWorkouts' }
         | { type: 'quests' }
         | { type: 'quickSession' }
         | { type: 'stats' };
 
     const isDeepLinkFriends = window.location.hash === '#friends';
     const [activeModal, setActiveModal] = useState<ActiveModal>(
-        isDeepLinkFriends ? { type: 'profile', initialTab: 'friends' } : null,
+        isDeepLinkFriends ? { type: 'friendsScreen', initialTab: 'friends' } : null,
     );
     const closeModal = useCallback(() => setActiveModal(null), []);
 
@@ -156,6 +161,13 @@ export function StartScreen({
         startQuestWorkout(quest);
     }, [startQuestWorkout]);
 
+    // Saved-workout pick: load plan into machine + navigate to config
+    const handleSavedWorkoutPick = useCallback((plan: WorkoutPlan) => {
+        setWorkoutPlan(plan);
+        setActiveModal(null);
+        handleOpenConfig();
+    }, [setWorkoutPlan, handleOpenConfig]);
+
     return (
         <div className="start-screen">
             <div className="camera-vignette" />
@@ -172,7 +184,7 @@ export function StartScreen({
                     xpIntoCurrentLevel={xpIntoCurrentLevel}
                     xpNeededForNextLevel={xpNeededForNextLevel}
                     levelProgressPct={levelProgressPct}
-                    onOpenProfile={() => setActiveModal({ type: 'profile', initialTab: 'feed' })}
+                    onOpenProfile={() => setActiveModal({ type: 'profileScreen' })}
                     onOpenAuth={() => setActiveModal({ type: 'auth' })}
                 />
 
@@ -296,8 +308,26 @@ export function StartScreen({
                     />
                 )}
 
-                {activeModal?.type === 'profile' && (
-                    <ProfileModal initialTab={activeModal.initialTab} onClose={closeModal} />
+                {activeModal?.type === 'profileScreen' && (
+                    <ProfileScreen
+                        onClose={closeModal}
+                        onOpenSavedWorkouts={() => setActiveModal({ type: 'savedWorkouts' })}
+                        onOpenFriends={(initialTab) => setActiveModal({ type: 'friendsScreen', initialTab })}
+                        onOpenStats={() => setActiveModal({ type: 'stats' })}
+                        onOpenQuests={() => setActiveModal({ type: 'quests' })}
+                    />
+                )}
+
+                {activeModal?.type === 'friendsScreen' && (
+                    <FriendsScreen onClose={closeModal} initialTab={activeModal.initialTab} />
+                )}
+
+                {activeModal?.type === 'savedWorkouts' && user && (
+                    <SavedWorkoutsScreen
+                        uid={user.uid}
+                        onClose={closeModal}
+                        onPick={handleSavedWorkoutPick}
+                    />
                 )}
 
                 {activeModal?.type === 'quests' && questProgress != null && (

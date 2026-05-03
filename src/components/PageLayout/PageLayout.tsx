@@ -6,7 +6,8 @@
  *   - Topbar: [back button] [title] [optional right slot]
  *   - Centered body column (max-width 480px)
  *
- * Used by ProfileModal, StatsScreen, QuestsScreen, ProgressionScreen, WorkoutConfigScreen.
+ * Used by ProfileScreen, FriendsScreen, SavedWorkoutsScreen, StatsScreen,
+ * QuestsScreen, ProgressionScreen, WorkoutConfigScreen.
  */
 import { useState, useCallback, type ReactNode } from 'react';
 import { useBackButton } from '@hooks/shared/useBackButton';

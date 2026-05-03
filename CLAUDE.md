@@ -90,7 +90,7 @@ Exercise type is `'pushup' | 'squat' | 'pullup' | 'legraise'` (defined in `src/e
 Screens and modals are lazy-loaded via `React.lazy()` + `<Suspense>`:
 
 - **App.tsx** lazy-loads workout screens: `WorkoutConfigScreen`, `RestScreen`, `SummaryScreen`, `LevelUpScreen`
-- **StartScreen** lazy-loads modals: `AuthModal`, `ProfileModal`, `QuickSessionModal`, `StatsScreen`, `QuestsScreen`
+- **StartScreen** lazy-loads modals/screens: `AuthModal`, `ProfileScreen`, `FriendsScreen`, `SavedWorkoutsScreen`, `QuickSessionModal`, `StatsScreen`, `QuestsScreen`
 
 Modal state uses TypeScript discriminated unions for type safety: `type ActiveModal = null | { type: 'auth'; ... } | { type: 'profile'; ... } | ...`
 

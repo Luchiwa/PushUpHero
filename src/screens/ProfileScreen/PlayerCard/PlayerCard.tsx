@@ -1,14 +1,14 @@
 /**
  * PlayerCard — hero block for ProfileScreen.
  *
- * Lifted from ProfileModal.tsx:96-181 verbatim. Avatar (uploadable) +
- * tier ring + level badge, displayName + streak, member-since, 14-segment
- * XP bar (tappable → opens Progression), and three mini-stats.
+ * Avatar (uploadable) + tier ring + level badge, displayName + streak,
+ * member-since, 14-segment XP bar (tappable → opens Progression), three
+ * mini-stats.
  *
  * Owns its own hooks because the alternative — receiving a dozen props
- * from ProfileScreen — pushes wiring noise into the parent for no payoff.
- * The only callback is `onProgressionOpen` since the XP bar is the entry
- * point and ProgressionScreen is rendered by ProfileScreen.
+ * from the parent — pushes wiring noise upstream for no payoff. The only
+ * callback is `onProgressionOpen` since the XP bar is the entry point
+ * and ProgressionScreen is rendered by the parent.
  */
 import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';

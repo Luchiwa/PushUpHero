@@ -1,18 +1,18 @@
 /**
  * ProfileScreen — auth-only navigation hub.
  *
- * Replaces ProfileModal. Top: PlayerCard hero (avatar, level, XP, mini
- * stats — verbatim from the modal). Below: HubMenu with a featured
- * Saved Workouts card and 5 navigation items + Settings + Sign out.
+ * Top: PlayerCard hero (avatar, level, XP, mini stats). Below: HubMenu
+ * with a featured Saved Workouts card and standard nav items + Settings
+ * + Sign out.
  *
- * ProgressionScreen and SettingsModal are rendered inline as overlays
- * (their natural home — they're sub-views of "your profile"). Other
- * destinations (Saved Workouts, Friends, Feed, Stats, Quests) bubble up
- * to StartScreen via callbacks; StartScreen owns the ActiveModal swap.
+ * ProgressionScreen and SettingsModal are rendered inline as overlays —
+ * they're sub-views of "your profile". Other destinations (Saved Workouts,
+ * Friends, Feed, Stats, Quests) bubble up via callbacks; the host owns
+ * the ActiveModal swap so the back button returns to the home screen.
  *
  * Guest gating happens at the entry point (PlayerHUD only renders the
- * tappable avatar for authenticated users), so an early null-return
- * here is just a guard against impossible states.
+ * tappable avatar for authenticated users); the early null-return below
+ * is just a guard against impossible states.
  */
 import { lazy, Suspense, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';

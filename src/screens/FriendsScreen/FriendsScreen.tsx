@@ -6,7 +6,7 @@
  * dot in ProfileScreen reads the same storage key to decide whether to
  * surface unread activity.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PageLayout } from '@components/PageLayout/PageLayout';
 import { useAuthCore } from '@hooks/useAuth';
@@ -29,14 +29,11 @@ export function FriendsScreen({ onClose, initialTab = 'friends' }: FriendsScreen
     const { friends } = useFriends();
     const [activeTab, setActiveTab] = useState<FriendsTabKey>(initialTab);
 
-    const markFeedSeen = useCallback(() => {
-        if (!user) return;
-        write(STORAGE_KEY_BUILDERS.feedLastSeen(user.uid), Date.now());
-    }, [user]);
-
     useEffect(() => {
-        if (activeTab === 'feed') markFeedSeen();
-    }, [activeTab, markFeedSeen]);
+        if (activeTab === 'feed' && user) {
+            write(STORAGE_KEY_BUILDERS.feedLastSeen(user.uid), Date.now());
+        }
+    }, [activeTab, user]);
 
     return (
         <PageLayout

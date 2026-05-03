@@ -1,6 +1,5 @@
 {
     "title": "Profile",
-    "settings_aria": "Settings",
     "default_user_name": "User",
     "member_since": "Member since {{date}}",
     "stat_total_xp": "Total XP",
@@ -8,8 +7,6 @@
     "stat_friends": "Friends",
     "xp_label_next": "→ LV{{level}} in {{remaining}} XP",
     "progression_cta": "Progression",
-    "tab_friends": "Friends",
-    "tab_feed": "Feed",
     "hub": {
         "featured_stamp": "FEATURED",
         "saved_workouts": "My Workouts",

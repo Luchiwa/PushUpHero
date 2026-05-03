@@ -2,11 +2,12 @@
  * FeedCacheContext — Session-scoped cache for the friends activity feed.
  *
  * The cache lives in a ref inside the provider (mounted in AuthProvider.tsx),
- * so it survives unmount/remount of consumers (e.g. ProfileModal close →
- * reopen) without paying a refetch. The provider also auto-resets the ref
- * when the authenticated user changes — this is the property the previous
- * module-level `let feedCache` could not give: a singleton that outlives
- * auth boundaries is a cross-user data leak.
+ * so it survives unmount/remount of consumers (e.g. FriendsScreen close →
+ * reopen, or ProfileScreen rendering a feed dot in the hub) without paying
+ * a refetch. The provider also auto-resets the ref when the authenticated
+ * user changes — this is the property the previous module-level
+ * `let feedCache` could not give: a singleton that outlives auth boundaries
+ * is a cross-user data leak.
  */
 import { createContext, useContext } from 'react';
 import type { ActivityEvent } from '@hooks/useActivityFeed';
