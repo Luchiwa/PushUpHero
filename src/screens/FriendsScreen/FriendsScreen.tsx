@@ -30,9 +30,11 @@ export function FriendsScreen({ onClose, initialTab = 'friends' }: FriendsScreen
     const [activeTab, setActiveTab] = useState<FriendsTabKey>(initialTab);
 
     useEffect(() => {
-        if (activeTab === 'feed' && user) {
-            write(STORAGE_KEY_BUILDERS.feedLastSeen(user.uid), Date.now());
-        }
+        // Depend on uid (stable) rather than the whole user object — dbUser
+        // updates upstream re-identify `user` and would otherwise re-fire the
+        // write on the same tab visit.
+        if (activeTab !== 'feed' || !user) return;
+        write(STORAGE_KEY_BUILDERS.feedLastSeen(user.uid), Date.now());
     }, [activeTab, user]);
 
     return (
@@ -47,7 +49,10 @@ export function FriendsScreen({ onClose, initialTab = 'friends' }: FriendsScreen
                 <button
                     type="button"
                     role="tab"
+                    id="friends-tab-friends"
                     aria-selected={activeTab === 'friends'}
+                    aria-controls="friends-panel-friends"
+                    tabIndex={activeTab === 'friends' ? 0 : -1}
                     className={`friends-tab ${activeTab === 'friends' ? 'friends-tab--active' : ''}`}
                     onClick={() => setActiveTab('friends')}
                 >
@@ -60,7 +65,10 @@ export function FriendsScreen({ onClose, initialTab = 'friends' }: FriendsScreen
                 <button
                     type="button"
                     role="tab"
+                    id="friends-tab-feed"
                     aria-selected={activeTab === 'feed'}
+                    aria-controls="friends-panel-feed"
+                    tabIndex={activeTab === 'feed' ? 0 : -1}
                     className={`friends-tab ${activeTab === 'feed' ? 'friends-tab--active' : ''}`}
                     onClick={() => setActiveTab('feed')}
                 >
@@ -76,12 +84,22 @@ export function FriendsScreen({ onClose, initialTab = 'friends' }: FriendsScreen
             </div>
 
             {activeTab === 'friends' && (
-                <div className="friends-tab-panel" role="tabpanel">
+                <div
+                    id="friends-panel-friends"
+                    className="friends-tab-panel"
+                    role="tabpanel"
+                    aria-labelledby="friends-tab-friends"
+                >
                     <FriendsTab />
                 </div>
             )}
             {activeTab === 'feed' && (
-                <div className="friends-tab-panel" role="tabpanel">
+                <div
+                    id="friends-panel-feed"
+                    className="friends-tab-panel"
+                    role="tabpanel"
+                    aria-labelledby="friends-tab-feed"
+                >
                     <FriendsFeedPanel friends={friends} />
                 </div>
             )}

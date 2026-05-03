@@ -63,8 +63,12 @@ export function ProfileScreen({
     const hasFeedUnread = friends.length > 0 && latestEventAt > lastSeen;
 
     const handleSignOut = useCallback(() => {
+        // Close the screen first so the slide-out animation runs while logout
+        // resolves; otherwise the !user guard below would unmount mid-render
+        // with no transition, leaving activeModal stuck on 'profileScreen'.
+        onClose();
         void logout();
-    }, [logout]);
+    }, [logout, onClose]);
 
     if (!user) return null;
 
