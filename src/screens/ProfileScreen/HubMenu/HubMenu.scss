@@ -1,0 +1,214 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+// ── Hub menu — vertical list of nav items + sign out ─────────────
+.hub-menu {
+    display: flex;
+    flex-direction: column;
+    gap: $space-sm + 2;  // 10px — slightly looser than $space-md (12) for breathing
+    width: 100%;
+
+    // Sign-out Button at the bottom takes full width
+    > .btn {
+        width: 100%;
+    }
+}
+
+.hub-divider {
+    height: 1px;
+    background: $line;
+    border: none;
+    margin: 4px 0;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// FEATURED — "Operator's Briefing" treatment for Saved Workouts
+// Vertical ember blade leading edge + HUD corner brackets on the
+// icon + atmospheric ember mesh + mono kicker over Oswald display
+// title. Distinct from standard items via height (88px vs 56px),
+// blade signature, and typography (display vs sans).
+// ══════════════════════════════════════════════════════════════════
+.hub-featured {
+    position: relative;
+    display: grid;
+    grid-template-columns: 64px 1fr 16px;
+    align-items: center;
+    gap: $space-md + 2;
+    min-height: 88px;
+    padding: $space-md ($space-md + 4) $space-md ($space-md + 10);  // +10 left for blade
+    background: $card;
+    background-image:
+        radial-gradient(ellipse 70% 100% at 0% 50%,
+            color-mix(in srgb, #{$ember} 16%, transparent),
+            transparent 60%),
+        radial-gradient(ellipse 60% 80% at 100% 0%,
+            color-mix(in srgb, #{$ember} 8%, transparent),
+            transparent 70%);
+    border: 1px solid color-mix(in srgb, #{$ember} 30%, transparent);
+    border-radius: $radius-lg;
+    cursor: pointer;
+    text-align: left;
+    color: inherit;
+    font-family: inherit;
+    flex-shrink: 0;
+    transition:
+        border-color 220ms $ease-arena,
+        transform 180ms $ease-arena,
+        box-shadow 220ms $ease-arena,
+        background 220ms $ease-arena;
+    box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.45),
+        0 0 18px color-mix(in srgb, #{$ember} 10%, transparent),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    // No `overflow: hidden`: would clip the title text-shadow + the blade
+    // glow halo. The blade `::before` is self-clamped via explicit edges.
+    isolation: isolate;
+
+    // Vertical ember blade — the signature element (matches SavedWorkoutCard)
+    &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: $space-md;
+        bottom: $space-md;
+        width: 4px;
+        background: $gradient-ember-cta;
+        border-radius: 0 3px 3px 0;
+        box-shadow:
+            0 0 14px color-mix(in srgb, #{$ember} 55%, transparent),
+            0 0 4px $ember;
+        transition:
+            top 220ms $ease-arena,
+            bottom 220ms $ease-arena,
+            width 220ms $ease-arena,
+            box-shadow 220ms $ease-arena;
+        z-index: $z-base;
+    }
+
+    // "FEATURED" stamp — diegetic status overlay top-right
+    &::after {
+        content: attr(data-stamp);
+        position: absolute;
+        top: $space-sm + 2;
+        right: $space-md + 2;
+        font-family: $font-mono;
+        font-weight: 700;
+        font-size: 8px;
+        letter-spacing: 2.5px;
+        color: $ember;
+        opacity: 0.55;
+        text-shadow: 0 0 8px color-mix(in srgb, #{$ember} 40%, transparent);
+        pointer-events: none;
+        z-index: $z-content;
+    }
+
+    &:hover,
+    &:focus-visible {
+        border-color: $ember;
+        transform: translateY(-2px);
+        box-shadow:
+            0 12px 32px rgba(0, 0, 0, 0.55),
+            0 0 28px color-mix(in srgb, #{$ember} 28%, transparent),
+            inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        outline: none;
+
+        &::before {
+            top: $space-sm;
+            bottom: $space-sm;
+            width: 5px;
+            box-shadow:
+                0 0 22px color-mix(in srgb, #{$ember} 85%, transparent),
+                0 0 6px $ember;
+        }
+
+        .hub-featured-chev {
+            transform: translateX(3px);
+            opacity: 1;
+        }
+    }
+}
+
+// Icon — HUD bracket frame around dumbbell glyph
+.hub-featured-icon {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, #{$ember} 6%, transparent);
+    border-radius: $radius-md;
+    border: 1px solid color-mix(in srgb, #{$ember} 22%, transparent);
+    color: $ember;
+    z-index: $z-content;
+
+    // Top-left corner bracket
+    &::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        width: 9px;
+        height: 9px;
+        border-top: 1.5px solid $ember;
+        border-left: 1.5px solid $ember;
+        border-radius: 3px 0 0 0;
+        opacity: 0.85;
+    }
+
+    // Bottom-right corner bracket
+    &::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        right: -2px;
+        width: 9px;
+        height: 9px;
+        border-bottom: 1.5px solid $ember;
+        border-right: 1.5px solid $ember;
+        border-radius: 0 0 3px 0;
+        opacity: 0.85;
+    }
+
+    svg {
+        width: 30px;
+        height: 30px;
+        filter: drop-shadow(0 0 6px color-mix(in srgb, #{$ember} 45%, transparent));
+    }
+}
+
+// Text stack — kicker over display title
+.hub-featured-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    z-index: $z-content;
+}
+
+.hub-featured-kicker {
+    @include kicker;
+    color: $ember;
+    text-shadow: 0 0 8px color-mix(in srgb, #{$ember} 30%, transparent);
+    font-variant-numeric: tabular-nums;
+}
+
+.hub-featured-title {
+    font-family: $font-display;
+    font-weight: 700;
+    font-size: 1.4rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: $text;
+    line-height: 1.05;
+    margin: 0;
+    @include text-truncate;
+    text-shadow: 0 0 14px color-mix(in srgb, #{$ember} 18%, transparent);
+}
+
+.hub-featured-chev {
+    color: $ember;
+    opacity: 0.85;
+    transition: transform 200ms $ease-arena, opacity 200ms $ease-arena;
+    z-index: $z-content;
+}

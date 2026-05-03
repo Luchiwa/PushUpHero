@@ -1,0 +1,129 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+// ── Hub menu item — obsidian row card with color-tinted icon ────
+// 56px hit-target (above WCAG min 44px). Layout grid:
+//   [icon 36px] [label flex] [badge|dot?] [chevron 14px]
+.hub-item {
+    position: relative;
+    display: grid;
+    grid-template-columns: 36px 1fr auto 14px;
+    align-items: center;
+    gap: $space-md;
+    min-height: 56px;
+    padding: $space-sm $space-md;
+    background: $card;
+    border: 1px solid $line;
+    border-radius: $radius-lg;
+    cursor: pointer;
+    text-align: left;
+    color: inherit;
+    font-family: inherit;
+    transition:
+        border-color 200ms $ease-arena,
+        transform 180ms $ease-arena,
+        box-shadow 200ms $ease-arena,
+        background 200ms $ease-arena;
+
+    &:hover,
+    &:focus-visible {
+        border-color: color-mix(in srgb, #{$ember} 40%, transparent);
+        transform: translateY(-1px);
+        box-shadow:
+            0 6px 18px rgba(0, 0, 0, 0.4),
+            0 0 12px color-mix(in srgb, #{$ember} 10%, transparent);
+        outline: none;
+
+        .hub-item-chev {
+            transform: translateX(2px);
+            opacity: 1;
+            color: $ember;
+        }
+    }
+}
+
+// Icon container — color-tinted glyph
+.hub-item-icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: $radius-md;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid $line;
+    flex-shrink: 0;
+
+    svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    &--ember {
+        color: $ember;
+        filter: drop-shadow(0 0 4px color-mix(in srgb, #{$ember} 30%, transparent));
+    }
+    &--gold  { color: $gold; }
+    &--dim   { color: $dim; }
+    &--blood { color: $blood; }
+}
+
+.hub-item-label {
+    font-family: $font-display;
+    font-weight: 600;
+    font-size: 1rem;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: $text;
+    line-height: 1.1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+// Badge — pending request count, ember pill
+@keyframes hub-badge-pulse {
+    0%, 100% { box-shadow: 0 0 8px color-mix(in srgb, #{$ember} 35%, transparent); }
+    50%      { box-shadow: 0 0 14px color-mix(in srgb, #{$ember} 60%, transparent); }
+}
+
+.hub-item-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    background: $ember;
+    color: $text;
+    font-family: $font-mono;
+    font-size: 0.65rem;
+    font-weight: 800;
+    border-radius: $radius-pill;
+    line-height: 1;
+    box-shadow: 0 0 8px color-mix(in srgb, #{$ember} 35%, transparent);
+    animation: hub-badge-pulse 2s ease-in-out infinite;
+    font-variant-numeric: tabular-nums;
+}
+
+// Dot — feed unread, ember
+@keyframes hub-dot-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.6; transform: scale(1.25); }
+}
+
+.hub-item-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: $ember;
+    box-shadow: 0 0 8px color-mix(in srgb, #{$ember} 60%, transparent);
+    animation: hub-dot-pulse 1.6s ease-in-out infinite;
+}
+
+.hub-item-chev {
+    color: $dim;
+    opacity: 0.6;
+    transition: transform 180ms $ease-arena, opacity 180ms $ease-arena, color 180ms $ease-arena;
+}

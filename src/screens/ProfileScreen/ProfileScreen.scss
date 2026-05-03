@@ -1,0 +1,8 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+// ── ProfileScreen body — flex column, hero card on top + hub below
+.profile-body {
+    padding-top: $space-md;
+    gap: $space-lg;
+}
