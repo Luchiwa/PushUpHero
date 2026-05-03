@@ -1,4 +1,7 @@
 {
+    "title": "Amis",
+    "tab_friends": "Amis",
+    "tab_feed": "Activité",
     "search_placeholder": "Recherche par nom d'utilisateur…",
     "search_clear_aria": "Effacer",
     "search_btn": "Rechercher",
