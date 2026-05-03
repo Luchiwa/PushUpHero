@@ -1,0 +1,113 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+// PageLayout body override — adjust vertical only; horizontal padding stays
+// from page-body.
+.actions-sheet-body {
+    padding-top: $space-md;
+    padding-bottom: $space-lg;
+}
+
+.actions-sheet {
+    display: flex;
+    flex-direction: column;
+    gap: $space-md;
+}
+
+// ── Menu rows ───────────────────────────────────────────────────────────────
+// Two stacked `<Button />` CTAs (rename = secondary, delete = danger).
+.actions-sheet-menu {
+    display: flex;
+    flex-direction: column;
+    gap: $space-sm;
+
+    > * { width: 100%; }
+}
+
+// ── Rename form ─────────────────────────────────────────────────────────────
+.actions-sheet-rename {
+    display: flex;
+    flex-direction: column;
+    gap: $space-sm;
+}
+
+.actions-rename-label {
+    @include kicker;
+    color: $dim;
+}
+
+.actions-rename-field { position: relative; }
+
+.actions-rename-input {
+    width: 100%;
+    padding: $space-md $space-3xl $space-md $space-md;
+    background: $obsidian-2;
+    border: 1px solid $line;
+    border-radius: $radius-md;
+    color: $text;
+    font-family: $font-sans;
+    font-size: 15px;
+    line-height: 1.4;
+    transition: border-color 180ms $ease-arena, box-shadow 180ms $ease-arena;
+
+    &::placeholder { color: color-mix(in srgb, #{$dim} 60%, transparent); }
+
+    &:focus {
+        outline: none;
+        border-color: $ember;
+        box-shadow: 0 0 0 3px color-mix(in srgb, #{$ember} 18%, transparent);
+    }
+
+    &--error {
+        border-color: $blood;
+
+        &:focus { box-shadow: 0 0 0 3px color-mix(in srgb, #{$blood} 22%, transparent); }
+    }
+
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.actions-rename-counter {
+    position: absolute;
+    right: $space-sm;
+    top: 50%;
+    transform: translateY(-50%);
+    @include micro;
+    color: $dim;
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
+}
+
+.actions-rename-error {
+    @include caption;
+    color: $blood;
+}
+
+// ── Delete confirm ──────────────────────────────────────────────────────────
+.actions-sheet-delete {
+    display: flex;
+    flex-direction: column;
+    gap: $space-md;
+}
+
+// Whisper, not shout — the destructive button below carries the visual weight.
+.actions-delete-body {
+    @include body;
+    margin: 0;
+    padding: $space-md;
+    background: color-mix(in srgb, #{$blood} 6%, transparent);
+    border: 1px solid color-mix(in srgb, #{$blood} 22%, transparent);
+    border-radius: $radius-md;
+    color: $text;
+}
+
+// ── CTA row (shared by rename + delete) ─────────────────────────────────────
+// Buttons themselves are the canonical `<Button />` component — this row is
+// just a flex container so the CTAs split the available width evenly.
+.actions-sheet-cta-row {
+    display: flex;
+    gap: $space-sm;
+    margin-top: $space-sm;
+
+    > * { flex: 1; }
+}

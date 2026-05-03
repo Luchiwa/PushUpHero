@@ -176,6 +176,8 @@ Key Arena keyframes (in `_animations.scss`):
 
 ## Gotchas — don't repeat these mistakes
 
+- **Don't hand-roll buttons.** The canonical button API is `<Button />` (`src/components/Button/Button.tsx`) — 4 variants (`primary` / `secondary` / `ghost` / `danger`) × 3 sizes (`lg` / `md` / `sm`), Oswald 600 UPPERCASE letter-spacing 2px, 16px radius. The recipe is a brand rule (handoff spec). Reach for it before writing any new button SCSS; if the variant you need is genuinely missing, extend the component rather than reinventing the styling at the call site. The dashed-ember `wc-add-block-btn` is grandfathered as an "add slot" affordance distinct from a button; everything else is a `<Button />`.
+
 - **`overflow: hidden` on a card clips ember text-shadow glows.** If your card has an ember title with `text-shadow: 0 0 12px`, don't put `overflow: hidden` on the card just to contain a decorative `::before`. `position: absolute; inset: 0` on the `::before` is already self-clamped — the parent doesn't need `overflow: hidden`.
 - **Children of `.page-body` (flex-column) compress without `flex-shrink: 0`.** PageLayout's body is `flex: 1; display: flex; flex-direction: column`. Hero cards, sticky headers, and category sections inside a scrollable quest list must set `flex-shrink: 0` or they shrink below natural height on short viewports.
 - **Screen titles must use `@include title-screen`.** Don't hand-roll — letter-spacing, uppercase, ember color, and line-height are a spec.

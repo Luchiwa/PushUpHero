@@ -1,0 +1,33 @@
+{
+    "title": "Mes workouts",
+    "empty": {
+        "title": "Aucun workout sauvegardé",
+        "sub": "Crée ton premier workout pour le retrouver ici"
+    },
+    "create_first": "Créer mon premier workout",
+    "never_used": "Jamais lancé",
+    "sets_count_one": "{{count}} set",
+    "sets_count_other": "{{count}} sets",
+    "exercises_count_one": "{{count}} exercice",
+    "exercises_count_other": "{{count}} exercices",
+    "actions_label": "Actions pour {{name}}",
+    "actions": {
+        "title": "Actions",
+        "rename": "Renommer",
+        "delete": "Supprimer"
+    },
+    "rename": {
+        "title": "Renommer",
+        "label": "Nouveau nom",
+        "placeholder": "Mon workout",
+        "submit": "Enregistrer",
+        "cancel": "Annuler"
+    },
+    "delete": {
+        "title": "Supprimer ce workout ?",
+        "body": "« {{name}} » sera supprimé définitivement.",
+        "confirm": "Supprimer",
+        "cancel": "Annuler"
+    },
+    "deleted": "« {{name}} » supprimé"
+}

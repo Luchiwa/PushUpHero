@@ -59,6 +59,11 @@
     margin: 0;
 }
 
+// Visually-hidden polite live region for "saved" announcement.
+.wc-live-region {
+    @include visually-hidden;
+}
+
 // ── Add exercise button ─────────────────────────────────────────────────────
 .wc-add-block-btn {
     display: flex;

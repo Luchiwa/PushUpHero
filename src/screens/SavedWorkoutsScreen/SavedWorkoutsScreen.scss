@@ -1,0 +1,28 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+// Body container — flex column. Inner list scrolls so the topbar stays put.
+.saved-body {
+    display: flex;
+    flex-direction: column;
+    padding-top: $space-lg;
+    padding-bottom: $space-lg;
+    gap: $space-md;
+}
+
+// Scrollable card list. Pattern mirror of `stats-sessions-scroll` —
+// we scroll the list, never `.page-body`, so the header position is stable.
+.saved-list {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: $space-xl;
+    display: flex;
+    flex-direction: column;
+    gap: $space-md;
+}
+
+// Visually-hidden polite live region for delete announcements.
+.saved-live {
+    @include visually-hidden;
+}

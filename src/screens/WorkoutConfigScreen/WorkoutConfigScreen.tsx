@@ -5,15 +5,26 @@
  * 1. Block list — shows all added exercise blocks, can add/remove/reorder
  * 2. Block editor — step-by-step wizard for one block (exercise → sets → goal → rest)
  */
-import { useCallback, useMemo, useState, type CSSProperties } from 'react';
+import { lazy, Suspense, useCallback, useMemo, useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { createDefaultBlock, type WorkoutBlock, type WorkoutPlan } from '@exercises/types';
-import { estimatePlanXpBaseline, formatNumber } from '@domain';
+import { estimatePlanXpBaseline, formatNumber, getTotalSets } from '@domain';
+import { useAuthCore } from '@hooks/useAuth';
+import { Button } from '@components/Button/Button';
 import { PageLayout } from '@components/PageLayout/PageLayout';
 import { PrimaryCTA } from '@components/PrimaryCTA/PrimaryCTA';
+import { ModalFallback } from '@components/ModalFallback/ModalFallback';
 import { BlockCard } from './BlockCard/BlockCard';
 import { BlockEditor } from './BlockEditor/BlockEditor';
 import './WorkoutConfigScreen.scss';
+
+// Lazy: only parsed when the user opens the saved workouts overlay.
+const SavedWorkoutsScreen = lazy(() =>
+    import('@screens/SavedWorkoutsScreen/SavedWorkoutsScreen').then(m => ({ default: m.SavedWorkoutsScreen })),
+);
+const SaveWorkoutSheet = lazy(() =>
+    import('./SaveWorkoutSheet/SaveWorkoutSheet').then(m => ({ default: m.SaveWorkoutSheet })),
+);
 
 // ── Props ────────────────────────────────────────────────────────
 
@@ -52,11 +63,16 @@ export function WorkoutConfigScreen({
     isReady,
 }: WorkoutConfigScreenProps) {
     const { t } = useTranslation('workout');
+    const { user } = useAuthCore();
     // null = block list mode, number = editing block at that index
     const [editingBlockIndex, setEditingBlockIndex] = useState<number | null>(null);
     const [blockStep, setBlockStep] = useState<BlockStep>('exercise');
     // Track if we're adding a new block (vs editing existing)
     const [isAddingNew, setIsAddingNew] = useState(false);
+    // Saved workouts overlay (auth-only). Entry point will move to ProfileScreen in PUS-22.
+    const [loadOpen, setLoadOpen] = useState(false);
+    const [saveOpen, setSaveOpen] = useState(false);
+    const [savedMessage, setSavedMessage] = useState('');
 
     const blocks = plan.blocks;
 
@@ -146,12 +162,16 @@ export function WorkoutConfigScreen({
         }
     }, [editingBlockIndex, handleBlockBack, onBack]);
 
+    const handleSaved = useCallback((name: string) => {
+        setSaveOpen(false);
+        // Toggle through empty so SR re-announces if user saves twice with same name.
+        setSavedMessage('');
+        setTimeout(() => setSavedMessage(t('config.saved', { name })), 50);
+    }, [t]);
+
     // ── Summary KPIs (block-list mode) ────────────────────────────
 
-    const totalSets = useMemo(
-        () => blocks.reduce((sum, b) => sum + b.numberOfSets, 0),
-        [blocks],
-    );
+    const totalSets = useMemo(() => getTotalSets({ blocks }), [blocks]);
     const { baselineXp, isPartial } = useMemo(
         () => estimatePlanXpBaseline({ blocks }),
         [blocks],
@@ -177,8 +197,34 @@ export function WorkoutConfigScreen({
     // ── Render: Block List ────────────────────────────────────────
 
     return (
+        <>
         <PageLayout title={t('config.title')} onClose={handleTopBack} zIndex={200} bodyClassName="wc-layout" transition="sheet">
             <div className="wc-body wc-body--list">
+                {/* Saved templates entry actions (auth-only). Save is also gated
+                    on having at least one block so the button never invites
+                    persisting an empty plan. */}
+                {user && (
+                    <Button
+                        variant="secondary"
+                        size="md"
+                        icon={<FolderOpenIcon />}
+                        onClick={() => setLoadOpen(true)}
+                    >
+                        {t('config.load_saved')}
+                    </Button>
+                )}
+                {user && blocks.length > 0 && (
+                    <Button
+                        variant="secondary"
+                        size="md"
+                        icon={<BookmarkIcon />}
+                        onClick={() => setSaveOpen(true)}
+                    >
+                        {t('config.save_current')}
+                    </Button>
+                )}
+                <div role="status" aria-live="polite" className="wc-live-region">{savedMessage}</div>
+
                 {/* Block cards */}
                 {blocks.length === 0 && (
                     <div className="wc-empty-state">
@@ -260,5 +306,43 @@ export function WorkoutConfigScreen({
                 </PrimaryCTA>
             </div>
         </PageLayout>
+        <Suspense fallback={<ModalFallback />}>
+            {loadOpen && user && (
+                <SavedWorkoutsScreen
+                    uid={user.uid}
+                    onClose={() => setLoadOpen(false)}
+                    onPick={(loadedPlan) => {
+                        onPlanChange(loadedPlan);
+                        setLoadOpen(false);
+                    }}
+                />
+            )}
+            {saveOpen && user && (
+                <SaveWorkoutSheet
+                    uid={user.uid}
+                    plan={plan}
+                    onClose={() => setSaveOpen(false)}
+                    onSaved={handleSaved}
+                />
+            )}
+        </Suspense>
+        </>
+    );
+}
+
+// ── Icons (inline SVG, currentColor) ─────────────────────────────
+function FolderOpenIcon() {
+    return (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M6 14l1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.55 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H18a2 2 0 0 1 2 2v2" />
+        </svg>
+    );
+}
+
+function BookmarkIcon() {
+    return (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+        </svg>
     );
 }

@@ -1,0 +1,80 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+// Visual pattern is intentionally identical to `SavedWorkoutActionsSheet`'s
+// rename mode (PUS-20 commit 3). When a third name-form consumer arrives,
+// extract a shared `WorkoutNameField` primitive — for now duplication is
+// the lighter cost.
+
+.save-sheet-body {
+    padding-top: $space-md;
+    padding-bottom: $space-lg;
+}
+
+.save-sheet {
+    display: flex;
+    flex-direction: column;
+    gap: $space-sm;
+}
+
+.save-sheet-label {
+    @include kicker;
+    color: $dim;
+}
+
+.save-sheet-field { position: relative; }
+
+.save-sheet-input {
+    width: 100%;
+    padding: $space-md $space-3xl $space-md $space-md;
+    background: $obsidian-2;
+    border: 1px solid $line;
+    border-radius: $radius-md;
+    color: $text;
+    font-family: $font-sans;
+    font-size: 15px;
+    line-height: 1.4;
+    transition: border-color 180ms $ease-arena, box-shadow 180ms $ease-arena;
+
+    &::placeholder { color: color-mix(in srgb, #{$dim} 60%, transparent); }
+
+    &:focus {
+        outline: none;
+        border-color: $ember;
+        box-shadow: 0 0 0 3px color-mix(in srgb, #{$ember} 18%, transparent);
+    }
+
+    &--error {
+        border-color: $blood;
+
+        &:focus { box-shadow: 0 0 0 3px color-mix(in srgb, #{$blood} 22%, transparent); }
+    }
+
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.save-sheet-counter {
+    position: absolute;
+    right: $space-sm;
+    top: 50%;
+    transform: translateY(-50%);
+    @include micro;
+    color: $dim;
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
+}
+
+.save-sheet-error {
+    @include caption;
+    color: $blood;
+}
+
+// CTAs themselves are the canonical `<Button />` component — this row is
+// just a flex container so the CTAs split the available width evenly.
+.save-sheet-cta-row {
+    display: flex;
+    gap: $space-sm;
+    margin-top: $space-sm;
+
+    > * { flex: 1; }
+}
