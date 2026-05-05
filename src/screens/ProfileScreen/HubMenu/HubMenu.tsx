@@ -1,8 +1,7 @@
 /**
  * HubMenu — vertical list of navigation items rendered below the
- * PlayerCard hero. The first item is a "featured" Saved Workouts card
- * with hero treatment (ember blade, larger icon, mono kicker count) —
- * inline because the visual is one-off, not reusable.
+ * PlayerCard hero. Six uniform cards: Saved Workouts, Friends, Activity
+ * Feed, Stats, Quests, Achievements.
  *
  * Settings opens from the topbar gear (ProfileScreen rightAction), and
  * sign-out lives only inside SettingsModal — neither belongs in the hub.
@@ -12,7 +11,6 @@ import { HubMenuItem } from '../HubMenuItem/HubMenuItem';
 import './HubMenu.scss';
 
 interface HubMenuProps {
-    savedWorkoutsCount: number;
     pendingFriendRequests: number;
     hasFeedUnread: boolean;
     onOpenSavedWorkouts: () => void;
@@ -24,7 +22,6 @@ interface HubMenuProps {
 }
 
 export function HubMenu({
-    savedWorkoutsCount,
     pendingFriendRequests,
     hasFeedUnread,
     onOpenSavedWorkouts,
@@ -44,31 +41,18 @@ export function HubMenu({
 
     return (
         <nav className="hub-menu" aria-label={t('title')}>
-            {/* Featured: Saved Workouts (Operator's Briefing treatment) */}
-            <button
-                type="button"
-                className="hub-featured"
+            {/* Saved Workouts — bookmark icon, ember (primary) */}
+            <HubMenuItem
+                iconColor="ember"
+                label={t('hub.saved_workouts')}
+                ariaLabel={t('hub.saved_workouts_aria')}
                 onClick={onOpenSavedWorkouts}
-                aria-label={t('hub.saved_workouts_aria')}
-                data-stamp={t('hub.featured_stamp')}
-            >
-                <span className="hub-featured-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M6.5 6.5L17.5 17.5" />
-                        <rect x="2" y="9" width="4" height="6" rx="1" />
-                        <rect x="18" y="9" width="4" height="6" rx="1" />
-                        <rect x="6" y="10" width="2" height="4" rx="0.5" />
-                        <rect x="16" y="10" width="2" height="4" rx="0.5" />
+                icon={
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
                     </svg>
-                </span>
-                <span className="hub-featured-text">
-                    <span className="hub-featured-kicker">{t('hub.saved_workouts_count', { count: savedWorkoutsCount })}</span>
-                    <span className="hub-featured-title">{t('hub.saved_workouts')}</span>
-                </span>
-                <svg className="hub-featured-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <polyline points="9 18 15 12 9 6" />
-                </svg>
-            </button>
+                }
+            />
 
             {/* Friends */}
             <HubMenuItem

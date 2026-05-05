@@ -9,10 +9,7 @@
     "xp_label_next": "→ LV{{level}} in {{remaining}} XP",
     "progression_cta": "Progression",
     "hub": {
-        "featured_stamp": "FEATURED",
         "saved_workouts": "My Workouts",
-        "saved_workouts_count_one": "{{count}} · workout saved",
-        "saved_workouts_count_other": "{{count}} · workouts saved",
         "saved_workouts_aria": "Open my saved workouts",
         "friends": "Friends",
         "friends_aria_with_pending_one": "Friends — {{count}} pending request",

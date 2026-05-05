@@ -21,7 +21,6 @@ import { ModalFallback } from '@components/ModalFallback/ModalFallback';
 import { useAuthCore } from '@hooks/useAuth';
 import { useFriends } from '@hooks/useFriends';
 import { useActivityFeed } from '@hooks/useActivityFeed';
-import { useSavedWorkouts } from '@hooks/useSavedWorkouts';
 import { read, STORAGE_KEY_BUILDERS } from '@infra/storage';
 import { PlayerCard } from './PlayerCard/PlayerCard';
 import { HubMenu } from './HubMenu/HubMenu';
@@ -53,7 +52,6 @@ export function ProfileScreen({
     const { user } = useAuthCore();
     const { friends, incomingRequests } = useFriends();
     const { feed } = useActivityFeed(friends);
-    const { workouts } = useSavedWorkouts(user?.uid);
 
     const [showSettings, setShowSettings] = useState(false);
     const [showProgression, setShowProgression] = useState(false);
@@ -88,7 +86,6 @@ export function ProfileScreen({
             >
                 <PlayerCard onProgressionOpen={() => setShowProgression(true)} />
                 <HubMenu
-                    savedWorkoutsCount={workouts.length}
                     pendingFriendRequests={incomingRequests.length}
                     hasFeedUnread={hasFeedUnread}
                     onOpenSavedWorkouts={onOpenSavedWorkouts}
