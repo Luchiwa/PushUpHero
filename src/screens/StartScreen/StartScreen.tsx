@@ -89,6 +89,13 @@ export function StartScreen({
         });
     }, []);
 
+    // ProfileScreen stays mounted while one of its sub-screens is active so
+    // the back navigation can unmount only the child — no remount animation,
+    // no flash of the home idle between exit and re-enter.
+    const showProfileHub =
+        activeModal?.type === 'profileScreen'
+        || (!!activeModal && 'from' in activeModal && activeModal.from === 'profileScreen');
+
     // Stats for the stats button
     const totalLifetimeReps = useMemo(() => {
         const lifetimeReps = dbUser?.progression.lifetimeReps;
@@ -319,7 +326,7 @@ export function StartScreen({
                     />
                 )}
 
-                {activeModal?.type === 'profileScreen' && (
+                {showProfileHub && (
                     <ProfileScreen
                         onClose={closeModal}
                         onOpenSavedWorkouts={() => setActiveModal({ type: 'savedWorkouts', from: 'profileScreen' })}
