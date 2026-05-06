@@ -15,7 +15,6 @@ interface HubMenuProps {
     hasFeedUnread: boolean;
     onOpenSavedWorkouts: () => void;
     onOpenFriends: () => void;
-    onOpenFeed: () => void;
     onOpenStats: () => void;
     onOpenQuests: () => void;
     onOpenAchievements: () => void;
@@ -26,18 +25,20 @@ export function HubMenu({
     hasFeedUnread,
     onOpenSavedWorkouts,
     onOpenFriends,
-    onOpenFeed,
     onOpenStats,
     onOpenQuests,
     onOpenAchievements,
 }: HubMenuProps) {
     const { t } = useTranslation('profile');
 
-    const friendsAriaLabel = pendingFriendRequests > 0
-        ? t('hub.friends_aria_with_pending', { count: pendingFriendRequests })
-        : undefined;
-
-    const feedAriaLabel = hasFeedUnread ? t('hub.feed_aria_unread') : undefined;
+    // Pending requests are actionable — surface them first in the SR label.
+    // Fall back to "new activity" only when there's no incoming request.
+    let socialAriaLabel: string | undefined;
+    if (pendingFriendRequests > 0) {
+        socialAriaLabel = t('hub.social_aria_with_pending', { count: pendingFriendRequests });
+    } else if (hasFeedUnread) {
+        socialAriaLabel = t('hub.social_aria_unread');
+    }
 
     return (
         <nav className="hub-menu" aria-label={t('title')}>
@@ -54,31 +55,18 @@ export function HubMenu({
                 }
             />
 
-            {/* Friends */}
+            {/* Social — friends list + activity feed in a single entry */}
             <HubMenuItem
                 iconColor="ember"
-                label={t('hub.friends')}
+                label={t('hub.social')}
                 badge={pendingFriendRequests}
-                ariaLabel={friendsAriaLabel}
+                dot={hasFeedUnread}
+                ariaLabel={socialAriaLabel}
                 onClick={onOpenFriends}
                 icon={
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
                         <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                    </svg>
-                }
-            />
-
-            {/* Activity Feed */}
-            <HubMenuItem
-                iconColor="ember"
-                label={t('hub.feed')}
-                dot={hasFeedUnread}
-                ariaLabel={feedAriaLabel}
-                onClick={onOpenFeed}
-                icon={
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
                     </svg>
                 }
             />

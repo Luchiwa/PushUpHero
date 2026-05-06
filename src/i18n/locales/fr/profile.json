@@ -11,11 +11,10 @@
     "hub": {
         "saved_workouts": "Mes workouts",
         "saved_workouts_aria": "Voir mes workouts sauvegardés",
-        "friends": "Amis",
-        "friends_aria_with_pending_one": "Amis — {{count}} demande en attente",
-        "friends_aria_with_pending_other": "Amis — {{count}} demandes en attente",
-        "feed": "Activité",
-        "feed_aria_unread": "Activité — nouvelles activités",
+        "social": "Social",
+        "social_aria_with_pending_one": "Social — {{count}} demande en attente",
+        "social_aria_with_pending_other": "Social — {{count}} demandes en attente",
+        "social_aria_unread": "Social — nouvelles activités",
         "stats": "Stats",
         "quests": "Quêtes",
         "achievements": "Succès"

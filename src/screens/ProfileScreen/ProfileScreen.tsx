@@ -36,7 +36,7 @@ const ProgressionScreen = lazy(() =>
 interface ProfileScreenProps {
     onClose: () => void;
     onOpenSavedWorkouts: () => void;
-    onOpenFriends: (initialTab: 'friends' | 'feed') => void;
+    onOpenFriends: () => void;
     onOpenStats: () => void;
     onOpenQuests: () => void;
 }
@@ -89,8 +89,7 @@ export function ProfileScreen({
                     pendingFriendRequests={incomingRequests.length}
                     hasFeedUnread={hasFeedUnread}
                     onOpenSavedWorkouts={onOpenSavedWorkouts}
-                    onOpenFriends={() => onOpenFriends('friends')}
-                    onOpenFeed={() => onOpenFriends('feed')}
+                    onOpenFriends={onOpenFriends}
                     onOpenStats={onOpenStats}
                     onOpenQuests={onOpenQuests}
                     onOpenAchievements={() => setShowProgression(true)}

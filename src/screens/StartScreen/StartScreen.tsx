@@ -312,7 +312,7 @@ export function StartScreen({
                     <ProfileScreen
                         onClose={closeModal}
                         onOpenSavedWorkouts={() => setActiveModal({ type: 'savedWorkouts' })}
-                        onOpenFriends={(initialTab) => setActiveModal({ type: 'friendsScreen', initialTab })}
+                        onOpenFriends={() => setActiveModal({ type: 'friendsScreen', initialTab: 'friends' })}
                         onOpenStats={() => setActiveModal({ type: 'stats' })}
                         onOpenQuests={() => setActiveModal({ type: 'quests' })}
                     />
