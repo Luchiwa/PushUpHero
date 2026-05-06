@@ -2,12 +2,12 @@
 @use 'mixins' as *;
 
 // ══════════════════════════════════════════════════════════════════
-// ProfileModal — Arena RPG player card. Obsidian base, tier-colored
-// accents (bronze / silver / gold / platinum), ember-gradient tabs,
-// obsidian-2 stat tiles.
+// PlayerCard — Arena RPG player card. Obsidian base, tier-colored
+// accents (bronze / silver / gold / platinum), ember-gradient stat
+// tiles, clickable XP bar that opens Progression.
 // ══════════════════════════════════════════════════════════════════
 
-// ── Tier color map (local — Arena-coherent tier palette) ─────────
+// Tier color map (local — Arena-coherent tier palette)
 $player-tiers: (
     'bronze':   #b87a3e,
     'silver':   #c0c6d8,
@@ -15,23 +15,6 @@ $player-tiers: (
     'platinum': $ice,
 );
 
-.profile-settings-btn {
-    transition: transform 0.25s $ease-arena, color 0.25s $ease-arena, background 0.25s $ease-arena;
-
-    &:hover {
-        transform: rotate(30deg);
-        color: $ember;
-    }
-}
-
-.profile-content {
-    padding-top: $space-md;
-    gap: $space-lg;
-}
-
-// ══════════════════════════════════════════════════════════════════
-// PLAYER CARD
-// ══════════════════════════════════════════════════════════════════
 @keyframes player-card-in {
     0%   { opacity: 0; transform: translateY(12px) scale(0.97); }
     100% { opacity: 1; transform: translateY(0) scale(1); }
@@ -60,6 +43,7 @@ $player-tiers: (
         0 4px 18px rgba(0, 0, 0, 0.45),
         0 0 14px color-mix(in srgb, var(--tier-color) 14%, transparent);
     animation: player-card-in 0.5s $ease-out-expo both;
+    flex-shrink: 0;
 
     @each $name, $color in $player-tiers {
         &.tier-#{$name} {
@@ -103,7 +87,7 @@ $player-tiers: (
 
     .avatar {
         position: relative;
-        z-index: 1;
+        z-index: $z-content;
         box-shadow: 0 4px 18px color-mix(in srgb, var(--tier-color) 40%, transparent);
     }
 
@@ -117,7 +101,7 @@ $player-tiers: (
     position: absolute;
     inset: 0;
     transform: rotate(-90deg);
-    z-index: 0;
+    z-index: $z-base;
 }
 
 .player-card-ring-track {
@@ -142,7 +126,7 @@ $player-tiers: (
 
 .player-card-edit-hint {
     position: absolute;
-    z-index: 2;
+    z-index: $z-raised;
     bottom: 4px;
     right: 4px;
     width: 22px;
@@ -161,7 +145,7 @@ $player-tiers: (
 
 .player-card-level {
     position: absolute;
-    z-index: 2;
+    z-index: $z-raised;
     top: -2px;
     right: -6px;
     font-family: $font-mono;
@@ -197,12 +181,12 @@ $player-tiers: (
     text-shadow: 0 0 12px color-mix(in srgb, var(--tier-color) 30%, transparent);
 }
 
-@keyframes fire-glow {
+@keyframes player-card-fire-glow {
     0%, 100% { box-shadow: 0 0 8px color-mix(in srgb, #{$blood} 55%, transparent); }
     50%      { box-shadow: 0 0 14px color-mix(in srgb, #{$blood} 85%, transparent); }
 }
 
-@keyframes flame-dance {
+@keyframes player-card-flame-dance {
     from { transform: translateY(0) scale(1); }
     to   { transform: translateY(-1px) scale(1.08); }
 }
@@ -228,7 +212,7 @@ $player-tiers: (
             color-mix(in srgb, #{$ember} 18%, transparent)
         );
         border-color: color-mix(in srgb, #{$blood} 50%, transparent);
-        animation: fire-glow 1.4s ease-in-out infinite;
+        animation: player-card-fire-glow 1.4s ease-in-out infinite;
     }
 }
 
@@ -238,7 +222,7 @@ $player-tiers: (
     display: inline-block;
 
     .on-fire & {
-        animation: flame-dance 0.6s ease-in-out infinite alternate;
+        animation: player-card-flame-dance 0.6s ease-in-out infinite alternate;
     }
 }
 
@@ -303,12 +287,12 @@ $player-tiers: (
     width: 100%;
 }
 
-@keyframes seg-fill {
+@keyframes pc-seg-fill {
     from { opacity: 0; transform: scaleY(0.4); }
     to   { opacity: 1; transform: scaleY(1); }
 }
 
-@keyframes seg-tip-pulse {
+@keyframes pc-seg-tip-pulse {
     0%, 100% { opacity: 1; }
     50%      { opacity: 0.7; }
 }
@@ -322,14 +306,14 @@ $player-tiers: (
 
     &.filled {
         background: var(--tier-color);
-        animation: seg-fill 0.35s $ease-arena both;
+        animation: pc-seg-fill 0.35s $ease-arena both;
         box-shadow: 0 0 4px color-mix(in srgb, var(--tier-color) 40%, transparent);
     }
 
     &.tip {
         animation:
-            seg-fill 0.35s $ease-arena both,
-            seg-tip-pulse 1.4s ease-in-out 0.8s infinite;
+            pc-seg-fill 0.35s $ease-arena both,
+            pc-seg-tip-pulse 1.4s ease-in-out 0.8s infinite;
         box-shadow: 0 0 8px color-mix(in srgb, var(--tier-color) 75%, transparent);
     }
 }
@@ -437,159 +421,4 @@ $player-tiers: (
     color: $dim;
     letter-spacing: 2px;
     line-height: 1.3;
-}
-
-// ══════════════════════════════════════════════════════════════════
-// PROFILE TABS
-// ══════════════════════════════════════════════════════════════════
-.profile-tabs {
-    position: relative;
-    display: flex;
-    gap: 0;
-    background: $obsidian-2;
-    border: 1px solid color-mix(in srgb, #{$ember} 22%, transparent);
-    border-radius: $radius-pill;
-    padding: 4px;
-    flex-shrink: 0;
-    overflow: hidden;
-    box-shadow: inset 0 1px 0 color-mix(in srgb, #{$ember} 8%, transparent);
-}
-
-.profile-tabs-indicator {
-    position: absolute;
-    top: 4px;
-    bottom: 4px;
-    width: calc(50% - 6px);
-    background: $gradient-ember-cta;
-    border-radius: $radius-pill;
-    box-shadow: $shadow-ember-glow;
-    transition: left 0.28s $ease-out-expo;
-    pointer-events: none;
-    z-index: $z-base;
-}
-
-.profile-tab {
-    position: relative;
-    flex: 1;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 8px $space-md;
-    background: none;
-    border: none;
-    font-family: $font-mono;
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: $dim;
-    cursor: pointer;
-    transition: color 0.2s $ease-arena;
-    z-index: $z-content;
-    border-radius: $radius-pill;
-
-    svg {
-        transition: opacity 0.2s $ease-arena;
-        opacity: 0.55;
-    }
-
-    &:hover:not(&--active) {
-        color: $text;
-        svg { opacity: 0.85; }
-    }
-
-    &--active {
-        color: $text;
-
-        svg {
-            opacity: 1;
-            color: $text;
-        }
-    }
-}
-
-@keyframes badge-pulse {
-    0%, 100% { box-shadow: 0 0 8px color-mix(in srgb, #{$ember} 35%, transparent); }
-    50%      { box-shadow: 0 0 14px color-mix(in srgb, #{$ember} 60%, transparent); }
-}
-
-.profile-tab-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 18px;
-    height: 18px;
-    padding: 0 5px;
-    background: $ember;
-    color: $text;
-    font-family: $font-mono;
-    font-size: 0.6rem;
-    font-weight: 800;
-    border-radius: $radius-pill;
-    line-height: 1;
-    box-shadow: 0 0 8px color-mix(in srgb, #{$ember} 35%, transparent);
-    animation: badge-pulse 2s ease-in-out infinite;
-}
-
-@keyframes dot-pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50%      { opacity: 0.6; transform: scale(1.2); }
-}
-
-.profile-tab-dot {
-    display: inline-block;
-    width: 7px;
-    height: 7px;
-    background: $ember;
-    border-radius: 50%;
-    box-shadow: 0 0 6px color-mix(in srgb, #{$ember} 60%, transparent);
-    animation: dot-pulse 1.4s ease-in-out infinite;
-    margin-left: 5px;
-    vertical-align: middle;
-}
-
-.profile-tab-panel {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    min-height: 0;
-
-    .friends-tab {
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-        min-height: 0;
-        overflow: hidden;
-
-        .friends-search-form { flex-shrink: 0; }
-
-        .friends-tab-scroll {
-            display: flex;
-            flex-direction: column;
-            gap: $space-md;
-            flex: 1;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            padding-bottom: $space-xl;
-        }
-    }
-
-    .friends-feed {
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-        min-height: 0;
-        overflow: hidden;
-
-        .feed-header { flex-shrink: 0; }
-
-        .feed-scroll {
-            flex: 1;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            padding-bottom: $space-xl;
-        }
-    }
 }

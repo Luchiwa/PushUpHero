@@ -1,0 +1,10 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+// ── Hub menu — vertical list of nav items ────────────────────────
+.hub-menu {
+    display: flex;
+    flex-direction: column;
+    gap: $space-sm + 2;  // 10px — slightly looser than $space-md (12) for breathing
+    width: 100%;
+}

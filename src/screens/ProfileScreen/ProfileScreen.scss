@@ -1,0 +1,23 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+// ── ProfileScreen body — flex column, hero card on top + hub below.
+// `overflow-y: auto` so the menu scrolls on short viewports — PageLayout's
+// .page-body has `overflow: hidden`, and several children (PlayerCard,
+// HubMenu items) push the column past the fold on iPhone SE / landscape.
+.profile-body {
+    padding-top: $space-md;
+    gap: $space-lg;
+    overflow-y: auto;
+}
+
+// ── Settings gear in the topbar right slot — rotates on hover ────
+.profile-settings-btn {
+    transition: transform 0.25s $ease-arena, color 0.25s $ease-arena;
+
+    &:hover,
+    &:focus-visible {
+        transform: rotate(30deg);
+        color: $ember;
+    }
+}

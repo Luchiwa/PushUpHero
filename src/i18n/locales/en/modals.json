@@ -70,58 +70,6 @@
             "btn_submit": "Delete My Account"
         }
     },
-    "profile": {
-        "title": "Profile",
-        "settings_aria": "Settings",
-        "default_user_name": "User",
-        "member_since": "Member since {{date}}",
-        "stat_total_xp": "Total XP",
-        "stat_sessions": "Sessions",
-        "stat_friends": "Friends",
-        "xp_label_next": "→ LV{{level}} in {{remaining}} XP",
-        "progression_cta": "Progression",
-        "tab_friends": "Friends",
-        "tab_feed": "Feed"
-    },
-    "friends": {
-        "search_placeholder": "Search by username…",
-        "search_clear_aria": "Clear",
-        "search_btn": "Search",
-        "search_loading": "…",
-        "not_found": "No user found with this username.",
-        "section_requests": "Friend requests",
-        "section_pending": "Pending sent requests",
-        "section_allies": "Allies — {{count}}",
-        "empty_title": "No allies yet",
-        "empty_subtitle": "Search for a username above to add your first training partner!",
-        "remove_confirm_title": "Remove friend?",
-        "remove_confirm_body_prefix": "Remove",
-        "remove_confirm_body_suffix": "from your friends list?",
-        "remove_confirm_cancel": "Cancel",
-        "remove_confirm_remove": "Remove",
-        "remove_loading": "…",
-        "request_label": "⚔️ Wants to challenge you!",
-        "accept_aria": "Accept",
-        "decline_aria": "Decline",
-        "request_sent_label": "Request sent — awaiting reply",
-        "cancel_request": "Cancel",
-        "card": {
-            "remove_aria": "Remove friend",
-            "remove_title": "Remove friend",
-            "encourage_aria": "Encourage",
-            "encourage_title": "Send encouragement",
-            "encourage_cooldown_title": "Send again in {{count}} min",
-            "stat_reps_one": "{{count}} rep",
-            "stat_reps_other": "{{count}} reps",
-            "stat_sessions_one": "{{count}} session",
-            "stat_sessions_other": "{{count}} sessions"
-        },
-        "search": {
-            "already_friends": "Friends",
-            "pending": "Pending",
-            "add": "+ Add"
-        }
-    },
     "feed": {
         "header_title": "Activity Feed",
         "live_badge": "LIVE",

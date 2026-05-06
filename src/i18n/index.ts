@@ -26,6 +26,8 @@ import frCoach from './locales/fr/coach.json';
 import frErrors from './locales/fr/errors.json';
 import frDashboard from './locales/fr/dashboard.json';
 import frSaved from './locales/fr/saved.json';
+import frProfile from './locales/fr/profile.json';
+import frFriends from './locales/fr/friends.json';
 
 import enCommon from './locales/en/common.json';
 import enStart from './locales/en/start.json';
@@ -37,6 +39,8 @@ import enCoach from './locales/en/coach.json';
 import enErrors from './locales/en/errors.json';
 import enDashboard from './locales/en/dashboard.json';
 import enSaved from './locales/en/saved.json';
+import enProfile from './locales/en/profile.json';
+import enFriends from './locales/en/friends.json';
 
 const storageDetector: CustomDetector = {
     name: 'pushupHeroStorage',
@@ -59,7 +63,7 @@ void i18n
         fallbackLng: 'en',
         supportedLngs: ['fr', 'en'],
         defaultNS: 'common',
-        ns: ['common', 'start', 'workout', 'stats', 'quests', 'modals', 'coach', 'errors', 'dashboard', 'saved'],
+        ns: ['common', 'start', 'workout', 'stats', 'quests', 'modals', 'coach', 'errors', 'dashboard', 'saved', 'profile', 'friends'],
         resources: {
             fr: {
                 common: frCommon,
@@ -72,6 +76,8 @@ void i18n
                 errors: frErrors,
                 dashboard: frDashboard,
                 saved: frSaved,
+                profile: frProfile,
+                friends: frFriends,
             },
             en: {
                 common: enCommon,
@@ -84,6 +90,8 @@ void i18n
                 errors: enErrors,
                 dashboard: enDashboard,
                 saved: enSaved,
+                profile: enProfile,
+                friends: enFriends,
             },
         },
         detection: {

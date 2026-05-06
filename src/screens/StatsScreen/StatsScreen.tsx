@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useWeekSessions, getWeekStart, formatWeekRange } from '@hooks/useWeekSessions';
 import { EXERCISE_META, getExerciseLabelKey, type ExerciseType } from '@exercises/types';
 import { WeeklyChart } from './WeeklyChart/WeeklyChart';
-import { SessionHistoryPanel } from '@modals/panels/SessionHistoryPanel/SessionHistoryPanel';
+import { SessionHistory } from '@components/SessionHistory/SessionHistory';
 import { PageLayout } from '@components/PageLayout/PageLayout';
 import { KPIGrid } from './KPIGrid/KPIGrid';
 import { computeWeeklySummary } from './KPIGrid/computeWeeklySummary';
@@ -190,7 +190,7 @@ export function StatsScreen({ onClose }: StatsScreenProps) {
 
             <div className="stats-sessions-scroll">
                 {filteredSessions.length > 0 ? (
-                    <SessionHistoryPanel sessions={filteredSessions} />
+                    <SessionHistory sessions={filteredSessions} />
                 ) : !loading && (
                     <p className="stats-sessions-empty">{t('screen.no_sessions')}</p>
                 )}
