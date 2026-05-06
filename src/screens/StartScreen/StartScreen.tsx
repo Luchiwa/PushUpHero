@@ -61,40 +61,32 @@ export function StartScreen({
     const { level, totalXp, xpIntoCurrentLevel, xpNeededForNextLevel, levelProgressPct } = useLevel();
     const { totalSessionCount } = useSessions();
 
-    // ── Single modal state (only one modal open at a time) ──────────
-    // The `from` field on hub-reachable screens enables back-stack: closing
-    // them returns to the ProfileScreen rather than the home idle. Screens
-    // opened from the home widgets / deep-link don't carry it and close
-    // straight to home as before.
+    // ── Modal navigation stack ──────────────────────────────────────
+    // Each push opens a screen on top; closeModal pops one level. The stack
+    // IS the history — no `from?` field, no special-case routing logic.
+    // Parent levels stay mounted under the top so back navigation just
+    // unmounts the child and reveals what's underneath, no flash.
     type ActiveModal =
-        | null
         | { type: 'auth'; signupPromo?: boolean }
         | { type: 'profileScreen' }
-        | { type: 'socialScreen'; initialTab: 'friends' | 'feed'; from?: 'profileScreen' }
-        | { type: 'savedWorkouts'; from?: 'profileScreen' }
-        | { type: 'quests'; from?: 'profileScreen' }
+        | { type: 'socialScreen'; initialTab: 'friends' | 'feed' }
+        | { type: 'savedWorkouts' }
+        | { type: 'quests' }
         | { type: 'quickSession' }
-        | { type: 'stats'; from?: 'profileScreen' };
+        | { type: 'stats' };
 
     const isDeepLinkFriends = window.location.hash === '#friends';
-    const [activeModal, setActiveModal] = useState<ActiveModal>(
-        isDeepLinkFriends ? { type: 'socialScreen', initialTab: 'friends' } : null,
+    const [modalStack, setModalStack] = useState<ActiveModal[]>(
+        isDeepLinkFriends ? [{ type: 'socialScreen', initialTab: 'friends' }] : [],
     );
-    const closeModal = useCallback(() => {
-        setActiveModal(prev => {
-            if (prev && 'from' in prev && prev.from === 'profileScreen') {
-                return { type: 'profileScreen' };
-            }
-            return null;
-        });
+
+    const pushModal = useCallback((modal: ActiveModal) => {
+        setModalStack(s => [...s, modal]);
     }, []);
 
-    // ProfileScreen stays mounted while one of its sub-screens is active so
-    // the back navigation can unmount only the child — no remount animation,
-    // no flash of the home idle between exit and re-enter.
-    const showProfileHub =
-        activeModal?.type === 'profileScreen'
-        || (!!activeModal && 'from' in activeModal && activeModal.from === 'profileScreen');
+    const closeModal = useCallback(() => {
+        setModalStack(s => s.slice(0, -1));
+    }, []);
 
     // Stats for the stats button
     const totalLifetimeReps = useMemo(() => {
@@ -118,7 +110,7 @@ export function StartScreen({
     const [prevSignupPrompt, setPrevSignupPrompt] = useState(false);
     if (pendingSignupPrompt && !prevSignupPrompt) {
         setPrevSignupPrompt(true);
-        setActiveModal({ type: 'auth', signupPromo: true });
+        pushModal({ type: 'auth', signupPromo: true });
         onSignupPromptHandled?.();
     }
     if (!pendingSignupPrompt && prevSignupPrompt) {
@@ -173,16 +165,17 @@ export function StartScreen({
         startQuestWorkout(featuredQuest);
     }, [featuredQuest, startQuestWorkout]);
 
-    // Quest start from QuestsScreen (close modal first)
+    // Quest start from QuestsScreen — clear the entire modal stack (the
+    // user is leaving the hub arborescence to enter the workout flow).
     const handleQuestStartFromJournal = useCallback((quest: QuestDef) => {
-        setActiveModal(null);
+        setModalStack([]);
         startQuestWorkout(quest);
     }, [startQuestWorkout]);
 
-    // Saved-workout pick: load plan into machine + navigate to config
+    // Saved-workout pick: load plan + navigate to config; clear the stack.
     const handleSavedWorkoutPick = useCallback((plan: WorkoutPlan) => {
         setWorkoutPlan(plan);
-        setActiveModal(null);
+        setModalStack([]);
         handleOpenConfig();
     }, [setWorkoutPlan, handleOpenConfig]);
 
@@ -202,8 +195,8 @@ export function StartScreen({
                     xpIntoCurrentLevel={xpIntoCurrentLevel}
                     xpNeededForNextLevel={xpNeededForNextLevel}
                     levelProgressPct={levelProgressPct}
-                    onOpenProfile={() => setActiveModal({ type: 'profileScreen' })}
-                    onOpenAuth={() => setActiveModal({ type: 'auth' })}
+                    onOpenProfile={() => pushModal({ type: 'profileScreen' })}
+                    onOpenAuth={() => pushModal({ type: 'auth' })}
                 />
 
                 {/* ── Quest Hero Card (only for featured quest) ── */}
@@ -228,7 +221,7 @@ export function StartScreen({
                         allQuestsCompleted={!!allQuestsCompleted}
                         availableCount={availableCount}
                         completedCount={completedCount}
-                        onOpen={() => setActiveModal({ type: 'quests' })}
+                        onOpen={() => pushModal({ type: 'quests' })}
                     />
                 )}
 
@@ -238,7 +231,7 @@ export function StartScreen({
                         streak={streak}
                         totalLifetimeReps={totalLifetimeReps}
                         totalSessionCount={totalSessionCount}
-                        onOpen={() => setActiveModal({ type: 'stats' })}
+                        onOpen={() => pushModal({ type: 'stats' })}
                     />
                 )}
 
@@ -265,7 +258,7 @@ export function StartScreen({
                         size="lg"
                         block
                         icon="⚡"
-                        onClick={() => setActiveModal({ type: 'quickSession' })}
+                        onClick={() => pushModal({ type: 'quickSession' })}
                     >
                         {t('cta.quick_session')}
                     </PrimaryCTA>
@@ -286,61 +279,28 @@ export function StartScreen({
             </div>
 
             <Suspense fallback={<ModalFallback />}>
-                {activeModal?.type === 'quickSession' && (
-                    <QuickSessionModal onClose={closeModal} />
-                )}
+                {/* JSX source order = stack rendering order. Parent levels
+                    sit below their children via DOM order at the same
+                    z-index, so back navigation reveals them without flash.
+                    For modals carrying props (initialTab, signupPromo),
+                    we look up the entry from the stack via .find(). */}
 
-                {activeModal?.type === 'stats' && (
-                    <StatsScreen onClose={closeModal} />
-                )}
-
-                {activeModal?.type === 'auth' && (
-                    <AuthModal
-                        onClose={closeModal}
-                        initialMode={activeModal.signupPromo ? 'register' : undefined}
-                        promoBanner={
-                            activeModal.signupPromo
-                                ? (
-                                    <>
-                                        <p className="auth-promo-title">
-                                            <span>🎉</span> {t('signup_promo.title')}
-                                        </p>
-                                        <ul className="auth-promo-perks">
-                                            <li className="auth-promo-perk">
-                                                <span className="perk-icon">💾</span>
-                                                {t('signup_promo.perk_save')}
-                                            </li>
-                                            <li className="auth-promo-perk">
-                                                <span className="perk-icon">🏆</span>
-                                                {t('signup_promo.perk_unlock')}
-                                            </li>
-                                            <li className="auth-promo-perk">
-                                                <span className="perk-icon">📈</span>
-                                                {t('signup_promo.perk_track')}
-                                            </li>
-                                        </ul>
-                                    </>
-                                )
-                                : undefined
-                        }
-                    />
-                )}
-
-                {showProfileHub && (
+                {modalStack.some(m => m.type === 'profileScreen') && (
                     <ProfileScreen
                         onClose={closeModal}
-                        onOpenSavedWorkouts={() => setActiveModal({ type: 'savedWorkouts', from: 'profileScreen' })}
-                        onOpenFriends={() => setActiveModal({ type: 'socialScreen', initialTab: 'friends', from: 'profileScreen' })}
-                        onOpenStats={() => setActiveModal({ type: 'stats', from: 'profileScreen' })}
-                        onOpenQuests={() => setActiveModal({ type: 'quests', from: 'profileScreen' })}
+                        onOpenSavedWorkouts={() => pushModal({ type: 'savedWorkouts' })}
+                        onOpenFriends={() => pushModal({ type: 'socialScreen', initialTab: 'friends' })}
+                        onOpenStats={() => pushModal({ type: 'stats' })}
+                        onOpenQuests={() => pushModal({ type: 'quests' })}
                     />
                 )}
 
-                {activeModal?.type === 'socialScreen' && (
-                    <SocialScreen onClose={closeModal} initialTab={activeModal.initialTab} />
-                )}
+                {(() => {
+                    const m = modalStack.find(x => x.type === 'socialScreen');
+                    return m ? <SocialScreen onClose={closeModal} initialTab={m.initialTab} /> : null;
+                })()}
 
-                {activeModal?.type === 'savedWorkouts' && user && (
+                {modalStack.some(m => m.type === 'savedWorkouts') && user && (
                     <SavedWorkoutsScreen
                         uid={user.uid}
                         onClose={closeModal}
@@ -348,7 +308,11 @@ export function StartScreen({
                     />
                 )}
 
-                {activeModal?.type === 'quests' && questProgress != null && (
+                {modalStack.some(m => m.type === 'stats') && (
+                    <StatsScreen onClose={closeModal} />
+                )}
+
+                {modalStack.some(m => m.type === 'quests') && questProgress != null && (
                     <QuestsScreen
                         onClose={closeModal}
                         questProgress={questProgress}
@@ -358,6 +322,45 @@ export function StartScreen({
                         onQuestStart={handleQuestStartFromJournal}
                     />
                 )}
+
+                {modalStack.some(m => m.type === 'quickSession') && (
+                    <QuickSessionModal onClose={closeModal} />
+                )}
+
+                {(() => {
+                    const m = modalStack.find(x => x.type === 'auth');
+                    return m ? (
+                        <AuthModal
+                            onClose={closeModal}
+                            initialMode={m.signupPromo ? 'register' : undefined}
+                            promoBanner={
+                                m.signupPromo
+                                    ? (
+                                        <>
+                                            <p className="auth-promo-title">
+                                                <span>🎉</span> {t('signup_promo.title')}
+                                            </p>
+                                            <ul className="auth-promo-perks">
+                                                <li className="auth-promo-perk">
+                                                    <span className="perk-icon">💾</span>
+                                                    {t('signup_promo.perk_save')}
+                                                </li>
+                                                <li className="auth-promo-perk">
+                                                    <span className="perk-icon">🏆</span>
+                                                    {t('signup_promo.perk_unlock')}
+                                                </li>
+                                                <li className="auth-promo-perk">
+                                                    <span className="perk-icon">📈</span>
+                                                    {t('signup_promo.perk_track')}
+                                                </li>
+                                            </ul>
+                                        </>
+                                    )
+                                    : undefined
+                            }
+                        />
+                    ) : null;
+                })()}
             </Suspense>
         </div>
     );
