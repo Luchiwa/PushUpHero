@@ -37,7 +37,7 @@ const StatsScreen = lazy(() => import('@screens/StatsScreen/StatsScreen').then(m
 ```
 
 - **App.tsx** lazy-loads: WorkoutConfigScreen, RestScreen, SummaryScreen, LevelUpScreen
-- **StartScreen** lazy-loads: AuthModal, ProfileScreen, FriendsScreen, SavedWorkoutsScreen, QuickSessionModal, StatsScreen, QuestsScreen
+- **StartScreen** lazy-loads: AuthModal, ProfileScreen, SocialScreen, SavedWorkoutsScreen, QuickSessionModal, StatsScreen, QuestsScreen
 
 ## Animation Pattern
 
@@ -75,5 +75,5 @@ Or they delegate to `<PageLayout>` which handles this internally.
 | QuestsScreen | Quest journal | Quest widget / ProfileScreen hub |
 | ProgressionScreen | Achievements & levels | ProfileScreen hub |
 | ProfileScreen | Auth-only navigation hub (PlayerCard hero + menu) | Avatar tap on PlayerHUD |
-| FriendsScreen | Friends list + Activity Feed (2 internal tabs) | ProfileScreen hub items / `#friends` deep-link |
+| SocialScreen | Friends list + Activity Feed (2 internal tabs) | ProfileScreen hub item / `#friends` deep-link |
 | SavedWorkoutsScreen | Saved workout templates (load → config) | ProfileScreen hub featured card / WorkoutConfigScreen |

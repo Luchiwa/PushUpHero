@@ -8,7 +8,7 @@ import { ModalFallback } from '@components/ModalFallback/ModalFallback';
 // Lazy-loaded modals/screens (only parsed when opened)
 const AuthModal = lazy(() => import('@modals/AuthModal/AuthModal').then(m => ({ default: m.AuthModal })));
 const ProfileScreen = lazy(() => import('@screens/ProfileScreen/ProfileScreen').then(m => ({ default: m.ProfileScreen })));
-const FriendsScreen = lazy(() => import('@screens/FriendsScreen/FriendsScreen').then(m => ({ default: m.FriendsScreen })));
+const SocialScreen = lazy(() => import('@screens/SocialScreen/SocialScreen').then(m => ({ default: m.SocialScreen })));
 const SavedWorkoutsScreen = lazy(() => import('@screens/SavedWorkoutsScreen/SavedWorkoutsScreen').then(m => ({ default: m.SavedWorkoutsScreen })));
 const QuickSessionModal = lazy(() => import('@modals/QuickSessionModal/QuickSessionModal').then(m => ({ default: m.QuickSessionModal })));
 const StatsScreen = lazy(() => import('@screens/StatsScreen/StatsScreen').then(m => ({ default: m.StatsScreen })));
@@ -62,21 +62,32 @@ export function StartScreen({
     const { totalSessionCount } = useSessions();
 
     // ── Single modal state (only one modal open at a time) ──────────
+    // The `from` field on hub-reachable screens enables back-stack: closing
+    // them returns to the ProfileScreen rather than the home idle. Screens
+    // opened from the home widgets / deep-link don't carry it and close
+    // straight to home as before.
     type ActiveModal =
         | null
         | { type: 'auth'; signupPromo?: boolean }
         | { type: 'profileScreen' }
-        | { type: 'friendsScreen'; initialTab: 'friends' | 'feed' }
-        | { type: 'savedWorkouts' }
-        | { type: 'quests' }
+        | { type: 'socialScreen'; initialTab: 'friends' | 'feed'; from?: 'profileScreen' }
+        | { type: 'savedWorkouts'; from?: 'profileScreen' }
+        | { type: 'quests'; from?: 'profileScreen' }
         | { type: 'quickSession' }
-        | { type: 'stats' };
+        | { type: 'stats'; from?: 'profileScreen' };
 
     const isDeepLinkFriends = window.location.hash === '#friends';
     const [activeModal, setActiveModal] = useState<ActiveModal>(
-        isDeepLinkFriends ? { type: 'friendsScreen', initialTab: 'friends' } : null,
+        isDeepLinkFriends ? { type: 'socialScreen', initialTab: 'friends' } : null,
     );
-    const closeModal = useCallback(() => setActiveModal(null), []);
+    const closeModal = useCallback(() => {
+        setActiveModal(prev => {
+            if (prev && 'from' in prev && prev.from === 'profileScreen') {
+                return { type: 'profileScreen' };
+            }
+            return null;
+        });
+    }, []);
 
     // Stats for the stats button
     const totalLifetimeReps = useMemo(() => {
@@ -311,15 +322,15 @@ export function StartScreen({
                 {activeModal?.type === 'profileScreen' && (
                     <ProfileScreen
                         onClose={closeModal}
-                        onOpenSavedWorkouts={() => setActiveModal({ type: 'savedWorkouts' })}
-                        onOpenFriends={() => setActiveModal({ type: 'friendsScreen', initialTab: 'friends' })}
-                        onOpenStats={() => setActiveModal({ type: 'stats' })}
-                        onOpenQuests={() => setActiveModal({ type: 'quests' })}
+                        onOpenSavedWorkouts={() => setActiveModal({ type: 'savedWorkouts', from: 'profileScreen' })}
+                        onOpenFriends={() => setActiveModal({ type: 'socialScreen', initialTab: 'friends', from: 'profileScreen' })}
+                        onOpenStats={() => setActiveModal({ type: 'stats', from: 'profileScreen' })}
+                        onOpenQuests={() => setActiveModal({ type: 'quests', from: 'profileScreen' })}
                     />
                 )}
 
-                {activeModal?.type === 'friendsScreen' && (
-                    <FriendsScreen onClose={closeModal} initialTab={activeModal.initialTab} />
+                {activeModal?.type === 'socialScreen' && (
+                    <SocialScreen onClose={closeModal} initialTab={activeModal.initialTab} />
                 )}
 
                 {activeModal?.type === 'savedWorkouts' && user && (

@@ -2,7 +2,7 @@
  * FeedCacheContext — Session-scoped cache for the friends activity feed.
  *
  * The cache lives in a ref inside the provider (mounted in AuthProvider.tsx),
- * so it survives unmount/remount of consumers (e.g. FriendsScreen close →
+ * so it survives unmount/remount of consumers (e.g. SocialScreen close →
  * reopen, or ProfileScreen rendering a feed dot in the hub) without paying
  * a refetch. The provider also auto-resets the ref when the authenticated
  * user changes — this is the property the previous module-level

@@ -1,5 +1,5 @@
 /**
- * FriendsScreen — Two-tab screen for friends list + activity feed.
+ * SocialScreen — Two-tab screen for friends list + activity feed.
  *
  * Tabs are an internal user toggle (not a workflow transition), so no
  * live region. Marking the feed as "seen" is owned here — the hub menu
@@ -14,20 +14,20 @@ import { useFriends } from '@hooks/useFriends';
 import { write, STORAGE_KEY_BUILDERS } from '@infra/storage';
 import { FriendsTab } from './FriendsTab/FriendsTab';
 import { FriendsFeedPanel } from './FriendsFeedPanel/FriendsFeedPanel';
-import './FriendsScreen.scss';
+import './SocialScreen.scss';
 
-export type FriendsTabKey = 'friends' | 'feed';
+export type SocialTabKey = 'friends' | 'feed';
 
-interface FriendsScreenProps {
+interface SocialScreenProps {
     onClose: () => void;
-    initialTab?: FriendsTabKey;
+    initialTab?: SocialTabKey;
 }
 
-export function FriendsScreen({ onClose, initialTab = 'friends' }: FriendsScreenProps) {
+export function SocialScreen({ onClose, initialTab = 'friends' }: SocialScreenProps) {
     const { t } = useTranslation('friends');
     const { user } = useAuthCore();
     const { friends } = useFriends();
-    const [activeTab, setActiveTab] = useState<FriendsTabKey>(initialTab);
+    const [activeTab, setActiveTab] = useState<SocialTabKey>(initialTab);
 
     useEffect(() => {
         // Depend on uid (stable) rather than the whole user object — dbUser
@@ -43,17 +43,17 @@ export function FriendsScreen({ onClose, initialTab = 'friends' }: FriendsScreen
             onClose={onClose}
             zIndex={200}
             transition="slide"
-            bodyClassName="friends-body"
+            bodyClassName="social-body"
         >
-            <div className="friends-tabs" role="tablist">
+            <div className="social-tabs" role="tablist">
                 <button
                     type="button"
                     role="tab"
-                    id="friends-tab-friends"
+                    id="social-tab-friends"
                     aria-selected={activeTab === 'friends'}
-                    aria-controls="friends-panel-friends"
+                    aria-controls="social-panel-friends"
                     tabIndex={activeTab === 'friends' ? 0 : -1}
-                    className={`friends-tab ${activeTab === 'friends' ? 'friends-tab--active' : ''}`}
+                    className={`social-tab ${activeTab === 'friends' ? 'social-tab--active' : ''}`}
                     onClick={() => setActiveTab('friends')}
                 >
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -65,11 +65,11 @@ export function FriendsScreen({ onClose, initialTab = 'friends' }: FriendsScreen
                 <button
                     type="button"
                     role="tab"
-                    id="friends-tab-feed"
+                    id="social-tab-feed"
                     aria-selected={activeTab === 'feed'}
-                    aria-controls="friends-panel-feed"
+                    aria-controls="social-panel-feed"
                     tabIndex={activeTab === 'feed' ? 0 : -1}
-                    className={`friends-tab ${activeTab === 'feed' ? 'friends-tab--active' : ''}`}
+                    className={`social-tab ${activeTab === 'feed' ? 'social-tab--active' : ''}`}
                     onClick={() => setActiveTab('feed')}
                 >
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -78,27 +78,27 @@ export function FriendsScreen({ onClose, initialTab = 'friends' }: FriendsScreen
                     <span>{t('tab_feed')}</span>
                 </button>
                 <div
-                    className="friends-tabs-indicator"
+                    className="social-tabs-indicator"
                     style={{ left: activeTab === 'friends' ? '4px' : 'calc(50% + 2px)' }}
                 />
             </div>
 
             {activeTab === 'friends' && (
                 <div
-                    id="friends-panel-friends"
-                    className="friends-tab-panel"
+                    id="social-panel-friends"
+                    className="social-tab-panel"
                     role="tabpanel"
-                    aria-labelledby="friends-tab-friends"
+                    aria-labelledby="social-tab-friends"
                 >
                     <FriendsTab />
                 </div>
             )}
             {activeTab === 'feed' && (
                 <div
-                    id="friends-panel-feed"
-                    className="friends-tab-panel"
+                    id="social-panel-feed"
+                    className="social-tab-panel"
                     role="tabpanel"
-                    aria-labelledby="friends-tab-feed"
+                    aria-labelledby="social-tab-feed"
                 >
                     <FriendsFeedPanel friends={friends} />
                 </div>
